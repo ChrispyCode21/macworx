@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { payout } from './payout'
+import { leftEarlyPayout, payout } from './payout'
 
 // SPEC §7.P. "Not first of the day" means no streak bonus applies.
 const notFirst = (correct: number) => payout({ correct, problemCount: 20, firstOfDay: false, streak: 3 })
@@ -55,5 +55,20 @@ describe('payout (SPEC §6.4)', () => {
     expect(() => payout({ correct: 5, problemCount: 20, firstOfDay: true, streak: -1 })).toThrow(RangeError)
     const firstOfDay = 'false' as unknown as boolean
     expect(() => payout({ correct: 5, problemCount: 20, firstOfDay, streak: 3 })).toThrow(RangeError)
+  })
+})
+
+describe('leaving early (SPEC §6.4)', () => {
+  // Leaving early pays the base only, whatever the streak or time of day, so there's nothing else to pass.
+  it('P9: left after 8 problems, 7 correct → base only, 7', () => {
+    expect(leftEarlyPayout(7)).toEqual({ base: 7, accuracyBonus: 0, streakBonus: 0, total: 7 })
+  })
+
+  it('P10: left after 3 problems, 0 correct → 0, no minimum', () => {
+    expect(leftEarlyPayout(0)).toEqual({ base: 0, accuracyBonus: 0, streakBonus: 0, total: 0 })
+  })
+
+  it('rejects impossible counts', () => {
+    for (const correct of [-1, 2.5, Number.NaN]) expect(() => leftEarlyPayout(correct)).toThrow(RangeError)
   })
 })
