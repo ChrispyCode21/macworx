@@ -1,4 +1,5 @@
 // Cloudflare Workers config: the built app as static assets, plus the /api/* Worker (ARCHITECTURE.md).
+// Workers Builds runs `npx wrangler deploy` for main and `npx wrangler preview` for other branches.
 // Security headers come from public/_headers, which the build copies into dist.
 {
   "name": "macworx",
@@ -12,13 +13,25 @@
     // /api and /api/* reach the Worker first; everything else is a static file.
     "run_worker_first": ["/api", "/api/*"],
   },
+  // Production data: her Macaronis, streak and results. Workers Builds deploys main here.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "macworx",
-      // Placeholder until the D1 database is created; local `wrangler dev` works without it.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "4567271a-d1b3-46a4-900f-e4d8b3afaf5f",
       "migrations_dir": "migrations",
     },
   ],
+  // PR preview URLs (`wrangler preview`). Bindings don't carry over, and previews must never
+  // touch production data, so they get their own database.
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "macworx-preview",
+        "database_id": "0c51256e-8800-42b6-a547-0bc6338aaa99",
+        "migrations_dir": "migrations",
+      },
+    ],
+  },
 }
