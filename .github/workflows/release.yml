@@ -28,15 +28,19 @@ jobs:
       contents: write
       issues: write # closing the version's milestone
     steps:
+      # main itself, never the run's head_sha, so only code already on main runs here.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
       - name: Create the tag and GitHub Release if this version is new
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
+          if [ "$(git rev-parse HEAD)" != "$RELEASE_SHA" ]; then
+            echo "main has moved past the commit CI passed on; the newer commit's CI run releases it."
+            exit 0
+          fi
           version=$(node -p "require('./package.json').version")
           tag="v$version"
           if gh release view "$tag" >/dev/null 2>&1; then
