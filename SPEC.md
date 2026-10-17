@@ -1,113 +1,212 @@
-# Homework App for My Daughter — Idea Log
+# macworx — Design Spec
 
-Oct 17, 2026 · @Chris
+Extra math practice for a 7-year-old, on her iPad, that rewards effort and never punishes.
 
-## Problem statement
+This is the source of truth for what the app does. It describes the MVP. Anything not described here is undecided: ask the owner before building it (CLAUDE.md).
 
-My 7-year-old's homework is limited to whatever her school assigns, and doing it is tied to being at home with a pencil and a table. Beyond that, nothing rewards her for doing extra practice.
+## 1. Problem
 
-The app solves both at once:
+Her homework is limited to what school assigns, and doing it needs home, a pencil and a table. Nothing rewards her for doing extra practice.
 
-- **Access:** extra practice she can do anywhere on her tablet, on top of assigned homework.
-- **Motivation:** a reason to come back that comes from rewards, never from punishment.
+macworx gives her:
 
-## Design principles
+- **Access:** extra math practice she can open anywhere on her iPad, on top of her assigned homework, never in place of it.
+- **Motivation:** Macaronis, a currency she earns by doing problems and spends on real-world rewards her parents grant.
 
-1. **Course-correct, never punish.** A wrong answer leads to a hint, a retry or an easier problem. Nothing is ever taken away from her.
-2. **Rewards come from effort.** Every reward is earned by doing work. The app never offers a way out of the work.
-3. **Surprise without compulsion.** Unpredictable rewards are fun, so keep them. There's no time limit, and missed days are never penalized.
-4. **Works anywhere.** Usable offline, on her tablet, without a parent setting things up each time.
+## 2. Platform & architecture
 
-## Core idea
+- **Device:** an iPad. The app is a PWA, installed from Safari (Share, then Add to Home Screen), and runs full screen.
+- **Offline:** assignments work with no connection. Results sync when the iPad is back online.
+- **Hosting:** Cloudflare Workers serve the app's static files and an `/api/*` Worker. Data lives in Cloudflare D1.
+- **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record.
+- **Users:** one child and her parents. The child's side needs no sign-in. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access.
 
-One place on her tablet holds extra homework she can open anytime. It sits on top of her assigned work, so it never replaces it. It runs on the tablet, so it doesn't need home, a pencil or a table.
+## 3. Non-goals (MVP)
 
-It's likely a PWA (a website that installs to the home screen and can work offline) rather than a native app store app.
+- Subjects other than math.
+- The spinner and the loot box.
+- Push notifications to the parent.
+- Time limits or timers of any kind.
+- More than one child.
+- Editing anything from the parent side (it is read-only).
 
-## Motivation features
+## 4. Principles
 
-| Feature | Original idea | Guardrail |
-| --- | --- | --- |
-| Spinner | Decides what she works on, with a chance she skips homework and plays games instead | The spinner picks the subject or the reward, but never lands on "no work." Spins are earned by finishing problems. |
-| Loot box | A surprise reward that keeps her coming back | Earned only, currency she spends on real-world rewards you grant, no penalty for missed days |
+1. **Course-correct, never punish.** Nothing she has earned is ever taken away. A missed answer shows the right one and moves on.
+2. **Never-negative wording.** No text frames a result as failure. Grades are Excellent, Great, Good and Improving.
+3. **Rewards come from effort.** Every Macaroni is earned by finishing work. There is no way to skip the work.
+4. **No time pressure.** No timers, no limits, and no penalty beyond a streak starting over.
 
-Why the guardrails matter: unpredictable rewards are what make loot boxes compelling, and that same effect is what makes them risky. The goal is to keep the excitement while teaching her that doing the work is what leads to the reward.
+## 5. Core user flows
 
-### Currency
+### 5.1 Do an assignment (child)
 
-Every spinner-assigned task pays out currency, and she spends it on real-world rewards you grant. The payout depends on three things:
+1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment.
+2. She starts an assignment: 20 math problems (§6.2).
+3. For each problem she enters a whole-number answer and submits it. She answers each problem once.
+   - Correct: the app says so and moves to the next problem.
+   - Not correct: the app shows the right answer in a friendly way (for example "7 × 8 = 56") and moves on.
+4. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy and streak bonuses shown), and the grade.
+5. She can start another assignment right away. Assignments are unlimited.
 
-| Factor | What it does |
-| --- | --- |
-| Base rate by task | Longer or less fun tasks pay more (a reading passage pays more than a set of math drills) |
-| Difficulty | Stretch problems pay more than warm-ups |
-| Accuracy | More correct answers pay more |
+### 5.2 Buy a reward (child)
 
-To keep accuracy from feeling like a penalty, a wrong answer she fixes on retry still earns partial credit, and finishing a task always pays a minimum.
+1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.6).
+2. She can buy any reward whose price is at most her balance. Buying it deducts the price from her balance and records the purchase.
+3. A parent sees the purchase on the dashboard and grants the reward in real life.
 
-## Homework bank
+### 5.3 Review progress (parent)
 
-| Subject | Format | How to build it |
-| --- | --- | --- |
-| Math | Timed drills of simple problems, plus harder stretch problems | Generated by code, so there's an endless supply at any difficulty |
-| Phonics | She hears a word and taps which of three words it was, or which letters make the starting sound | The browser's built-in text-to-speech (Web Speech API) says the word. Record your own audio if the voices sound bad. |
-| Spelling | A sentence with a blank, and she picks the correctly spelled word | Seeded from her school's weekly spelling lists |
-| Reading comprehension | A short passage followed by multiple-choice questions | Passages written or generated at her reading level, then reviewed by a parent |
+The parent dashboard reads the same data and changes nothing. It shows:
 
-## Supporting features
+- Each finished assignment: date, every problem with her answer and the right answer, correct count, grade and Macaronis earned.
+- Her balance, streak and purchase history.
 
-- **Parent side:** add spelling words and assignments, and see what she got right or wrong so you know where to course-correct.
-- **Content sourcing:** math can be generated by code, but spelling and reading need curated content. This is likely the biggest ongoing effort.
-- **Offline support:** a PWA can cache its content and work with no internet, for the car or a waiting room.
+A streak broken by something outside her control is restored by a parent editing D1 directly.
 
-## Decisions
+## 6. Domain rules
 
-| Topic | Decision |
-| --- | --- |
-| Device | iPad. The PWA installs from Safari (Share, then Add to Home Screen). |
-| Rewards | A list of real-world rewards, each with an icon and a price. When she buys one, the parent gets a notification. This also teaches her to budget. |
-| Reward examples | Ice cream (2–3 days of good work), pet shelter visit (a bit more), camping trip (a week or more) |
-| Purchase notifications | Push notification to the parent web app |
-| MVP subject | Math: 3–5 digit addition and subtraction (results never negative), and single-digit multiplication (the product can be multi-digit) |
-| What she sees | Number of completed assignments, currency balance, streak, and a grade: Excellent (100%), Great (90%+), Good (80%+), Improving (below 80%). There's never a negative label. |
-| Parent view | A separate dashboard that reads the same data |
-| Time limit | None. Reward prices are the only throttle, and many rewards are things she could ask for anyway. |
-| Streak | Resets on a missed day, because some assignments take 5 minutes and that's a teachable moment. If a miss was outside her control, the parent restores it in the database. |
-| Hosting and data | Cloudflare, with D1 as the database. Data volume is negligible, since she's the only user. |
+### 6.1 Problem generator
 
-### MVP: the question engine
+Problems come from code, not a question bank, so the supply never runs out.
 
-Math needs no question bank. Code generates each problem from random numbers and scores her answer against the computed result. That generate-and-score logic is the foundation every subject reuses:
+- **Addition:** pick a digit count `d` from 3, 4 or 5. Both numbers have `d` digits (between 10^(d−1) and 10^d − 1). The answer is their sum, which can have `d + 1` digits.
+- **Subtraction:** same digit rule as addition. The larger number comes first, so the answer is never negative. Equal numbers are allowed, and give 0.
+- **Multiplication:** both factors are whole numbers from 0 to 9. The answer is their product, which can have two digits.
 
-- **Math:** problems are generated, and the answer is computed.
-- **Spelling, phonics, reading:** questions come from a bank with a stored answer, but they're scored the same way.
+### 6.2 Assignment
 
-For a 7-year-old, the generator needs difficulty rules, not just random numbers. Examples: subtraction never goes below zero, division always comes out even, and number ranges grow with difficulty.
+- An assignment is 20 problems: 7 addition, 7 subtraction and 6 multiplication, in shuffled order.
+- Every assignment is generated from a seed. The same seed always gives the same 20 problems, in the same order. The app sends the seed and her answers; the Worker regenerates the problems from the seed and re-scores them.
 
-### Earning rate and pricing
+### 6.3 Scoring
 
-Each correct answer pays 1 Macaroni. Finishing an assignment adds an accuracy bonus of up to 20% of the question count. The streak bonus is +1 per streak day, capped at +10, and is paid once per day. Assignments are unlimited, and every one earns its base and accuracy bonus.
+- Each problem has one answer, computed by the generator.
+- Her answer is a whole number. It is correct when its value equals the computed answer.
+- **Accuracy** is correct answers divided by the problem count.
 
-| 20-question math assignment | Correct answers | Accuracy bonus | Total |
-| --- | --- | --- | --- |
-| 100% correct | 20 | +4 | 24 |
-| 75% correct | 15 | +3 | 18 |
-| 50% correct | 10 | +2 | 12 |
-| 100% correct, first assignment of the day, 7-day streak | 20 | +4 (+7 streak) | 31 |
+### 6.4 Macaroni payout
 
-| Reward | Price | Days of perfect work, starting a fresh streak |
-| --- | --- | --- |
-| Ice cream | 75 | 3 |
-| Pet shelter visit | 100 | 4 |
-| Camping trip | 300 | 11 |
+Finishing an assignment pays:
 
-The day counts assume one 20-question assignment a day, earning 24 + streak days.
+- **Base:** 1 Macaroni per correct answer.
+- **Accuracy bonus:** 20% of the correct answers, rounded down. A 20-problem assignment pays up to +4.
+- **Streak bonus:** on her first finished assignment of the day only, +1 per streak day, including today, up to +10 (§6.5).
+- **Minimum:** a finished assignment always pays at least 1 Macaroni in total.
 
-### Streak bonus (post-MVP)
+Payout values live in one config module (CLAUDE.md).
 
-Each streak day adds +1 Macaroni, up to +10, paid once per day on her first completed assignment. The bonus is felt right away: it grows from day 2. At the cap, it's worth about 40% of a perfect assignment. Prices stay fixed, and the streak only speeds up earning.
+### 6.5 Streak
 
-## Open questions
+- A **day** is a calendar date in the iPad's local time. A day counts toward the streak once she finishes at least one assignment that day.
+- Her streak is the number of consecutive counted days ending today.
+- If she finished an assignment yesterday, today's first finished assignment adds 1 to the streak. If her last counted day is earlier than yesterday, or there is none, the streak starts over at 1.
+- Later assignments on the same day leave the streak unchanged and pay no streak bonus.
 
-- [ ] Full reward menu with prices (post-MVP, decided by the parents)
-- [ ] Push notification setup for the parent web app (post-MVP)
+### 6.6 Grade
+
+Each assignment gets one grade, from its accuracy:
+
+| Grade | Accuracy |
+|---|---|
+| Excellent | 100% |
+| Great | 90% or more |
+| Good | 80% or more |
+| Improving | Below 80% |
+
+Home shows the grade of her latest assignment. Grade cutoffs live in the same config module as the payout values.
+
+### 6.7 Rewards
+
+| Reward | Price |
+|---|---|
+| Ice cream | 75 |
+| Pet shelter visit | 100 |
+| Camping trip | 300 |
+
+Prices are fixed. The streak bonus only speeds up earning.
+
+## 7. Worked examples → test cases
+
+Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If a rule changes, update its examples. Unless stated, an assignment has 20 problems, and "not first of the day" means another assignment was already finished today, so no streak bonus applies.
+
+### 7.P Payout (§6.4)
+
+| ID | Given | Expected |
+|---|---|---|
+| P1 | 20 correct, not first of the day | 20 + 4 accuracy → **24** |
+| P2 | 15 correct (75%), not first of the day | 15 + 3 → **18** |
+| P3 | 10 correct (50%), not first of the day | 10 + 2 → **12** |
+| P4 | 20 correct, first of the day, 7-day streak | 20 + 4 + 7 streak → **31** |
+| P5 | 17 correct, not first of the day | 20% of 17 is 3.4, rounded down → 17 + 3 → **20** |
+| P6 | 4 correct, not first of the day | 20% of 4 is 0.8, rounded down → 4 + 0 → **4** |
+| P7 | 0 correct, not first of the day | 0 earned, raised to the minimum → **1** |
+| P8 | 0 correct, first of the day, 3-day streak | 0 + 0 + 3 streak → **3** (already above the minimum) |
+
+### 7.S Streak (§6.4, §6.5)
+
+| ID | Given | Expected |
+|---|---|---|
+| S1 | No assignment ever finished; she finishes one today | Streak **1**, streak bonus **+1** |
+| S2 | Streak 6, last counted day yesterday; she finishes one today | Streak **7**, streak bonus **+7** |
+| S3 | Streak 9, last counted day yesterday; she finishes one today | Streak **10**, streak bonus **+10** |
+| S4 | Streak 14, last counted day yesterday; she finishes one today | Streak **15**, streak bonus **+10** (capped) |
+| S5 | She already finished one today (streak 7); she finishes another | Streak stays **7**, streak bonus **+0** |
+| S6 | Streak 12, last counted day 2 days ago; she finishes one today | Streak starts over at **1**, streak bonus **+1** |
+
+### 7.G Grade (§6.6)
+
+| ID | Given | Expected |
+|---|---|---|
+| G1 | 20 of 20 correct (100%) | **Excellent** |
+| G2 | 19 of 20 (95%) | **Great** |
+| G3 | 18 of 20 (90%) | **Great** (90% counts as Great) |
+| G4 | 17 of 20 (85%) | **Good** |
+| G5 | 16 of 20 (80%) | **Good** (80% counts as Good) |
+| G6 | 15 of 20 (75%) | **Improving** |
+| G7 | 0 of 20 (0%) | **Improving** |
+
+### 7.M Generator and scoring (§6.1–§6.3)
+
+| ID | Given | Expected |
+|---|---|---|
+| M1 | Any seed | 20 problems: **7 addition, 7 subtraction, 6 multiplication** |
+| M2 | Addition and subtraction problems from 1,000 seeds | Both numbers have the **same digit count, 3 to 5** (100–999, 1,000–9,999 or 10,000–99,999) |
+| M3 | Subtraction problems from 1,000 seeds | First number ≥ second; answer **never negative** |
+| M4 | Subtraction 4,512 − 4,512 | Allowed; answer **0** |
+| M5 | Addition 99,999 + 99,999 | Answer **199,998** (one more digit than the numbers) |
+| M6 | Multiplication problems from 1,000 seeds | Both factors **0 to 9** |
+| M7 | 7 × 8, answered 56; then answered 54 | 56 is **correct**; 54 is **not correct** |
+| M8 | The same seed, generated twice | **Identical** problems in identical order |
+
+### 7.R Rewards (§6.4, §6.7)
+
+One 20-problem assignment a day, all correct, starting a fresh streak: day `n` pays 24 + min(n, 10).
+
+| ID | Given | Expected |
+|---|---|---|
+| R1 | Ice cream, 75 | Balance 51 after day 2, 78 after day 3 → affordable on **day 3** |
+| R2 | Pet shelter visit, 100 | Balance 78 after day 3, 106 after day 4 → affordable on **day 4** |
+| R3 | Camping trip, 300 | Balance 295 after day 10, 329 after day 11 → affordable on **day 11** |
+
+## 8. Contracts (signatures are in code, `src/engine/`)
+
+The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock and no `Math.random`. Randomness comes from the seed, and dates are passed in. It exposes:
+
+- `generateAssignment(seed)`: the 20 problems of §6.2.
+- `checkAnswer(problem, answer)`: §6.3.
+- `nextStreak(state, today)`: the streak after finishing an assignment today, and whether it was the first of the day (§6.5).
+- `payout(result)`: base, accuracy bonus, streak bonus and total (§6.4).
+- `grade(correct, total)`: §6.6.
+
+## 9. Later
+
+Ideas outside the MVP. Each needs a spec section before it is built.
+
+- **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), spelling (pick the correct spelling, seeded from school lists), reading comprehension (parent-reviewed passages with multiple-choice questions).
+- **Spinner:** earned spins that pick the subject or a reward, never "no work".
+- **Loot box:** earned-only surprise rewards.
+- **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
+- **Difficulty levels:** stretch problems that pay more than warm-ups.
+- **Parent tools:** push notification on a purchase, adding spelling words and assignments, restoring a streak from the dashboard.
+- **Full reward menu** with prices.
