@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  },
+  "overrides": [
+    {
+      "files": ["src/engine/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              { "name": "react", "message": "The engine is pure TypeScript: no React (CLAUDE.md)." },
+              { "name": "react-dom", "message": "The engine is pure TypeScript: no React (CLAUDE.md)." }
+            ],
+            "patterns": [
+              {
+                "group": ["../*", "../**", "react-*", "cloudflare:*", "node:*"],
+                "message": "The engine may only import from src/engine (CLAUDE.md)."
+              }
+            ]
+          }
+        ],
+        "no-restricted-globals": [
+          "error",
+          { "name": "fetch", "message": "The engine does no I/O: no fetch (CLAUDE.md)." },
+          { "name": "localStorage", "message": "The engine does no I/O (CLAUDE.md)." },
+          { "name": "indexedDB", "message": "The engine does no I/O (CLAUDE.md)." },
+          { "name": "window", "message": "The engine has no DOM (CLAUDE.md)." },
+          { "name": "document", "message": "The engine has no DOM (CLAUDE.md)." },
+          { "name": "Date", "message": "The engine has no clock: pass dates in (SPEC §8)." }
+        ]
+      }
+    }
+  ]
+}
