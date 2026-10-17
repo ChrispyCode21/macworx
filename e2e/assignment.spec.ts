@@ -112,3 +112,28 @@ test('the delete key and a lone 0 work on the pad', async ({ page }) => {
   await expect(page.locator('.stacked-answer')).toHaveText('0')
   await expect(page.getByRole('button', { name: 'Check' })).toBeEnabled()
 })
+
+test('leaving with none right hides the Macaroni line instead of showing 0', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start' }).click()
+  await answer(page, (await currentAnswer(page)) + 1)
+  await page.getByRole('button', { name: 'Done for now' }).click()
+
+  await expect(page.getByRole('heading', { name: 'You did 1 problem.' })).toBeVisible()
+  await expect(page.locator('.result-macaronis')).toHaveCount(0)
+})
+
+test('leaving after answering all 20 counts as finishing', async ({ page }) => {
+  // About 100 taps, like the full assignment above.
+  test.setTimeout(90_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start' }).click()
+  for (let n = 1; n <= 20; n++) {
+    await answer(page, await currentAnswer(page))
+    if (n < 20) await page.getByRole('button', { name: 'Next' }).click()
+  }
+  await page.getByRole('button', { name: 'Done for now' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Excellent!' })).toBeVisible()
+  await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
+})

@@ -50,7 +50,7 @@ macworx gives her:
    - Either way, she taps Next when she's ready. Nothing moves on by itself.
 5. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy and streak bonuses shown), and the grade.
 6. She can start another assignment right away. Assignments are unlimited.
-7. She can leave an assignment at any time. It ends early: she sees how many problems she did and the Macaronis they earned (§6.4), then home. Leaving before answering any problem records nothing. The next assignment she starts is a new one.
+7. She can leave an assignment at any time. It ends early: she sees how many problems she did and the Macaronis they earned (§6.4), then home. When they earned none, the Macaroni line is left out rather than showing 0. Leaving before answering any problem records nothing. Leaving after answering all 20 counts as finishing, with the full result. The next assignment she starts is a new one.
 
 ### 5.2 Buy a reward (child)
 
