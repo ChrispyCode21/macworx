@@ -61,14 +61,34 @@ describe('payout (SPEC §6.4)', () => {
 describe('leaving early (SPEC §6.4)', () => {
   // Leaving early pays the base only, whatever the streak or time of day, so there's nothing else to pass.
   it('P9: left after 8 problems, 7 correct → base only, 7', () => {
-    expect(leftEarlyPayout(7)).toEqual({ base: 7, accuracyBonus: 0, streakBonus: 0, total: 7 })
+    expect(leftEarlyPayout({ correct: 7, answered: 8, problemCount: 20 })).toEqual({
+      base: 7,
+      accuracyBonus: 0,
+      streakBonus: 0,
+      total: 7,
+    })
   })
 
   it('P10: left after 3 problems, 0 correct → 0, no minimum', () => {
-    expect(leftEarlyPayout(0)).toEqual({ base: 0, accuracyBonus: 0, streakBonus: 0, total: 0 })
+    expect(leftEarlyPayout({ correct: 0, answered: 3, problemCount: 20 })).toEqual({
+      base: 0,
+      accuracyBonus: 0,
+      streakBonus: 0,
+      total: 0,
+    })
   })
 
-  it('rejects impossible counts', () => {
-    for (const correct of [-1, 2.5, Number.NaN]) expect(() => leftEarlyPayout(correct)).toThrow(RangeError)
+  it("rejects impossible counts, so a request can't claim more than she answered", () => {
+    for (const [correct, answered] of [
+      [-1, 3],
+      [2.5, 3],
+      [4, 3],
+      [500, 3],
+      [5, 20], // all 20 answered is a finished assignment, not leaving early
+    ])
+      expect(
+        () => leftEarlyPayout({ correct, answered, problemCount: 20 }),
+        `${correct}/${answered}`,
+      ).toThrow(RangeError)
   })
 })

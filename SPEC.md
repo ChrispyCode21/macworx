@@ -206,7 +206,7 @@ The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock an
 - `checkAnswer(problem, answer)`: §6.3.
 - `nextStreak(state, today)`: the streak after finishing an assignment today, and whether it was the first of the day (§6.5).
 - `payout(result)`: base, accuracy bonus, streak bonus and total for a finished assignment (§6.4).
-- `leftEarlyPayout(correct)`: the base-only payout for an assignment she leaves early (§6.4).
+- `leftEarlyPayout({ correct, answered, problemCount })`: the base-only payout for an assignment she leaves early (§6.4).
 - `grade(correct, total)`: §6.6.
 
 ## 9. Later

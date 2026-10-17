@@ -30,6 +30,9 @@ export const ASSIGNMENT = {
   multiplication: 6,
 } as const
 
+/** Problems in one assignment. */
+export const ASSIGNMENT_SIZE = ASSIGNMENT.addition + ASSIGNMENT.subtraction + ASSIGNMENT.multiplication
+
 /** Number ranges (SPEC §6.1). */
 export const GENERATOR = {
   /** Addition and subtraction: both numbers share one of these digit counts, equally likely. */

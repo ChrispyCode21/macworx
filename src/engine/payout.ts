@@ -37,9 +37,22 @@ export function payout({ correct, problemCount, firstOfDay, streak }: PayoutInpu
   return { base, accuracyBonus, streakBonus, total }
 }
 
+export interface LeftEarlyInput {
+  correct: number
+  /** Problems she answered before leaving: fewer than all of them, or it's a finished assignment. */
+  answered: number
+  problemCount: number
+}
+
 /** An assignment she leaves early pays the base only: no bonuses and no minimum (§6.4). */
-export function leftEarlyPayout(correct: number): Payout {
-  if (!Number.isInteger(correct) || correct < 0) throw new RangeError(`Invalid correct count: ${correct}`)
+export function leftEarlyPayout({ correct, answered, problemCount }: LeftEarlyInput): Payout {
+  const valid =
+    [correct, answered, problemCount].every(Number.isInteger) &&
+    correct >= 0 &&
+    correct <= answered &&
+    answered < problemCount
+  if (!valid)
+    throw new RangeError(`Invalid early result: ${correct} of ${answered} answered of ${problemCount}`)
   const base = correct * PAYOUT.perCorrect
   return { base, accuracyBonus: 0, streakBonus: 0, total: base }
 }
