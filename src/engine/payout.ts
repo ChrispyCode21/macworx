@@ -24,7 +24,9 @@ export function payout({ correct, problemCount, firstOfDay, streak }: PayoutInpu
     problemCount >= 1 &&
     correct >= 0 &&
     correct <= problemCount &&
-    streak >= 0
+    streak >= 0 &&
+    // Strictly a boolean, so a "false" string from a request body can't pay the streak bonus.
+    typeof firstOfDay === 'boolean'
   if (!valid) throw new RangeError(`Invalid result: ${correct} of ${problemCount}, streak ${streak}`)
 
   const base = correct * PAYOUT.perCorrect

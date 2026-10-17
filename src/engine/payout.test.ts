@@ -53,5 +53,7 @@ describe('payout (SPEC §6.4)', () => {
     expect(() => notFirst(2.5)).toThrow(RangeError)
     expect(() => payout({ correct: 0, problemCount: 0, firstOfDay: false, streak: 0 })).toThrow(RangeError)
     expect(() => payout({ correct: 5, problemCount: 20, firstOfDay: true, streak: -1 })).toThrow(RangeError)
+    const firstOfDay = 'false' as unknown as boolean
+    expect(() => payout({ correct: 5, problemCount: 20, firstOfDay, streak: 3 })).toThrow(RangeError)
   })
 })

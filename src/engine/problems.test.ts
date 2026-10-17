@@ -62,6 +62,49 @@ describe('generator (SPEC §6.1, §6.2)', () => {
     expect(generateAssignment(20261017)).toEqual(generateAssignment(20261017))
   })
 
+  // The Worker regenerates an assignment from its seed, possibly on a newer build than the app that
+  // made it. Any change to how problems are drawn changes these, and needs a plan for queued results.
+  it('generates exactly these problems for seed 1', () => {
+    const sym = { addition: '+', subtraction: '-', multiplication: '*' } as const
+    expect(generateAssignment(1).map((p) => `${p.a} ${sym[p.operation]} ${p.b} = ${p.answer}`)).toEqual([
+      '463 + 322 = 785',
+      '1 * 7 = 7',
+      '692 - 591 = 101',
+      '74885 - 27353 = 47532',
+      '7 * 4 = 28',
+      '540 + 160 = 700',
+      '50974 + 53990 = 104964',
+      '484 - 138 = 346',
+      '7486 + 4832 = 12318',
+      '8188 - 3653 = 4535',
+      '1024 + 5747 = 6771',
+      '97154 + 35299 = 132453',
+      '2 * 9 = 18',
+      '2 * 0 = 0',
+      '471 - 324 = 147',
+      '9950 - 7933 = 2017',
+      '5 * 1 = 5',
+      '6 * 8 = 48',
+      '781 - 237 = 544',
+      '7903 + 3572 = 11475',
+    ])
+  })
+
+  it('picks 3, 4 and 5 digits about equally often', () => {
+    const problems = [...all('addition'), ...all('subtraction')]
+    for (const d of [3, 4, 5]) {
+      const share = problems.filter((p) => digits(p.a) === d).length / problems.length
+      expect(share, `${d} digits`).toBeGreaterThan(0.3)
+      expect(share, `${d} digits`).toBeLessThan(0.37)
+    }
+  })
+
+  it('rejects seeds that are not whole numbers from 0 to 2^32 − 1', () => {
+    for (const seed of [0.5, -1, 2 ** 32, Number.NaN, Number.POSITIVE_INFINITY])
+      expect(() => generateAssignment(seed), String(seed)).toThrow(RangeError)
+    expect(() => generateAssignment('7' as unknown as number)).toThrow(RangeError)
+  })
+
   it('different seeds give different assignments', () => {
     expect(generateAssignment(1)).not.toEqual(generateAssignment(2))
   })

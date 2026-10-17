@@ -31,6 +31,8 @@ export function dayNumber(day: string): number {
 
 /** The streak after she finishes an assignment today. */
 export function nextStreak(state: StreakState, today: string): StreakResult {
+  if (!Number.isInteger(state.streak) || state.streak < 0)
+    throw new RangeError(`Invalid stored streak: ${state.streak}`)
   const todayNumber = dayNumber(today)
   if (state.lastDay === null) return { streak: 1, lastDay: today, firstOfDay: true }
 

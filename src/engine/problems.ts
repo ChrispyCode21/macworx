@@ -39,8 +39,14 @@ function generateProblem(operation: Operation, rng: Rng): Problem {
   return makeProblem(operation, withDigits(rng, digits), withDigits(rng, digits))
 }
 
-/** The assignment for a seed: the same seed always gives the same problems in the same order. */
+/**
+ * The assignment for a seed: the same seed always gives the same problems in the same order.
+ * The seed is a whole number from 0 to 2^32 − 1; anything else would be silently folded onto another
+ * seed (every fraction onto 0), so it's rejected.
+ */
 export function generateAssignment(seed: number): Problem[] {
+  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff)
+    throw new RangeError(`Seed must be a whole number from 0 to 2^32 − 1: ${seed}`)
   const rng = createRng(seed)
   const operations = (Object.keys(ASSIGNMENT) as Operation[]).flatMap((op) =>
     Array.from({ length: ASSIGNMENT[op] }, () => op),
