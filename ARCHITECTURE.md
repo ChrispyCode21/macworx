@@ -7,7 +7,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | Path | What it holds |
 |---|---|
 | `src/` | The React app (Vite). `main.tsx` mounts `App.tsx`, a placeholder screen. |
-| `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). Not created yet. |
+| `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |
 | `worker/` | The Cloudflare Worker that answers `/api/*`. |
 | `migrations/` | Numbered D1 SQL migrations. Empty: there are no tables yet. |
 | `public/` | Icons, `logo.svg` and `_headers`, copied into the build as is. |
@@ -15,6 +15,22 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `scripts/` | The check scripts CI runs, plus the engine purity test. |
 | `.github/` | CI, security and release workflows, the `main` ruleset, Dependabot, PR and issue templates. |
 | `.claude/agents/` | Local `plan-reviewer` and `code-reviewer` subagents (PIPELINE.md). |
+
+## Question engine
+
+`src/engine/` holds every rule that decides what she earns, so the app and the Worker compute the same results. `index.ts` is its public API (SPEC §8). Nothing uses it yet.
+
+| File | What it does |
+|---|---|
+| `config.ts` | The one config module: payout values, grade cutoffs, assignment shape, number ranges and reward prices. |
+| `random.ts` | A seeded generator (mulberry32). |
+| `problems.ts` | `generateAssignment(seed)`: 20 shuffled problems; the same seed always gives the same assignment, so the Worker can regenerate and re-score it. `makeProblem` computes an answer. |
+| `score.ts` | `checkAnswer`: a whole number equal to the computed answer. |
+| `streak.ts` | `nextStreak(state, today)`: dates come in as `YYYY-MM-DD` strings and are compared as day numbers, with no `Date` object or clock. |
+| `payout.ts` | `payout`: base, accuracy bonus, streak bonus and total, all whole-number math. |
+| `grade.ts` | `grade`: the grade from the cutoffs in `config.ts`. |
+
+Each file's tests sit beside it, named with their SPEC §7 IDs.
 
 ## Data flow
 
@@ -41,7 +57,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | Check | What it enforces |
 |---|---|
 | `format:check` | Prettier formatting. |
-| `lint` | oxlint. In `src/engine/` it allows only `./` imports (no React, packages or Node modules) and rejects `fetch`, `globalThis`, the DOM, `Date`, `crypto` and `performance` (`.oxlintrc.json`). |
+| `lint` | oxlint. In `src/engine/` it allows only `./` imports (no React, packages or Node modules; engine tests may also import `vitest`) and rejects `fetch`, `globalThis`, the DOM, `Date`, `crypto` and `performance` (`.oxlintrc.json`). |
 | `check:conventions` | No `.tsx` files or `Math.random` in the engine; grade labels only in `src/engine/config.ts`; never-negative wording in strings and JSX text under `src/`; no skipped, todo or focused tests (`scripts/check-conventions.mjs`). |
 | `check:spec` | Every SPEC §7 example ID has a test named `it('ID: ...')`, unless it's listed in `scripts/spec-pending.txt`. Commented-out tests don't count. A listed ID that has a test fails too, so the list only shrinks. |
 | `check:changelog` | CHANGELOG.md has a section for `package.json`'s version. |

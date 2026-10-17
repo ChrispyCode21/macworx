@@ -73,6 +73,22 @@
           }
         ]
       }
+    },
+    {
+      "files": ["src/engine/**/*.test.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["*", "!./*", "!./**", "!vitest"],
+                "message": "Engine tests import only vitest and src/engine (CLAUDE.md)."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
