@@ -10,7 +10,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/screens/` | One component per screen: Home, Assignment, Result. |
 | `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`. |
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
-| `src/assignment/` | Pure helpers for the assignment screen (number pad typing). |
+| `src/assignment/` | Pure helpers for the assignment screen: answer boxes and number pad typing. |
 | `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |
 | `worker/` | The Cloudflare Worker that answers `/api/*`. |
 | `migrations/` | Numbered D1 SQL migrations. Empty: there are no tables yet. |
@@ -42,6 +42,7 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 - **Seeds:** each assignment gets a random seed from `crypto.getRandomValues` in `App.tsx`. The engine never makes randomness itself.
 - **Text:** every string she sees lives in `src/copy.ts`, including the grade headings, keyed by the engine's `Grade` type.
 - **Shared building blocks:** `src/ui/Button` is the only button, with variants `primary`, `secondary`, `key` and `check`. `src/ui/format.ts` does all number and operator formatting. Colors and sizes are CSS custom properties at the top of `src/index.css`. `check-conventions` fails on a raw `<button>` or inline number formatting outside `src/ui/`, on words written straight into JSX instead of `src/copy.ts`, and on a hex color outside the tokens.
+- **Answer boxes:** `StackedProblem` lays the problem out one digit per column with one answer box per column. `src/assignment/answer.ts` keeps her digits in the order she tapped them, and derives the boxes from them: ones place first for addition and subtraction, left to right (lined up under the ones column) for multiplication.
 - **Layout:** the assignment puts the number pad below the problem in portrait and beside it in landscape. Nothing uses an `<input>`, so the iPad keyboard never opens. The pad ignores taps for 350 ms after it appears, so a double tap on Next can't type into the next problem. Padding respects the iPad's safe areas.
 - **VoiceOver:** an always-present hidden live region reads each response, and focus moves to Next after Check and to the pad after Next.
 

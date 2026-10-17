@@ -81,7 +81,9 @@ const inUi = (f) => f.startsWith(join('src', 'ui'))
 // Text she sees lives in src/copy.ts: no words written straight into JSX.
 const copyRules = [
   {
-    test: (l) => />\s*[A-Za-z][^<{}]*</.test(l) || /^\s*[A-Za-z][\w ,.!?']*$/.test(l),
+    // Text between tags, or Prettier-wrapped JSX text on a line of its own: two or more words, which
+    // a line of code (an identifier in a wrapped import, say) never is.
+    test: (l) => />\s*[A-Za-z][^<{}]*</.test(l) || /^\s*[A-Za-z][\w,.!?']*( [\w,.!?']+)+$/.test(l),
     message: 'Put on-screen text in src/copy.ts and use it from there.',
   },
 ]

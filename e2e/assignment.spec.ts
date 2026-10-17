@@ -26,10 +26,13 @@ async function padReady(page: Page) {
   await expect(page.locator('.pad[data-ready]')).toBeVisible()
 }
 
-/** Types a number on the pad and taps Check. */
+/** Types a number the way she would (SPEC §5.1) and taps Check: ones place first, except multiplication. */
 async function answer(page: Page, value: number) {
   await padReady(page)
-  for (const digit of String(value)) await page.getByRole('button', { name: digit, exact: true }).click()
+  const onesFirst = (await page.locator('.stacked').getAttribute('data-operation')) !== 'multiplication'
+  const digits = onesFirst ? [...String(value)].reverse() : [...String(value)]
+  for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
+  await expect(page.locator('.stacked')).toHaveAttribute('data-shown', String(value))
   await page.getByRole('button', { name: 'Check' }).click()
 }
 
@@ -91,7 +94,7 @@ test('a quick second tap on Next does not type into the next problem', async ({ 
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
   await expect(page.getByText('Problem 2 of 20')).toBeVisible()
-  await expect(page.locator('.stacked-answer')).toHaveText(' ')
+  await expect(page.locator('.stacked')).toHaveAttribute('data-shown', '')
 })
 
 test('leaving before answering anything goes straight home', async ({ page }) => {
@@ -109,7 +112,7 @@ test('the delete key and a lone 0 work on the pad', async ({ page }) => {
   await page.getByRole('button', { name: 'Delete' }).click()
   await expect(page.getByRole('button', { name: 'Check' })).toBeDisabled()
   await page.getByRole('button', { name: '0', exact: true }).click()
-  await expect(page.locator('.stacked-answer')).toHaveText('0')
+  await expect(page.locator('.stacked')).toHaveAttribute('data-shown', '0')
   await expect(page.getByRole('button', { name: 'Check' })).toBeEnabled()
 })
 

@@ -1,5 +1,13 @@
 import { useMemo, useState } from 'react'
-import { deleteDigit, typeDigit } from '../assignment/answer'
+import {
+  answerValue,
+  boxCount,
+  deleteDigit,
+  entryFor,
+  nextBox,
+  shownDigits,
+  typeDigit,
+} from '../assignment/answer'
 import { NumberPad } from '../components/NumberPad'
 import { StackedProblem } from '../components/StackedProblem'
 import { COPY } from '../copy'
@@ -24,9 +32,11 @@ export function Assignment({ seed, onFinish, onLeave }: Props) {
   const problem = problems[index]
   const last = index === problems.length - 1
   const answered = index + (response ? 1 : 0)
+  const entry = entryFor(problem.operation)
+  const boxes = boxCount(problem)
 
   const check = () => {
-    const right = checkAnswer(problem, Number(typed))
+    const right = checkAnswer(problem, answerValue(typed, entry))
     if (right) setCorrect((c) => c + 1)
     setResponse(right ? 'correct' : 'shown')
   }
@@ -54,14 +64,19 @@ export function Assignment({ seed, onFinish, onLeave }: Props) {
           {COPY.leave}
         </Button>
       </header>
-      <StackedProblem problem={problem} answer={response ? String(problem.answer) : typed} />
+      <StackedProblem
+        problem={problem}
+        boxes={boxes}
+        shown={response ? String(problem.answer) : shownDigits(typed, entry)}
+        next={response ? null : nextBox(typed, entry, boxes)}
+      />
       {/* Always mounted, so VoiceOver announces each response as its text changes. */}
       <p className="visually-hidden" aria-live="polite">
         {response && [lead, formatEquation(problem), after].filter(Boolean).join(' ')}
       </p>
       {response === null ? (
         <NumberPad
-          onDigit={(d) => setTyped((t) => typeDigit(t, d))}
+          onDigit={(d) => setTyped((t) => typeDigit(t, d, boxes))}
           onDelete={() => setTyped(deleteDigit)}
           onCheck={check}
           canCheck={typed !== ''}

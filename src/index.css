@@ -101,6 +101,7 @@ p {
 .assignment {
   display: grid;
   grid-template-areas: 'bar' 'problem' 'answer';
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   justify-items: center;
 }
@@ -117,16 +118,22 @@ p {
   grid-area: problem;
   align-self: center;
   display: grid;
-  grid-template-columns: auto auto;
-  column-gap: var(--gap);
-  font-size: 3.4rem;
+  /* The operator, then one column per place value (StackedProblem sets --columns). */
+  grid-template-columns: auto repeat(var(--columns), var(--digit));
+  column-gap: 6px;
+  font-size: 2.8rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
+  --digit: 1.1em;
 }
 
-.stacked-num {
-  text-align: right;
+.stacked-digit {
+  text-align: center;
+}
+
+.stacked-op {
+  padding-right: 10px;
 }
 
 .stacked-rule {
@@ -135,8 +142,19 @@ p {
   margin: 8px 0;
 }
 
-.stacked-answer {
+.answer-box {
+  height: 1.3em;
+  margin-top: 6px;
+  border: 3px solid var(--soft);
+  border-radius: 10px;
   color: var(--answer-ink);
+  text-align: center;
+}
+
+/* Where her next digit goes. */
+.answer-box-next {
+  border-color: var(--accent);
+  background: var(--soft);
 }
 
 .pad,
