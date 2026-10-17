@@ -43,8 +43,12 @@ macworx gives her:
 
 1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment.
 2. She starts an assignment: 20 math problems (§6.2).
-3. Each problem is stacked like on paper: the numbers right-aligned, the operator beside the second number, a line, and her answer below it.
-4. She enters a whole-number answer on an on-screen number pad (digits 0–9, a delete key and Check) and submits it with Check. The iPad keyboard never opens. She answers each problem once.
+3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
+4. She enters her answer on an on-screen number pad (digits 0–9, a delete key and Check) and submits it with Check. The iPad keyboard never opens. She answers each problem once.
+   - Addition and subtraction fill from the ones place leftward, the way she works the columns: for 100 + 200 she types 0, 0, 3.
+   - Multiplication fills left to right, the way she writes a number: for 7 × 8 she types 5, 6. The answer stays lined up under the ones column, so a one-digit product sits in the ones box.
+   - The box where her next digit goes is highlighted. Delete removes the digit she typed last. A box past the last one takes nothing.
+   - Her answer is the number the boxes show; a leading 0 doesn't change it.
    - Correct: the app says so and shows the problem with its answer.
    - Not correct: the app shows the right answer in a friendly way (for example "7 × 8 = 56").
    - Either way, she taps Next when she's ready. Nothing moves on by itself.
