@@ -70,7 +70,7 @@ A streak broken by something outside her control is restored by a parent editing
 
 Problems come from code, not a question bank, so the supply never runs out.
 
-- **Addition:** pick a digit count `d` from 3, 4 or 5. Both numbers have `d` digits (between 10^(d−1) and 10^d − 1). The answer is their sum, which can have `d + 1` digits.
+- **Addition:** pick a digit count `d` from 3, 4 or 5, each equally likely. Both numbers have `d` digits (between 10^(d−1) and 10^d − 1). The answer is their sum, which can have `d + 1` digits.
 - **Subtraction:** same digit rule as addition. The larger number comes first, so the answer is never negative. Equal numbers are allowed, and give 0.
 - **Multiplication:** both factors are whole numbers from 0 to 9. The answer is their product, which can have two digits.
 
@@ -102,6 +102,7 @@ Payout values live in one config module (CLAUDE.md).
 - Her streak is the number of consecutive counted days ending today.
 - If she finished an assignment yesterday, today's first finished assignment adds 1 to the streak. If her last counted day is earlier than yesterday, or there is none, the streak starts over at 1.
 - Later assignments on the same day leave the streak unchanged and pay no streak bonus.
+- If today is earlier than her last counted day (the iPad's clock was set back, or she crossed time zones), it counts as the same day: the streak and last counted day stay as they are, and no streak bonus is paid.
 
 ### 6.6 Grade
 
@@ -153,6 +154,7 @@ Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If
 | S4 | Streak 14, last counted day yesterday; she finishes one today | Streak **15**, streak bonus **+10** (capped) |
 | S5 | She already finished one today (streak 7); she finishes another | Streak stays **7**, streak bonus **+0** |
 | S6 | Streak 12, last counted day 2 days ago; she finishes one today | Streak starts over at **1**, streak bonus **+1** |
+| S7 | Streak 5, last counted day tomorrow (the clock was set back); she finishes one today | Same as the same day: streak stays **5**, last counted day stays tomorrow, streak bonus **+0** |
 
 ### 7.G Grade (§6.6)
 
