@@ -1,0 +1,55 @@
+# Tags and publishes a release when a merge to main carries a new version in package.json, once CI
+# has passed on that commit (so a red main never releases, ruleset or not).
+# Release by PR: bump the version and add its CHANGELOG.md section (CI checks the section exists).
+# Releasing a version also closes its milestone, if there is one; the owner
+# creates milestones by hand when a version is scoped.
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag new version
+    # Only CI runs for pushes to main (merges), and only green ones. PR runs never release.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write # closing the version's milestone
+    steps:
+      # main itself, never the run's head_sha, so only code already on main runs here.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create the tag and GitHub Release if this version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$RELEASE_SHA" ]; then
+            echo "main has moved past the commit CI passed on; the newer commit's CI run releases it."
+            exit 0
+          fi
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag is already released; nothing to do."
+            exit 0
+          fi
+          node scripts/changelog-section.mjs "$version" > release-notes.md
+          gh release create "$tag" --target "$RELEASE_SHA" --title "$tag" --notes-file release-notes.md
+          milestone=$(gh api --paginate "repos/$GITHUB_REPOSITORY/milestones?state=open" --jq ".[] | select(.title == \"$tag\") | .number")
+          for number in $milestone; do
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/milestones/$number" -f state=closed >/dev/null
+          done

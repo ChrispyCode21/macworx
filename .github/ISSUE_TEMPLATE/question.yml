@@ -1,0 +1,20 @@
+# A behavior SPEC.md doesn't settle (CLAUDE.md, "Source of truth"). The owner's answer goes into
+# SPEC.md in the PR that builds it; the issue closes with that PR.
+name: Question
+description: Something SPEC.md leaves open, for the owner to decide.
+labels: [question]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What's undecided, and the SPEC.md section it belongs to.
+    validations:
+      required: true
+  - type: textarea
+    id: default
+    attributes:
+      label: Recommended default
+      description: What to build if the owner agrees, and why.
+    validations:
+      required: true

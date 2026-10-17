@@ -1,0 +1,78 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/engine/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["*", "!./*", "!./**"],
+                "message": "The engine is pure TypeScript and imports only from src/engine: no React, packages or Node modules (CLAUDE.md)."
+              }
+            ]
+          }
+        ],
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "fetch",
+            "message": "The engine does no I/O: no fetch (CLAUDE.md)."
+          },
+          {
+            "name": "localStorage",
+            "message": "The engine does no I/O (CLAUDE.md)."
+          },
+          {
+            "name": "indexedDB",
+            "message": "The engine does no I/O (CLAUDE.md)."
+          },
+          {
+            "name": "window",
+            "message": "The engine has no DOM (CLAUDE.md)."
+          },
+          {
+            "name": "document",
+            "message": "The engine has no DOM (CLAUDE.md)."
+          },
+          {
+            "name": "Date",
+            "message": "The engine has no clock: pass dates in (SPEC §8)."
+          },
+          {
+            "name": "globalThis",
+            "message": "The engine does no I/O or DOM access (CLAUDE.md)."
+          },
+          {
+            "name": "self",
+            "message": "The engine does no I/O or DOM access (CLAUDE.md)."
+          },
+          {
+            "name": "navigator",
+            "message": "The engine has no DOM (CLAUDE.md)."
+          },
+          {
+            "name": "crypto",
+            "message": "The engine takes randomness from the seed (SPEC §8)."
+          },
+          {
+            "name": "performance",
+            "message": "The engine has no clock (SPEC §8)."
+          }
+        ]
+      }
+    }
+  ]
+}
