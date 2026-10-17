@@ -46,9 +46,11 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 
 ## Hosting
 
-- `wrangler.jsonc` configures the Worker, its static assets and the D1 binding.
-- The D1 `database_id` is a placeholder until the database is created in Cloudflare. `npm run worker:dev` builds the app and runs the Worker locally against a local D1.
-- Nothing is deployed yet.
+- `wrangler.jsonc` configures the Worker, its static assets and the D1 bindings.
+- **Workers Builds** (Cloudflare's GitHub integration) builds every push with `npm run build`. It deploys `main` to production with `npx wrangler deploy` and other branches to preview URLs with `npx wrangler preview`. The build settings live in the Cloudflare dashboard, not in the repo.
+- **Two D1 databases, both bound as `DB`:** `macworx` holds production data. `macworx-preview` is used only by preview URLs (the `previews` block), so a PR branch never touches her real data. Both are empty until the first migration.
+- Database IDs identify a database but grant no access, so they're committed. Cloudflare sign-ins and API tokens are never committed, and the build doesn't need any.
+- `npm run worker:dev` builds the app and runs the Worker locally against a local D1.
 
 ## Quality gates and releases
 
