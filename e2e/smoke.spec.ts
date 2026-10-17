@@ -16,3 +16,17 @@ test('links a web app manifest for installing to the home screen', async ({ page
   const manifest = await (await request.get(href!)).json()
   expect(manifest).toMatchObject({ name: 'macworx', display: 'standalone' })
 })
+
+test.describe('offline', () => {
+  test.use({ serviceWorkers: 'allow' })
+
+  test('opens with no connection once the service worker has installed', async ({ page, context }) => {
+    await page.goto('/')
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready
+    })
+    await context.setOffline(true)
+    await page.reload()
+    await expect(page.getByRole('heading', { name: 'macworx' })).toBeVisible()
+  })
+})

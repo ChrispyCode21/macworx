@@ -50,7 +50,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
         // /api/* is the Worker's, never the app shell.
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api(\/|$)/],
       },
     }),
   ],

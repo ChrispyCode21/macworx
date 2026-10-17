@@ -15,9 +15,11 @@ describe('worker routing', () => {
 
   it('returns 404 for unknown API paths', async () => {
     expect((await call('/api/nope')).status).toBe(404)
+    expect((await call('/api')).status).toBe(404)
   })
 
-  it('serves everything else from the static assets', async () => {
+  // In production run_worker_first sends only /api paths here; this guards local `wrangler dev`.
+  it('passes anything else to the static assets', async () => {
     expect(await (await call('/')).text()).toBe('app')
   })
 })

@@ -8,7 +8,8 @@ export default {
   async fetch(request, env): Promise<Response> {
     const { pathname } = new URL(request.url)
     if (pathname === '/api/health') return Response.json({ ok: true })
-    if (pathname.startsWith('/api/')) return Response.json({ error: 'Not found' }, { status: 404 })
+    if (pathname === '/api' || pathname.startsWith('/api/'))
+      return Response.json({ error: 'Not found' }, { status: 404 })
     return env.ASSETS.fetch(request)
   },
 } satisfies ExportedHandler<Env>

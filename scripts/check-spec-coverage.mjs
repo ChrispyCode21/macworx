@@ -27,9 +27,12 @@ function testFiles(dir) {
     return /\.test\.tsx?$/.test(e.name) ? [path] : []
   })
 }
+// Comments are dropped, so a commented-out test doesn't count. Skipped tests fail check-conventions.
 const tests = testFiles('src')
   .map((f) => readFileSync(f, 'utf8'))
   .join('\n')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/^\s*\/\/.*$/gm, '')
 const tested = (id) => new RegExp(`\\bit\\(\\s*['"\`]${id}:`).test(tests)
 
 const problems = []

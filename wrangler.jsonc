@@ -9,8 +9,8 @@
     "binding": "ASSETS",
     // Any unknown path serves the app (index.html).
     "not_found_handling": "single-page-application",
-    // /api/* reaches the Worker first; everything else is a static file.
-    "run_worker_first": ["/api/*"],
+    // /api and /api/* reach the Worker first; everything else is a static file.
+    "run_worker_first": ["/api", "/api/*"],
   },
   "d1_databases": [
     {
