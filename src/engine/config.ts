@@ -1,0 +1,46 @@
+// The one config module (CLAUDE.md): payout values, grade cutoffs, assignment shape, generator
+// ranges and reward prices. Change a number here, and its SPEC.md section and §7 examples with it.
+
+/** Macaroni payout (SPEC §6.4). */
+export const PAYOUT = {
+  perCorrect: 1,
+  /** Accuracy bonus: this percent of the correct answers, rounded down. */
+  accuracyBonusPercent: 20,
+  /** Streak bonus per streak day, on the first finished assignment of the day only. */
+  streakPerDay: 1,
+  streakCap: 10,
+  /** A finished assignment always pays at least this much in total. */
+  minimum: 1,
+} as const
+
+/** Grade cutoffs, best first (SPEC §6.6). An assignment gets the first grade whose minimum it meets. */
+export const GRADES = [
+  { label: 'Excellent', minPercent: 100 },
+  { label: 'Great', minPercent: 90 },
+  { label: 'Good', minPercent: 80 },
+  { label: 'Improving', minPercent: 0 },
+] as const
+
+export type Grade = (typeof GRADES)[number]['label']
+
+/** Problems per assignment, by operation (SPEC §6.2). */
+export const ASSIGNMENT = {
+  addition: 7,
+  subtraction: 7,
+  multiplication: 6,
+} as const
+
+/** Number ranges (SPEC §6.1). */
+export const GENERATOR = {
+  /** Addition and subtraction: both numbers share one of these digit counts, equally likely. */
+  digitCounts: [3, 4, 5],
+  /** Multiplication: both factors run from 0 to this. */
+  factorMax: 9,
+} as const
+
+/** Reward prices in Macaronis (SPEC §6.7). */
+export const REWARDS = [
+  { name: 'Ice cream', price: 75 },
+  { name: 'Pet shelter visit', price: 100 },
+  { name: 'Camping trip', price: 300 },
+] as const
