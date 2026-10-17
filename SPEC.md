@@ -43,7 +43,7 @@ macworx gives her:
 
 1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment.
 2. She starts an assignment: 20 math problems (§6.2).
-3. For each problem she enters a whole-number answer and submits it. She answers each problem once.
+3. For each problem she enters a whole-number answer on an on-screen number pad (digits 0–9, a delete key and Check) and submits it with Check. The iPad keyboard never opens. She answers each problem once.
    - Correct: the app says so and moves to the next problem.
    - Not correct: the app shows the right answer in a friendly way (for example "7 × 8 = 56") and moves on.
 4. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy and streak bonuses shown), and the grade.
