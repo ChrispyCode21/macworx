@@ -24,9 +24,9 @@ export async function handle(request: Request, env: Env, now: Date): Promise<Res
 
   const route = CHILD_ROUTES[`${request.method} ${pathname}`]
   if (!route) return error(404, 'not_found')
-  const device = await deviceFor(request, env.DB)
-  if (device === null) return error(401, 'unauthorized')
   try {
+    const device = await deviceFor(request, env.DB)
+    if (device === null) return error(401, 'unauthorized')
     return await route({ request, url, db: env.DB, device, now })
   } catch (e) {
     // Every error body is { error: code }, even an unexpected one (worker/http.ts).

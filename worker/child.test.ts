@@ -269,3 +269,12 @@ describe('review fixes', () => {
     expect(again.body.state).toMatchObject({ balance: 25, completed: 1 })
   })
 })
+
+describe('unexpected errors', () => {
+  it('answer { error: server } with 500, even when the key lookup itself fails', async () => {
+    await t.db.prepare('DROP TABLE results').run()
+    await t.db.prepare('DROP TABLE seeds').run()
+    await t.db.prepare('DROP TABLE devices').run()
+    expect(await t.call('GET', '/api/state')).toEqual({ status: 500, body: { error: 'server' } })
+  })
+})
