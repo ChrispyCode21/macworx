@@ -2,9 +2,13 @@
 
 All notable changes to macworx. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
-To release: in a PR, move the "Unreleased" notes under a new version heading and bump `version` in `package.json` to match. Merging tags the release automatically (see ARCHITECTURE.md, "Quality gates and releases").
+To release: in a PR, move the "Unreleased" notes under a new version heading and bump `version` in `package.json` to match (`npm version X.Y.Z --no-git-tag-version`). Merging tags the release and closes its milestone automatically (see ARCHITECTURE.md, "Quality gates and releases").
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-10-17
+
+Practice on the iPad: 20 math problems at a time, worked on paper-style columns, live on Cloudflare.
 
 ### Added
 
