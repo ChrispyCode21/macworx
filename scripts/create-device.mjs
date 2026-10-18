@@ -22,14 +22,15 @@ const key = randomBytes(32).toString('base64url')
 const hash = createHash('sha256').update(key).digest('hex')
 const sql = `INSERT INTO devices (key_hash, label, created_at) VALUES ('${hash}', '${label.replaceAll("'", "''")}', datetime('now'))`
 
-// Through a file: on Windows, npx runs via the shell, which would split the SQL into separate arguments.
+// Through a file, and wrangler run with Node directly (no shell), so neither the SQL nor a temp path
+// with spaces in it gets split into separate arguments.
+const wrangler = join('node_modules', 'wrangler', 'bin', 'wrangler.js')
 const dir = mkdtempSync(join(tmpdir(), 'macworx-device-'))
 const file = join(dir, 'device.sql')
 writeFileSync(file, `${sql};\n`)
 try {
-  execFileSync('npx', ['wrangler', 'd1', 'execute', 'macworx', where, '--file', file], {
+  execFileSync(process.execPath, [wrangler, 'd1', 'execute', 'macworx', where, '--file', file], {
     stdio: 'inherit',
-    shell: process.platform === 'win32',
   })
 } finally {
   rmSync(dir, { recursive: true, force: true })

@@ -106,8 +106,14 @@ describe('saving results (SPEC §6.8)', () => {
 
   it('W5: a result dated before her last counted day counts as that day: streak unchanged, still paid', async () => {
     await t.db.prepare("UPDATE child SET streak = 4, last_day = '2026-10-17'").run()
-    const { body } = await finish('2026-10-15', { now: '2026-10-17' })
-    // The seed was handed out on 10-17, so 10-15 is first moved to 10-16; either way it's before 10-17.
+    // Handed out on 10-14, so 10-15 is in range and stays 10-15: two days before her last counted day,
+    // which without the §6.8 rule would restart the streak (S8) and move her last day backwards.
+    const s = await seed('2026-10-14')
+    const { body } = await t.call('POST', '/api/results', {
+      body: { seed: s, day: '2026-10-15', answers: answers(s) },
+      now: at('2026-10-17'),
+    })
+    expect(body.result.day).toBe('2026-10-15')
     expect(body.result.payout).toEqual({ base: 20, accuracyBonus: 4, streakBonus: 0, total: 24 })
     expect(body.state).toMatchObject({ streak: 4, lastDay: '2026-10-17', balance: 24 })
   })

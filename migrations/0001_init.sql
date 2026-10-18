@@ -37,7 +37,9 @@ CREATE TABLE results (
   created_at TEXT NOT NULL
 ) STRICT;
 
--- Her totals. A parent restores a broken streak by editing streak and last_day here.
+-- Her totals. A parent restores a broken streak by editing streak and last_day here, and changes
+-- revision in the same statement (revision = lower(hex(randomblob(16)))) so a result being recorded at
+-- that moment retries from the edited row instead of overwriting it.
 -- revision changes on every write, so two writes can't both apply from the same starting point.
 CREATE TABLE child (
   id INTEGER PRIMARY KEY CHECK (id = 1),

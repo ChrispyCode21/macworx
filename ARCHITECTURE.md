@@ -61,9 +61,11 @@ D1, one database per environment (see "Hosting"). `migrations/0001_init.sql` cre
 | `devices` | Paired iPads: the SHA-256 of each device key (never the key), a label, and when it was revoked. |
 | `seeds` | Seeds handed out, the device and day they went to, and whether a result used them. |
 | `results` | Each recorded assignment as the Worker re-scored it: her answers (JSON), counts, grade and payout. |
-| `child` | One row: balance, streak, last counted day, completed assignments. A parent restores a broken streak by editing `streak` and `last_day` here. |
+| `child` | One row: balance, streak, last counted day, completed assignments. A parent restores a broken streak by editing `streak` and `last_day` here, and changes `revision` in the same statement (see below). |
 
 - **One write at a time:** recording a result is one D1 batch. Its first statement updates `child` only if `revision` still has the value read before the write, and sets a new random revision. The result insert and the seed update apply only if the new revision is in place. So a lost race changes nothing; the Worker re-reads and retries (3 tries, then 503), and a repeat of the same seed returns the recorded result.
+- **Editing by hand:** `UPDATE child SET streak = 5, last_day = '2026-10-17', revision = lower(hex(randomblob(16))) WHERE id = 1`. Changing `revision` makes a result being recorded at that moment retry from the edited row rather than overwrite it.
+- **Seeds and the app:** `POST /api/seeds` returns every seed the Worker still counts as unused, including ones the iPad has used offline but not synced yet. The app must leave out seeds that are in its result queue (#19).
 - **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
 - **Pairing by hand:** until the pairing screen exists (#17, #18), `node scripts/create-device.mjs --local|--remote "label"` creates a device and prints its key once.
 - **Tests** (`worker/*.test.ts`) run the Worker in Node against a real local D1 from Miniflare, with every migration applied. (`@cloudflare/vitest-pool-workers` doesn't support this repo's Vitest version.)
