@@ -246,3 +246,20 @@ describe('every child route needs a device key', () => {
     expect((await t.call(method, path)).status).toBe(401)
   })
 })
+
+describe('review fixes', () => {
+  it('answers a pending list of exactly 100 seeds', async () => {
+    const hundred = Array.from({ length: 100 }, (_, i) => i).join(',')
+    expect((await t.call('GET', `/api/state?pending=${hundred}`)).status).toBe(200)
+  })
+
+  it('never records or pays a seed twice, even if the result row already exists', async () => {
+    const s = await seed()
+    const request = { body: { seed: s, day: '2026-10-17', answers: answers(s) } }
+    await t.call('POST', '/api/results', request)
+    await t.db.prepare("UPDATE child SET revision = 'reset'").run()
+    const again = await t.call('POST', '/api/results', request)
+    expect(again.status).toBe(200)
+    expect(again.body.state).toMatchObject({ balance: 25, completed: 1 })
+  })
+})

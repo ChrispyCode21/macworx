@@ -26,7 +26,13 @@ export async function handle(request: Request, env: Env, now: Date): Promise<Res
   if (!route) return error(404, 'not_found')
   const device = await deviceFor(request, env.DB)
   if (device === null) return error(401, 'unauthorized')
-  return route({ request, url, db: env.DB, device, now })
+  try {
+    return await route({ request, url, db: env.DB, device, now })
+  } catch (e) {
+    // Every error body is { error: code }, even an unexpected one (worker/http.ts).
+    console.error(e)
+    return error(500, 'server')
+  }
 }
 
 export default {

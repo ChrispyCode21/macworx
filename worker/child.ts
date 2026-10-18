@@ -76,9 +76,10 @@ async function readState(db: D1Database, device: number, pending: number[] = [])
     ? (
         await db
           .prepare(
-            `SELECT seed FROM results WHERE device_id = ? AND seed IN (${pending.map(() => '?').join(', ')})`,
+            // One JSON parameter, not one per seed: D1 allows at most 100 bound parameters.
+            'SELECT seed FROM results WHERE device_id = ? AND seed IN (SELECT value FROM json_each(?))',
           )
-          .bind(device, ...pending)
+          .bind(device, JSON.stringify(pending))
           .all<{ seed: number }>()
       ).results.map((r) => r.seed)
     : []
@@ -214,14 +215,15 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
       db
         .prepare(
           `UPDATE child SET balance = balance + ?, completed = completed + ?, streak = ?, last_day = ?,
-           revision = ? WHERE id = 1 AND revision = ?`,
+           revision = ? WHERE id = 1 AND revision = ? AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)`,
         )
-        .bind(earned.total, finished ? 1 : 0, streak, lastDay, revision, child.revision),
+        .bind(earned.total, finished ? 1 : 0, streak, lastDay, revision, child.revision, body.seed),
       db
         .prepare(
           `INSERT INTO results (seed, device_id, day, answers, answered, correct, finished, grade, base,
            accuracy_bonus, streak_bonus, total, created_at)
-           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT revision FROM child WHERE id = 1) = ?`,
+           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT revision FROM child WHERE id = 1) = ?
+           AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)`,
         )
         .bind(
           body.seed,
@@ -238,6 +240,7 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
           earned.total,
           now.toISOString(),
           revision,
+          body.seed,
         ),
       db
         .prepare('UPDATE seeds SET used = 1 WHERE seed = ? AND (SELECT revision FROM child WHERE id = 1) = ?')
