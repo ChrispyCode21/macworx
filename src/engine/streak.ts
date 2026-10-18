@@ -37,8 +37,9 @@ export function nextStreak(state: StreakState, today: string): StreakResult {
   if (state.lastDay === null) return { streak: 1, lastDay: today, firstOfDay: true }
 
   const last = dayNumber(state.lastDay)
-  // Same day, or a day earlier than the last counted one (clock set back): nothing changes.
-  if (todayNumber <= last) return { ...state, firstOfDay: false }
+  // Same day, or 1 day earlier than the last counted one (clock set back, time zones): nothing changes.
+  if (todayNumber <= last && last - todayNumber <= 1) return { ...state, firstOfDay: false }
+  // Yesterday continues the streak; a gap, or a last day far ahead (the clock had jumped), starts over.
   const streak = todayNumber === last + 1 ? state.streak + 1 : 1
   return { streak, lastDay: today, firstOfDay: true }
 }

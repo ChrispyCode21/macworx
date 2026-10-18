@@ -111,7 +111,8 @@ Payout values live in one config module (CLAUDE.md).
 - Her streak is the number of consecutive counted days ending today.
 - If she finished an assignment yesterday, today's first finished assignment adds 1 to the streak. If her last counted day is earlier than yesterday, or there is none, the streak starts over at 1.
 - Later assignments on the same day leave the streak unchanged and pay no streak bonus.
-- If today is earlier than her last counted day (the iPad's clock was set back, or she crossed time zones), it counts as the same day: the streak and last counted day stay as they are, and no streak bonus is paid.
+- If today is 1 day earlier than her last counted day (the iPad's clock was set back, or she crossed time zones), it counts as the same day: the streak and last counted day stay as they are, and no streak bonus is paid.
+- If her last counted day is more than 1 day after today (the clock had jumped far ahead), the streak starts over at 1 and today becomes the last counted day, so one wrong clock reading can't stall the streak.
 
 ### 6.6 Grade
 
@@ -166,6 +167,7 @@ Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If
 | S5 | She already finished one today (streak 7); she finishes another | Streak stays **7**, streak bonus **+0** |
 | S6 | Streak 12, last counted day 2 days ago; she finishes one today | Streak starts over at **1**, streak bonus **+1** |
 | S7 | Streak 5, last counted day tomorrow (the clock was set back); she finishes one today | Same as the same day: streak stays **5**, last counted day stays tomorrow, streak bonus **+0** |
+| S8 | Streak 5, last counted day 3 days after today (the clock had jumped ahead); she finishes one today | Streak starts over at **1**, today becomes the last counted day, streak bonus **+1** |
 
 ### 7.G Grade (§6.6)
 

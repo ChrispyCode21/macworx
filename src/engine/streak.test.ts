@@ -63,6 +63,22 @@ describe('streak (SPEC §6.5)', () => {
     })
   })
 
+  it('S8: last counted day 3 days after today (clock had jumped ahead) → starts over at 1, bonus +1', () => {
+    expect(finish({ streak: 5, lastDay: '2026-10-20' })).toEqual(counted(1, 1))
+  })
+
+  it('treats exactly 1 day ahead as the same day, and 2 days ahead as starting over', () => {
+    expect(nextStreak({ streak: 5, lastDay: '2026-10-18' }, TODAY)).toMatchObject({
+      streak: 5,
+      firstOfDay: false,
+    })
+    expect(nextStreak({ streak: 5, lastDay: '2026-10-19' }, TODAY)).toEqual({
+      streak: 1,
+      lastDay: TODAY,
+      firstOfDay: true,
+    })
+  })
+
   it('continues across month, year and leap-day boundaries', () => {
     for (const [last, today] of [
       ['2026-10-31', '2026-11-01'],
