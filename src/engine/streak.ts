@@ -43,3 +43,26 @@ export function nextStreak(state: StreakState, today: string): StreakResult {
   const streak = todayNumber === last + 1 ? state.streak + 1 : 1
   return { streak, lastDay: today, firstOfDay: true }
 }
+
+/** The YYYY-MM-DD date for a day number (Hinnant's civil_from_days), the inverse of dayNumber. */
+function dayFromNumber(n: number): string {
+  const z = n + 719468
+  const era = Math.floor(z / 146097)
+  const dayOfEra = z - era * 146097
+  const yearOfEra = Math.floor(
+    (dayOfEra - Math.floor(dayOfEra / 1460) + Math.floor(dayOfEra / 36524) - Math.floor(dayOfEra / 146096)) /
+      365,
+  )
+  const dayOfYear = dayOfEra - (365 * yearOfEra + Math.floor(yearOfEra / 4) - Math.floor(yearOfEra / 100))
+  const mp = Math.floor((5 * dayOfYear + 2) / 153)
+  const d = dayOfYear - Math.floor((153 * mp + 2) / 5) + 1
+  const m = mp < 10 ? mp + 3 : mp - 9
+  const y = yearOfEra + era * 400 + (m <= 2 ? 1 : 0)
+  return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+}
+
+/** The calendar day `n` days after `day` (before it, for a negative `n`). */
+export function addDays(day: string, n: number): string {
+  if (!Number.isInteger(n)) throw new RangeError(`Not a whole number of days: ${n}`)
+  return dayFromNumber(dayNumber(day) + n)
+}

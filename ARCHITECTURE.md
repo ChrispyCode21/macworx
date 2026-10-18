@@ -12,11 +12,11 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
 | `src/assignment/` | Pure helpers for the assignment screen: answer boxes and number pad typing. |
 | `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |
-| `worker/` | The Cloudflare Worker that answers `/api/*`. |
-| `migrations/` | Numbered D1 SQL migrations. Empty: there are no tables yet. |
+| `worker/` | The Cloudflare Worker that answers `/api/*`: routing (`index.ts`), device keys (`auth.ts`), the child API (`child.ts`). `worker/test/` holds a local D1 for its tests. |
+| `migrations/` | Numbered D1 SQL migrations, applied in order. See "Data". |
 | `public/` | Icons, `logo.svg` and `_headers`, copied into the build as is. |
 | `e2e/` | Playwright tests of the production build. |
-| `scripts/` | The check scripts CI runs, plus the engine purity test. |
+| `scripts/` | The check scripts CI runs, the engine purity test, and `create-device.mjs`. |
 | `.github/` | CI, security and release workflows, the `main` ruleset, Dependabot, PR and issue templates. |
 | `.claude/agents/` | Local `plan-reviewer` and `code-reviewer` subagents (PIPELINE.md). |
 
@@ -49,8 +49,24 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 ## Data flow
 
 - The browser loads the built app (`dist/`) as static assets from Cloudflare Workers. Any unknown path serves `index.html`.
-- `/api` and `/api/*` reach the Worker first (`run_worker_first` in `wrangler.jsonc`). Today it answers only `GET /api/health` with `{ "ok": true }`, and returns 404 for any other `/api` path.
-- The Worker has a D1 binding, `DB`, with no tables and no queries yet.
+- `/api` and `/api/*` reach the Worker first (`run_worker_first` in `wrangler.jsonc`). `GET /api/health` answers `{ "ok": true }` without a key. Every other route needs a device key (`Authorization: Bearer <key>`) and returns 401 without a valid one; an unknown route returns 404.
+- **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. The app doesn't call it yet (#19).
+
+## Data
+
+D1, one database per environment (see "Hosting"). `migrations/0001_init.sql` creates STRICT tables:
+
+| Table | Holds |
+|---|---|
+| `devices` | Paired iPads: the SHA-256 of each device key (never the key), a label, and when it was revoked. |
+| `seeds` | Seeds handed out, the device and day they went to, and whether a result used them. |
+| `results` | Each recorded assignment as the Worker re-scored it: her answers (JSON), counts, grade and payout. |
+| `child` | One row: balance, streak, last counted day, completed assignments. A parent restores a broken streak by editing `streak` and `last_day` here. |
+
+- **One write at a time:** recording a result is one D1 batch. Its first statement updates `child` only if `revision` still has the value read before the write, and sets a new random revision. The result insert and the seed update apply only if the new revision is in place. So a lost race changes nothing; the Worker re-reads and retries (3 tries, then 503), and a repeat of the same seed returns the recorded result.
+- **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
+- **Pairing by hand:** until the pairing screen exists (#17, #18), `node scripts/create-device.mjs --local|--remote "label"` creates a device and prints its key once.
+- **Tests** (`worker/*.test.ts`) run the Worker in Node against a real local D1 from Miniflare, with every migration applied. (`@cloudflare/vitest-pool-workers` doesn't support this repo's Vitest version.)
 
 ## Offline and install
 
@@ -61,8 +77,11 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 ## Hosting
 
 - `wrangler.jsonc` configures the Worker, its static assets and the D1 bindings.
-- **Workers Builds** (Cloudflare's GitHub integration) builds every push with `npm run build`. It deploys `main` to production with `npx wrangler deploy` and other branches to preview URLs with `npx wrangler preview`. The build settings live in the Cloudflare dashboard, not in the repo.
-- **Two D1 databases, both bound as `DB`:** `macworx` holds production data. `macworx-preview` is used only by preview URLs (the `previews` block), so a PR branch never touches her real data. Both are empty until the first migration.
+- **Workers Builds** (Cloudflare's GitHub integration) builds every push with `npm run build`, applies migrations, then deploys. The build settings live in the Cloudflare dashboard, not in the repo:
+  - Deploy command (`main`): `npx wrangler d1 migrations apply macworx --remote && npx wrangler deploy`
+  - Non-production branch deploy command: `npx wrangler d1 migrations apply macworx-preview --remote -c wrangler.preview-migrations.jsonc && npx wrangler preview`
+- **Two D1 databases, both bound as `DB`:** `macworx` holds production data. `macworx-preview` is used only by preview URLs (the `previews` block), so a PR branch never touches her real data. A branch's migrations run on the shared preview database before it merges.
+- `wrangler.preview-migrations.jsonc` exists only so wrangler can find the preview database for migrations; it can't see one that's only in the `previews` block. `worker/config.test.ts` checks the two configs name the same preview database, and that production and previews differ.
 - Database IDs identify a database but grant no access, so they're committed. Cloudflare sign-ins and API tokens are never committed, and the build doesn't need any.
 - `npm run worker:dev` builds the app and runs the Worker locally against a local D1.
 

@@ -1,5 +1,5 @@
 // Fails if any worked example in SPEC.md §7 has no unit test named with its ID (CLAUDE.md, "Tests").
-// A test counts when its name starts with the ID and a colon, e.g. it('P4: ...').
+// A test counts when its name starts with the ID and a colon, e.g. it('P4: ...'), in src/ or worker/.
 // IDs listed in scripts/spec-pending.txt may go untested until their slice lands; listing one that
 // already has a test, or that isn't in §7, also fails, so the list only ever shrinks.
 import { readdirSync, readFileSync } from 'node:fs'
@@ -28,7 +28,7 @@ function testFiles(dir) {
   })
 }
 // Comments are dropped, so a commented-out test doesn't count. Skipped tests fail check-conventions.
-const tests = testFiles('src')
+const tests = [...testFiles('src'), ...testFiles('worker')]
   .map((f) => readFileSync(f, 'utf8'))
   .join('\n')
   .replace(/\/\*[\s\S]*?\*\//g, '')

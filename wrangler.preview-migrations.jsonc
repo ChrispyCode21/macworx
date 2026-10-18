@@ -1,0 +1,16 @@
+// Used only to apply migrations to the preview database: the Workers Builds preview command runs
+// `npx wrangler d1 migrations apply macworx-preview --remote -c wrangler.preview-migrations.jsonc`.
+// wrangler can't find a database that's only in wrangler.jsonc's "previews" block. Keep this
+// database_id equal to that block's.
+{
+  "name": "macworx",
+  "compatibility_date": "2026-10-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "macworx-preview",
+      "database_id": "0c51256e-8800-42b6-a547-0bc6338aaa99",
+      "migrations_dir": "migrations",
+    },
+  ],
+}
