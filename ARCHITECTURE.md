@@ -90,3 +90,5 @@ gh api -X POST repos/ChrispyCode21/macworx/rulesets --input .github/rulesets/mai
 ```
 
 Releases: when CI passes on a push to `main` that carries a new `package.json` version, `release.yml` tags that commit and creates a GitHub Release from that version's CHANGELOG.md section.
+
+Milestones are named after versions (`v0.2.0`), and each issue goes in the milestone of the release it's planned for. Releasing a version closes its milestone. Before 1.0, a feature set bumps the middle number and fixes between feature sets bump the last (`v0.1.1`).
