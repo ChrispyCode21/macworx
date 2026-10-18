@@ -1,18 +1,226 @@
 :root {
+  --ink: #3b2a05;
+  --paper: #fff6dc;
+  --accent: #f2a516;
+  --accent-ink: #3b2a05;
+  --soft: #fde9b8;
+  --answer-ink: #8a5a00;
+  --space: 24px;
+  --gap: 16px;
+  --radius: 20px;
+  --tap: 56px;
+  --tap-large: 88px;
+  --key: 96px;
   font-family:
     system-ui,
     -apple-system,
     sans-serif;
-  color: #3b2a05;
-  background: #fff6dc;
+  font-size: 24px;
+  color: var(--ink);
+  background: var(--paper);
+  /* Taps shouldn't zoom or highlight on the iPad. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
 }
 
-.app {
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+h1 {
+  font-size: 2.4rem;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+.screen {
+  box-sizing: border-box;
   min-height: 100dvh;
+  /* Clear the iPad's rounded corners and home indicator (index.html sets viewport-fit=cover). */
+  padding: max(var(--space), env(safe-area-inset-top)) max(var(--space), env(safe-area-inset-right))
+    max(var(--space), env(safe-area-inset-bottom)) max(var(--space), env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space);
+  text-align: center;
+}
+
+/* src/ui/Button.tsx variants */
+.button {
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.button-primary {
+  min-width: 280px;
+  min-height: var(--tap-large);
+  padding: 0 var(--space);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 1.6rem;
+}
+
+.button-secondary {
+  min-height: var(--tap);
+  padding: 0 var(--gap);
+  border: 2px solid var(--accent);
+  background: transparent;
+  font-weight: 400;
+}
+
+.button-key,
+.button-check {
+  height: var(--key);
+  font-size: 2rem;
+  background: var(--soft);
+}
+
+.button-check {
+  background: var(--accent);
+  font-size: 1.2rem;
+}
+
+/* Assignment: problem above the pad in portrait, beside it in landscape. */
+.assignment {
   display: grid;
-  place-items: center;
+  grid-template-areas: 'bar' 'problem' 'answer';
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+}
+
+.assignment-bar {
+  grid-area: bar;
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stacked {
+  grid-area: problem;
+  align-self: center;
+  display: grid;
+  /* The operator, then one column per place value (StackedProblem sets --columns). */
+  grid-template-columns: auto repeat(var(--columns), var(--digit));
+  column-gap: 6px;
+  font-size: 2.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  --digit: 1.1em;
+}
+
+.stacked-digit {
+  text-align: center;
+}
+
+.stacked-op {
+  padding-right: 10px;
+}
+
+.stacked-rule {
+  grid-column: 1 / -1;
+  border-top: 6px solid var(--ink);
+  margin: 8px 0;
+}
+
+.answer-box {
+  height: 1.3em;
+  margin-top: 6px;
+  border: 3px solid var(--soft);
+  border-radius: 10px;
+  color: var(--answer-ink);
+  text-align: center;
+}
+
+/* Where her next digit goes. */
+.answer-box-next {
+  border-color: var(--accent);
+  background: var(--soft);
+}
+
+.pad,
+.response {
+  grid-area: answer;
+}
+
+.pad {
+  display: grid;
+  grid-template-columns: repeat(3, var(--key));
+  gap: var(--gap);
+}
+
+.response {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap);
+  /* As tall as the pad, so the screen doesn't jump between pad and response. */
+  min-height: calc(4 * var(--key) + 3 * var(--gap));
+  justify-content: center;
+}
+
+.response-lead {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.response-equation {
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (orientation: landscape) {
+  .assignment {
+    grid-template-areas: 'bar bar' 'problem answer';
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: center;
+  }
+}
+
+.result-count,
+.result-macaronis {
+  font-size: 1.6rem;
+}
+
+.note {
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+
+.result-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap);
+}
+
+/* Read by VoiceOver, not shown. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

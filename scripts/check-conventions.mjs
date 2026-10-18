@@ -4,6 +4,8 @@
 // - grade labels appear only in the config module (src/engine/config.ts).
 // - never-negative wording: no failure words in the app's strings or JSX text (src/).
 // - no skipped, todo or focused tests, so a test named with a SPEC §7 ID always runs.
+// - shared UI: <Button> from src/ui/ instead of a raw <button>, and number formatting only in
+//   src/ui/format.ts; on-screen text only in src/copy.ts; colors only as tokens in src/index.css.
 //
 // A line can opt out with a comment containing `conventions-ignore` and a reason, e.g.
 //   {/* conventions-ignore: "Great Wall" is a place name, not a grade */}
@@ -64,6 +66,38 @@ const testRules = [
   },
 ]
 
+// Shared building blocks (ARCHITECTURE.md, "UI"): one Button, one place for display formatting.
+const reuseRules = [
+  {
+    test: (l) => /<button[\s>]/.test(l),
+    message: 'Use <Button> from src/ui/Button, not a raw <button>.',
+  },
+  {
+    test: (l) => /\.(toLocaleString|toFixed)\(|\bIntl\./.test(l),
+    message: 'Format numbers with src/ui/format.ts, not inline.',
+  },
+]
+const inUi = (f) => f.startsWith(join('src', 'ui'))
+// Text she sees lives in src/copy.ts: no words written straight into JSX.
+const copyRules = [
+  {
+    // Text between tags, or Prettier-wrapped JSX text on a line of its own: two or more words, which
+    // a line of code (an identifier in a wrapped import, say) never is.
+    test: (l) => />\s*[A-Za-z][^<{}]*</.test(l) || /^\s*[A-Za-z][\w,.!?']*( [\w,.!?']+)+$/.test(l),
+    message: 'Put on-screen text in src/copy.ts and use it from there.',
+  },
+]
+// Colors are tokens: a hex value only where a custom property is defined (--name: #...).
+const cssRules = [
+  {
+    test: (l) => /#[0-9a-fA-F]{3,8}\b/.test(l) && !/^\s*--[\w-]+\s*:/.test(l),
+    message: 'Use a color token from the top of src/index.css, not a raw hex value.',
+  },
+]
+
+for (const f of source.filter((f) => !inUi(f))) check(f, reuseRules)
+for (const f of source.filter((f) => f.endsWith('.tsx'))) check(f, copyRules)
+for (const f of files('src', /\.css$/)) check(f, cssRules)
 for (const f of source.filter((f) => inEngine(f) && f.endsWith('.tsx')))
   problems.push(`${shown(f)}  The engine is pure TypeScript: no .tsx files or JSX (CLAUDE.md).`)
 for (const f of source.filter(inEngine)) check(f, engineRules)

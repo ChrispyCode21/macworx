@@ -1,4 +1,4 @@
-// Macaroni payout for a finished assignment (SPEC §6.4).
+// Macaroni payout for a finished assignment, or one she leaves early (SPEC §6.4).
 import { PAYOUT } from './config'
 
 export interface PayoutInput {
@@ -35,4 +35,24 @@ export function payout({ correct, problemCount, firstOfDay, streak }: PayoutInpu
   const streakBonus = firstOfDay ? Math.min(streak * PAYOUT.streakPerDay, PAYOUT.streakCap) : 0
   const total = Math.max(PAYOUT.minimum, base + accuracyBonus + streakBonus)
   return { base, accuracyBonus, streakBonus, total }
+}
+
+export interface LeftEarlyInput {
+  correct: number
+  /** Problems she answered before leaving: fewer than all of them, or it's a finished assignment. */
+  answered: number
+  problemCount: number
+}
+
+/** An assignment she leaves early pays the base only: no bonuses and no minimum (§6.4). */
+export function leftEarlyPayout({ correct, answered, problemCount }: LeftEarlyInput): Payout {
+  const valid =
+    [correct, answered, problemCount].every(Number.isInteger) &&
+    correct >= 0 &&
+    correct <= answered &&
+    answered < problemCount
+  if (!valid)
+    throw new RangeError(`Invalid early result: ${correct} of ${answered} answered of ${problemCount}`)
+  const base = correct * PAYOUT.perCorrect
+  return { base, accuracyBonus: 0, streakBonus: 0, total: base }
 }

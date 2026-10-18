@@ -43,11 +43,18 @@ macworx gives her:
 
 1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment.
 2. She starts an assignment: 20 math problems (§6.2).
-3. For each problem she enters a whole-number answer and submits it. She answers each problem once.
-   - Correct: the app says so and moves to the next problem.
-   - Not correct: the app shows the right answer in a friendly way (for example "7 × 8 = 56") and moves on.
-4. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy and streak bonuses shown), and the grade.
-5. She can start another assignment right away. Assignments are unlimited.
+3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
+4. She enters her answer on an on-screen number pad (digits 0–9, a delete key and Check) and submits it with Check. The iPad keyboard never opens. She answers each problem once.
+   - Addition and subtraction fill from the ones place leftward, the way she works the columns: for 100 + 200 she types 0, 0, 3.
+   - Multiplication fills left to right, the way she writes a number: for 7 × 8 she types 5, 6. The answer stays lined up under the ones column, so a one-digit product sits in the ones box.
+   - The box where her next digit goes is highlighted. Delete removes the digit she typed last. A box past the last one takes nothing.
+   - Her answer is the number the boxes show; a leading 0 doesn't change it.
+   - Correct: the app says so and shows the problem with its answer.
+   - Not correct: the app shows the right answer in a friendly way (for example "7 × 8 = 56").
+   - Either way, she taps Next when she's ready. Nothing moves on by itself.
+5. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy and streak bonuses shown), and the grade.
+6. She can start another assignment right away. Assignments are unlimited.
+7. She can leave an assignment at any time. It ends early: she sees how many problems she did and the Macaronis they earned (§6.4), then home. When they earned none, the Macaroni line is left out rather than showing 0. Leaving before answering any problem records nothing. Leaving after answering all 20 counts as finishing, with the full result. The next assignment she starts is a new one.
 
 ### 5.2 Buy a reward (child)
 
@@ -94,6 +101,8 @@ Finishing an assignment pays:
 - **Streak bonus:** on her first finished assignment of the day only, +1 per streak day, including today, up to +10 (§6.5).
 - **Minimum:** a finished assignment always pays at least 1 Macaroni in total.
 
+An assignment she leaves early (§5.1) pays the base only: 1 Macaroni per correct answer so far. It gets no accuracy bonus, streak bonus, minimum or grade, and doesn't count toward the streak.
+
 Payout values live in one config module (CLAUDE.md).
 
 ### 6.5 Streak
@@ -106,7 +115,7 @@ Payout values live in one config module (CLAUDE.md).
 
 ### 6.6 Grade
 
-Each assignment gets one grade, from its accuracy:
+Each finished assignment gets one grade, from its accuracy:
 
 | Grade | Accuracy |
 |---|---|
@@ -143,6 +152,8 @@ Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If
 | P6 | 4 correct, not first of the day | 20% of 4 is 0.8, rounded down → 4 + 0 → **4** |
 | P7 | 0 correct, not first of the day | 0 earned, raised to the minimum → **1** |
 | P8 | 0 correct, first of the day, 3-day streak | 0 + 0 + 3 streak → **3** (already above the minimum) |
+| P9 | Left early after 8 problems, 7 correct, first of the day, 3-day streak | Base only → **7** (no bonus, streak bonus or grade) |
+| P10 | Left early after 3 problems, 0 correct | Base only → **0** (no minimum) |
 
 ### 7.S Streak (§6.4, §6.5)
 
@@ -198,7 +209,8 @@ The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock an
 - `generateAssignment(seed)`: the 20 problems of §6.2.
 - `checkAnswer(problem, answer)`: §6.3.
 - `nextStreak(state, today)`: the streak after finishing an assignment today, and whether it was the first of the day (§6.5).
-- `payout(result)`: base, accuracy bonus, streak bonus and total (§6.4).
+- `payout(result)`: base, accuracy bonus, streak bonus and total for a finished assignment (§6.4).
+- `leftEarlyPayout({ correct, answered, problemCount })`: the base-only payout for an assignment she leaves early (§6.4).
 - `grade(correct, total)`: §6.6.
 
 ## 9. Later
@@ -208,6 +220,7 @@ Ideas outside the MVP. Each needs a spec section before it is built.
 - **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), spelling (pick the correct spelling, seeded from school lists), reading comprehension (parent-reviewed passages with multiple-choice questions).
 - **Spinner:** earned spins that pick the subject or a reward, never "no work".
 - **Loot box:** earned-only surprise rewards.
+- **Carrying and borrowing:** work space on the stacked problem to mark a carried 1 or regroup from the next place.
 - **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
 - **Difficulty levels:** stretch problems that pay more than warm-ups.
 - **Parent tools:** push notification on a purchase, adding spelling words and assignments, restoring a streak from the dashboard.
