@@ -10,7 +10,11 @@ interface Props {
   shown: string
   /** The box her next digit goes in, highlighted; null when there's none. */
   next: number | null
+  /** After Check: whether her answer was right, which tints her boxes (SPEC §5.1). */
+  outcome?: 'right' | 'notRight' | null
 }
+
+const OUTCOME_CLASS = { right: ' answer-box-right', notRight: ' answer-box-not-right' } as const
 
 /** Right-aligns digits into `columns` cells, one digit each; empty cells are ''. */
 function inColumns(digits: string, columns: number): string[] {
@@ -22,7 +26,7 @@ function inColumns(digits: string, columns: number): string[] {
  * A problem stacked like on paper (SPEC §5.1): one digit per column, lined up by place value, with one
  * answer box per column. No thousands separators here, so the columns stay lined up.
  */
-export function StackedProblem({ problem, boxes, shown, next }: Props) {
+export function StackedProblem({ problem, boxes, shown, next, outcome = null }: Props) {
   const op = operatorSymbol(problem.operation)
   const row = (digits: string, key: string) =>
     inColumns(digits, boxes).map((digit, i) => (
@@ -39,6 +43,7 @@ export function StackedProblem({ problem, boxes, shown, next }: Props) {
       data-b={problem.b}
       data-operation={problem.operation}
       data-shown={shown}
+      data-outcome={outcome ?? undefined}
       role="img"
       aria-label={`${formatNumber(problem.a)} ${op} ${formatNumber(problem.b)} = ${shown}`}
     >
@@ -49,7 +54,10 @@ export function StackedProblem({ problem, boxes, shown, next }: Props) {
       <span className="stacked-rule" />
       <span />
       {inColumns(shown, boxes).map((digit, i) => (
-        <span key={`box${i}`} className={i === next ? 'answer-box answer-box-next' : 'answer-box'}>
+        <span
+          key={`box${i}`}
+          className={`answer-box${i === next ? ' answer-box-next' : ''}${outcome ? OUTCOME_CLASS[outcome] : ''}`}
+        >
           {digit}
         </span>
       ))}

@@ -6,6 +6,12 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-19
+
+### Fixed
+
+- **Her answer stays put after Check:** the boxes used to switch to the right answer, so her own boxes seemed to show the answer she'd gotten wrong. Now they keep exactly what she typed, tinted soft green when it's right and soft coral when it isn't, and the right answer appears only in the line above Next.
+
 ## [0.1.0] - 2026-10-17
 
 Practice on the iPad: 20 math problems at a time, worked on paper-style columns, live on Cloudflare.

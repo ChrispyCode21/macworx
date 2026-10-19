@@ -67,8 +67,10 @@ export function Assignment({ seed, onFinish, onLeave }: Props) {
       <StackedProblem
         problem={problem}
         boxes={boxes}
-        shown={response ? String(problem.answer) : shownDigits(typed, entry)}
+        // Her answer stays exactly as she typed it; the right answer is only in the line above Next.
+        shown={shownDigits(typed, entry)}
         next={response ? null : nextBox(typed, entry, boxes)}
+        outcome={response === null ? null : response === 'correct' ? 'right' : 'notRight'}
       />
       {/* Always mounted, so VoiceOver announces each response as its text changes. */}
       <p className="visually-hidden" aria-live="polite">
