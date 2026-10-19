@@ -54,7 +54,7 @@ describe('pairing (SPEC §6.9)', () => {
 
   it('A2: the same code sent again → refused, no second device', async () => {
     const { code } = await makeCode()
-    await pair(code)
+    expect((await pair(code)).status).toBe(201)
     const before = await deviceCount()
     const again = await pair(code)
     expect(again).toEqual({ status: 400, body: { error: 'bad_code' } })
@@ -70,8 +70,22 @@ describe('pairing (SPEC §6.9)', () => {
     const { code } = await makeCode()
     for (let i = 0; i < 5; i++) expect((await pair(wrong(code))).status).toBe(400)
     expect((await pair(code)).status).toBe(400)
-    const before = await deviceCount()
-    expect(before).toBe(2) // the two test devices only
+    expect(await deviceCount()).toBe(2) // the two test devices only
+  })
+
+  it('four wrong tries, then the right one on the fifth → paired', async () => {
+    const { code } = await makeCode()
+    for (let i = 0; i < 4; i++) await pair(wrong(code))
+    expect((await pair(code)).status).toBe(201)
+  })
+
+  it('a burst that includes the right code compares at most five tries', async () => {
+    const { code } = await makeCode()
+    const tries = [...Array.from({ length: 11 }, () => wrong(code)), code]
+    const results = await Promise.all(tries.map((c) => pair(c)))
+    const row = await t.db.prepare('SELECT attempts FROM pairing_codes').first<{ attempts: number }>()
+    expect(row!.attempts).toBe(5)
+    expect(results.filter((r) => r.status === 201).length).toBeLessThanOrEqual(1)
   })
 
   it('A4: a burst of wrong guesses at once still counts every one; the code is void after five', async () => {
@@ -105,7 +119,9 @@ describe('pairing (SPEC §6.9)', () => {
   })
 
   it('refuses everything the same way, so a guess learns nothing', async () => {
-    for (const code of ['123456', '12345', 'abcdef', 123456, undefined]) {
+    const live = await makeCode()
+    expect(await pair(wrong(live.code))).toEqual({ status: 400, body: { error: 'bad_code' } })
+    for (const code of ['12345', 'abcdef', 123456, undefined]) {
       expect(await pair(code), String(code)).toEqual({ status: 400, body: { error: 'bad_code' } })
     }
   })
@@ -132,5 +148,7 @@ describe('pairing (SPEC §6.9)', () => {
     const codes = new Set<string>()
     for (let i = 0; i < 20; i++) codes.add((await makeCode(`iPad ${i}`)).code)
     expect(codes.size).toBeGreaterThan(15)
+    // Leading zeros are kept: every code is six digits.
+    for (const c of codes) expect(c).toMatch(/^\d{6}$/)
   })
 })

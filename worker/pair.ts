@@ -53,23 +53,30 @@ export async function postPair({ request, db, now }: { request: Request; db: D1D
   if (!/^\d{6}$/.test(code)) return error(400, 'bad_code')
 
   const at = now.toISOString()
-  const usable = 'used_at IS NULL AND voided_at IS NULL AND attempts < ? AND expires_at > ?'
-  const current = await db
-    .prepare(`SELECT id, code_hash FROM pairing_codes WHERE ${usable} ORDER BY id DESC LIMIT 1`)
+  // Every try is counted before the code is compared, in one statement: the newest usable code gets
+  // attempts + 1 and comes back. So a burst of tries at once gets 5 comparisons between them, no more.
+  const tried = await db
+    .prepare(
+      `UPDATE pairing_codes SET attempts = attempts + 1
+       WHERE id = (SELECT id FROM pairing_codes
+                   WHERE used_at IS NULL AND voided_at IS NULL AND attempts < ? AND expires_at > ?
+                   ORDER BY id DESC LIMIT 1)
+       RETURNING id, code_hash, attempts`,
+    )
     .bind(MAX_TRIES, at)
-    .first<{ id: number; code_hash: string }>()
-  if (!current) return error(400, 'bad_code')
+    .first<{ id: number; code_hash: string; attempts: number }>()
+  if (!tried) return error(400, 'bad_code')
 
   const hash = await sha256Hex(code)
-  if (hash !== current.code_hash) {
-    // Counted in SQL, so a burst of guesses at once can't get more than 5 between them; the fifth voids it.
-    await db
-      .prepare(
-        `UPDATE pairing_codes SET attempts = attempts + 1,
-         voided_at = CASE WHEN attempts + 1 >= ? THEN ? ELSE voided_at END WHERE id = ? AND ${usable}`,
-      )
-      .bind(MAX_TRIES, at, current.id, MAX_TRIES, at)
-      .run()
+  if (hash !== tried.code_hash) {
+    // The fifth wrong try voids the code.
+    if (tried.attempts >= MAX_TRIES)
+      await db
+        .prepare(
+          'UPDATE pairing_codes SET voided_at = ? WHERE id = ? AND used_at IS NULL AND voided_at IS NULL',
+        )
+        .bind(at, tried.id)
+        .run()
     return error(400, 'bad_code')
   }
 
@@ -79,14 +86,17 @@ export async function postPair({ request, db, now }: { request: Request; db: D1D
   const claim = crypto.randomUUID()
   const [claimed] = await db.batch([
     db
-      .prepare(`UPDATE pairing_codes SET used_at = ?, claim = ? WHERE id = ? AND code_hash = ? AND ${usable}`)
-      .bind(at, claim, current.id, hash, MAX_TRIES, at),
+      .prepare(
+        `UPDATE pairing_codes SET used_at = ?, claim = ?
+         WHERE id = ? AND code_hash = ? AND used_at IS NULL AND voided_at IS NULL AND attempts <= ? AND expires_at > ?`,
+      )
+      .bind(at, claim, tried.id, hash, MAX_TRIES, at),
     db
       .prepare(
         `INSERT INTO devices (key_hash, label, created_at)
          SELECT ?, name, ? FROM pairing_codes WHERE id = ? AND claim = ?`,
       )
-      .bind(await sha256Hex(key), at, current.id, claim),
+      .bind(await sha256Hex(key), at, tried.id, claim),
   ])
   if (claimed.meta.changes !== 1) return error(400, 'bad_code')
   return json(201, { key })
