@@ -158,6 +158,7 @@ Prices are fixed. The streak bonus only speeds up earning.
 
 - **Parent access:** every `/api/parent/*` request must carry a valid Cloudflare Access token for this app: signed by the team's keys, issued by the team, for this application, not expired, with the parent's email. Anything else is refused (401), including when the Worker isn't configured for Access, so PR previews never serve parent routes.
 - **Pairing:** the parent names the iPad (up to 40 characters) and gets a 6-digit code, valid for 10 minutes and for one use. Making a new code voids any earlier unused one. Five wrong tries void the code. On the iPad, entering the right code pairs it: the Worker returns its device key once and stores only the key's SHA-256.
+- **Pairing rate limit:** at most 10 pairing tries a minute from one network address. Beyond that the Worker answers 429 without looking at the code, so nobody can keep voiding a parent's codes by sending wrong guesses. (Cloudflare's limit is approximate and per location; it guards against a nuisance, and the code's own 5 tries are the real protection.)
 - **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The dashboard warns before unpairing: "Results not yet synced from this iPad will be lost."
 
 ## 7. Worked examples → test cases
@@ -241,6 +242,7 @@ Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out th
 | A4 | Five wrong codes, then the right one | All refused: the fifth wrong try voids the code |
 | A5 | A parent unpairs an iPad | Its key is refused (401) on every child route |
 | A6 | A parent route without a valid Access token, or with the Worker's Access settings missing | Refused (401) |
+| A7 | Ten pairing tries from one address within a minute, then an eleventh with the right code | The eleventh is refused (429) and the code is untouched: no try counted, still usable from another address |
 
 ### 7.R Rewards (§6.4, §6.7)
 
