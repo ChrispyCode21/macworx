@@ -51,18 +51,19 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 - The browser loads the built app (`dist/`) as static assets from Cloudflare Workers. Any unknown path serves `index.html`.
 - `/api` and `/api/*` reach the Worker first (`run_worker_first` in `wrangler.jsonc`). `GET /api/health` answers `{ "ok": true }` without a key. Every other route needs a device key (`Authorization: Bearer <key>`) and returns 401 without a valid one; an unknown route returns 404.
 - **Parent routes** (`/api/parent/*`, `worker/parent.ts`): the Worker checks the Cloudflare Access token itself before anything else, so an unknown parent path is 401 too. Today: `GET /api/parent/devices` and `DELETE /api/parent/devices/:id` (unpair).
-- **The Access check** (`worker/access.ts`): `ctx.access` isn't passed to Workers that serve static assets, so the Worker verifies the `Cf-Access-Jwt-Assertion` token: RS256 only, signed by a key from `https://<team>/cdn-cgi/access/certs` (cached an hour; an unknown key id refetches at most once a minute), issuer `https://<team>`, audience `ACCESS_AUD`, not expired, with an email. It needs `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` (Worker vars, not secrets) and refuses everything without them; the `previews` block sets neither, so previews never serve parent routes.
+- **The Access check** (`worker/access.ts`): `ctx.access` isn't passed to Workers that serve static assets, so the Worker verifies the `Cf-Access-Jwt-Assertion` token: RS256 only, signed by a key from `https://<team>/cdn-cgi/access/certs` (cached an hour; an unknown key id refetches at most once a minute), issuer `https://<team>`, audience `ACCESS_AUD`, not expired, with an email. It needs `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` and refuses everything without them. They go in `wrangler.jsonc`'s top-level `vars` (not secrets, and not the dashboard: each `wrangler deploy` replaces dashboard vars). Vars don't carry into the `previews` block, so previews never serve parent routes; keep it that way, since a parent token is checked by audience, not hostname.
 - **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. The app doesn't call it yet (#19).
 
 ## Data
 
-D1, one database per environment (see "Hosting"). `migrations/0001_init.sql` creates STRICT tables:
+D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql` and `0002_admin_log.sql`:
 
 | Table | Holds |
 |---|---|
 | `devices` | Paired iPads: the SHA-256 of each device key (never the key), a label, and when it was revoked. |
 | `seeds` | Seeds handed out, the device and day they went to, and whether a result used them. |
 | `results` | Each recorded assignment as the Worker re-scored it: her answers (JSON), counts, grade and payout. |
+| `admin_log` | Every change a parent makes in admin mode (SPEC §5.3): when, which parent (Access email), the action and a JSON detail. Written in the same batch as the change. |
 | `child` | One row: balance, streak, last counted day, completed assignments. A parent restores a broken streak by editing `streak` and `last_day` here, and changes `revision` in the same statement (see below). |
 
 - **One write at a time:** recording a result is one D1 batch. Its first statement updates `child` only if `revision` still has the value read before the write, and sets a new random revision. The result insert and the seed update apply only if the new revision is in place. So a lost race changes nothing; the Worker re-reads and retries (3 tries, then 503), and a repeat of the same seed returns the recorded result.

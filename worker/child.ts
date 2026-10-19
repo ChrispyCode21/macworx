@@ -215,9 +215,10 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
       db
         .prepare(
           `UPDATE child SET balance = balance + ?, completed = completed + ?, streak = ?, last_day = ?,
-           revision = ? WHERE id = 1 AND revision = ? AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)`,
+           revision = ? WHERE id = 1 AND revision = ? AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)
+           AND EXISTS (SELECT 1 FROM devices WHERE id = ? AND revoked_at IS NULL)`,
         )
-        .bind(earned.total, finished ? 1 : 0, streak, lastDay, revision, child.revision, body.seed),
+        .bind(earned.total, finished ? 1 : 0, streak, lastDay, revision, child.revision, body.seed, device),
       db
         .prepare(
           `INSERT INTO results (seed, device_id, day, answers, answered, correct, finished, grade, base,
@@ -253,6 +254,12 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
     // Someone else wrote first; if it was this same result, return it instead of recording it twice.
     const raced = await findResult(db, body.seed)
     if (raced) return json(200, { result: toResult(raced), state: await readState(db, device) })
+    // Or the iPad was unpaired while this upload was on its way: refused like any later request (§6.9).
+    const active = await db
+      .prepare('SELECT 1 AS ok FROM devices WHERE id = ? AND revoked_at IS NULL')
+      .bind(device)
+      .first()
+    if (!active) return error(401, 'unauthorized')
   }
   return error(503, 'busy')
 }

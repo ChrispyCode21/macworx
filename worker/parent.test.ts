@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clearAccessKeys, parentEmail } from './access'
-import { accessToken, AUD, KID, TEAM, testCerts } from './test/access-keys'
-import { createTestDb, DEVICE_KEY } from './test/db'
+import { accessToken, AUD, certsWithUnusableKey, KID, ROTATED_KID, TEAM, testCerts } from './test/access-keys'
+import { createTestDb, DEVICE_KEY, OTHER_KEY } from './test/db'
 
 const NOW = new Date('2026-10-17T12:00:00Z')
 
@@ -46,6 +46,9 @@ describe('Access token check (SPEC §6.9)', () => {
     expect(await check()).toBeNull()
     expect(await check('not-a-token')).toBeNull()
     expect(await check('a.b.c')).toBeNull()
+    const [head, body] = (await accessToken()).split('.')
+    expect(await check(`${head}.${body}.abcde`)).toBeNull()
+    expect(await check(`${head}.${body}.ab!c`)).toBeNull()
   })
 
   it('fails closed when the Worker has no Access settings (PR previews)', async () => {
@@ -68,7 +71,42 @@ describe('Access token check (SPEC §6.9)', () => {
     await run(unknown, new Date(NOW.getTime() + 61_000))
     expect(certs.calls).toHaveLength(2)
     expect(certs.calls[0]).toBe(`https://${TEAM}/cdn-cgi/access/certs`)
-    expect(KID).toBe('test-key-1')
+  })
+
+  it('verifies with a rotated key once the refetch brings it in', async () => {
+    const certs = testCerts((call) => (call === 1 ? [KID] : [KID, ROTATED_KID]))
+    const run = (token: string, now: Date) => parentEmail(request(token), env, now, certs.fetchCerts)
+    expect(await run(await accessToken(), NOW)).toBe('parent@example.com')
+    const later = new Date(NOW.getTime() + 61_000)
+    const rotated = await accessToken({ header: { kid: ROTATED_KID }, now: later })
+    expect(await run(rotated, later)).toBe('parent@example.com')
+  })
+
+  it('refetches the keys after an hour', async () => {
+    const certs = testCerts()
+    const run = (now: Date) =>
+      accessToken({ now }).then((t) => parentEmail(request(t), env, now, certs.fetchCerts))
+    await run(NOW)
+    await run(new Date(NOW.getTime() + 59 * 60_000))
+    expect(certs.calls).toHaveLength(1)
+    await run(new Date(NOW.getTime() + 61 * 60_000))
+    expect(certs.calls).toHaveLength(2)
+  })
+
+  it('a failed key fetch refuses, and waits a minute before trying again', async () => {
+    const certs = testCerts((call) => (call === 1 ? new Error('Cloudflare is down') : [KID]))
+    const run = (now: Date) =>
+      accessToken({ now }).then((t) => parentEmail(request(t), env, now, certs.fetchCerts))
+    expect(await run(NOW)).toBeNull()
+    expect(await run(new Date(NOW.getTime() + 30_000))).toBeNull()
+    expect(certs.calls).toHaveLength(1)
+    expect(await run(new Date(NOW.getTime() + 61_000))).toBe('parent@example.com')
+  })
+
+  it('skips a key it cannot use instead of refusing everything', async () => {
+    const keys = await certsWithUnusableKey()
+    const fetchCerts = async () => ({ keys: keys as never })
+    expect(await parentEmail(request(await accessToken()), env, NOW, fetchCerts)).toBe('parent@example.com')
   })
 })
 
@@ -99,6 +137,12 @@ describe('parent API', () => {
     await preview.dispose()
   })
 
+  it('a wrong method on a parent path is 404 after the Access check', async () => {
+    const token = await accessToken()
+    expect((await t.call('GET', '/api/parent/devices/1', { key: null, accessToken: token })).status).toBe(404)
+    expect((await t.call('POST', '/api/parent/devices', { key: null, accessToken: token })).status).toBe(404)
+  })
+
   it('lists the paired iPads', async () => {
     const { status, body } = await t.call('GET', '/api/parent/devices', {
       key: null,
@@ -122,6 +166,14 @@ describe('parent API', () => {
       expect((await t.call(method, path, { key: DEVICE_KEY })).status, path).toBe(401)
     const list = await t.call('GET', '/api/parent/devices', { key: null, accessToken: token })
     expect(list.body.devices[0].revokedAt).toBe('2026-10-17T12:00:00.000Z')
+
+    // Only that iPad: the other one is still paired.
+    expect(list.body.devices[1].revokedAt).toBeNull()
+    expect((await t.call('GET', '/api/state', { key: OTHER_KEY })).status).toBe(200)
+
+    // And the change is logged with the parent who made it (SPEC §5.3).
+    const log = await t.db.prepare('SELECT email, action, detail FROM admin_log').all()
+    expect(log.results).toEqual([{ email: 'parent@example.com', action: 'unpair', detail: '{"deviceId":1}' }])
   })
 
   it('unpairing twice keeps the first time, and an unknown iPad is 404', async () => {

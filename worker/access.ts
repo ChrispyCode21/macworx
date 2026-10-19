@@ -34,35 +34,57 @@ async function keyFor(team: string, kid: string, now: number, fetchCerts: CertsF
   const cached = cache.get(team)
   const fresh = cached && now - cached.fetchedAt < KEYS_TTL_MS
   if (fresh && cached.keys.has(kid)) return cached.keys.get(kid)!
-  if (fresh && now - cached.fetchedAt < REFETCH_GAP_MS) return null
+  if (cached && now - cached.fetchedAt < REFETCH_GAP_MS) return null
 
-  const { keys } = await fetchCerts(`https://${team}/cdn-cgi/access/certs`)
+  // Stamp the attempt first: a failed fetch, like a forged key id, can't trigger another for a minute.
+  const keys = new Map(cached?.keys ?? [])
+  cache.set(team, { keys, fetchedAt: now })
+  let fetched: Jwk[]
+  try {
+    fetched = (await fetchCerts(`https://${team}/cdn-cgi/access/certs`)).keys
+  } catch {
+    return keys.get(kid) ?? null
+  }
   const imported = new Map<string, CryptoKey>()
-  for (const jwk of keys) {
+  for (const jwk of fetched) {
     if (jwk.kty !== 'RSA' || !jwk.kid) continue
     const { kid: id, ...material } = jwk
-    imported.set(
-      id,
-      await crypto.subtle.importKey('jwk', material, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, [
-        'verify',
-      ]),
-    )
+    try {
+      imported.set(
+        id,
+        await crypto.subtle.importKey(
+          'jwk',
+          material,
+          { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+          false,
+          ['verify'],
+        ),
+      )
+    } catch {
+      // A key this check can't use (another algorithm, an encryption key) is skipped, not fatal.
+    }
   }
   cache.set(team, { keys: imported, fetchedAt: now })
   return imported.get(kid) ?? null
 }
 
-function base64urlBytes(text: string): Uint8Array {
+function base64urlBytes(text: string): Uint8Array | null {
+  if (!/^[A-Za-z0-9_-]*$/.test(text)) return null
   const base64 = text
     .replace(/-/g, '+')
     .replace(/_/g, '/')
     .padEnd(Math.ceil(text.length / 4) * 4, '=')
-  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+  try {
+    return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+  } catch {
+    return null
+  }
 }
 
 function base64urlJson(text: string): Record<string, unknown> | null {
   try {
-    return JSON.parse(new TextDecoder().decode(base64urlBytes(text)))
+    const bytes = base64urlBytes(text)
+    return bytes ? JSON.parse(new TextDecoder().decode(bytes)) : null
   } catch {
     return null
   }
@@ -88,8 +110,10 @@ export async function parentEmail(
 
   const key = await keyFor(team, header.kid, now.getTime(), fetchCerts)
   if (!key) return null
+  const signature = base64urlBytes(parts[2])
+  if (!signature) return null
   const signed = new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
-  const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64urlBytes(parts[2]), signed)
+  const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signature, signed)
   if (!valid) return null
 
   const seconds = now.getTime() / 1000

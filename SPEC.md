@@ -272,12 +272,7 @@ The Worker's child API (every route needs the iPad's device key):
 The parent API (every route needs a valid Access token, §6.9):
 
 - `GET /api/parent/devices`: the paired and unpaired iPads.
-- `DELETE /api/parent/devices/:id`: unpairs an iPad.
-- `POST /api/parent/pairing-code { name }`: a new pairing code for an iPad with that name.
-
-Pairing (the one route with no key or token; the code is the gate):
-
-- `POST /api/pair { code }`: pairs the iPad and returns its device key once.
+- `DELETE /api/parent/devices/:id`: unpairs an iPad (logged).
 
 ## 9. Later
 
