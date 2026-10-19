@@ -46,14 +46,20 @@ test('finishes an assignment and sees the grade and Macaronis', async ({ page })
     await expect(page.getByText(`Problem ${n} of 20`)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Check' })).toBeDisabled()
     const right = await currentAnswer(page)
+    const problem = page.locator('.stacked')
     if (n === 3) {
-      // One not right: the response shows how it works, never her answer.
+      // One not right: her answer stays in her boxes, tinted coral; the right one is only in the response.
       await answer(page, right + 1)
       await expect(page.getByText("Here's how that one works:", { exact: true })).toBeVisible()
       await expect(page.getByText('Keep going!', { exact: true })).toBeVisible()
+      await expect(problem).toHaveAttribute('data-shown', String(right + 1))
+      await expect(problem).toHaveAttribute('data-outcome', 'notRight')
+      await expect(page.locator('.answer-box-not-right').first()).toBeVisible()
     } else {
       await answer(page, right)
       await expect(page.locator('.response-lead')).toHaveText(CHEERS)
+      await expect(problem).toHaveAttribute('data-shown', String(right))
+      await expect(problem).toHaveAttribute('data-outcome', 'right')
     }
     if (n === 1) await noSidewaysScroll(page)
     await page.getByRole('button', { name: n === 20 ? 'See how I did' : 'Next' }).click()
