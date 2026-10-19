@@ -8,6 +8,25 @@ const CODE_LIFE_MS = 10 * 60 * 1000
 const MAX_TRIES = 5
 const MAX_NAME = 40
 
+/**
+ * The rate-limit key for an address: IPv4 as is, IPv6 by its /64 block, since one home or connection
+ * controls a whole /64 and could otherwise use a fresh address for every try.
+ */
+export function addressKey(address: string): string {
+  if (!address.includes(':')) return address
+  const [head, tail] = address.toLowerCase().split('::')
+  const front = head ? head.split(':') : []
+  const back = tail ? tail.split(':') : []
+  const groups =
+    tail === undefined
+      ? front
+      : [...front, ...Array(Math.max(0, 8 - front.length - back.length)).fill('0'), ...back]
+  return `${groups
+    .slice(0, 4)
+    .map((g) => g.replace(/^0+(?=.)/, ''))
+    .join(':')}::/64`
+}
+
 /** A uniformly random 6-digit code: rejection sampling, so no code is likelier than another. */
 function newCode(): string {
   const limit = Math.floor(0x1_0000_0000 / 1_000_000) * 1_000_000
@@ -60,7 +79,7 @@ export async function postPair({
 }) {
   // Rate limit first, before the code is even read, so a flood of guesses can't void a parent's code.
   if (!limiter) return error(503, 'unavailable')
-  const address = request.headers.get('CF-Connecting-IP') ?? 'unknown'
+  const address = addressKey(request.headers.get('CF-Connecting-IP') ?? 'unknown')
   if (!(await limiter.limit({ key: `pair:${address}` })).success) return error(429, 'too_many_tries')
 
   const body = (await readJson(request)) as { code?: unknown } | undefined

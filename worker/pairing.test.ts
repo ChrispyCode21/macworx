@@ -160,6 +160,20 @@ describe('pairing (SPEC §6.9)', () => {
     expect(other.status).toBe(201)
   })
 
+  it('a rate-limited try is refused before its code is looked at: no try counted', async () => {
+    const { code } = await makeCode()
+    for (let i = 0; i < 10; i++) await pair('x')
+    expect((await pair(wrong(code))).status).toBe(429)
+    const row = await t.db.prepare('SELECT attempts FROM pairing_codes').first<{ attempts: number }>()
+    expect(row!.attempts).toBe(0)
+  })
+
+  it('counts IPv6 addresses by their /64 block', async () => {
+    for (let i = 0; i < 10; i++) await pair('x', NOW, `2001:db8:1:2::${i + 1}`)
+    expect((await pair('x', NOW, '2001:db8:1:2:aaaa:bbbb:cccc:dddd')).status).toBe(429)
+    expect((await pair('x', NOW, '2001:db8:1:3::1')).status).toBe(400)
+  })
+
   it('refuses pairing (503) if the rate limiter is missing, rather than pairing unguarded', async () => {
     const { code } = await makeCode()
     delete t.env.PAIR_LIMITER
