@@ -21,22 +21,25 @@ export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
   const start = () => setScreen({ name: 'assignment', seed: newSeed() })
   const [paired, setPaired] = useState(() => getDeviceKey() !== null)
-  const home = () => {
-    setPaired(getDeviceKey() !== null)
-    setScreen({ name: 'home' })
-  }
 
-  // A stored key a parent has since unpaired is forgotten, so the Pair button comes back (SPEC §5.4).
-  useEffect(() => {
+  // Whenever Home opens with a stored key, a key a parent has since unpaired is forgotten, so the Pair
+  // button comes back (SPEC §5.4).
+  const checkKey = () => {
     const key = getDeviceKey()
+    setPaired(key !== null)
     if (!key) return
     keyStillPaired(key).then((ok) => {
-      if (!ok) {
+      if (!ok && getDeviceKey() === key) {
         forgetDeviceKey()
         setPaired(false)
       }
     })
-  }, [])
+  }
+  const home = () => {
+    checkKey()
+    setScreen({ name: 'home' })
+  }
+  useEffect(checkKey, [])
 
   switch (screen.name) {
     case 'home':

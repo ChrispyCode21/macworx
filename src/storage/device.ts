@@ -19,8 +19,16 @@ export function getDeviceKey(): string | null {
   }
 }
 
-export function setDeviceKey(key: string): void {
-  storage()?.setItem(KEY, key)
+/** Stores the key; false if this iPad's storage is missing or refused it. */
+export function setDeviceKey(key: string): boolean {
+  try {
+    const s = storage()
+    if (!s) return false
+    s.setItem(KEY, key)
+    return s.getItem(KEY) === key
+  } catch {
+    return false
+  }
 }
 
 export function forgetDeviceKey(): void {

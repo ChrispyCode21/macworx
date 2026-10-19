@@ -83,13 +83,31 @@ test('a key the Worker no longer accepts is forgotten, and the button comes back
   await page.route('/api/state', (route) => route.fulfill({ status: 401, json: { error: 'unauthorized' } }))
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Pair this iPad' })).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('macworx.deviceKey'))).toBeNull()
 })
 
 test('a key that still works keeps the button hidden', async ({ page }) => {
   await asInstalledApp(page)
   await page.addInitScript(() => localStorage.setItem('macworx.deviceKey', 'paired-key-0123456789'))
+  const checked = page.waitForRequest('/api/state')
   await page.route('/api/state', (route) => route.fulfill({ status: 200, json: {} }))
   await page.goto('/')
+  expect((await checked).headers().authorization).toBe('Bearer paired-key-0123456789')
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Pair this iPad' })).toHaveCount(0)
+})
+
+test('Back waits while a code is on its way', async ({ page }) => {
+  await asInstalledApp(page)
+  let answer: () => void = () => {}
+  await page.route('/api/pair', (route) => {
+    answer = () => void route.fulfill({ status: 201, json: { key: 'late-key-0123456789' } })
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Pair this iPad' }).click()
+  await typeCode(page, '123456')
+  await page.getByRole('button', { name: 'Pair', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Back' })).toBeDisabled()
+  answer()
+  await expect(page.getByRole('heading', { name: 'This iPad is paired!' })).toBeVisible()
 })

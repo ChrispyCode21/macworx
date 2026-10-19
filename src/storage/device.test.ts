@@ -29,6 +29,19 @@ describe('device key storage', () => {
     expect(getDeviceKey()).toBeNull()
   })
 
+  it('reports a key it could not keep', () => {
+    expect(setDeviceKey('abc')).toBe(false) // no storage at all
+    globalThis.localStorage = {
+      ...fakeStorage(),
+      setItem: () => {
+        throw new Error('quota')
+      },
+    }
+    expect(setDeviceKey('abc')).toBe(false)
+    globalThis.localStorage = fakeStorage()
+    expect(setDeviceKey('abc')).toBe(true)
+  })
+
   it('reads as not paired when storage is missing or refuses', () => {
     expect(getDeviceKey()).toBeNull()
     expect(() => forgetDeviceKey()).not.toThrow()

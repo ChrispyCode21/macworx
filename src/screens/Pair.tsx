@@ -26,9 +26,12 @@ export function Pair({ onDone }: { onDone: () => void }) {
     setSending(true)
     const result = await pair(typed)
     setSending(false)
-    if (result.kind === 'paired') {
-      setDeviceKey(result.key)
+    if (result.kind === 'paired' && setDeviceKey(result.key)) {
       setPaired(true)
+    } else if (result.kind === 'paired') {
+      // Paired on the server but this iPad couldn't keep the key: the code is used, so ask for a new one.
+      setMessage(COPY.pairNotAccepted)
+      setTyped('')
     } else {
       setMessage(MESSAGE[result.kind])
       setTyped('')
@@ -61,7 +64,8 @@ export function Pair({ onDone }: { onDone: () => void }) {
         canCheck={typed.length === CODE_LENGTH && !sending}
         checkLabel={COPY.pairKey}
       />
-      <Button variant="secondary" onClick={onDone}>
+      {/* Not while a code is on its way: the answer must land on this screen. */}
+      <Button variant="secondary" onClick={onDone} disabled={sending}>
         {COPY.back}
       </Button>
     </main>

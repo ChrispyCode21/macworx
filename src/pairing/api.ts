@@ -21,7 +21,8 @@ export async function pair(code: string): Promise<PairResult> {
   }
   if (response.status === 201) {
     const body = (await response.json().catch(() => null)) as { key?: unknown } | null
-    return typeof body?.key === 'string' ? { kind: 'paired', key: body.key } : { kind: 'busy' }
+    // The server used the code; without a key to keep, the only way on is a new code.
+    return typeof body?.key === 'string' ? { kind: 'paired', key: body.key } : { kind: 'notAccepted' }
   }
   if (response.status === 400) return { kind: 'notAccepted' }
   if (response.status === 429) return { kind: 'tooManyTries' }

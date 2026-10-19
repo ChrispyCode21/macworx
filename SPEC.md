@@ -86,7 +86,7 @@ Every change is logged: what changed, when, and which parent made it. The app's 
 2. A parent makes a code on the parent dashboard (§5.3, §6.9). On the Pair screen, the code is typed on the same number pad into six boxes, filled left to right, and sent with **Pair**.
 3. Paired: the screen says so and the button disappears from Home. The iPad keeps its device key.
 4. Not paired: a friendly line says what to do (ask for a new code, wait a minute, connect to Wi-Fi, or try again soon), and the boxes clear.
-5. When Home opens with a stored key, the iPad checks it with the Worker. If a parent has unpaired the iPad, the iPad forgets the key and the button comes back.
+5. Whenever Home opens with a stored key, the iPad checks it with the Worker. If a parent has unpaired the iPad, the iPad forgets the key and the button comes back.
 
 ## 6. Domain rules
 
