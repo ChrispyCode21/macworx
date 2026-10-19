@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { generateAssignment } from '../src/engine'
+import { postResult } from './child'
 import { createTestDb, migrationStatements, OTHER_KEY } from './test/db'
 
 let t: Awaited<ReturnType<typeof createTestDb>>
@@ -298,5 +299,27 @@ describe('unexpected errors', () => {
     await t.db.prepare('DROP TABLE seeds').run()
     await t.db.prepare('DROP TABLE devices').run()
     expect(await t.call('GET', '/api/state')).toEqual({ status: 500, body: { error: 'server' } })
+  })
+})
+
+describe('an upload on its way when the iPad is unpaired', () => {
+  it('is refused, not recorded (SPEC §6.9)', async () => {
+    const s = await seed()
+    // The key check already passed for device 1; then a parent unpairs it before the write.
+    await t.db.prepare("UPDATE devices SET revoked_at = '2026-10-17T12:00:00Z' WHERE id = 1").run()
+    const response = await postResult({
+      request: new Request('https://macworx.test/api/results', {
+        method: 'POST',
+        body: JSON.stringify({ seed: s, day: '2026-10-17', answers: answers(s) }),
+      }),
+      url: new URL('https://macworx.test/api/results'),
+      db: t.db,
+      device: 1,
+      now: at('2026-10-17'),
+    })
+    expect(response.status).toBe(401)
+    const count = await t.db.prepare('SELECT COUNT(*) AS n FROM results').first<{ n: number }>()
+    expect(count?.n).toBe(0)
+    expect((await t.db.prepare('SELECT balance FROM child').first<{ balance: number }>())?.balance).toBe(0)
   })
 })
