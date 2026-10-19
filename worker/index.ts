@@ -9,6 +9,8 @@ import { PARENT_ROUTES } from './parent'
 export interface Env extends AccessEnv {
   ASSETS: Fetcher
   DB: D1Database
+  /** Pairing tries per address (SPEC §6.9). Missing means pairing is refused: the guard never goes quietly. */
+  PAIR_LIMITER?: RateLimit
 }
 
 /** Child routes; every one needs the iPad's device key (SPEC §2). */
@@ -47,7 +49,7 @@ export async function handle(
 
     // The one write route with no key or token: the one-time code is the gate (CLAUDE.md, SPEC §6.9).
     if (request.method === 'POST' && pathname === '/api/pair')
-      return await postPair({ request, db: env.DB, now })
+      return await postPair({ request, db: env.DB, now, limiter: env.PAIR_LIMITER })
 
     const route = CHILD_ROUTES[`${request.method} ${pathname}`]
     if (!route) return error(404, 'not_found')

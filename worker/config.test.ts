@@ -23,6 +23,14 @@ describe('wrangler configs', () => {
     expect(main.previews.vars).toBeUndefined()
   })
 
+  it('rate-limit pairing in production and previews, with separate counters', () => {
+    const [prod] = main.ratelimits
+    const [preview] = main.previews.ratelimits
+    expect(prod).toMatchObject({ name: 'PAIR_LIMITER', simple: { limit: 10, period: 60 } })
+    expect(preview).toMatchObject({ name: 'PAIR_LIMITER', simple: { limit: 10, period: 60 } })
+    expect(prod.namespace_id).not.toBe(preview.namespace_id)
+  })
+
   it('keep production and previews on different databases', () => {
     expect(main.d1_databases[0].database_id).not.toBe(main.previews.d1_databases[0].database_id)
   })
