@@ -4,7 +4,7 @@ Extra homework practice that kids actually want to come back to.
 
 macworx turns practice into a game. Kids work through short assignments on a tablet and earn **Macaronis**, a currency they spend in a **rewards shop** on real-world rewards their parents set up, like ice cream or a trip. Doing a little every day builds a **streak**, and a longer streak earns bonus Macaronis.
 
-It's built around one rule: effort earns rewards, and nothing is ever taken away. A missed answer just shows how the problem works, then she moves on.
+It's built around one rule: effort earns rewards, and nothing is ever taken away. A missed answer just shows how the problem works, then they move on.
 
 ## What's in it
 
