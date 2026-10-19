@@ -25,6 +25,18 @@ export const COPY = {
   bonus: (base: number, bonus: number) => `${formatNumber(base)} + ${formatNumber(bonus)} bonus = `,
   savingSoon: 'Macaronis start saving soon!',
   anotherOne: 'Do another one',
+  // Pairing her iPad (SPEC §5.4)
+  pairThisIpad: 'Pair this iPad',
+  pairTitle: 'Pair this iPad',
+  pairInstruction: 'Ask a grown-up for the 6-digit code, then type it here.',
+  pairKey: 'Pair',
+  back: 'Back',
+  paired: 'This iPad is paired!',
+  pairedDone: 'Done',
+  pairNotAccepted: "Hmm, that code isn't working. Ask a grown-up for a new one.",
+  pairTooManyTries: "Let's wait a minute, then try again.",
+  pairOffline: 'Connect to Wi-Fi to pair this iPad.',
+  pairBusy: "Something's busy right now. Try again in a minute.",
   home: 'Home',
 } as const
 

@@ -13,10 +13,12 @@ interface Props {
   onDelete: () => void
   onCheck: () => void
   canCheck: boolean
+  /** The Check key's label; the pairing screen calls it Pair. */
+  checkLabel?: string
 }
 
 /** The on-screen number pad (SPEC §5.1): the iPad keyboard never opens. */
-export function NumberPad({ onDigit, onDelete, onCheck, canCheck }: Props) {
+export function NumberPad({ onDigit, onDelete, onCheck, canCheck, checkLabel = COPY.check }: Props) {
   const [ready, setReady] = useState(false)
   useEffect(() => {
     const timer = setTimeout(() => setReady(true), READY_AFTER_MS)
@@ -41,7 +43,7 @@ export function NumberPad({ onDigit, onDelete, onCheck, canCheck }: Props) {
         0
       </Button>
       <Button variant="check" disabled={!canCheck} onClick={whenReady(onCheck)}>
-        {COPY.check}
+        {checkLabel}
       </Button>
     </div>
   )
