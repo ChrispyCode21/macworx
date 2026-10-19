@@ -182,6 +182,8 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
   if (!seedRow || seedRow.device_id !== device) return error(404, 'unknown_seed')
 
   const day = clampDay(body.day, seedRow.issued_day, now)
+  // A day that had to be moved came from a wrong clock, so it doesn't touch the streak (§6.8, W7).
+  const clockWrong = day !== body.day
   const problems = generateAssignment(body.seed)
   const answered = body.answers.length
   const correct = body.answers.filter((a, i) => checkAnswer(problems[i], a)).length
@@ -197,7 +199,10 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
     let streak = child.streak
     let lastDay = child.last_day
     let gradeLabel: string | null = null
-    if (finished) {
+    if (finished && clockWrong) {
+      earned = payout({ correct, problemCount: answered, firstOfDay: false, streak })
+      gradeLabel = grade(correct, answered)
+    } else if (finished) {
       // A result that arrives with a day before her last counted day counts as that day (§6.8).
       const streakDay = lastDay && dayNumber(day) < dayNumber(lastDay) ? lastDay : day
       const next = nextStreak({ streak, lastDay }, streakDay)

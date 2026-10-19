@@ -90,6 +90,7 @@ describe('saving results (SPEC §6.8)', () => {
   it('W3: a day two days after the Worker date → recorded on the Worker tomorrow', async () => {
     const { body } = await finish('2026-10-19', { now: '2026-10-17' })
     expect(body.result.day).toBe('2026-10-18')
+    expect(body.state).toMatchObject({ streak: 0, lastDay: null })
   })
 
   it('W4: no key, or a key that is not valid → 401, nothing recorded', async () => {
@@ -131,6 +132,19 @@ describe('saving results (SPEC §6.8)', () => {
       completed: 0,
       latestGrade: null,
     })
+  })
+
+  it('W7: a finished result dated 2026-10-20 (clock wrong) → recorded 10-18, paid 24, streak untouched', async () => {
+    await t.db.prepare("UPDATE child SET streak = 5, last_day = '2026-10-16'").run()
+    const { body } = await finish('2026-10-20', { now: '2026-10-17' })
+    expect(body.result).toMatchObject({ day: '2026-10-18', grade: 'Excellent' })
+    expect(body.result.payout).toEqual({ base: 20, accuracyBonus: 4, streakBonus: 0, total: 24 })
+    expect(body.state).toMatchObject({ streak: 5, lastDay: '2026-10-16', completed: 1, balance: 24 })
+
+    // Her next result with a correct clock continues the streak as if the wrong one never happened.
+    const next = await finish('2026-10-17')
+    expect(next.body.state).toMatchObject({ streak: 6, lastDay: '2026-10-17' })
+    expect(next.body.result.payout.streakBonus).toBe(6)
   })
 
   it('reproduces the streak examples day by day (S1, S2, S5, S6 and P4 = 31)', async () => {
@@ -199,6 +213,14 @@ describe('saving results (SPEC §6.8)', () => {
   it('moves a day too early into range: no earlier than the day before the seed was handed out', async () => {
     const { body } = await finish('2026-10-01', { now: '2026-10-17' })
     expect(body.result.day).toBe('2026-10-16')
+  })
+
+  it('a day moved up from too early leaves the streak alone too', async () => {
+    await t.db.prepare("UPDATE child SET streak = 5, last_day = '2026-10-14'").run()
+    const { body } = await finish('2026-10-01', { now: '2026-10-17' })
+    expect(body.result.day).toBe('2026-10-16')
+    expect(body.result.payout.streakBonus).toBe(0)
+    expect(body.state).toMatchObject({ streak: 5, lastDay: '2026-10-14', completed: 1 })
   })
 })
 
