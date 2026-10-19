@@ -27,6 +27,7 @@ Standing instructions for every Claude session in this repo. Every run reads thi
 - **Payout values and grade cutoffs live in one config module**, never as scattered constants.
 - **Never-negative wording.** No text frames a result as failure. Grades are Excellent, Great, Good and Improving.
 - **Parent routes** (`/parent`, `/api/parent/*`) sit behind Cloudflare Access. Never add an unauthenticated write endpoint.
+- **The one exception** is `POST /api/pair`, which has no key or token and is not behind Access. It stays gated by a 6-digit code a parent makes behind Access that lasts 10 minutes, works once and allows 5 tries (SPEC §6.9). Never loosen those guards or add another such route.
 
 ## Tests
 

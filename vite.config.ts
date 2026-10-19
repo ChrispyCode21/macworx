@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react'
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
+import { NETWORK_ONLY_PATHS } from './src/networkOnly.ts'
 
 /** The "/*" block of public/_headers, so `vite preview` runs under the production policy. */
 function productionHeaders(): Record<string, string> {
@@ -49,8 +50,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        // /api/* is the Worker's, never the app shell.
-        navigateFallbackDenylist: [/^\/api(\/|$)/],
+        // Never the cached app shell for these: the Worker, Cloudflare Access and its sign-in (src/networkOnly.ts).
+        navigateFallbackDenylist: NETWORK_ONLY_PATHS,
       },
     }),
   ],

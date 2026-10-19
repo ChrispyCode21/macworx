@@ -274,6 +274,11 @@ The parent API (every route needs a valid Access token, §6.9):
 
 - `GET /api/parent/devices`: the paired and unpaired iPads.
 - `DELETE /api/parent/devices/:id`: unpairs an iPad (logged).
+- `POST /api/parent/pairing-code { name }`: a new pairing code for an iPad with that name (logged).
+
+Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
+
+- `POST /api/pair { code }`: pairs the iPad and returns its device key once.
 
 ## 9. Later
 
