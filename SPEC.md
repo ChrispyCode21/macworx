@@ -142,7 +142,7 @@ Prices are fixed. The streak bonus only speeds up earning.
 - **Seeds:** the Worker hands each iPad up to 20 unused seeds at a time and accepts each seed once. An iPad keeps its unused seeds so assignments work offline.
 - **Recording:** the Worker regenerates the assignment from its seed and re-scores her answers. 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
 - **The same result twice:** sending a result for a seed that's already recorded returns the recorded result and counts nothing again, so a retry after a lost connection is safe.
-- **Day range:** a result's day may be no earlier than the day before its seed was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. Because of this, her last counted day is never more than a day ahead of the real date.
+- **Day range:** a result's day may be no earlier than the day before its seed was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. A day that had to be moved means the iPad's clock was wrong, so that result doesn't touch the streak: it's paid its base and accuracy bonus and counts as completed, but the streak, last counted day and streak bonus stay as they were. Because of this, her last counted day is never more than a day ahead of the real date, and a clock that's off by more than a day can't reset her streak. (A clock off by only a day looks the same as a time-zone difference, so it counts like any other day.)
 - **Results that arrive late:** a result whose day is earlier than her last counted day counts as that same last day for the streak (no streak change, no streak bonus) and is still paid.
 - **Completed assignments** counts finished assignments only.
 
@@ -215,6 +215,7 @@ Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out th
 | W4 | A result with no device key, or a key that isn't valid | Refused (401); nothing recorded |
 | W5 | Last counted day 2026-10-17 (streak 4); a finished result dated 2026-10-15 arrives | Counts as 2026-10-17: streak stays **4**, last counted day stays **2026-10-17**, no streak bonus; still paid |
 | W6 | A result she left early: 8 answered, 7 correct | Paid **7**; streak, last counted day and completed unchanged; no grade |
+| W7 | Streak 5, last counted day 2026-10-16; a finished result, 20 correct, dated 2026-10-20 (the clock was wrong) | Recorded on **2026-10-18**, paid 20 + 4 = **24** (no streak bonus); streak stays **5**, last counted day stays **2026-10-16**; completed **+1**, grade **Excellent** |
 
 ### 7.R Rewards (§6.4, §6.7)
 
