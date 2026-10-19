@@ -49,8 +49,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        // /api/* is the Worker's, never the app shell.
-        navigateFallbackDenylist: [/^\/api(\/|$)/],
+        // /api is the Worker's and /parent is behind Cloudflare Access: both always go to the network,
+        // never the cached app shell, or Access couldn't ask a parent to sign in.
+        navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/parent(\/|$)/],
       },
     }),
   ],

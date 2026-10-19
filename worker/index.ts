@@ -3,6 +3,7 @@ import { fetchCertsFromCloudflare, parentEmail, type AccessEnv, type CertsFetche
 import { deviceFor } from './auth'
 import { getState, postResult, postSeeds, type ChildRequest } from './child'
 import { error, json } from './http'
+import { postPair } from './pair'
 import { PARENT_ROUTES } from './parent'
 
 export interface Env extends AccessEnv {
@@ -43,6 +44,10 @@ export async function handle(
       }
       return error(404, 'not_found')
     }
+
+    // The one write route with no key or token: the one-time code is the gate (CLAUDE.md, SPEC §6.9).
+    if (request.method === 'POST' && pathname === '/api/pair')
+      return await postPair({ request, db: env.DB, now })
 
     const route = CHILD_ROUTES[`${request.method} ${pathname}`]
     if (!route) return error(404, 'not_found')

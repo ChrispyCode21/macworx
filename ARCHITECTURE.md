@@ -50,19 +50,21 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 
 - The browser loads the built app (`dist/`) as static assets from Cloudflare Workers. Any unknown path serves `index.html`.
 - `/api` and `/api/*` reach the Worker first (`run_worker_first` in `wrangler.jsonc`). `GET /api/health` answers `{ "ok": true }` without a key. Every other route needs a device key (`Authorization: Bearer <key>`) and returns 401 without a valid one; an unknown route returns 404.
-- **Parent routes** (`/api/parent/*`, `worker/parent.ts`): the Worker checks the Cloudflare Access token itself before anything else, so an unknown parent path is 401 too. Today: `GET /api/parent/devices` and `DELETE /api/parent/devices/:id` (unpair).
-- **The Access check** (`worker/access.ts`): `ctx.access` isn't passed to Workers that serve static assets, so the Worker verifies the `Cf-Access-Jwt-Assertion` token: RS256 only, signed by a key from `https://<team>/cdn-cgi/access/certs` (cached an hour; an unknown key id refetches at most once a minute), issuer `https://<team>`, audience `ACCESS_AUD`, not expired, with an email. It needs `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` and refuses everything without them. They go in `wrangler.jsonc`'s top-level `vars` (not secrets, and not the dashboard: each `wrangler deploy` replaces dashboard vars). Vars don't carry into the `previews` block, so previews never serve parent routes; keep it that way, since a parent token is checked by audience, not hostname.
+- **Parent routes** (`/api/parent/*`, `worker/parent.ts`): the Worker checks the Cloudflare Access token itself before anything else, so an unknown parent path is 401 too. Today: `GET /api/parent/devices`, `DELETE /api/parent/devices/:id` (unpair) and `POST /api/parent/pairing-code`.
+- **Pairing** (`worker/pair.ts`, SPEC §6.9): `POST /api/pair { code }` is the one write route with no key or token; the one-time code is the gate (CLAUDE.md). A wrong code is counted in SQL, so a burst of guesses can't get more than 5 between them. The right code is claimed with a random value in the same batch that creates the device, so one code can't pair twice. Every refusal is the same `bad_code`.
+- **The Access check** (`worker/access.ts`): `ctx.access` isn't passed to Workers that serve static assets, so the Worker verifies the `Cf-Access-Jwt-Assertion` token: RS256 only, signed by a key from `https://<team>/cdn-cgi/access/certs` (cached an hour; an unknown key id refetches at most once a minute), issuer `https://<team>`, audience `ACCESS_AUD`, not expired, with an email. It needs `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` and refuses everything without them. They're in `wrangler.jsonc`'s top-level `vars` (not secrets, and not the dashboard: each `wrangler deploy` replaces dashboard vars). Vars don't carry into the `previews` block, so previews never serve parent routes; keep it that way, since a parent token is checked by audience, not hostname.
 - **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. The app doesn't call it yet (#19).
 
 ## Data
 
-D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql` and `0002_admin_log.sql`:
+D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql`, `0002_admin_log.sql` and `0003_pairing.sql`:
 
 | Table | Holds |
 |---|---|
 | `devices` | Paired iPads: the SHA-256 of each device key (never the key), a label, and when it was revoked. |
 | `seeds` | Seeds handed out, the device and day they went to, and whether a result used them. |
 | `results` | Each recorded assignment as the Worker re-scored it: her answers (JSON), counts, grade and payout. |
+| `pairing_codes` | Pairing codes: the code's SHA-256, the iPad's name, expiry, wrong tries, and when it was used or voided. Only the newest usable code counts. |
 | `admin_log` | Every change a parent makes in admin mode (SPEC §5.3): when, which parent (Access email), the action and a JSON detail. Written in the same batch as the change. |
 | `child` | One row: balance, streak, last counted day, completed assignments. A parent restores a broken streak by editing `streak` and `last_day` here, and changes `revision` in the same statement (see below). |
 
@@ -75,7 +77,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 
 ## Offline and install
 
-`vite-plugin-pwa` generates the web app manifest and a service worker that precaches the built app, so the app opens with no connection (checked by `e2e/smoke.spec.ts`). `/api` paths are never served from the app shell. Icons are generated from `public/logo.svg` with `npx pwa-assets-generator` (`pwa-assets.config.ts`).
+`vite-plugin-pwa` generates the web app manifest and a service worker that precaches the built app, so the app opens with no connection (checked by `e2e/smoke.spec.ts`). `/api` and `/parent` paths are never served from the app shell: they always go to the network, so Cloudflare Access can ask a parent to sign in. Icons are generated from `public/logo.svg` with `npx pwa-assets-generator` (`pwa-assets.config.ts`).
 
 `public/_headers` sets the security headers for static assets. `vite preview` applies the same headers, minus HSTS, so a local production build runs under the production policy.
 

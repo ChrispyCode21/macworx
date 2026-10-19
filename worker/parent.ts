@@ -1,5 +1,6 @@
 // The parent API (SPEC §5.3, §6.9, §8). Every route here runs only after parentEmail() accepted the request.
 import { error, json } from './http'
+import { postPairingCode } from './pair'
 
 export interface ParentRequest {
   request: Request
@@ -63,4 +64,5 @@ export const PARENT_ROUTES: {
 }[] = [
   { method: 'GET', pattern: /^\/api\/parent\/devices$/, run: listDevices },
   { method: 'DELETE', pattern: /^\/api\/parent\/devices\/(?<id>\d+)$/, run: unpairDevice },
+  { method: 'POST', pattern: /^\/api\/parent\/pairing-code$/, run: (req) => postPairingCode(req) },
 ]

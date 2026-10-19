@@ -17,6 +17,12 @@ describe('wrangler configs', () => {
     expect(previewMigrations.d1_databases).toEqual(main.previews.d1_databases)
   })
 
+  it('give production the Access settings, and previews none, so previews never serve parent routes', () => {
+    expect(main.vars.ACCESS_TEAM_DOMAIN).toMatch(/^[a-z0-9-]+\.cloudflareaccess\.com$/)
+    expect(main.vars.ACCESS_AUD).toMatch(/^[0-9a-f]{64}$/)
+    expect(main.previews.vars).toBeUndefined()
+  })
+
   it('keep production and previews on different databases', () => {
     expect(main.d1_databases[0].database_id).not.toBe(main.previews.d1_databases[0].database_id)
   })

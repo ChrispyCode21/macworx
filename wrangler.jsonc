@@ -13,6 +13,12 @@
     // /api and /api/* reach the Worker first; everything else is a static file.
     "run_worker_first": ["/api", "/api/*"],
   },
+  // Cloudflare Access for the parent routes (worker/access.ts). Not secrets: Access shows both in its
+  // sign-in link. Kept out of the "previews" block on purpose, so previews never serve parent routes.
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "misty-butterfly-5638.cloudflareaccess.com",
+    "ACCESS_AUD": "a5ceb91781123283e917a7c2aa1d0b8670bf874af456649bb0c408406fa4ab5d",
+  },
   // Production data: her Macaronis, streak and results. Workers Builds deploys main here.
   "d1_databases": [
     {
