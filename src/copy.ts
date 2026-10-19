@@ -54,6 +54,8 @@ export const COPY = {
   parentKeepPaired: 'Keep it paired',
   parentNoDevices: 'No iPads paired yet.',
   parentNameProblem: 'Give the iPad a name of up to 40 characters.',
+  parentSignedOut: 'Your sign-in has run out. Reload the page to sign in again.',
+  parentOffline: 'No connection. Check the Wi-Fi and try again.',
   parentServerTrouble: 'Something went wrong on our side. Try again in a minute.', // conventions-ignore: parent-facing, approved in #18
   home: 'Home',
 } as const

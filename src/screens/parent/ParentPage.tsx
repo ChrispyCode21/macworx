@@ -7,9 +7,11 @@ import { TextField } from '../../ui/TextField'
 
 const MAX_NAME = 40
 
-/** What a failed parent call shows. A run-out sign-in is already reloading the page. */
+/** What a failed parent call shows. While the page reloads for a sign-in, nothing. */
 function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
-  if (result.error === 'signed_out') return null
+  if (result.error === 'reloading') return null
+  if (result.error === 'signed_out') return COPY.parentSignedOut
+  if (result.error === 'offline') return COPY.parentOffline
   if (result.error === 'bad_name') return COPY.parentNameProblem
   return COPY.parentServerTrouble
 }
@@ -22,11 +24,13 @@ export function ParentPage() {
   const [now, setNow] = useState(() => new Date())
   const [confirming, setConfirming] = useState<Device | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
+  const [making, setMaking] = useState(false)
 
   const refresh = async () => {
     const result = await listDevices()
-    if (result.ok) setDevices(result.body.devices)
-    else setProblem(failure(result))
+    if (!result.ok) return setProblem(failure(result))
+    setDevices(result.body.devices)
+    setProblem(null)
   }
   useEffect(() => {
     void refresh()
@@ -43,7 +47,10 @@ export function ParentPage() {
     setProblem(null)
     const trimmed = name.trim()
     if (trimmed.length < 1 || trimmed.length > MAX_NAME) return setProblem(COPY.parentNameProblem)
+    // One request at a time: a second code voids the first, so a quick double click must not race.
+    setMaking(true)
     const result = await makeCode(trimmed)
+    setMaking(false)
     if (!result.ok) return setProblem(failure(result))
     setNow(new Date())
     setCode(result.body)
@@ -51,6 +58,7 @@ export function ParentPage() {
 
   const onUnpair = async (device: Device) => {
     setConfirming(null)
+    setProblem(null)
     const result = await unpair(device.id)
     if (!result.ok) return setProblem(failure(result))
     await refresh()
@@ -76,7 +84,9 @@ export function ParentPage() {
           maxLength={MAX_NAME}
           onChange={(e) => setName(e.target.value)}
         />
-        <Button onClick={onMakeCode}>{COPY.parentMakeCode}</Button>
+        <Button onClick={onMakeCode} disabled={making}>
+          {COPY.parentMakeCode}
+        </Button>
         {code && (
           <div className="parent-code" aria-live="polite">
             {left > 0 ? (

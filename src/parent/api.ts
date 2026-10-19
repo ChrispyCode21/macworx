@@ -5,6 +5,18 @@
 
 const RELOADED = 'macworx.parentReloaded'
 
+/** The one-reload flag. Storage that refuses reads as "already reloaded", so it can never loop. */
+function flag(op: 'get' | 'set' | 'clear'): boolean {
+  try {
+    if (op === 'get') return sessionStorage.getItem(RELOADED) !== null
+    if (op === 'set') sessionStorage.setItem(RELOADED, '1')
+    else sessionStorage.removeItem(RELOADED)
+    return true
+  } catch {
+    return true
+  }
+}
+
 export type ParentResult<T> = { ok: true; body: T } | { ok: false; status: number; error: string }
 
 export async function parentCall<T>(path: string, init: RequestInit = {}): Promise<ParentResult<T>> {
@@ -20,13 +32,16 @@ export async function parentCall<T>(path: string, init: RequestInit = {}): Promi
   }
   const body = response.type === 'opaqueredirect' ? null : await response.json().catch(() => null)
   if (body === null) {
-    if (sessionStorage.getItem(RELOADED) === null) {
-      sessionStorage.setItem(RELOADED, '1')
+    // Cloudflare's own error pages (5xx) aren't a sign-in: say so, don't reload.
+    if (response.status >= 500) return { ok: false, status: response.status, error: 'server' }
+    if (!flag('get')) {
+      flag('set')
       location.reload()
+      return { ok: false, status: response.status, error: 'reloading' }
     }
     return { ok: false, status: response.status, error: 'signed_out' }
   }
-  sessionStorage.removeItem(RELOADED)
+  flag('clear')
   return response.ok
     ? { ok: true, body: body as T }
     : { ok: false, status: response.status, error: String((body as { error?: unknown }).error ?? 'server') }

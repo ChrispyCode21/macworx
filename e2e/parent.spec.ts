@@ -106,3 +106,79 @@ test('her app at / never shows the parent page', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
   await expect(page.getByText('macworx · Parent')).toHaveCount(0)
 })
+
+test('after the one reload, a sign-in that still fails says so instead of going quiet', async ({ page }) => {
+  await page.route('/api/parent/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: '<html>Sign in</html>' }),
+  )
+  await page.goto('/parent')
+  await expect(page.getByRole('alert')).toHaveText(
+    'Your sign-in has run out. Reload the page to sign in again.',
+  )
+})
+
+test('a successful call clears the reload flag, so a later run-out can reload again', async ({ page }) => {
+  await parentApi(page, [herIpad])
+  await page.addInitScript(() => sessionStorage.setItem('macworx.parentReloaded', '1'))
+  await page.goto('/parent')
+  await expect(page.getByText('Paired Oct 19')).toBeVisible()
+  expect(await page.evaluate(() => sessionStorage.getItem('macworx.parentReloaded'))).toBeNull()
+})
+
+test('a Cloudflare error page says try again, without reloading', async ({ page }) => {
+  await page.route('/api/parent/**', (route) =>
+    route.fulfill({ status: 502, contentType: 'text/html', body: '<html>Bad gateway</html>' }),
+  )
+  let loads = 0
+  page.on('load', () => loads++)
+  await page.goto('/parent')
+  await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
+  expect(loads).toBe(1)
+})
+
+test('with no connection, says to check the Wi-Fi', async ({ page }) => {
+  await page.route('/api/parent/**', (route) => route.abort('internetdisconnected'))
+  await page.goto('/parent')
+  await expect(page.getByRole('alert')).toHaveText('No connection. Check the Wi-Fi and try again.')
+})
+
+test('a later success clears an earlier message', async ({ page }) => {
+  let fail = true
+  await page.route('/api/parent/**', (route) => {
+    if (route.request().method() === 'GET' && fail)
+      return route.fulfill({ status: 500, json: { error: 'server' } })
+    if (route.request().method() === 'GET') return route.fulfill({ json: { devices: [] } })
+    return route.fulfill({
+      status: 201,
+      json: { code: '111222', expiresAt: new Date(Date.now() + 600_000).toISOString() },
+    })
+  })
+  await page.goto('/parent')
+  await expect(page.getByRole('alert')).toBeVisible()
+  fail = false
+  await page.getByLabel('iPad name').fill('Her iPad')
+  await page.getByRole('button', { name: 'Make a code' }).click()
+  await expect(page.getByText('111 222')).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+})
+
+test('Make a code waits for its answer before taking another click', async ({ page }) => {
+  let answer: () => void = () => {}
+  const posts: number[] = []
+  await page.route('/api/parent/**', (route) => {
+    if (route.request().method() === 'GET') return route.fulfill({ json: { devices: [] } })
+    posts.push(1)
+    answer = () =>
+      void route.fulfill({
+        status: 201,
+        json: { code: '333444', expiresAt: new Date(Date.now() + 600_000).toISOString() },
+      })
+  })
+  await page.goto('/parent')
+  await page.getByLabel('iPad name').fill('Her iPad')
+  await page.getByRole('button', { name: 'Make a code' }).click()
+  await expect(page.getByRole('button', { name: 'Make a code' })).toBeDisabled()
+  answer()
+  await expect(page.getByText('333 444')).toBeVisible()
+  expect(posts).toHaveLength(1)
+})
