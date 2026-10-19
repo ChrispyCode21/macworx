@@ -1,2 +1,8 @@
 # SPEC §7 example IDs whose slice hasn't landed yet (scripts/check-spec-coverage.mjs).
 # Remove an ID in the PR that adds its test.
+A1
+A2
+A3
+A4
+A5
+A6

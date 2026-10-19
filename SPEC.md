@@ -19,7 +19,7 @@ macworx gives her:
 - **Offline:** assignments work with no connection. Results sync when the iPad is back online.
 - **Hosting:** Cloudflare Workers serve the app's static files and an `/api/*` Worker. Data lives in Cloudflare D1.
 - **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record. The Worker hands out the seeds assignments are generated from (§6.8).
-- **Users:** one child and her parents. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. A request without a valid key is refused and changes nothing. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access.
+- **Users:** one child and her parents. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. A request without a valid key is refused and changes nothing. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access, and the Worker also checks every parent request's Access token itself, refusing any request without a valid one (§6.9).
 
 ## 3. Non-goals (MVP)
 
@@ -32,7 +32,7 @@ macworx gives her:
 
 ## 4. Principles
 
-1. **Course-correct, never punish.** Nothing she has earned is ever taken away. A missed answer shows the right one and moves on.
+1. **Course-correct, never punish.** The app's rules never take away anything she has earned. A missed answer shows the right one and moves on. (A parent can correct anything in the dashboard, §5.3.)
 2. **Never-negative wording.** No text frames a result as failure. Grades are Excellent, Great, Good and Improving.
 3. **Rewards come from effort.** Every Macaroni is earned by finishing work. There is no way to skip the work.
 4. **No time pressure.** No timers, no limits, and no penalty beyond a streak starting over.
@@ -62,14 +62,22 @@ macworx gives her:
 2. She can buy any reward whose price is at most her balance. Buying it deducts the price from her balance and records the purchase.
 3. A parent sees the purchase on the dashboard and grants the reward in real life.
 
-### 5.3 Review progress (parent)
+### 5.3 Parent dashboard (admin)
 
-The parent dashboard reads the same data and changes nothing. It shows:
+The parent dashboard is admin mode: it shows everything and can change anything. It shows:
 
 - Each finished assignment: date, every problem with her answer and the right answer, correct count, grade and Macaronis earned.
 - Her balance, streak and purchase history.
+- The paired iPads.
 
-A streak broken by something outside her control is restored by a parent editing D1 directly.
+A parent can:
+
+- Pair an iPad and unpair one (§6.9).
+- Add or remove Macaronis with a note, for example to fix a mistake or to reward her real homework grades.
+- Set or restore her streak and last counted day.
+- Correct a recorded result.
+
+Every change is logged: what changed, when, and which parent made it. The app's own rules never take anything away (§4); a parent's corrections are the exception.
 
 ## 6. Domain rules
 
@@ -146,6 +154,12 @@ Prices are fixed. The streak bonus only speeds up earning.
 - **Results that arrive late:** a result whose day is earlier than her last counted day counts as that same last day for the streak (no streak change, no streak bonus) and is still paid.
 - **Completed assignments** counts finished assignments only.
 
+### 6.9 Parent access and pairing
+
+- **Parent access:** every `/api/parent/*` request must carry a valid Cloudflare Access token for this app: signed by the team's keys, issued by the team, for this application, not expired, with the parent's email. Anything else is refused (401), including when the Worker isn't configured for Access, so PR previews never serve parent routes.
+- **Pairing:** the parent names the iPad (up to 40 characters) and gets a 6-digit code, valid for 10 minutes and for one use. Making a new code voids any earlier unused one. Five wrong tries void the code. On the iPad, entering the right code pairs it: the Worker returns its device key once and stores only the key's SHA-256.
+- **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The dashboard warns before unpairing: "Results not yet synced from this iPad will be lost."
+
 ## 7. Worked examples → test cases
 
 Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If a rule changes, update its examples. Unless stated, an assignment has 20 problems, and "not first of the day" means another assignment was already finished today, so no streak bonus applies.
@@ -216,6 +230,17 @@ Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out th
 | W5 | Last counted day 2026-10-17 (streak 4); a finished result dated 2026-10-15 arrives | Counts as 2026-10-17: streak stays **4**, last counted day stays **2026-10-17**, no streak bonus; still paid |
 | W6 | A result she left early: 8 answered, 7 correct | Paid **7**; streak, last counted day and completed unchanged; no grade |
 
+### 7.A Parent access and pairing (§6.9)
+
+| ID | Given | Expected |
+|---|---|---|
+| A1 | A parent makes a code named "Her iPad"; the iPad sends that code within 10 minutes | Paired: a device key comes back once, and it works on child routes |
+| A2 | The same code sent again | Refused; no second device |
+| A3 | The code sent 11 minutes after it was made | Refused |
+| A4 | Five wrong codes, then the right one | All refused: the fifth wrong try voids the code |
+| A5 | A parent unpairs an iPad | Its key is refused (401) on every child route |
+| A6 | A parent route without a valid Access token, or with the Worker's Access settings missing | Refused (401) |
+
 ### 7.R Rewards (§6.4, §6.7)
 
 One 20-problem assignment a day, all correct, starting a fresh streak: day `n` pays 24 + min(n, 10).
@@ -243,6 +268,16 @@ The Worker's child API (every route needs the iPad's device key):
 - `GET /api/state?pending=…`: balance, streak, last counted day, completed assignments, the latest finished assignment's grade, and which of the listed seeds (up to 100) are already recorded.
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
 - `POST /api/results`: records a result (§6.8) and returns it with the new state.
+
+The parent API (every route needs a valid Access token, §6.9):
+
+- `GET /api/parent/devices`: the paired and unpaired iPads.
+- `DELETE /api/parent/devices/:id`: unpairs an iPad.
+- `POST /api/parent/pairing-code { name }`: a new pairing code for an iPad with that name.
+
+Pairing (the one route with no key or token; the code is the gate):
+
+- `POST /api/pair { code }`: pairs the iPad and returns its device key once.
 
 ## 9. Later
 
