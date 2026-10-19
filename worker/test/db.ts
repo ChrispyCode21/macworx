@@ -24,6 +24,18 @@ export function migrationStatements(): string[] {
     )
 }
 
+/** Stands in for Cloudflare's rate limiter: 10 tries per key, as configured in wrangler.jsonc. */
+export function testLimiter(limit = 10) {
+  const counts = new Map<string, number>()
+  const limiter: RateLimit = {
+    async limit({ key }) {
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+      return { success: counts.get(key)! <= limit }
+    },
+  }
+  return limiter
+}
+
 /** `access: false` leaves the Worker's Access settings out, as on a PR preview. */
 export async function createTestDb({ access = true }: { access?: boolean } = {}) {
   const mf = new Miniflare(
@@ -47,6 +59,7 @@ export async function createTestDb({ access = true }: { access?: boolean } = {})
   const env: Env = {
     ASSETS: { fetch: async () => new Response('app') } as unknown as Fetcher,
     DB: db,
+    PAIR_LIMITER: testLimiter(),
     ...(access ? { ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD } : {}),
   }
   const certs = testCerts()
@@ -60,11 +73,13 @@ export async function createTestDb({ access = true }: { access?: boolean } = {})
       key = DEVICE_KEY,
       now = new Date('2026-10-17T12:00:00Z'),
       accessToken,
-    }: { body?: unknown; key?: string | null; now?: Date; accessToken?: string } = {},
+      ip = '203.0.113.7',
+    }: { body?: unknown; key?: string | null; now?: Date; accessToken?: string; ip?: string } = {},
   ) {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (key) headers.Authorization = `Bearer ${key}`
     if (accessToken) headers['Cf-Access-Jwt-Assertion'] = accessToken
+    headers['CF-Connecting-IP'] = ip
     const request = new Request(`https://macworx.test${path}`, {
       method,
       headers,
@@ -74,5 +89,5 @@ export async function createTestDb({ access = true }: { access?: boolean } = {})
     return { status: response.status, body: (await response.json()) as Record<string, any> }
   }
 
-  return { db, call, certs, dispose: () => mf.dispose() }
+  return { db, env, call, certs, dispose: () => mf.dispose() }
 }

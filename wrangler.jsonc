@@ -19,6 +19,8 @@
     "ACCESS_TEAM_DOMAIN": "misty-butterfly-5638.cloudflareaccess.com",
     "ACCESS_AUD": "a5ceb91781123283e917a7c2aa1d0b8670bf874af456649bb0c408406fa4ab5d",
   },
+  // At most 10 pairing tries a minute from one address (SPEC §6.9, worker/pair.ts).
+  "ratelimits": [{ "name": "PAIR_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
   // Production data: her Macaronis, streak and results. Workers Builds deploys main here.
   "d1_databases": [
     {
@@ -31,6 +33,10 @@
   // PR preview URLs (`wrangler preview`). Bindings don't carry over, and previews must never
   // touch production data, so they get their own database.
   "previews": {
+    // Bindings don't carry into previews; their own namespace keeps their counters apart from production.
+    "ratelimits": [
+      { "name": "PAIR_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } },
+    ],
     "d1_databases": [
       {
         "binding": "DB",

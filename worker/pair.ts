@@ -47,7 +47,22 @@ export async function postPairingCode(req: ParentRequest): Promise<Response> {
 }
 
 /** POST /api/pair { code } → { key }, once. Every refusal looks the same, so a guess learns nothing. */
-export async function postPair({ request, db, now }: { request: Request; db: D1Database; now: Date }) {
+export async function postPair({
+  request,
+  db,
+  now,
+  limiter,
+}: {
+  request: Request
+  db: D1Database
+  now: Date
+  limiter?: RateLimit
+}) {
+  // Rate limit first, before the code is even read, so a flood of guesses can't void a parent's code.
+  if (!limiter) return error(503, 'unavailable')
+  const address = request.headers.get('CF-Connecting-IP') ?? 'unknown'
+  if (!(await limiter.limit({ key: `pair:${address}` })).success) return error(429, 'too_many_tries')
+
   const body = (await readJson(request)) as { code?: unknown } | undefined
   const code = typeof body?.code === 'string' ? body.code : ''
   if (!/^\d{6}$/.test(code)) return error(400, 'bad_code')
