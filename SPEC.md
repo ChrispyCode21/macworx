@@ -49,8 +49,9 @@ macworx gives her:
    - Multiplication fills left to right, the way she writes a number: for 7 × 8 she types 5, 6. The answer stays lined up under the ones column, so a one-digit product sits in the ones box.
    - The box where her next digit goes is highlighted. Delete removes the digit she typed last. A box past the last one takes nothing.
    - Her answer is the number the boxes show; a leading 0 doesn't change it.
-   - Correct: the app says so and shows the problem with its answer.
-   - Not correct: the app shows the right answer in a friendly way (for example "7 × 8 = 56").
+   - After Check, her answer stays in the boxes exactly as she typed it; the boxes never change to a different answer.
+   - Correct: the app says so, and her boxes turn a soft green.
+   - Not correct: her boxes turn a soft coral (never bright red, and no ✗), and the line above Next shows the right answer in a friendly way (for example "7 × 8 = 56"). The right answer appears only there, never in her boxes.
    - Either way, she taps Next when she's ready. Nothing moves on by itself.
 5. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy and streak bonuses shown), and the grade.
 6. She can start another assignment right away. Assignments are unlimited.
