@@ -26,7 +26,7 @@ Standing instructions for every Claude session in this repo. Every run reads thi
 - **The Worker re-scores every result** with the same engine. The client never decides what it earned.
 - **Payout values and grade cutoffs live in one config module**, never as scattered constants.
 - **Never-negative wording.** No text frames a result as failure. Grades are Excellent, Great, Good and Improving.
-- **Parent routes** (`/parent`, `/api/parent/*`) sit behind Cloudflare Access. Never add an unauthenticated write endpoint.
+- **Parent routes** (`/parent`, `/api/parent/*`) sit behind Cloudflare Access. Never add an unauthenticated write endpoint. The one exception is `POST /api/pair`, gated by a one-time 6-digit code a parent makes behind Access (SPEC §6.9).
 
 ## Tests
 
