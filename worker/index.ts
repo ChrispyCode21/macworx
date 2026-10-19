@@ -1,9 +1,11 @@
 // The /api/* Worker (ARCHITECTURE.md). Every other path is served from the built app's static assets.
+import { fetchCertsFromCloudflare, parentEmail, type AccessEnv, type CertsFetcher } from './access'
 import { deviceFor } from './auth'
 import { getState, postResult, postSeeds, type ChildRequest } from './child'
 import { error, json } from './http'
+import { PARENT_ROUTES } from './parent'
 
-export interface Env {
+export interface Env extends AccessEnv {
   ASSETS: Fetcher
   DB: D1Database
 }
@@ -15,16 +17,35 @@ const CHILD_ROUTES: Record<string, (req: ChildRequest) => Promise<Response>> = {
   'POST /api/results': postResult,
 }
 
-/** The Worker's logic, with the clock passed in so tests can fix it. */
-export async function handle(request: Request, env: Env, now: Date): Promise<Response> {
+const isParentPath = (pathname: string) => pathname === '/api/parent' || pathname.startsWith('/api/parent/')
+
+/** The Worker's logic, with the clock (and, for tests, the Access key source) passed in. */
+export async function handle(
+  request: Request,
+  env: Env,
+  now: Date,
+  fetchCerts: CertsFetcher = fetchCertsFromCloudflare,
+): Promise<Response> {
   const url = new URL(request.url)
   const { pathname } = url
   if (pathname === '/api/health') return json(200, { ok: true })
   if (pathname !== '/api' && !pathname.startsWith('/api/')) return env.ASSETS.fetch(request)
 
-  const route = CHILD_ROUTES[`${request.method} ${pathname}`]
-  if (!route) return error(404, 'not_found')
   try {
+    // Parent routes: the Access token is checked before anything else, so even an unknown parent path is 401.
+    if (isParentPath(pathname)) {
+      const email = await parentEmail(request, env, now, fetchCerts)
+      if (email === null) return error(401, 'unauthorized')
+      for (const route of PARENT_ROUTES) {
+        const match = route.method === request.method && route.pattern.exec(pathname)
+        if (match)
+          return await route.run({ request, url, db: env.DB, email, now, params: { ...match.groups } })
+      }
+      return error(404, 'not_found')
+    }
+
+    const route = CHILD_ROUTES[`${request.method} ${pathname}`]
+    if (!route) return error(404, 'not_found')
     const device = await deviceFor(request, env.DB)
     if (device === null) return error(401, 'unauthorized')
     return await route({ request, url, db: env.DB, device, now })

@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { convertV4MiniflareOptions, Miniflare } from 'miniflare'
 import { sha256Hex } from '../auth'
 import { handle, type Env } from '../index'
+import { AUD, TEAM, testCerts } from './access-keys'
 
 export const DEVICE_KEY = 'test-device-key-0123456789abcdef'
 export const OTHER_KEY = 'other-device-key-0123456789abcdef'
@@ -23,7 +24,8 @@ export function migrationStatements(): string[] {
     )
 }
 
-export async function createTestDb() {
+/** `access: false` leaves the Worker's Access settings out, as on a PR preview. */
+export async function createTestDb({ access = true }: { access?: boolean } = {}) {
   const mf = new Miniflare(
     convertV4MiniflareOptions({
       modules: true,
@@ -42,9 +44,14 @@ export async function createTestDb() {
       .bind(await sha256Hex(key), label, '2026-10-17T00:00:00Z')
       .run()
 
-  const env: Env = { ASSETS: { fetch: async () => new Response('app') } as unknown as Fetcher, DB: db }
+  const env: Env = {
+    ASSETS: { fetch: async () => new Response('app') } as unknown as Fetcher,
+    DB: db,
+    ...(access ? { ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD } : {}),
+  }
+  const certs = testCerts()
 
-  /** Calls the Worker as the paired iPad (or with the given key, or none). */
+  /** Calls the Worker as the paired iPad (or with the given key, or none), or as a parent with an Access token. */
   async function call(
     method: string,
     path: string,
@@ -52,18 +59,20 @@ export async function createTestDb() {
       body,
       key = DEVICE_KEY,
       now = new Date('2026-10-17T12:00:00Z'),
-    }: { body?: unknown; key?: string | null; now?: Date } = {},
+      accessToken,
+    }: { body?: unknown; key?: string | null; now?: Date; accessToken?: string } = {},
   ) {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (key) headers.Authorization = `Bearer ${key}`
+    if (accessToken) headers['Cf-Access-Jwt-Assertion'] = accessToken
     const request = new Request(`https://macworx.test${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     })
-    const response = await handle(request, env, now)
+    const response = await handle(request, env, now, certs.fetchCerts)
     return { status: response.status, body: (await response.json()) as Record<string, any> }
   }
 
-  return { db, call, dispose: () => mf.dispose() }
+  return { db, call, certs, dispose: () => mf.dispose() }
 }

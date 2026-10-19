@@ -12,7 +12,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
 | `src/assignment/` | Pure helpers for the assignment screen: answer boxes and number pad typing. |
 | `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |
-| `worker/` | The Cloudflare Worker that answers `/api/*`: routing (`index.ts`), device keys (`auth.ts`), the child API (`child.ts`). `worker/test/` holds a local D1 for its tests. |
+| `worker/` | The Cloudflare Worker that answers `/api/*`: routing (`index.ts`), device keys (`auth.ts`), the child API (`child.ts`), Access checks (`access.ts`) and the parent API (`parent.ts`). `worker/test/` holds a local D1 for its tests. |
 | `migrations/` | Numbered D1 SQL migrations, applied in order. See "Data". |
 | `public/` | Icons, `logo.svg` and `_headers`, copied into the build as is. |
 | `e2e/` | Playwright tests of the production build. |
@@ -50,6 +50,8 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 
 - The browser loads the built app (`dist/`) as static assets from Cloudflare Workers. Any unknown path serves `index.html`.
 - `/api` and `/api/*` reach the Worker first (`run_worker_first` in `wrangler.jsonc`). `GET /api/health` answers `{ "ok": true }` without a key. Every other route needs a device key (`Authorization: Bearer <key>`) and returns 401 without a valid one; an unknown route returns 404.
+- **Parent routes** (`/api/parent/*`, `worker/parent.ts`): the Worker checks the Cloudflare Access token itself before anything else, so an unknown parent path is 401 too. Today: `GET /api/parent/devices` and `DELETE /api/parent/devices/:id` (unpair).
+- **The Access check** (`worker/access.ts`): `ctx.access` isn't passed to Workers that serve static assets, so the Worker verifies the `Cf-Access-Jwt-Assertion` token: RS256 only, signed by a key from `https://<team>/cdn-cgi/access/certs` (cached an hour; an unknown key id refetches at most once a minute), issuer `https://<team>`, audience `ACCESS_AUD`, not expired, with an email. It needs `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` (Worker vars, not secrets) and refuses everything without them; the `previews` block sets neither, so previews never serve parent routes.
 - **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. The app doesn't call it yet (#19).
 
 ## Data
