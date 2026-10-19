@@ -5,6 +5,11 @@
   --accent-ink: #3b2a05;
   --soft: #fde9b8;
   --answer-ink: #8a5a00;
+  /* After Check (SPEC §5.1): soft green when right, soft coral when not. Never bright red. */
+  --right-soft: #dcf3d4;
+  --right-edge: #6cbf5a;
+  --not-right-soft: #ffe0d6;
+  --not-right-edge: #f0947a;
   --space: 24px;
   --gap: 16px;
   --radius: 20px;
@@ -155,6 +160,16 @@ p {
 .answer-box-next {
   border-color: var(--accent);
   background: var(--soft);
+}
+
+.answer-box-right {
+  border-color: var(--right-edge);
+  background: var(--right-soft);
+}
+
+.answer-box-not-right {
+  border-color: var(--not-right-edge);
+  background: var(--not-right-soft);
 }
 
 .pad,
