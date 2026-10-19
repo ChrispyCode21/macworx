@@ -18,8 +18,8 @@ macworx gives her:
 - **Device:** an iPad. The app is a PWA, installed from Safari (Share, then Add to Home Screen), and runs full screen.
 - **Offline:** assignments work with no connection. Results sync when the iPad is back online.
 - **Hosting:** Cloudflare Workers serve the app's static files and an `/api/*` Worker. Data lives in Cloudflare D1.
-- **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record.
-- **Users:** one child and her parents. The child's side needs no sign-in. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access.
+- **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record. The Worker hands out the seeds assignments are generated from (§6.8).
+- **Users:** one child and her parents. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. A request without a valid key is refused and changes nothing. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access.
 
 ## 3. Non-goals (MVP)
 
@@ -137,6 +137,15 @@ Home shows the grade of her latest assignment. Grade cutoffs live in the same co
 
 Prices are fixed. The streak bonus only speeds up earning.
 
+### 6.8 Saving results
+
+- **Seeds:** the Worker hands each iPad up to 20 unused seeds at a time and accepts each seed once. An iPad keeps its unused seeds so assignments work offline.
+- **Recording:** the Worker regenerates the assignment from its seed and re-scores her answers. 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
+- **The same result twice:** sending a result for a seed that's already recorded returns the recorded result and counts nothing again, so a retry after a lost connection is safe.
+- **Day range:** a result's day may be no earlier than the day before its seed was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. Because of this, her last counted day is never more than a day ahead of the real date.
+- **Results that arrive late:** a result whose day is earlier than her last counted day counts as that same last day for the streak (no streak change, no streak bonus) and is still paid.
+- **Completed assignments** counts finished assignments only.
+
 ## 7. Worked examples → test cases
 
 Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If a rule changes, update its examples. Unless stated, an assignment has 20 problems, and "not first of the day" means another assignment was already finished today, so no streak bonus applies.
@@ -194,6 +203,19 @@ Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If
 | M7 | 7 × 8, answered 56; then answered 54 | 56 is **correct**; 54 is **not correct** |
 | M8 | The same seed, generated twice | **Identical** problems in identical order |
 
+### 7.W Saving results (§6.8)
+
+Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out that day, and her state is balance 0, streak 0, no last counted day.
+
+| ID | Given | Expected |
+|---|---|---|
+| W1 | A finished result, 20 correct, day 2026-10-17 | Recorded: payout 20 + 4 + 1 streak = **25**, balance **25**, streak **1**, completed **1**, grade **Excellent**; the seed is used |
+| W2 | The same seed sent again | The recorded result comes back; balance stays **25**, completed stays **1** |
+| W3 | A finished result dated 2026-10-19 (two days after the Worker's date) | Recorded on **2026-10-18** (the Worker's tomorrow) |
+| W4 | A result with no device key, or a key that isn't valid | Refused (401); nothing recorded |
+| W5 | Last counted day 2026-10-17 (streak 4); a finished result dated 2026-10-15 arrives | Counts as 2026-10-17: streak stays **4**, last counted day stays **2026-10-17**, no streak bonus; still paid |
+| W6 | A result she left early: 8 answered, 7 correct | Paid **7**; streak, last counted day and completed unchanged; no grade |
+
 ### 7.R Rewards (§6.4, §6.7)
 
 One 20-problem assignment a day, all correct, starting a fresh streak: day `n` pays 24 + min(n, 10).
@@ -214,6 +236,13 @@ The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock an
 - `payout(result)`: base, accuracy bonus, streak bonus and total for a finished assignment (§6.4).
 - `leftEarlyPayout({ correct, answered, problemCount })`: the base-only payout for an assignment she leaves early (§6.4).
 - `grade(correct, total)`: §6.6.
+- `addDays(day, n)`: the calendar day `n` days after (or before) `day`.
+
+The Worker's child API (every route needs the iPad's device key):
+
+- `GET /api/state?pending=…`: balance, streak, last counted day, completed assignments, the latest finished assignment's grade, and which of the listed seeds (up to 100) are already recorded.
+- `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
+- `POST /api/results`: records a result (§6.8) and returns it with the new state.
 
 ## 9. Later
 

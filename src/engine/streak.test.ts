@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { payout } from './payout'
-import { dayNumber, nextStreak, type StreakState } from './streak'
+import { addDays, dayNumber, nextStreak, type StreakState } from './streak'
 
 const TODAY = '2026-10-17'
 
@@ -99,6 +99,28 @@ describe('streak (SPEC §6.5)', () => {
     expect(dayNumber('1970-01-01')).toBe(0)
     expect(dayNumber('2000-03-01') - dayNumber('2000-02-28')).toBe(2)
     expect(dayNumber('2100-03-01') - dayNumber('2100-02-28')).toBe(1)
+  })
+
+  it('adds and subtracts days across month, year and leap-day boundaries', () => {
+    expect(addDays('2026-10-17', 1)).toBe('2026-10-18')
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01')
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01')
+    expect(addDays('2027-01-01', -1)).toBe('2026-12-31')
+    expect(addDays('2028-02-28', 1)).toBe('2028-02-29')
+    expect(addDays('2100-02-28', 1)).toBe('2100-03-01')
+    expect(addDays('2000-02-28', 1)).toBe('2000-02-29')
+    expect(addDays('1970-01-01', 0)).toBe('1970-01-01')
+  })
+
+  it('round-trips every day for a few years', () => {
+    for (let n = dayNumber('2025-01-01'); n < dayNumber('2030-01-01'); n++) {
+      const day = addDays('1970-01-01', n)
+      expect(dayNumber(day)).toBe(n)
+    }
+  })
+
+  it('rejects a fractional number of days', () => {
+    expect(() => addDays('2026-10-17', 0.5)).toThrow(RangeError)
   })
 
   it('rejects a stored streak that is negative or not a whole number', () => {
