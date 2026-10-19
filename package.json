@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:cloudflare": "node scripts/cloudflare-build.mjs && npm run build",
     "lint": "oxlint",
     "preview": "vite preview",
     "worker:dev": "npm run build && wrangler dev",

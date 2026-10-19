@@ -66,7 +66,7 @@ D1, one database per environment (see "Hosting"). `migrations/0001_init.sql` cre
 - **One write at a time:** recording a result is one D1 batch. Its first statement updates `child` only if `revision` still has the value read before the write, and sets a new random revision. The result insert and the seed update apply only if the new revision is in place. So a lost race changes nothing; the Worker re-reads and retries (3 tries, then 503), and a repeat of the same seed returns the recorded result.
 - **Editing by hand:** `UPDATE child SET streak = 5, last_day = '2026-10-17', revision = lower(hex(randomblob(16))) WHERE id = 1`. Changing `revision` makes a result being recorded at that moment retry from the edited row rather than overwrite it.
 - **Seeds and the app:** `POST /api/seeds` returns every seed the Worker still counts as unused, including ones the iPad has used offline but not synced yet. The app must leave out seeds that are in its result queue (#19).
-- **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
+- **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them in the build step, before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
 - **Pairing by hand:** until the pairing screen exists (#17, #18), `node scripts/create-device.mjs --local|--remote "label"` creates a device and prints its key once.
 - **Tests** (`worker/*.test.ts`) run the Worker in Node against a real local D1 from Miniflare, with every migration applied. (`@cloudflare/vitest-pool-workers` doesn't support this repo's Vitest version.)
 
@@ -79,9 +79,10 @@ D1, one database per environment (see "Hosting"). `migrations/0001_init.sql` cre
 ## Hosting
 
 - `wrangler.jsonc` configures the Worker, its static assets and the D1 bindings.
-- **Workers Builds** (Cloudflare's GitHub integration) builds every push with `npm run build`, applies migrations, then deploys. The build settings live in the Cloudflare dashboard, not in the repo:
-  - Deploy command (`main`): `npx wrangler d1 migrations apply macworx --remote && npx wrangler deploy`
-  - Non-production branch deploy command: `npx wrangler d1 migrations apply macworx-preview --remote -c wrangler.preview-migrations.jsonc && npx wrangler preview`
+- **Workers Builds** (Cloudflare's GitHub integration) builds every push. Its settings live in the Cloudflare dashboard:
+  - Build command: `npm run build:cloudflare`. `scripts/cloudflare-build.mjs` applies D1 migrations to `macworx` when the branch is `main` and to `macworx-preview` for any other branch (from `WORKERS_CI_BRANCH`), then runs `npm run build`. The migration step lives in the repo, not in the dashboard's deploy fields, so it's reviewed and versioned; it refuses to run outside Workers Builds.
+  - Deploy command (`main`): `npx wrangler deploy`. Preview command (other branches): `npx wrangler preview`.
+  - Migrations run before the new code deploys, so each migration must also work with the code already running (add, don't rename or drop).
 - **Two D1 databases, both bound as `DB`:** `macworx` holds production data. `macworx-preview` is used only by preview URLs (the `previews` block), so a PR branch never touches her real data. A branch's migrations run on the shared preview database before it merges.
 - `wrangler.preview-migrations.jsonc` exists only so wrangler can find the preview database for migrations; it can't see one that's only in the `previews` block. `worker/config.test.ts` checks the two configs name the same preview database, and that production and previews differ.
 - Database IDs identify a database but grant no access, so they're committed. Cloudflare sign-ins and API tokens are never committed, and the build doesn't need any.
