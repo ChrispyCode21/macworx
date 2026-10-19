@@ -37,6 +37,24 @@ export const COPY = {
   pairTooManyTries: "Let's wait a minute, then try again.",
   pairOffline: 'Connect to Wi-Fi to pair this iPad.',
   pairBusy: "Something's busy right now. Try again in a minute.",
+  // The parent page (SPEC §5.3), for a parent
+  parentTitle: 'macworx · Parent',
+  parentPairHeading: 'Pair an iPad',
+  parentNameLabel: 'iPad name',
+  parentNameHint: 'Up to 40 characters, e.g. "Her iPad"',
+  parentMakeCode: 'Make a code',
+  parentCodeWithin: (minutes: number) =>
+    `Enter it on the iPad within ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`,
+  parentCodeRanOut: 'This code has run out. Make a new one.',
+  parentDevicesHeading: 'Paired iPads',
+  parentPairedOn: (day: string) => `Paired ${day}`,
+  parentUnpairedOn: (day: string) => `Unpaired ${day}`,
+  parentUnpair: 'Unpair',
+  parentUnpairConfirm: (name: string) => `Unpair ${name}? Results this iPad hasn't sent yet won't be saved.`,
+  parentKeepPaired: 'Keep it paired',
+  parentNoDevices: 'No iPads paired yet.',
+  parentNameProblem: 'Give the iPad a name of up to 40 characters.',
+  parentServerTrouble: 'Something went wrong on our side. Try again in a minute.', // conventions-ignore: parent-facing, approved in #18
   home: 'Home',
 } as const
 

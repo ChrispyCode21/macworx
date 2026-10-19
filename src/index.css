@@ -243,6 +243,79 @@ p {
   min-height: 1.5em;
 }
 
+/* The parent page (SPEC §5.3): a plain, readable page for a phone or computer. */
+.parent {
+  box-sizing: border-box;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  font-size: 0.8rem;
+}
+
+.parent-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap);
+}
+
+.parent-problem,
+.parent-confirm,
+.parent-code {
+  padding: var(--gap);
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+
+.parent-code-digits {
+  font-size: 2.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+}
+
+.parent-devices {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.parent-device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+  padding: var(--gap) 0;
+  border-bottom: 1px solid var(--soft);
+}
+
+.parent-device-name {
+  font-weight: 700;
+  flex: 1;
+}
+
+.text-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.text-field-input {
+  font: inherit;
+  padding: 12px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+}
+
+.text-field-hint {
+  opacity: 0.8;
+}
+
 /* Read by VoiceOver, not shown. */
 .visually-hidden {
   position: absolute;

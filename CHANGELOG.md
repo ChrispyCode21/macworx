@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Parent page:** at `/parent`, behind your Cloudflare Access sign-in. Name an iPad and make a 6-digit pairing code (it counts down from 10 minutes), see the paired iPads, and unpair one after a warning.
 - **Pair her iPad:** in the installed app, Home shows **Pair this iPad** until the iPad is paired. A parent's 6-digit code goes in on the number pad, and the iPad keeps its key. If a parent later unpairs it, the button comes back. Practice works either way.
 
 ## [0.1.1] - 2026-10-19

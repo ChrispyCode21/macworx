@@ -83,7 +83,11 @@ const copyRules = [
   {
     // Text between tags, or Prettier-wrapped JSX text on a line of its own: two or more words, which
     // a line of code (an identifier in a wrapped import, say) never is.
-    test: (l) => />\s*[A-Za-z][^<{}]*</.test(l) || /^\s*[A-Za-z][\w,.!?']*( [\w,.!?']+)+$/.test(l),
+    test: (l) =>
+      />\s*[A-Za-z][^<{}]*</.test(l) ||
+      /^\s*(?!(return|const|let|await|throw|case|export|import|if|else)\b)[A-Za-z][\w,.!?']*( [\w,.!?']+)+$/.test(
+        l,
+      ),
     message: 'Put on-screen text in src/copy.ts and use it from there.',
   },
 ]
