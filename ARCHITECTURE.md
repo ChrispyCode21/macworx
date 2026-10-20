@@ -22,8 +22,8 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `public/` | Icons, `logo.svg` and `_headers`, copied into the build as is. |
 | `e2e/` | Playwright tests of the production build. |
 | `scripts/` | The check scripts CI runs, the engine purity test, and `create-device.mjs`. |
-| `.github/` | CI, security and release workflows, the `main` ruleset, Dependabot, PR and issue templates. |
-| `.claude/agents/` | Local `plan-reviewer` and `code-reviewer` subagents (PIPELINE.md). |
+| `.github/` | CI, security, release and merge-gate workflows, the `main` ruleset, Dependabot, PR and issue templates. |
+| `.claude/` | nightshift's config for this repo (`nightshift.json`) and its release-issue text (PIPELINE.md). |
 
 ## Question engine
 
@@ -112,7 +112,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 
 ## Quality gates and releases
 
-`npm run check:all` runs every check CI runs, in CI's order. Run it before pushing.
+`npm run check:all` runs every check CI runs, in CI's order. Run it before pushing. `npm run check:fast` runs the quick ones while working: everything up to the unit tests, plus `typecheck` (`tsc -b`) in place of the build and Playwright.
 
 | Check | What it enforces |
 |---|---|
@@ -125,7 +125,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 | `build` | Type-check (app, Worker, configs, e2e) and production build. |
 | `test:e2e` | Playwright, WebKit and Chromium, iPad portrait (820×1180) and landscape (1180×820): the app loads without sideways scrolling, links its manifest, and opens offline. |
 
-CI (`.github/workflows/ci.yml`) runs the same checks as two jobs, **Checks** and **Playwright**. `security.yml` adds CodeQL and dependency review. Dependabot opens weekly grouped updates.
+CI (`.github/workflows/ci.yml`) runs the same checks as two jobs, **Checks** and **Playwright**. `security.yml` adds CodeQL and dependency review. Dependabot opens weekly grouped updates. `merge-gate.yml` labels each PR `touches-data` or `touches-gates` from its paths, so nightshift's reviewer leaves those PRs for the owner to merge (PIPELINE.md, "Who merges").
 
 `.github/rulesets/main.json` protects `main`: PRs only, no force-push or deletion, and all the checks above must pass. Apply it once with:
 

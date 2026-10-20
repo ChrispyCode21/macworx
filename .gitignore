@@ -32,6 +32,10 @@ CLAUDE.local.md
 .claude/*
 !.claude/agents/
 !.claude/skills/
+# nightshift's config for this repo (PIPELINE.md); its run files stay local.
+!.claude/nightshift.json
+!.claude/nightshift/
+.agent-runs/
 
 # Playwright output (npm run test:e2e)
 test-results

@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "fast": "npm run check:fast",
+    "e2e": "npx playwright test",
+    "install": "npm ci"
+  },
+  "builder": {
+    "milestones": "semver",
+    "authors": "owner",
+    "branchPrefix": "agent/issue-",
+    "docs": ["SPEC.md", "CLAUDE.md", "ARCHITECTURE.md"],
+    "spec": { "path": "SPEC.md", "recordDecisionsFirst": true },
+    "workedExamples": { "paths": ["src/engine/"], "approveOnIssue": true, "section": "SPEC.md §7" },
+    "neverEdit": [".github/workflows/", ".github/rulesets/", ".claude/"],
+    "release": { "issueText": ".claude/nightshift/release-issue.md" }
+  },
+  "reviewer": {
+    "authors": ["agent", "app/dependabot", "app/claude"],
+    "highRisk": {
+      "paths": ["src/engine/", "src/storage/", "migrations/", "worker/"],
+      "labels": ["touches-data", "touches-gates", "high-risk"]
+    },
+    "ownerMerges": {
+      "labels": ["touches-data", "touches-gates"],
+      "release": true,
+      "dependabotWorkflows": true
+    },
+    "mergeNotes": {
+      "touches-data": "Merging deploys to production: its migrations run on her real D1 data before the new code. Check they only add (no rename or drop).",
+      "touches-gates": "It changes what decides green (check scripts, config, workflows or rulesets): read those files, not just the result."
+    },
+    "mergeMethod": "merge"
+  },
+  "standards": {
+    "baseline": true,
+    "rules": ["CLAUDE.md", "ARCHITECTURE.md"],
+    "checker": "scripts/check-conventions.mjs",
+    "exceptions": []
+  }
+}
