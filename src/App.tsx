@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { keyStillPaired } from './pairing/api'
 import { Pair } from './screens/Pair'
+import { ParentPage } from './screens/parent/ParentPage'
 import { forgetDeviceKey, getDeviceKey, isInstalled } from './storage/device'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
@@ -17,7 +18,16 @@ function newSeed(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0]
 }
 
+/** /parent is a full page load (behind Cloudflare Access), never a route inside her app (SPEC §5.3). */
 export function App() {
+  return location.pathname === '/parent' || location.pathname.startsWith('/parent/') ? (
+    <ParentPage />
+  ) : (
+    <ChildApp />
+  )
+}
+
+function ChildApp() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
   const start = () => setScreen({ name: 'assignment', seed: newSeed() })
   const [paired, setPaired] = useState(() => getDeviceKey() !== null)
