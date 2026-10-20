@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "build:cloudflare": "node scripts/cloudflare-build.mjs && npm run build",
     "lint": "oxlint",
+    "typecheck": "tsc -b",
     "preview": "vite preview",
     "worker:dev": "npm run build && wrangler dev",
     "test": "vitest run",
@@ -18,7 +19,8 @@
     "check:spec": "node scripts/check-spec-coverage.mjs",
     "check:conventions": "node scripts/check-conventions.mjs",
     "check:changelog": "node scripts/changelog-section.mjs --check",
-    "check:all": "node scripts/check-all.mjs"
+    "check:all": "node scripts/check-all.mjs",
+    "check:fast": "node scripts/check-all.mjs --fast"
   },
   "dependencies": {
     "react": "^19.2.8",

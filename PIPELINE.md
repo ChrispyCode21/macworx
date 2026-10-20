@@ -2,6 +2,8 @@
 
 How the models split the work. The goal: Opus judgment where a mistake can hide, Sonnet everywhere else, and automated checks before any model reviews anything.
 
+[nightshift](https://github.com/ChrispyCode21/nightshift) runs this pipeline on the owner's machine, configured by `.claude/nightshift.json`: a builder at 2:00 AM and a reviewer at 4:00 AM Central, and on pushes to agent and Dependabot branches. The builder takes issues from the lowest open version milestone.
+
 ## Stages
 
 | Stage | Who | Reads | Produces |
@@ -11,7 +13,7 @@ How the models split the work. The goal: Opus judgment where a mistake can hide,
 | Build | Sonnet 5.5 | The approved plan | A branch and a PR |
 | Gates | CI (no model) | The PR | Pass or fail: format, lint, conventions, spec coverage, tests, build, Playwright, CodeQL, dependency review |
 | Code review | Sonnet 5.5 or Opus 5.5 (see "Risk tiers") | The diff, the plan, the issue | Ranked findings |
-| Merge | Owner | The PR and the review | Merged, or sent back |
+| Merge | nightshift's reviewer, or the owner (see "Who merges") | The PR and the review | Merged, held with reasons, or sent back |
 
 ## Why a plan review instead of the advisor
 
@@ -51,6 +53,13 @@ Everything else gets a Sonnet review. The `high-risk` label forces Opus.
 - **Plan review:** at most 2 revise rounds, then it goes to the owner.
 - **Timeouts:** triage 10 minutes, build 45 minutes.
 
-## Status
+## Who merges
 
-Not built yet. Start locally with two subagents in `.claude/agents/`: `plan-reviewer` (`model: opus`) and `code-reviewer` (model chosen by risk tier). Port Logtelligent's GitHub workflow (`agent.yml`) once SPEC.md and the first slice exist.
+`merge-gate.yml` labels every PR but Dependabot's from the paths it changes. The reviewer reviews and fixes a labeled PR, then comments that it's ready and leaves the merge to the owner. It merges everything else itself once CI is green.
+
+| Label | Paths | Why the owner merges |
+| --- | --- | --- |
+| `touches-data` | `migrations/`, `worker/`, `src/storage/` | Merging deploys: migrations run on her real D1 data, and the Worker guards auth, pairing and the parent API. |
+| `touches-gates` | `scripts/`, lint, format, type and test config, `public/_headers`, `wrangler*.jsonc`, workflows and rulesets | It changes what decides green. |
+
+Release PRs, and Dependabot PRs that touch workflows, also wait for the owner. Labels are only added by the workflow; the owner can remove one.
