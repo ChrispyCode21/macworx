@@ -6,6 +6,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Added
+
+- **Pair her iPad:** in the installed app, Home shows **Pair this iPad** until the iPad is paired. A parent's 6-digit code goes in on the number pad, and the iPad keeps its key. If a parent later unpairs it, the button comes back. Practice works either way.
+
 ## [0.1.1] - 2026-10-19
 
 ### Fixed

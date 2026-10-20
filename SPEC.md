@@ -65,7 +65,7 @@ macworx gives her:
 
 ### 5.3 Parent dashboard (admin)
 
-The parent dashboard is admin mode: it shows everything and can change anything. It shows:
+The parent dashboard is admin mode: it shows everything and can change anything. It lives at `/parent` on the same app, for a parent's phone or computer; nothing on her screens links to it. It shows:
 
 - Each finished assignment: date, every problem with her answer and the right answer, correct count, grade and Macaronis earned.
 - Her balance, streak and purchase history.
@@ -79,6 +79,14 @@ A parent can:
 - Correct a recorded result.
 
 Every change is logged: what changed, when, and which parent made it. The app's own rules never take anything away (§4); a parent's corrections are the exception.
+
+### 5.4 Pair her iPad
+
+1. Until her iPad is paired, she can still practice; Home also shows a **Pair this iPad** button. It shows only when the app runs installed from the home screen, because Safari and the installed app keep separate storage, so a pairing done in Safari wouldn't reach her app.
+2. A parent makes a code on the parent dashboard (§5.3, §6.9). On the Pair screen, the code is typed on the same number pad into six boxes, filled left to right, and sent with **Pair**.
+3. Paired: the screen says so and the button disappears from Home. The iPad keeps its device key.
+4. Not paired: a friendly line says what to do (ask for a new code, wait a minute, connect to Wi-Fi, or try again soon), and the boxes clear.
+5. Whenever Home opens with a stored key, the iPad checks it with the Worker. If a parent has unpaired the iPad, the iPad forgets the key and the button comes back.
 
 ## 6. Domain rules
 
@@ -160,7 +168,7 @@ Prices are fixed. The streak bonus only speeds up earning.
 - **Parent access:** every `/api/parent/*` request must carry a valid Cloudflare Access token for this app: signed by the team's keys, issued by the team, for this application, not expired, with the parent's email. Anything else is refused (401), including when the Worker isn't configured for Access, so PR previews never serve parent routes.
 - **Pairing:** the parent names the iPad (up to 40 characters) and gets a 6-digit code, valid for 10 minutes and for one use. Making a new code voids any earlier unused one. Five wrong tries void the code. On the iPad, entering the right code pairs it: the Worker returns its device key once and stores only the key's SHA-256.
 - **Pairing rate limit:** at most 10 pairing tries a minute from one network address (an IPv6 address counts by its /64 block, roughly one home or connection). Beyond that the Worker answers 429 without looking at the code. This slows a flood of guesses; it can't stop someone who sends a few wrong guesses a minute from voiding a code, since 5 wrong tries void it. If that ever happens, the parent makes a new code later. The code's own one use, 10 minutes and 5 tries are what keep an iPad from being paired by anyone else. If the Worker has no rate limiter, pairing is refused (503) rather than left unguarded.
-- **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The dashboard warns before unpairing: "Results not yet synced from this iPad will be lost."
+- **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The dashboard warns before unpairing: "Results this iPad hasn't sent yet won't be saved."
 
 ## 7. Worked examples → test cases
 

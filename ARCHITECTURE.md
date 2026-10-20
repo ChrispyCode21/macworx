@@ -10,6 +10,8 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/screens/` | One component per screen: Home, Assignment, Result. |
 | `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`. |
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
+| `src/storage/` | The iPad's own storage: today, its device key (`device.ts`). |
+| `src/pairing/` | The iPad's pairing calls: `/api/pair`, and checking a stored key. |
 | `src/assignment/` | Pure helpers for the assignment screen: answer boxes and number pad typing. |
 | `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |
 | `worker/` | The Cloudflare Worker that answers `/api/*`: routing (`index.ts`), device keys (`auth.ts`), the child API (`child.ts`), Access checks (`access.ts`) and the parent API (`parent.ts`). `worker/test/` holds a local D1 for its tests. |
@@ -39,6 +41,7 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 ## UI
 
 - **Screens:** `App.tsx` holds which screen is showing (home, an assignment with its seed, or a result) in React state. There's no router, and nothing is saved yet: a result lives only until the next screen.
+- **Pairing** (SPEC §5.4): `Home` shows **Pair this iPad** only when the app runs installed (`navigator.standalone` or `display-mode: standalone`) and has no key. The Pair screen reuses `NumberPad` (with a `checkLabel`) and the answer-box style (`CodeBoxes`). On load, a stored key is checked against `/api/state`; a 401 forgets it.
 - **Seeds:** each assignment gets a random seed from `crypto.getRandomValues` in `App.tsx`. The engine never makes randomness itself.
 - **Text:** every string she sees lives in `src/copy.ts`, including the grade headings, keyed by the engine's `Grade` type.
 - **Shared building blocks:** `src/ui/Button` is the only button, with variants `primary`, `secondary`, `key` and `check`. `src/ui/format.ts` does all number and operator formatting. Colors and sizes are CSS custom properties at the top of `src/index.css`. `check-conventions` fails on a raw `<button>` or inline number formatting outside `src/ui/`, on words written straight into JSX instead of `src/copy.ts`, and on a hex color outside the tokens.
