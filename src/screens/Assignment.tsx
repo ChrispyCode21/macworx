@@ -17,8 +17,9 @@ import { formatEquation } from '../ui/format'
 
 interface Props {
   seed: number
-  onFinish: (correct: number, problemCount: number) => void
-  onLeave: (answered: number, correct: number) => void
+  /** Her answers in order, one per problem she checked. */
+  onFinish: (answers: number[], correct: number) => void
+  onLeave: (answers: number[], correct: number) => void
 }
 
 /** One assignment, a problem at a time (SPEC §5.1). */
@@ -27,21 +28,23 @@ export function Assignment({ seed, onFinish, onLeave }: Props) {
   const [index, setIndex] = useState(0)
   const [typed, setTyped] = useState('')
   const [correct, setCorrect] = useState(0)
+  const [answers, setAnswers] = useState<number[]>([])
   const [response, setResponse] = useState<'correct' | 'shown' | null>(null)
 
   const problem = problems[index]
   const last = index === problems.length - 1
-  const answered = index + (response ? 1 : 0)
   const entry = entryFor(problem.operation)
   const boxes = boxCount(problem)
 
   const check = () => {
-    const right = checkAnswer(problem, answerValue(typed, entry))
+    const answer = answerValue(typed, entry)
+    const right = checkAnswer(problem, answer)
+    setAnswers((a) => [...a, answer])
     if (right) setCorrect((c) => c + 1)
     setResponse(right ? 'correct' : 'shown')
   }
   const next = () => {
-    if (last) return onFinish(correct, problems.length)
+    if (last) return onFinish(answers, correct)
     setIndex((i) => i + 1)
     setTyped('')
     setResponse(null)
@@ -58,7 +61,7 @@ export function Assignment({ seed, onFinish, onLeave }: Props) {
           variant="secondary"
           // All 20 answered counts as finished, even if she leaves before tapping "See how I did".
           onClick={() =>
-            answered === problems.length ? onFinish(correct, answered) : onLeave(answered, correct)
+            answers.length === problems.length ? onFinish(answers, correct) : onLeave(answers, correct)
           }
         >
           {COPY.leave}
