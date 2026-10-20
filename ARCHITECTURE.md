@@ -10,7 +10,8 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/screens/` | One component per screen: Home, Assignment, Result. |
 | `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`. |
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
-| `src/storage/` | The iPad's own storage: today, its device key (`device.ts`). |
+| `src/storage/` | The iPad's own storage (`device.ts`): its device key, unused seeds, unsent results and the Worker's latest state. |
+| `src/sync/` | Saving her results (`sync.ts`): taking a stored seed, queueing a result, and syncing with the Worker. |
 | `src/parent/` | The parent page's calls (`api.ts`): every `/api/parent` call, and reloading once when Access's sign-in has run out. |
 | `src/screens/parent/` | The parent page (`ParentPage.tsx`). |
 | `src/pairing/` | The iPad's pairing calls: `/api/pair`, and checking a stored key. |
@@ -52,6 +53,16 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 - **Layout:** the assignment puts the number pad below the problem in portrait and beside it in landscape. Nothing uses an `<input>`, so the iPad keyboard never opens. The pad ignores taps for 350 ms after it appears, so a double tap on Next can't type into the next problem. Padding respects the iPad's safe areas.
 - **VoiceOver:** an always-present hidden live region reads each response, and focus moves to Next after Check and to the pad after Next.
 
+## Saving results
+
+SPEC §6.8. `src/storage/device.ts` keeps four `localStorage` entries: the device key, the unused seeds, the queue of results not yet sent (`{ seed, day, answers }`, the day being the iPad's own) and the Worker's latest state. Anything it can't parse reads as empty. Forgetting the key clears all four. With a key, the app asks for persistent storage (`navigator.storage.persist()`).
+
+`src/sync/sync.ts`:
+
+- **The seed in progress** is kept in memory with the key it came with, never stored: a closed app has nothing to resume, and the next top-up brings the seed back. `endSeed` queues her answers, or puts an unanswered seed at the back of the list; it does nothing if the key changed meanwhile.
+- **`sync()`** runs one at a time; a call during a run joins it and makes it run once more. It sends queued results oldest first and removes each by seed once the Worker returns the recorded result (keeping its state), or refuses it as `bad_result` or `unknown_seed` (it can never be recorded). Any other answer holds that result and the rest for the next sync, but seeds still top up; no connection stops the sync. Each request gives up after 10 seconds. Then `POST /api/seeds`: the new list keeps stored seeds the Worker still lists, in their order, adds new ones, and leaves out queued and in-progress seeds, read again after the reply arrives. Last, `GET /api/state`. A 401 at any step forgets the key.
+- **When:** the screens don't call it yet.
+
 ## Data flow
 
 - The browser loads the built app (`dist/`) as static assets from Cloudflare Workers. Any unknown path serves `index.html`.
@@ -59,7 +70,7 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 - **Parent routes** (`/api/parent/*`, `worker/parent.ts`): the Worker checks the Cloudflare Access token itself before anything else, so an unknown parent path is 401 too. Today: `GET /api/parent/devices`, `DELETE /api/parent/devices/:id` (unpair) and `POST /api/parent/pairing-code`.
 - **Pairing** (`worker/pair.ts`, SPEC §6.9): `POST /api/pair { code }` is the one write route with no key or token; the one-time code is the gate (CLAUDE.md). Each try is counted before its code is compared, in one `UPDATE … RETURNING` on the newest usable code, so a burst of tries at once gets at most 5 comparisons between them. The right code is claimed with a random value in the same batch that creates the device, so one code can't pair twice. Every refusal is the same `bad_code`. Before any of that, a Cloudflare rate-limit binding (`PAIR_LIMITER`, 10 tries a minute per `CF-Connecting-IP`, IPv6 counted by its /64 block) answers 429 to slow a flood of guesses (it can't stop slow ones from voiding a code; SPEC §6.9); without the binding, pairing is refused (503) rather than unguarded. Previews have their own limiter namespace.
 - **The Access check** (`worker/access.ts`): `ctx.access` isn't passed to Workers that serve static assets, so the Worker verifies the `Cf-Access-Jwt-Assertion` token: RS256 only, signed by a key from `https://<team>/cdn-cgi/access/certs` (cached an hour; an unknown key id refetches at most once a minute), issuer `https://<team>`, audience `ACCESS_AUD`, not expired, with an email. It needs `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` and refuses everything without them. They're in `wrangler.jsonc`'s top-level `vars` (not secrets, and not the dashboard: each `wrangler deploy` replaces dashboard vars). Vars don't carry into the `previews` block, so previews never serve parent routes; keep it that way, since a parent token is checked by audience, not hostname.
-- **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. The app doesn't call it yet (#19).
+- **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. `src/sync/sync.ts` calls it.
 
 ## Data
 
@@ -76,7 +87,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 
 - **One write at a time:** recording a result is one D1 batch. Its first statement updates `child` only if `revision` still has the value read before the write, and sets a new random revision. The result insert and the seed update apply only if the new revision is in place. So a lost race changes nothing; the Worker re-reads and retries (3 tries, then 503), and a repeat of the same seed returns the recorded result.
 - **Editing by hand:** `UPDATE child SET streak = 5, last_day = '2026-10-17', revision = lower(hex(randomblob(16))) WHERE id = 1`. Changing `revision` makes a result being recorded at that moment retry from the edited row rather than overwrite it.
-- **Seeds and the app:** `POST /api/seeds` returns every seed the Worker still counts as unused, including ones the iPad has used offline but not synced yet. The app must leave out seeds that are in its result queue (#19).
+- **Seeds and the app:** `POST /api/seeds` returns every seed the Worker still counts as unused, including ones the iPad has used offline but not synced yet. The app leaves out seeds in its result queue and the one in progress.
 - **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them in the build step, before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
 - **Pairing by hand:** until the pairing screen exists (#17, #18), `node scripts/create-device.mjs --local|--remote "label"` creates a device and prints its key once.
 - **Tests** (`worker/*.test.ts`) run the Worker in Node against a real local D1 from Miniflare, with every migration applied. (`@cloudflare/vitest-pool-workers` doesn't support this repo's Vitest version.)
