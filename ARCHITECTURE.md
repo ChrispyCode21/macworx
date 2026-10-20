@@ -14,7 +14,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/sync/` | Saving her results (`sync.ts`): taking a stored seed, queueing a result, and syncing with the Worker. |
 | `src/parent/` | The parent page's calls (`api.ts`): every `/api/parent` call, and reloading once when Access's sign-in has run out. |
 | `src/screens/parent/` | The parent page (`ParentPage.tsx`). |
-| `src/pairing/` | The iPad's pairing calls: `/api/pair`, and checking a stored key. |
+| `src/pairing/` | The iPad's pairing call: `/api/pair`. |
 | `src/assignment/` | Pure helpers for the assignment screen: answer boxes and number pad typing. |
 | `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |
 | `worker/` | The Cloudflare Worker that answers `/api/*`: routing (`index.ts`), device keys (`auth.ts`), the child API (`child.ts`), Access checks (`access.ts`) and the parent API (`parent.ts`). `worker/test/` holds a local D1 for its tests. |
@@ -43,10 +43,10 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 
 ## UI
 
-- **Screens:** `App.tsx` holds which screen is showing (home, an assignment with its seed, or a result) in React state. There's no router, and nothing is saved yet: a result lives only until the next screen.
+- **Screens:** `App.tsx` holds which screen is showing (home, an assignment with its seed, or a result) in React state. There's no router. What's saved lives in `src/storage/device.ts` (see "Saving results").
 - **Parent page** (SPEC §5.3): `App.tsx` renders `ParentPage` when the page loads at `/parent`; it's never a route inside her app, so every visit is a full page load that Access can intercept. Calls use `redirect: 'manual'`: a redirect or non-JSON answer below 500 means Access wants a sign-in, so the page reloads once (a `sessionStorage` flag stops a loop), then says the sign-in has run out; a JSON refusal is the Worker's own and shows a message, as does a Cloudflare error page (5xx). Her screens never use a text box; the parent page uses `src/ui/TextField`.
-- **Pairing** (SPEC §5.4): `Home` shows **Pair this iPad** only when the app runs installed (`navigator.standalone` or `display-mode: standalone`) and has no key. The Pair screen reuses `NumberPad` (with a `checkLabel`) and the answer-box style (`CodeBoxes`). On load, a stored key is checked against `/api/state`; a 401 forgets it.
-- **Seeds:** each assignment gets a random seed from `crypto.getRandomValues` in `App.tsx`. The engine never makes randomness itself.
+- **Pairing** (SPEC §5.4): `Home` shows **Pair this iPad** only when the app runs installed (`navigator.standalone` or `display-mode: standalone`) and has no key. The Pair screen reuses `NumberPad` (with a `checkLabel`) and the answer-box style (`CodeBoxes`). Each sync checks the stored key; a 401 forgets it, with the seeds and unsent results stored for it.
+- **Seeds:** a paired iPad takes the next stored seed (`takeSeed`), syncing first when it has none; with none and no connection, Home shows the Wi-Fi line. An iPad without a key practices with a random seed from `crypto.getRandomValues` and saves nothing. The engine never makes randomness itself.
 - **Text:** every string she sees lives in `src/copy.ts`, including the grade headings, keyed by the engine's `Grade` type.
 - **Shared building blocks:** `src/ui/Button` is the only button, with variants `primary`, `secondary`, `key` and `check`. `src/ui/format.ts` does all number and operator formatting. Colors and sizes are CSS custom properties at the top of `src/index.css`. `check-conventions` fails on a raw `<button>` or inline number formatting outside `src/ui/`, on words written straight into JSX instead of `src/copy.ts`, and on a hex color outside the tokens.
 - **Answer boxes:** `StackedProblem` lays the problem out one digit per column with one answer box per column. `src/assignment/answer.ts` keeps her digits in the order she tapped them, and derives the boxes from them: ones place first for addition and subtraction, left to right (lined up under the ones column) for multiplication.
@@ -61,7 +61,7 @@ SPEC §6.8. `src/storage/device.ts` keeps four `localStorage` entries: the devic
 
 - **The seed in progress** is kept in memory with the key it came with, never stored: a closed app has nothing to resume, and the next top-up brings the seed back. `endSeed` queues her answers, or puts an unanswered seed at the back of the list; it does nothing if the key changed meanwhile.
 - **`sync()`** runs one at a time; a call during a run joins it and makes it run once more. It sends queued results oldest first and removes each by seed once the Worker returns the recorded result (keeping its state), or refuses it as `bad_result` or `unknown_seed` (it can never be recorded). Any other answer holds that result and the rest for the next sync, but seeds still top up; no connection stops the sync. Each request gives up after 10 seconds. Then `POST /api/seeds`: the new list keeps stored seeds the Worker still lists, in their order, adds new ones, and leaves out queued and in-progress seeds, read again after the reply arrives. Last, `GET /api/state`. A 401 at any step forgets the key.
-- **When:** the screens don't call it yet.
+- **When:** on load, whenever Home shows, after each result, and on the browser's `online` event.
 
 ## Data flow
 
@@ -70,7 +70,7 @@ SPEC §6.8. `src/storage/device.ts` keeps four `localStorage` entries: the devic
 - **Parent routes** (`/api/parent/*`, `worker/parent.ts`): the Worker checks the Cloudflare Access token itself before anything else, so an unknown parent path is 401 too. Today: `GET /api/parent/devices`, `DELETE /api/parent/devices/:id` (unpair) and `POST /api/parent/pairing-code`.
 - **Pairing** (`worker/pair.ts`, SPEC §6.9): `POST /api/pair { code }` is the one write route with no key or token; the one-time code is the gate (CLAUDE.md). Each try is counted before its code is compared, in one `UPDATE … RETURNING` on the newest usable code, so a burst of tries at once gets at most 5 comparisons between them. The right code is claimed with a random value in the same batch that creates the device, so one code can't pair twice. Every refusal is the same `bad_code`. Before any of that, a Cloudflare rate-limit binding (`PAIR_LIMITER`, 10 tries a minute per `CF-Connecting-IP`, IPv6 counted by its /64 block) answers 429 to slow a flood of guesses (it can't stop slow ones from voiding a code; SPEC §6.9); without the binding, pairing is refused (503) rather than unguarded. Previews have their own limiter namespace.
 - **The Access check** (`worker/access.ts`): `ctx.access` isn't passed to Workers that serve static assets, so the Worker verifies the `Cf-Access-Jwt-Assertion` token: RS256 only, signed by a key from `https://<team>/cdn-cgi/access/certs` (cached an hour; an unknown key id refetches at most once a minute), issuer `https://<team>`, audience `ACCESS_AUD`, not expired, with an email. It needs `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` and refuses everything without them. They're in `wrangler.jsonc`'s top-level `vars` (not secrets, and not the dashboard: each `wrangler deploy` replaces dashboard vars). Vars don't carry into the `previews` block, so previews never serve parent routes; keep it that way, since a parent token is checked by audience, not hostname.
-- **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. `src/sync/sync.ts` calls it.
+- **The child API** (`worker/child.ts`, SPEC §6.8, §8): `GET /api/state`, `POST /api/seeds` and `POST /api/results`. The Worker regenerates each assignment from its seed and re-scores it with the engine, imported straight from `src/engine/`, so the app and the Worker can't disagree on the rules. The app calls it from `src/sync/sync.ts`.
 
 ## Data
 

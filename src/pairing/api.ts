@@ -1,4 +1,4 @@
-// The iPad's calls for pairing (SPEC §5.4, §6.9): trade a code for a device key, and check a stored key.
+// The iPad's calls for pairing (SPEC §5.4, §6.9): trade a code for a device key.
 
 export type PairResult =
   | { kind: 'paired'; key: string }
@@ -27,14 +27,4 @@ export async function pair(code: string): Promise<PairResult> {
   if (response.status === 400) return { kind: 'notAccepted' }
   if (response.status === 429) return { kind: 'tooManyTries' }
   return { kind: 'busy' }
-}
-
-/** Whether the Worker still accepts this key: false only when it says so (401), never when offline. */
-export async function keyStillPaired(key: string): Promise<boolean> {
-  try {
-    const response = await fetch('/api/state', { headers: { Authorization: `Bearer ${key}` } })
-    return response.status !== 401
-  } catch {
-    return true
-  }
 }

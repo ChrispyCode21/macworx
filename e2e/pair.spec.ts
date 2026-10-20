@@ -80,7 +80,7 @@ test('a Safari tab never offers pairing', async ({ page }) => {
 test('a key the Worker no longer accepts is forgotten, and the button comes back', async ({ page }) => {
   await asInstalledApp(page)
   await page.addInitScript(() => localStorage.setItem('macworx.deviceKey', 'unpaired-key-0123456789'))
-  await page.route('/api/state', (route) => route.fulfill({ status: 401, json: { error: 'unauthorized' } }))
+  await page.route('/api/*', (route) => route.fulfill({ status: 401, json: { error: 'unauthorized' } }))
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Pair this iPad' })).toBeVisible()
   expect(await page.evaluate(() => localStorage.getItem('macworx.deviceKey'))).toBeNull()
@@ -89,7 +89,8 @@ test('a key the Worker no longer accepts is forgotten, and the button comes back
 test('a key that still works keeps the button hidden', async ({ page }) => {
   await asInstalledApp(page)
   await page.addInitScript(() => localStorage.setItem('macworx.deviceKey', 'paired-key-0123456789'))
-  const checked = page.waitForRequest('/api/state')
+  const checked = page.waitForRequest('/api/seeds')
+  await page.route('/api/seeds', (route) => route.fulfill({ status: 200, json: { seeds: [1] } }))
   await page.route('/api/state', (route) => route.fulfill({ status: 200, json: {} }))
   await page.goto('/')
   expect((await checked).headers().authorization).toBe('Bearer paired-key-0123456789')
@@ -110,4 +111,13 @@ test('Back waits while a code is on its way', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Back' })).toBeDisabled()
   answer()
   await expect(page.getByRole('heading', { name: 'This iPad is paired!' })).toBeVisible()
+})
+
+test('a paired iPad with no seeds and no connection asks for Wi-Fi', async ({ page }) => {
+  await asInstalledApp(page)
+  await page.addInitScript(() => localStorage.setItem('macworx.deviceKey', 'paired-key-0123456789'))
+  await page.route('/api/*', (route) => route.abort('internetdisconnected'))
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByText('Connect to Wi-Fi to get more problems!')).toBeVisible()
 })

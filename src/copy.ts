@@ -6,6 +6,7 @@ export const COPY = {
   title: 'macworx',
   start: 'Start',
   startHint: `${ASSIGNMENT_SIZE} problems. Take your time.`,
+  connectForProblems: 'Connect to Wi-Fi to get more problems!',
   progress: (n: number, total: number) => `Problem ${n} of ${total}`,
   leave: 'Done for now',
   check: 'Check',
