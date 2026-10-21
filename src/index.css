@@ -223,6 +223,24 @@ p {
   background: var(--soft);
 }
 
+/* Her numbers on Home (SPEC §5.1): a wrapping row of soft pills. */
+.home-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-numbers li {
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  background: var(--soft);
+  font-size: 1.4rem;
+}
+
 .result-buttons {
   display: flex;
   flex-direction: column;

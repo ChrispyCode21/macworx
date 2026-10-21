@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pair } from './screens/Pair'
 import { ParentPage } from './screens/parent/ParentPage'
-import { getDeviceKey, isInstalled, requestPersistence } from './storage/device'
-import { endSeed, sync, takeSeed } from './sync/sync'
+import { payout } from './engine'
+import { getDeviceKey, getQueue, getWorkerState, isInstalled, requestPersistence } from './storage/device'
+import { homeNumbers, nextResult, type HomeNumbers } from './sync/projection'
+import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
 import { Result, type Outcome } from './screens/Result'
@@ -27,10 +29,17 @@ export function App() {
   )
 }
 
+/** Her four numbers for Home: none without a key or before the Worker's state arrives (SPEC §6.8). */
+function currentNumbers(): HomeNumbers | undefined {
+  if (!getDeviceKey()) return undefined
+  return homeNumbers(getWorkerState(), getQueue(), localDay(new Date())) ?? undefined
+}
+
 function ChildApp() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
   const [paired, setPaired] = useState(() => getDeviceKey() !== null)
   const [noSeeds, setNoSeeds] = useState(false)
+  const [numbers, setNumbers] = useState(currentNumbers)
   const starting = useRef(false)
   const shown = useRef(screen)
   shown.current = screen
@@ -55,15 +64,22 @@ function ChildApp() {
       setScreen({ name: 'home' })
     } else setScreen({ name: 'assignment', seed })
   }
-  const end = (seed: number, answers: number[]) => endSeed(seed, answers, new Date())
+  const end = (seed: number, answers: number[], now: Date) => {
+    endSeed(seed, answers, now)
+    setNumbers(currentNumbers())
+  }
 
   // Whenever Home opens, results go out and seeds come in. A key a parent has since unpaired is forgotten
   // (a 401), so the Pair button comes back (SPEC §5.4).
   const refresh = () => {
     setPaired(getDeviceKey() !== null)
+    setNumbers(currentNumbers())
     if (!getDeviceKey()) return
     requestPersistence()
-    sync().then(() => setPaired(getDeviceKey() !== null))
+    sync().then(() => {
+      setPaired(getDeviceKey() !== null)
+      setNumbers(currentNumbers())
+    })
   }
   const home = () => {
     refresh()
@@ -82,6 +98,7 @@ function ChildApp() {
         <Home
           onStart={start}
           noSeeds={noSeeds}
+          numbers={numbers}
           onPair={!paired && isInstalled() ? () => setScreen({ name: 'pair' }) : undefined}
         />
       )
@@ -93,15 +110,20 @@ function ChildApp() {
           key={screen.seed}
           seed={screen.seed}
           onFinish={(answers, correct) => {
-            end(screen.seed, answers)
-            setScreen({
-              name: 'result',
-              outcome: { kind: 'finished', correct, problemCount: answers.length },
-            })
+            // One clock reading, so the streak bonus is priced on the day the result is dated.
+            const now = new Date()
+            const state = getWorkerState()
+            const problemCount = answers.length
+            const earned =
+              getDeviceKey() && state
+                ? nextResult(state, getQueue(), correct, localDay(now))
+                : payout({ correct, problemCount, firstOfDay: false, streak: 0 })
+            end(screen.seed, answers, now)
+            setScreen({ name: 'result', outcome: { kind: 'finished', correct, problemCount, earned } })
           }}
           // Leaving before answering anything records nothing (SPEC §5.1).
           onLeave={(answers, correct) => {
-            end(screen.seed, answers)
+            end(screen.seed, answers, new Date())
             if (answers.length === 0) home()
             else
               setScreen({ name: 'result', outcome: { kind: 'leftEarly', answered: answers.length, correct } })

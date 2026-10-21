@@ -68,7 +68,12 @@ export function project(state: WorkerState, queue: QueuedResult[]): WorkerState 
 }
 
 /** What a finished assignment with `correct` right answers earns on `today`, after the unsent results. */
-export function nextResult(state: WorkerState, queue: QueuedResult[], correct: number, today: string): Payout {
+export function nextResult(
+  state: WorkerState,
+  queue: QueuedResult[],
+  correct: number,
+  today: string,
+): Payout {
   return finishedPayout(project(state, queue), today, correct).earned
 }
 

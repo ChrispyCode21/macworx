@@ -1,11 +1,11 @@
 import { COPY, GRADE_COPY } from '../copy'
-import { ASSIGNMENT_SIZE, grade, leftEarlyPayout, payout } from '../engine'
+import { ASSIGNMENT_SIZE, grade, leftEarlyPayout, type Payout } from '../engine'
 import { Button } from '../ui/Button'
 
+type FinishedOutcome = { kind: 'finished'; correct: number; problemCount: number; earned: Payout }
+
 /** How an assignment went: finished, or left early (SPEC §5.1, §6.4, §6.6). */
-export type Outcome =
-  | { kind: 'finished'; correct: number; problemCount: number }
-  | { kind: 'leftEarly'; answered: number; correct: number }
+export type Outcome = FinishedOutcome | { kind: 'leftEarly'; answered: number; correct: number }
 
 interface Props {
   outcome: Outcome
@@ -17,7 +17,6 @@ export function Result({ outcome, onAnother, onHome }: Props) {
   return (
     <main className="screen result">
       {outcome.kind === 'finished' ? <Finished {...outcome} /> : <LeftEarly {...outcome} />}
-      <p className="note">{COPY.savingSoon}</p>
       <div className="result-buttons">
         <Button onClick={onAnother}>{COPY.anotherOne}</Button>
         <Button variant="secondary" onClick={onHome}>
@@ -28,9 +27,7 @@ export function Result({ outcome, onAnother, onHome }: Props) {
   )
 }
 
-function Finished({ correct, problemCount }: { correct: number; problemCount: number }) {
-  // Nothing is saved yet, so there's no streak: the streak bonus waits for the saving slice.
-  const earned = payout({ correct, problemCount, firstOfDay: false, streak: 0 })
+function Finished({ correct, problemCount, earned }: FinishedOutcome) {
   const { heading, line } = GRADE_COPY[grade(correct, problemCount)]
   return (
     <>
@@ -38,7 +35,8 @@ function Finished({ correct, problemCount }: { correct: number; problemCount: nu
       <p>{line}</p>
       <p className="result-count">{COPY.rightCount(correct, problemCount)}</p>
       <p className="result-macaronis">
-        {earned.accuracyBonus > 0 && COPY.bonus(earned.base, earned.accuracyBonus)}
+        {earned.accuracyBonus + earned.streakBonus > 0 &&
+          COPY.bonus(earned.base, earned.accuracyBonus, earned.streakBonus)}
         <strong>{COPY.macaronis(earned.total)}</strong>
       </p>
     </>
