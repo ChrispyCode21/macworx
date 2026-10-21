@@ -33,6 +33,9 @@ export const ASSIGNMENT = {
 /** Problems in one assignment. */
 export const ASSIGNMENT_SIZE = ASSIGNMENT.addition + ASSIGNMENT.subtraction + ASSIGNMENT.multiplication
 
+/** The largest answer a result may carry; the Worker refuses anything above it. */
+export const MAX_ANSWER = 999_999
+
 /** Number ranges (SPEC §6.1). */
 export const GENERATOR = {
   /** Addition and subtraction: both numbers share one of these digit counts, equally likely. */
