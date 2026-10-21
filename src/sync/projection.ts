@@ -10,6 +10,7 @@ import {
   grade,
   GRADES,
   leftEarlyPayout,
+  MAX_ANSWER,
   nextStreak,
   payout,
   type Grade,
@@ -42,7 +43,11 @@ function finishedPayout(state: WorkerState, day: string, correct: number) {
 
 /** Applies one result, or returns the state as it was when the result isn't valid (the Worker drops it). */
 function apply(state: WorkerState, { seed, day, answers }: QueuedResult): WorkerState {
+  // The Worker's parseResult rules: a result it refuses is dropped at sync, so it isn't counted here.
+  const wholeNumbers = answers.every((a) => Number.isInteger(a) && a >= 0 && a <= MAX_ANSWER)
+  if (answers.length < 1 || answers.length > ASSIGNMENT_SIZE || !wholeNumbers) return state
   try {
+    dayNumber(day)
     const problems = generateAssignment(seed)
     const correct = answers.filter((a, i) => problems[i] && checkAnswer(problems[i], a)).length
     if (answers.length !== ASSIGNMENT_SIZE) {

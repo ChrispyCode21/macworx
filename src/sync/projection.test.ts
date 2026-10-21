@@ -55,6 +55,19 @@ describe('project', () => {
     const after = project(state(), [{ seed: 1, day: 'nope', answers: answersFor(1) }, finished(2)])
     expect(after.balance).toBe(131)
   })
+
+  it('skips the results the Worker refuses', () => {
+    const answers = answersFor(3)
+    const refused: QueuedResult[] = [
+      { seed: 3, day: TODAY, answers: [...answers, 1] },
+      { seed: 3, day: TODAY, answers: [] },
+      { seed: 3, day: TODAY, answers: [...answers.slice(0, 4), 1_000_000] },
+      { seed: 3, day: TODAY, answers: [...answers.slice(0, 4), -1] },
+      { seed: 3, day: TODAY, answers: [...answers.slice(0, 4), 1.5] },
+      { seed: 3, day: 'nope', answers: answers.slice(0, 5) },
+    ]
+    for (const item of refused) expect(project(state(), [item])).toEqual(state())
+  })
 })
 
 describe('nextResult', () => {
