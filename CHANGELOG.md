@@ -9,7 +9,8 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 ### Added
 
 - **Her numbers on Home:** completed assignments, Macaroni balance, streak and the grade of her latest assignment, counting results that haven't been sent yet. The streak is left out when she hasn't finished one recently, and nothing shows until a paired iPad has its numbers. The result screen shows the streak bonus on her first finished assignment of the day.
-- **Her results are saved:** a paired iPad keeps a batch of problems from the server, so assignments work with no connection, and sends each result when it can, oldest first. If it runs out of problems while offline, Start says "Connect to Wi-Fi to get more problems!"- **Parent page:** at `/parent`, behind your Cloudflare Access sign-in. Name an iPad and make a 6-digit pairing code (it counts down from 10 minutes), see the paired iPads, and unpair one after a warning.
+- **Her results are saved:** a paired iPad keeps a batch of problems from the server, so assignments work with no connection, and sends each result when it can, oldest first. If it runs out of problems while offline, Start says "Connect to Wi-Fi to get more problems!"
+- **Parent page:** at `/parent`, behind your Cloudflare Access sign-in. Name an iPad and make a 6-digit pairing code (it counts down from 10 minutes), see the paired iPads, and unpair one after a warning.
 - **Pair her iPad:** in the installed app, Home shows **Pair this iPad** until the iPad is paired. A parent's 6-digit code goes in on the number pad, and the iPad keeps its key. If a parent later unpairs it, the button comes back. Practice works either way.
 
 ### Removed
