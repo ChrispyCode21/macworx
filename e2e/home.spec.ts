@@ -76,6 +76,22 @@ test('Home shows her four numbers, including results not yet sent', async ({ pag
   await expect(page.getByText('Macaronis start saving soon!')).toHaveCount(0)
 })
 
+test('Home takes the Worker numbers when the connection comes back', async ({ page }) => {
+  await openApp(page, true, { 'macworx.state': state() })
+  const numbers = page.locator('.home-numbers')
+  await expect(numbers).toContainText('100 Macaronis')
+
+  await page.unroute('/api/**')
+  await page.route('/api/**', (route) =>
+    route.request().url().endsWith('/api/seeds')
+      ? route.fulfill({ json: { seeds: [] } })
+      : route.fulfill({ json: state({ balance: 150, completed: 7 }) }),
+  )
+  await page.evaluate(() => dispatchEvent(new Event('online')))
+  await expect(numbers).toContainText('150 Macaronis')
+  await expect(numbers).toContainText('7 assignments done')
+})
+
 test('Home shows none of the numbers on an iPad that is not paired', async ({ page }) => {
   await openApp(page, false)
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
