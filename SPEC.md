@@ -16,7 +16,7 @@ macworx gives her:
 ## 2. Platform & architecture
 
 - **Device:** an iPad. The app is a PWA, installed from Safari (Share, then Add to Home Screen), and runs full screen.
-- **Offline:** assignments work with no connection. Results sync when the iPad is back online.
+- **Offline:** assignments work with no connection. Results sync when the iPad is back online. Buying a reward needs a connection (§5.2).
 - **Hosting:** Cloudflare Workers serve the app's static files and an `/api/*` Worker. Data lives in Cloudflare D1.
 - **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record. The Worker hands out the seeds assignments are generated from (§6.8).
 - **Users:** one child and her parents. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. A request without a valid key is refused and changes nothing. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access, and the Worker also checks every parent request's Access token itself, refusing any request without a valid one (§6.9).
@@ -59,8 +59,8 @@ macworx gives her:
 
 ### 5.2 Buy a reward (child)
 
-1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.6).
-2. She can buy any reward whose price is at most her balance. Buying it deducts the price from her balance and records the purchase.
+1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7).
+2. She can buy any reward whose price is at most her balance, but only while the iPad can reach the Worker. The Worker checks the price against its own balance, deducts it and records the purchase, so the Worker's balance is always the one spent.
 3. A parent sees the purchase on the dashboard and grants the reward in real life.
 
 ### 5.3 Parent dashboard (admin)
