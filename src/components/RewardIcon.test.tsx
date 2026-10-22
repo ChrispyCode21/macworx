@@ -9,5 +9,11 @@ describe('RewardIcon', () => {
     expect(html).toContain('<svg')
     expect(html).toContain('aria-hidden="true"')
     expect(html).toContain('<path')
+    expect(html).toContain(`data-reward="${id}"`)
+  })
+
+  it('draws a different picture for every reward', () => {
+    const markups = REWARDS.map((r) => renderToStaticMarkup(<RewardIcon id={r.id} />))
+    expect(new Set(markups).size).toBe(REWARDS.length)
   })
 })
