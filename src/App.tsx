@@ -87,7 +87,8 @@ function ChildApp() {
   }
   useEffect(() => {
     refresh()
-    const online = () => void sync()
+    // Home may be showing when the connection comes back, so its numbers follow the sync.
+    const online = () => void sync().then(() => setNumbers(currentNumbers()))
     addEventListener('online', online)
     return () => removeEventListener('online', online)
   }, [])
