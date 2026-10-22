@@ -23,8 +23,14 @@ export const COPY = {
   rightCount: (correct: number, total: number) => `${correct} of ${total} right`,
   didProblems: (n: number) => `You did ${n} ${n === 1 ? 'problem' : 'problems'}.`,
   macaronis: (n: number) => `${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}`,
-  bonus: (base: number, bonus: number) => `${formatNumber(base)} + ${formatNumber(bonus)} bonus = `,
-  savingSoon: 'Macaronis start saving soon!',
+  /** The parts of a finished payout; a bonus of 0 is left out. */
+  bonus: (base: number, accuracy: number, streak: number) =>
+    `${formatNumber(base)}${accuracy > 0 ? ` + ${formatNumber(accuracy)} bonus` : ''}${
+      streak > 0 ? ` + ${formatNumber(streak)} streak bonus` : ''
+    } = `,
+  completedCount: (n: number) => `${formatNumber(n)} ${n === 1 ? 'assignment' : 'assignments'} done`,
+  streakDays: (n: number) => `${formatNumber(n)} day streak`,
+  latestGrade: (grade: Grade) => `Latest: ${grade}`,
   anotherOne: 'Do another one',
   // Pairing her iPad (SPEC §5.4)
   pairThisIpad: 'Pair this iPad',

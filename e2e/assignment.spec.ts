@@ -68,7 +68,7 @@ test('finishes an assignment and sees the grade and Macaronis', async ({ page })
   await expect(page.getByRole('heading', { name: 'Great work!' })).toBeVisible()
   await expect(page.getByText('19 of 20 right')).toBeVisible()
   await expect(page.locator('.result-macaronis')).toHaveText('19 + 3 bonus = 22 Macaronis')
-  await expect(page.getByText('Macaronis start saving soon!')).toBeVisible()
+  await expect(page.getByText('Macaronis start saving soon!')).toHaveCount(0)
   await noSidewaysScroll(page)
 
   await page.getByRole('button', { name: 'Do another one' }).click()

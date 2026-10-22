@@ -8,10 +8,10 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 |---|---|
 | `src/` | The React app (Vite). `main.tsx` mounts `App.tsx`, which switches between screens. See "UI". |
 | `src/screens/` | One component per screen: Home, Assignment, Result. |
-| `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`. |
+| `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`, `RewardIcon`. |
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
 | `src/storage/` | The iPad's own storage (`device.ts`): its device key, unused seeds, unsent results and the Worker's latest state. |
-| `src/sync/` | Saving her results (`sync.ts`): taking a stored seed, queueing a result, and syncing with the Worker. |
+| `src/sync/` | Saving her results (`sync.ts`): taking a stored seed, queueing a result, and syncing with the Worker. `projection.ts` applies unsent results to the Worker's numbers for Home and the result. |
 | `src/parent/` | The parent page's calls (`api.ts`): every `/api/parent` call, and reloading once when Access's sign-in has run out. |
 | `src/screens/parent/` | The parent page (`ParentPage.tsx`). |
 | `src/pairing/` | The iPad's pairing call: `/api/pair`. |
@@ -31,7 +31,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 
 | File | What it does |
 |---|---|
-| `config.ts` | The one config module: payout values, grade cutoffs, assignment shape, number ranges and reward prices. |
+| `config.ts` | The one config module: payout values, grade cutoffs, assignment shape, number ranges and the reward menu (each reward has an id, a name and a price). |
 | `random.ts` | A seeded generator (mulberry32). |
 | `problems.ts` | `generateAssignment(seed)`: 20 shuffled problems; the same seed always gives the same assignment, so the Worker can regenerate and re-score it. `makeProblem` computes an answer. |
 | `score.ts` | `checkAnswer`: a whole number equal to the computed answer. |
@@ -47,6 +47,8 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 - **Parent page** (SPEC §5.3): `App.tsx` renders `ParentPage` when the page loads at `/parent`; it's never a route inside her app, so every visit is a full page load that Access can intercept. Calls use `redirect: 'manual'`: a redirect or non-JSON answer below 500 means Access wants a sign-in, so the page reloads once (a `sessionStorage` flag stops a loop), then says the sign-in has run out; a JSON refusal is the Worker's own and shows a message, as does a Cloudflare error page (5xx). Her screens never use a text box; the parent page uses `src/ui/TextField`.
 - **Pairing** (SPEC §5.4): `Home` shows **Pair this iPad** only when the app runs installed (`navigator.standalone` or `display-mode: standalone`) and has no key. The Pair screen reuses `NumberPad` (with a `checkLabel`) and the answer-box style (`CodeBoxes`). Each sync checks the stored key; a 401 forgets it, with the seeds and unsent results stored for it.
 - **Seeds:** a paired iPad takes the next stored seed (`takeSeed`), syncing first when it has none; with none and no connection, Home shows the Wi-Fi line. An iPad without a key practices with a random seed from `crypto.getRandomValues` and saves nothing. The engine never makes randomness itself.
+- **Home numbers** (SPEC §5.1, §6.8): `App.tsx` keeps `numbers` from `homeNumbers(getWorkerState(), getQueue(), today)` and recomputes them when Home shows, after each sync and after a result is queued. They are absent without a key or before the first state arrives; `Home` then shows nothing extra. The finished `Outcome` carries the `Payout` from `nextResult`, so the result shows the streak bonus on the first assignment of the day; without a key and a state it is the payout with no streak bonus.
+- **Reward icons** (SPEC §6.7): `RewardIcon` draws one inline SVG per `RewardId` (a `Record`, so a reward without an icon fails type-checking), using only the color tokens. They are decorative (`aria-hidden`). No screen shows them yet.
 - **Text:** every string she sees lives in `src/copy.ts`, including the grade headings, keyed by the engine's `Grade` type.
 - **Shared building blocks:** `src/ui/Button` is the only button, with variants `primary`, `secondary`, `key` and `check`. `src/ui/format.ts` does all number and operator formatting. Colors and sizes are CSS custom properties at the top of `src/index.css`. `check-conventions` fails on a raw `<button>` or inline number formatting outside `src/ui/`, on words written straight into JSX instead of `src/copy.ts`, and on a hex color outside the tokens.
 - **Answer boxes:** `StackedProblem` lays the problem out one digit per column with one answer box per column. `src/assignment/answer.ts` keeps her digits in the order she tapped them, and derives the boxes from them: ones place first for addition and subtraction, left to right (lined up under the ones column) for multiplication.
@@ -61,6 +63,7 @@ SPEC §6.8. `src/storage/device.ts` keeps four `localStorage` entries: the devic
 
 - **The seed in progress** is kept in memory with the key it came with, never stored: a closed app has nothing to resume, and the next top-up brings the seed back. `endSeed` queues her answers, or puts an unanswered seed at the back of the list; it does nothing if the key changed meanwhile.
 - **`sync()`** runs one at a time; a call during a run joins it and makes it run once more. It sends queued results oldest first and removes each by seed once the Worker returns the recorded result (keeping its state), or refuses it as `bad_result` or `unknown_seed` (it can never be recorded). Any other answer holds that result and the rest for the next sync, but seeds still top up; no connection stops the sync. Each request gives up after 10 seconds. Then `POST /api/seeds`: the new list keeps stored seeds the Worker still lists, in their order, adds new ones, and leaves out queued and in-progress seeds, read again after the reply arrives. Last, `GET /api/state`. A 401 at any step forgets the key.
+- **Projection** (`src/sync/projection.ts`, pure): `project` applies each queued result to the Worker's state, oldest first, with the engine functions and the Worker's rule that a day before the last counted day counts as that day. A bad item is skipped, as the Worker drops it. It doesn't model the Worker's day clamp; the Worker's numbers replace the projection after each sync. Home shows no numbers until the first state is stored.
 - **When:** on load, whenever Home shows, after each result, and on the browser's `online` event.
 
 ## Data flow

@@ -7,6 +7,7 @@ import {
   generateAssignment,
   grade,
   leftEarlyPayout,
+  MAX_ANSWER,
   nextStreak,
   payout,
   type Payout,
@@ -23,7 +24,6 @@ export interface ChildRequest {
 
 const MAX_UNUSED_SEEDS = 20
 const MAX_PENDING = 100
-const MAX_ANSWER = 999_999
 const WRITE_ATTEMPTS = 3
 
 interface ChildRow {

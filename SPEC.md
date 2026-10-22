@@ -16,7 +16,7 @@ macworx gives her:
 ## 2. Platform & architecture
 
 - **Device:** an iPad. The app is a PWA, installed from Safari (Share, then Add to Home Screen), and runs full screen.
-- **Offline:** assignments work with no connection. Results sync when the iPad is back online.
+- **Offline:** assignments work with no connection. Results sync when the iPad is back online. Buying a reward needs a connection (§5.2).
 - **Hosting:** Cloudflare Workers serve the app's static files and an `/api/*` Worker. Data lives in Cloudflare D1.
 - **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record. The Worker hands out the seeds assignments are generated from (§6.8).
 - **Users:** one child and her parents. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. A request without a valid key is refused and changes nothing. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access, and the Worker also checks every parent request's Access token itself, refusing any request without a valid one (§6.9).
@@ -41,7 +41,7 @@ macworx gives her:
 
 ### 5.1 Do an assignment (child)
 
-1. She opens the app and sees home: completed assignments, her Macaroni balance (which includes Macaronis from assignments the Worker hasn't re-scored yet), her streak, and the grade of her latest assignment.
+1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these.
 2. She starts an assignment: 20 math problems (§6.2).
 3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
 4. She enters her answer on an on-screen number pad (digits 0–9, a delete key and Check) and submits it with Check. The iPad keyboard never opens. She answers each problem once.
@@ -53,14 +53,14 @@ macworx gives her:
    - Correct: the app says so, and her boxes turn a soft green.
    - Not correct: her boxes turn a soft coral (never bright red, and no ✗), and the line above Next shows the right answer in a friendly way (for example "7 × 8 = 56"). The right answer appears only there, never in her boxes.
    - Either way, she taps Next when she's ready. Nothing moves on by itself.
-5. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy and streak bonuses shown), and the grade.
+5. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy bonus, and the streak bonus on her first finished assignment of the day, shown), and the grade. Before the iPad has the Worker's numbers the streak bonus is left out.
 6. She can start another assignment right away. Assignments are unlimited.
 7. She can leave an assignment at any time. It ends early: she sees how many problems she did and the Macaronis they earned (§6.4), then home. When they earned none, the Macaroni line is left out rather than showing 0. Leaving before answering any problem records nothing. Leaving after answering all 20 counts as finishing, with the full result. The next assignment she starts is a new one.
 
 ### 5.2 Buy a reward (child)
 
-1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.6).
-2. She can buy any reward whose price is at most her balance. Buying it deducts the price from her balance and records the purchase.
+1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7).
+2. She can buy any reward whose price is at most her balance, but only while the iPad can reach the Worker. The Worker checks the price against its own balance, deducts it and records the purchase, so the Worker's balance is always the one spent.
 3. A parent sees the purchase on the dashboard and grants the reward in real life.
 
 ### 5.3 Parent dashboard (admin)
@@ -146,13 +146,14 @@ Home shows the grade of her latest assignment. Grade cutoffs live in the same co
 
 ### 6.7 Rewards
 
-| Reward | Price |
-|---|---|
-| Ice cream | 75 |
-| Pet shelter visit | 100 |
-| Camping trip | 300 |
+| Reward | Icon | Price |
+|---|---|---|
+| Ice Cream | ice cream cone | 30 |
+| Pet Store | storefront | 75 |
+| Camping | tent | 300 |
+| Puppy | puppy | 10,000 |
 
-Prices are fixed. The streak bonus only speeds up earning.
+Prices are fixed. The streak bonus only speeds up earning. The small rewards cost a day of high effort, or a couple of days of light effort. The Puppy takes sustained, concerted effort, saving and budgeting: about 10 months of daily assignments.
 
 ### 6.8 Saving results
 
@@ -162,8 +163,9 @@ Prices are fixed. The streak bonus only speeds up earning.
 - **Day range:** a result's day may be no earlier than the day before its seed was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. A day that had to be moved means the iPad's clock was wrong, so that result doesn't touch the streak: it's paid its base and accuracy bonus and counts as completed, but the streak, last counted day and streak bonus stay as they were. Because of this, her last counted day is never more than a day ahead of the real date, and a clock that's off by more than a day can't reset her streak. (A clock off by only a day looks the same as a time-zone difference, so it counts like any other day.)
 - **Results that arrive late:** a result whose day is earlier than her last counted day counts as that same last day for the streak (no streak change, no streak bonus) and is still paid.
 - **Completed assignments** counts finished assignments only.
-- **On the iPad:** a paired iPad keeps its unused seeds, the results it hasn't sent yet, and the Worker's latest state in its own storage, and asks the browser to keep that storage. Each assignment uses the next stored seed, and its result is dated with the iPad's own day. Results go to the Worker one at a time, oldest first, whenever the app opens, Home shows, a result is saved, or the connection comes back; the Worker's numbers replace the iPad's. Her balance on Home is the Worker's latest balance plus what the engine computes for each result not yet sent. A result the Worker refuses as not valid is dropped, so it can't hold up the rest. When the iPad tops up its seeds, it leaves out seeds in its unsent results and the one she's working on. A stored seed she leaves without answering anything goes to the back of the list.
+- **On the iPad:** a paired iPad keeps its unused seeds, the results it hasn't sent yet, and the Worker's latest state in its own storage, and asks the browser to keep that storage. Each assignment uses the next stored seed, and its result is dated with the iPad's own day. Results go to the Worker one at a time, oldest first, whenever the app opens, Home shows, a result is saved, or the connection comes back; the Worker's numbers replace the iPad's. Home shows the Worker's latest numbers with each result not yet sent applied on top, oldest first, using the engine. Every result adds what it pays to the balance. A finished result also adds 1 to completed assignments, moves the streak (§6.5; a result dated before her last counted day counts as that day) and sets the latest grade. A result she left early adds only its base. Each result is applied with the day the iPad dated it. The Worker's numbers replace these after each sync. A result the Worker refuses as not valid is dropped, so it can't hold up the rest. When the iPad tops up its seeds, it leaves out seeds in its unsent results and the one she's working on. A stored seed she leaves without answering anything goes to the back of the list.
 - **No seeds:** when a paired iPad has no seeds left and can't reach the Worker, Start shows "Connect to Wi-Fi to get more problems!"
+- **Before the iPad has numbers:** a paired iPad that hasn't yet received the Worker's state, and an iPad that isn't paired, show no numbers on Home (not a balance of 0). A finished result leaves out the streak bonus: its total is base plus accuracy bonus, with the minimum applied.
 - **Not paired:** an iPad without a device key still does assignments, each from a random seed, and saves nothing.
 
 ### 6.9 Parent access and pairing
@@ -268,9 +270,10 @@ One 20-problem assignment a day, all correct, starting a fresh streak: day `n` p
 
 | ID | Given | Expected |
 |---|---|---|
-| R1 | Ice cream, 75 | Balance 51 after day 2, 78 after day 3 → affordable on **day 3** |
-| R2 | Pet shelter visit, 100 | Balance 78 after day 3, 106 after day 4 → affordable on **day 4** |
-| R3 | Camping trip, 300 | Balance 295 after day 10, 329 after day 11 → affordable on **day 11** |
+| R1 | Ice Cream, 30 | Balance 25 after day 1, 51 after day 2 → affordable on **day 2** |
+| R2 | Pet Store, 75 | Balance 51 after day 2, 78 after day 3 → affordable on **day 3** |
+| R3 | Camping, 300 | Balance 295 after day 10, 329 after day 11 → affordable on **day 11** |
+| R4 | Puppy, 10,000 | Balance 9,985 after day 295, 10,019 after day 296 → affordable on **day 296** |
 
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
@@ -311,4 +314,4 @@ Ideas outside the MVP. Each needs a spec section before it is built.
 - **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
 - **Difficulty levels:** stretch problems that pay more than warm-ups.
 - **Parent tools:** push notification on a purchase, adding spelling words and assignments, restoring a streak from the dashboard.
-- **Full reward menu** with prices.
+- **More rewards:** the full reward menu beyond the four in §6.7.
