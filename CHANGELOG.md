@@ -6,6 +6,8 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-22
+
 ### Added
 
 - **The reward menu:** Ice Cream (30 Macaronis), Pet Store (75), Camping (300) and Puppy (10,000), each with its own picture. The shop screen where she can buy them comes later.
