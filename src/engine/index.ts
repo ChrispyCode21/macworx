@@ -8,6 +8,7 @@ export {
   PAYOUT,
   REWARDS,
   type Grade,
+  type RewardId,
 } from './config'
 export { grade } from './grade'
 export { leftEarlyPayout, payout, type LeftEarlyInput, type Payout, type PayoutInput } from './payout'

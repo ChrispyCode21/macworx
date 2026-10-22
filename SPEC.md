@@ -146,13 +146,14 @@ Home shows the grade of her latest assignment. Grade cutoffs live in the same co
 
 ### 6.7 Rewards
 
-| Reward | Price |
-|---|---|
-| Ice cream | 75 |
-| Pet shelter visit | 100 |
-| Camping trip | 300 |
+| Reward | Icon | Price |
+|---|---|---|
+| Ice Cream | ice cream cone | 30 |
+| Pet Store | storefront | 75 |
+| Camping | tent | 300 |
+| Puppy | puppy | 10,000 |
 
-Prices are fixed. The streak bonus only speeds up earning.
+Prices are fixed. The streak bonus only speeds up earning. The small rewards cost a day of high effort, or a couple of days of light effort. The Puppy takes sustained, concerted effort, saving and budgeting: about 10 months of daily assignments.
 
 ### 6.8 Saving results
 
@@ -263,9 +264,10 @@ One 20-problem assignment a day, all correct, starting a fresh streak: day `n` p
 
 | ID | Given | Expected |
 |---|---|---|
-| R1 | Ice cream, 75 | Balance 51 after day 2, 78 after day 3 → affordable on **day 3** |
-| R2 | Pet shelter visit, 100 | Balance 78 after day 3, 106 after day 4 → affordable on **day 4** |
-| R3 | Camping trip, 300 | Balance 295 after day 10, 329 after day 11 → affordable on **day 11** |
+| R1 | Ice Cream, 30 | Balance 25 after day 1, 51 after day 2 → affordable on **day 2** |
+| R2 | Pet Store, 75 | Balance 51 after day 2, 78 after day 3 → affordable on **day 3** |
+| R3 | Camping, 300 | Balance 295 after day 10, 329 after day 11 → affordable on **day 11** |
+| R4 | Puppy, 10,000 | Balance 9,985 after day 295, 10,019 after day 296 → affordable on **day 296** |
 
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
@@ -306,4 +308,4 @@ Ideas outside the MVP. Each needs a spec section before it is built.
 - **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
 - **Difficulty levels:** stretch problems that pay more than warm-ups.
 - **Parent tools:** push notification on a purchase, adding spelling words and assignments, restoring a streak from the dashboard.
-- **Full reward menu** with prices.
+- **More rewards:** the full reward menu beyond the four in §6.7.
