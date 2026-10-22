@@ -6,6 +6,8 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-22
+
 ### Added
 
 - **Her numbers on Home:** completed assignments, Macaroni balance, streak and the grade of her latest assignment, counting results that haven't been sent yet. The streak is left out when she hasn't finished one recently, and nothing shows until a paired iPad has its numbers. The result screen shows the streak bonus on her first finished assignment of the day.
