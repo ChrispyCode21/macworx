@@ -6,6 +6,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Fixed
+
+- **Home numbers update when the connection comes back:** they used to stay out of date until Home was opened again.
+
 ## [0.2.0] - 2026-10-22
 
 ### Added
