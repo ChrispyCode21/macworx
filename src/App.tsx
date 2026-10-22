@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pair } from './screens/Pair'
 import { ParentPage } from './screens/parent/ParentPage'
-import { getDeviceKey, isInstalled, requestPersistence } from './storage/device'
+import { canPair, getDeviceKey, requestPersistence } from './storage/device'
 import { endSeed, sync, takeSeed } from './sync/sync'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
@@ -82,7 +82,7 @@ function ChildApp() {
         <Home
           onStart={start}
           noSeeds={noSeeds}
-          onPair={!paired && isInstalled() ? () => setScreen({ name: 'pair' }) : undefined}
+          onPair={!paired && canPair() ? () => setScreen({ name: 'pair' }) : undefined}
         />
       )
     case 'pair':

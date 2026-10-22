@@ -11,6 +11,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 - **Her results are saved:** a paired iPad keeps a batch of problems from the server, so assignments work with no connection, and sends each result when it can, oldest first. If it runs out of problems while offline, Start says "Connect to Wi-Fi to get more problems!" Home shows the saved numbers in the next release.
 - **Parent page:** at `/parent`, behind your Cloudflare Access sign-in. Name an iPad and make a 6-digit pairing code (it counts down from 10 minutes), see the paired iPads, and unpair one after a warning.
 - **Pair her iPad:** in the installed app, Home shows **Pair this iPad** until the iPad is paired. A parent's 6-digit code goes in on the number pad, and the iPad keeps its key. If a parent later unpairs it, the button comes back. Practice works either way.
+- **Pairing in PR previews:** a preview shows **Pair this iPad** in a browser tab, and its own preview code (kept in Cloudflare, never in the repo) pairs a device in the preview database, so paired screens can be checked on a phone. It does nothing on the live app.
 
 ## [0.1.1] - 2026-10-19
 

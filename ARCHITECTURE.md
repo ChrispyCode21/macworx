@@ -89,7 +89,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 - **Editing by hand:** `UPDATE child SET streak = 5, last_day = '2026-10-17', revision = lower(hex(randomblob(16))) WHERE id = 1`. Changing `revision` makes a result being recorded at that moment retry from the edited row rather than overwrite it.
 - **Seeds and the app:** `POST /api/seeds` returns every seed the Worker still counts as unused, including ones the iPad has used offline but not synced yet. The app leaves out seeds in its result queue and the one in progress.
 - **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them in the build step, before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
-- **Pairing by hand:** until the pairing screen exists (#17, #18), `node scripts/create-device.mjs --local|--remote "label"` creates a device and prints its key once.
+- **Pairing by hand:** `node scripts/create-device.mjs --local|--remote "label"` creates a device without a pairing code and prints its key once. The Pair screen is the normal way (SPEC §5.4).
 - **Tests** (`worker/*.test.ts`) run the Worker in Node against a real local D1 from Miniflare, with every migration applied. (`@cloudflare/vitest-pool-workers` doesn't support this repo's Vitest version.)
 
 ## Offline and install
@@ -108,6 +108,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 - **Two D1 databases, both bound as `DB`:** `macworx` holds production data. `macworx-preview` is used only by preview URLs (the `previews` block), so a PR branch never touches her real data. A branch's migrations run on the shared preview database before it merges.
 - `wrangler.preview-migrations.jsonc` exists only so wrangler can find the preview database for migrations; it can't see one that's only in the `previews` block. `worker/config.test.ts` checks the two configs name the same preview database, and that production and previews differ.
 - Database IDs identify a database but grant no access, so they're committed. Cloudflare sign-ins and API tokens are never committed, and the build doesn't need any.
+- **Preview pairing** (SPEC §6.9): `previews.vars.PREVIEW` is the mark; the code is the Worker secret `PREVIEW_PAIR_CODE` on the Preview base config, set with `npx wrangler preview base-config secret put PREVIEW_PAIR_CODE` (6 digits, not in the repo). `worker/pair.ts` accepts it only when `PREVIEW` is set, `ACCESS_AUD` is not, and the secret is 6 digits; it is checked after the rate limit. The client's `__PREVIEW__` build flag (`vite.config.ts`, from `WORKERS_CI_BRANCH` through `isPreviewBranch` in `src/previewBuild.ts`; `canPair` in `src/storage/device.ts`) shows the Pair button outside the installed app.
 - `npm run worker:dev` builds the app and runs the Worker locally against a local D1.
 
 ## Quality gates and releases

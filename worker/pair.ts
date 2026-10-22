@@ -44,6 +44,21 @@ function newKey(): string {
     .replace(/=+$/, '')
 }
 
+/**
+ * The preview pairing code (SPEC §6.9), or undefined when it must do nothing. Fails closed: the Worker
+ * must carry the preview mark and no Access settings at all (production always has them), and the secret
+ * must be exactly 6 digits.
+ */
+export function previewPairCode(env: {
+  PREVIEW?: string
+  PREVIEW_PAIR_CODE?: string
+  ACCESS_AUD?: string
+  ACCESS_TEAM_DOMAIN?: string
+}): string | undefined {
+  if (env.PREVIEW !== '1' || env.ACCESS_AUD !== undefined || env.ACCESS_TEAM_DOMAIN !== undefined) return
+  return /^\d{6}$/.test(env.PREVIEW_PAIR_CODE ?? '') ? env.PREVIEW_PAIR_CODE : undefined
+}
+
 /** POST /api/parent/pairing-code { name } → { code, expiresAt }. Voids any earlier unused code. */
 export async function postPairingCode(req: ParentRequest): Promise<Response> {
   const { request, db, now } = req
@@ -71,11 +86,14 @@ export async function postPair({
   db,
   now,
   limiter,
+  previewCode,
 }: {
   request: Request
   db: D1Database
   now: Date
   limiter?: RateLimit
+  /** From `previewPairCode`: set only on a PR preview. */
+  previewCode?: string
 }) {
   // Rate limit first, before the code is even read, so a flood of guesses can't void a parent's code.
   if (!limiter) return error(503, 'unavailable')
@@ -87,6 +105,16 @@ export async function postPair({
   if (!/^\d{6}$/.test(code)) return error(400, 'bad_code')
 
   const at = now.toISOString()
+  // A PR preview's own code pairs a new device each time, without a parent's code (SPEC §6.9).
+  if (previewCode !== undefined && (await sha256Hex(code)) === (await sha256Hex(previewCode))) {
+    const key = newKey()
+    await db
+      .prepare('INSERT INTO devices (key_hash, label, created_at) VALUES (?, ?, ?)')
+      .bind(await sha256Hex(key), 'Preview', at)
+      .run()
+    return json(201, { key })
+  }
+
   // Every try is counted before the code is compared, in one statement: the newest usable code gets
   // attempts + 1 and comes back. So a burst of tries at once gets 5 comparisons between them, no more.
   const tried = await db

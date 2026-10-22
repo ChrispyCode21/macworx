@@ -82,7 +82,7 @@ Every change is logged: what changed, when, and which parent made it. The app's 
 
 ### 5.4 Pair her iPad
 
-1. Until her iPad is paired, she can still practice; Home also shows a **Pair this iPad** button. It shows only when the app runs installed from the home screen, because Safari and the installed app keep separate storage, so a pairing done in Safari wouldn't reach her app.
+1. Until her iPad is paired, she can still practice; Home also shows a **Pair this iPad** button. It shows only when the app runs installed from the home screen, because Safari and the installed app keep separate storage, so a pairing done in Safari wouldn't reach her app. A PR preview build shows it in a browser tab too (§6.9), so paired screens can be checked on a phone or tablet.
 2. A parent makes a code on the parent dashboard (§5.3, §6.9). On the Pair screen, the code is typed on the same number pad into six boxes, filled left to right, and sent with **Pair**.
 3. Paired: the screen says so and the button disappears from Home. The iPad keeps its device key.
 4. Not paired: a friendly line says what to do (ask for a new code, wait a minute, connect to Wi-Fi, or try again soon), and the boxes clear.
@@ -171,6 +171,7 @@ Prices are fixed. The streak bonus only speeds up earning.
 - **Parent access:** every `/api/parent/*` request must carry a valid Cloudflare Access token for this app: signed by the team's keys, issued by the team, for this application, not expired, with the parent's email. Anything else is refused (401), including when the Worker isn't configured for Access, so PR previews never serve parent routes.
 - **Pairing:** the parent names the iPad (up to 40 characters) and gets a 6-digit code, valid for 10 minutes and for one use. Making a new code voids any earlier unused one. Five wrong tries void the code. On the iPad, entering the right code pairs it: the Worker returns its device key once and stores only the key's SHA-256.
 - **Pairing rate limit:** at most 10 pairing tries a minute from one network address (an IPv6 address counts by its /64 block, roughly one home or connection). Beyond that the Worker answers 429 without looking at the code. This slows a flood of guesses; it can't stop someone who sends a few wrong guesses a minute from voiding a code, since 5 wrong tries void it. If that ever happens, the parent makes a new code later. The code's own one use, 10 minutes and 5 tries are what keep an iPad from being paired by anyone else. If the Worker has no rate limiter, pairing is refused (503) rather than left unguarded.
+- **Preview pairing:** a PR preview can pair without a parent, so paired screens can be checked on a phone. The preview's own 6-digit code is a secret held in Cloudflare's preview settings, never in the repo. Typing it on the Pair screen pairs the device: the Worker makes a new device named "Preview" in the preview database and returns its key once. The code can be used any number of times and never expires; the pairing rate limit still applies first, and it is the only guard against guessing. It works only when the Worker is marked as a preview, has no Access settings and holds a valid code; any other code goes through the normal checks. Production never has the preview mark and always has Access settings, so the preview code does nothing there. A preview build also shows the Pair button outside the installed app (§5.4).
 - **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The dashboard warns before unpairing: "Results this iPad hasn't sent yet won't be saved."
 
 ## 7. Worked examples → test cases
@@ -255,6 +256,11 @@ Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out th
 | A5 | A parent unpairs an iPad | Its key is refused (401) on every child route |
 | A6 | A parent route without a valid Access token, or with the Worker's Access settings missing | Refused (401) |
 | A7 | Ten pairing tries from one address within a minute, then an eleventh with the right code | The eleventh is refused (429) and the code is untouched: no try counted, still usable from another address |
+| A8 | On a preview, the preview code sent twice | Paired both times: two devices named "Preview", each key works on child routes |
+| A9 | The preview code sent to a Worker that has the Access settings, or lacks the preview mark, or has no preview code | Refused (400), no device |
+| A10 | On a preview, a wrong code | Refused (400) like any wrong code |
+| A11 | Eleven preview-code tries from one address within a minute | The eleventh is refused (429) before the code is read |
+| A12 | A preview build, not installed | Home shows **Pair this iPad**; a production build, not installed, does not |
 
 ### 7.R Rewards (§6.4, §6.7)
 

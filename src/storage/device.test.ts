@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  canPair,
   dropQueued,
   forgetDeviceKey,
   getDeviceKey,
@@ -101,5 +102,12 @@ describe('seeds, queue and state', () => {
   it('works without storage at all', () => {
     expect(() => setSeeds([1])).not.toThrow()
     expect(getSeeds()).toEqual([])
+  })
+})
+
+describe('Pair button (SPEC §5.4)', () => {
+  it('A12: a preview build, not installed → Pair shows; a production build, not installed → it does not', () => {
+    expect(canPair(true)).toBe(true)
+    expect(canPair(false)).toBe(false)
   })
 })
