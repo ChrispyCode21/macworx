@@ -44,9 +44,12 @@ export const GENERATOR = {
   factorMax: 9,
 } as const
 
-/** Reward prices in Macaronis (SPEC §6.7). */
+/** The reward menu: a stable id, a name and a price in Macaronis (SPEC §6.7). */
 export const REWARDS = [
-  { name: 'Ice cream', price: 75 },
-  { name: 'Pet shelter visit', price: 100 },
-  { name: 'Camping trip', price: 300 },
+  { id: 'ice-cream', name: 'Ice Cream', price: 30 },
+  { id: 'pet-store', name: 'Pet Store', price: 75 },
+  { id: 'camping', name: 'Camping', price: 300 },
+  { id: 'puppy', name: 'Puppy', price: 10000 },
 ] as const
+
+export type RewardId = (typeof REWARDS)[number]['id']
