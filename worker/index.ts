@@ -35,22 +35,7 @@ export async function handle(
 ): Promise<Response> {
   const url = new URL(request.url)
   const { pathname } = url
-  // TEMPORARY diagnostic, previews only; removed before merge.
-  if (pathname === '/api/health')
-    return json(
-      200,
-      env.PREVIEW === '1'
-        ? {
-            ok: true,
-            diag: {
-              mark: true,
-              access: env.ACCESS_AUD !== undefined || env.ACCESS_TEAM_DOMAIN !== undefined,
-              hasSecret: env.PREVIEW_PAIR_CODE !== undefined,
-              secretValid: previewPairCode(env) !== undefined,
-            },
-          }
-        : { ok: true },
-    )
+  if (pathname === '/api/health') return json(200, { ok: true })
   if (pathname !== '/api' && !pathname.startsWith('/api/')) return env.ASSETS.fetch(request)
 
   try {
