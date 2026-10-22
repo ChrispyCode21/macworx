@@ -55,7 +55,7 @@ const ICONS: Record<RewardId, ReactNode> = {
   ),
 }
 
-/** A reward's picture. Decorative: the shop shows the reward's name beside it. */
+/** A reward's picture. Decorative: show the reward's name beside it. */
 export function RewardIcon({ id, size = 64 }: { id: RewardId; size?: number }) {
   return (
     <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" focusable="false" data-reward={id}>
