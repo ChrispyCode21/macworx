@@ -8,7 +8,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 |---|---|
 | `src/` | The React app (Vite). `main.tsx` mounts `App.tsx`, which switches between screens. See "UI". |
 | `src/screens/` | One component per screen: Home, Assignment, Result. |
-| `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`. |
+| `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`, `RewardIcon`. |
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
 | `src/storage/` | The iPad's own storage (`device.ts`): its device key, unused seeds, unsent results and the Worker's latest state. |
 | `src/sync/` | Saving her results (`sync.ts`): taking a stored seed, queueing a result, and syncing with the Worker. `projection.ts` applies unsent results to the Worker's numbers for Home and the result. |
@@ -31,7 +31,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 
 | File | What it does |
 |---|---|
-| `config.ts` | The one config module: payout values, grade cutoffs, assignment shape, number ranges and reward prices. |
+| `config.ts` | The one config module: payout values, grade cutoffs, assignment shape, number ranges and the reward menu (each reward has an id, a name and a price). |
 | `random.ts` | A seeded generator (mulberry32). |
 | `problems.ts` | `generateAssignment(seed)`: 20 shuffled problems; the same seed always gives the same assignment, so the Worker can regenerate and re-score it. `makeProblem` computes an answer. |
 | `score.ts` | `checkAnswer`: a whole number equal to the computed answer. |
@@ -48,6 +48,7 @@ Each file's tests sit beside it, named with their SPEC §7 IDs.
 - **Pairing** (SPEC §5.4): `Home` shows **Pair this iPad** only when the app runs installed (`navigator.standalone` or `display-mode: standalone`) and has no key. The Pair screen reuses `NumberPad` (with a `checkLabel`) and the answer-box style (`CodeBoxes`). Each sync checks the stored key; a 401 forgets it, with the seeds and unsent results stored for it.
 - **Seeds:** a paired iPad takes the next stored seed (`takeSeed`), syncing first when it has none; with none and no connection, Home shows the Wi-Fi line. An iPad without a key practices with a random seed from `crypto.getRandomValues` and saves nothing. The engine never makes randomness itself.
 - **Home numbers** (SPEC §5.1, §6.8): `App.tsx` keeps `numbers` from `homeNumbers(getWorkerState(), getQueue(), today)` and recomputes them when Home shows, after each sync and after a result is queued. They are absent without a key or before the first state arrives; `Home` then shows nothing extra. The finished `Outcome` carries the `Payout` from `nextResult`, so the result shows the streak bonus on the first assignment of the day; without a key and a state it is the payout with no streak bonus.
+- **Reward icons** (SPEC §6.7): `RewardIcon` draws one inline SVG per `RewardId` (a `Record`, so a reward without an icon fails type-checking), using only the color tokens. They are decorative (`aria-hidden`); the shop will show the name beside them. No screen shows them yet; the shop is a later v0.3.0 issue.
 - **Text:** every string she sees lives in `src/copy.ts`, including the grade headings, keyed by the engine's `Grade` type.
 - **Shared building blocks:** `src/ui/Button` is the only button, with variants `primary`, `secondary`, `key` and `check`. `src/ui/format.ts` does all number and operator formatting. Colors and sizes are CSS custom properties at the top of `src/index.css`. `check-conventions` fails on a raw `<button>` or inline number formatting outside `src/ui/`, on words written straight into JSX instead of `src/copy.ts`, and on a hex color outside the tokens.
 - **Answer boxes:** `StackedProblem` lays the problem out one digit per column with one answer box per column. `src/assignment/answer.ts` keeps her digits in the order she tapped them, and derives the boxes from them: ones place first for addition and subtraction, left to right (lined up under the ones column) for multiplication.

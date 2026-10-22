@@ -6,6 +6,14 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Added
+
+- **The reward menu:** Ice Cream (30 Macaronis), Pet Store (75), Camping (300) and Puppy (10,000), each with its own picture. The shop screen where she can buy them comes later.
+
+### Changed
+
+- **Reward prices:** the earlier three rewards (Ice cream 75, Pet shelter visit 100, Camping trip 300) are replaced by the menu above.
+
 ### Fixed
 
 - **Home numbers update when the connection comes back:** they used to stay out of date until Home was opened again.
