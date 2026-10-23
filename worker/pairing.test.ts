@@ -188,3 +188,57 @@ describe('pairing (SPEC §6.9)', () => {
     for (const c of codes) expect(c).toMatch(/^\d{6}$/)
   })
 })
+
+describe('preview pairing (SPEC §6.9)', () => {
+  const PREVIEW_CODE = '482915'
+  const previewEnv = { PREVIEW: '1', PREVIEW_PAIR_CODE: PREVIEW_CODE }
+  const devices = async () =>
+    (await t.db.prepare('SELECT label FROM devices WHERE label = ?').bind('Preview').all()).results.length
+
+  /** A PR preview: marked, with no Access settings. */
+  async function asPreview(extra: Record<string, string> = {}) {
+    await t.dispose()
+    t = await createTestDb({ access: false })
+    Object.assign(t.env, previewEnv, extra)
+  }
+
+  it('A8: the preview code sent twice → two devices named "Preview", each key works', async () => {
+    await asPreview()
+    const first = await pair(PREVIEW_CODE)
+    const second = await pair(PREVIEW_CODE)
+    expect([first.status, second.status]).toEqual([201, 201])
+    expect(first.body.key).not.toBe(second.body.key)
+    expect(await devices()).toBe(2)
+    for (const { body } of [first, second])
+      expect((await t.call('GET', '/api/state', { key: body.key })).status).toBe(200)
+  })
+
+  it('A9: refused when the Worker has Access settings, lacks the preview mark, or has no valid preview code', async () => {
+    for (const [env, extra] of [
+      [{ access: true }, previewEnv],
+      [{ access: false }, { PREVIEW_PAIR_CODE: PREVIEW_CODE }],
+      [{ access: false }, { PREVIEW: '1' }],
+      [{ access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '12345' }],
+      [{ access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '' }],
+    ] as const) {
+      await t.dispose()
+      t = await createTestDb(env)
+      Object.assign(t.env, extra)
+      expect(await pair(PREVIEW_CODE)).toEqual({ status: 400, body: { error: 'bad_code' } })
+      expect(await devices()).toBe(0)
+    }
+  })
+
+  it('A10: a wrong code on a preview → refused like any wrong code', async () => {
+    await asPreview()
+    expect(await pair(wrong(PREVIEW_CODE))).toEqual({ status: 400, body: { error: 'bad_code' } })
+    expect(await devices()).toBe(0)
+  })
+
+  it('A11: eleven preview-code tries from one address in a minute → the eleventh is 429', async () => {
+    await asPreview()
+    for (let i = 0; i < 10; i++) expect((await pair(PREVIEW_CODE)).status).toBe(201)
+    expect(await pair(PREVIEW_CODE)).toEqual({ status: 429, body: { error: 'too_many_tries' } })
+    expect(await devices()).toBe(10)
+  })
+})

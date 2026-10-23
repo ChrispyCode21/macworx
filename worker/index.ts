@@ -3,7 +3,7 @@ import { fetchCertsFromCloudflare, parentEmail, type AccessEnv, type CertsFetche
 import { deviceFor } from './auth'
 import { getState, postResult, postSeeds, type ChildRequest } from './child'
 import { error, json } from './http'
-import { postPair } from './pair'
+import { postPair, previewPairCode } from './pair'
 import { PARENT_ROUTES } from './parent'
 
 export interface Env extends AccessEnv {
@@ -11,6 +11,10 @@ export interface Env extends AccessEnv {
   DB: D1Database
   /** Pairing tries per address (SPEC §6.9). Missing means pairing is refused: the guard never goes quietly. */
   PAIR_LIMITER?: RateLimit
+  /** "1" on PR previews only (`previews.vars` in wrangler.jsonc); with the next two, it enables preview pairing (SPEC §6.9). */
+  PREVIEW?: string
+  /** The preview's pairing code: a Preview base-config secret, never in the repo. */
+  PREVIEW_PAIR_CODE?: string
 }
 
 /** Child routes; every one needs the iPad's device key (SPEC §2). */
@@ -49,7 +53,13 @@ export async function handle(
 
     // The one write route with no key or token: the one-time code is the gate (CLAUDE.md, SPEC §6.9).
     if (request.method === 'POST' && pathname === '/api/pair')
-      return await postPair({ request, db: env.DB, now, limiter: env.PAIR_LIMITER })
+      return await postPair({
+        request,
+        db: env.DB,
+        now,
+        limiter: env.PAIR_LIMITER,
+        previewCode: previewPairCode(env),
+      })
 
     const route = CHILD_ROUTES[`${request.method} ${pathname}`]
     if (!route) return error(404, 'not_found')

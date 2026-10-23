@@ -33,6 +33,9 @@
   // PR preview URLs (`wrangler preview`). Bindings don't carry over, and previews must never
   // touch production data, so they get their own database.
   "previews": {
+    // Marks a preview for preview pairing (SPEC §6.9). Not a secret. The code itself is the Preview base-config
+    // secret PREVIEW_PAIR_CODE. The Access vars stay out of this block, so previews never serve parent routes.
+    "vars": { "PREVIEW": "1" },
     // Bindings don't carry into previews; their own namespace keeps their counters apart from production.
     "ratelimits": [
       { "name": "PAIR_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } },

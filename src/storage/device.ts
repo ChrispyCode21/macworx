@@ -113,3 +113,7 @@ export function isInstalled(): boolean {
   const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true
   return iosStandalone || globalThis.matchMedia?.('(display-mode: standalone)').matches === true
 }
+
+/** Whether Home offers Pair: in the installed app, or in a PR preview build, which is opened in a browser tab (SPEC §5.4). */
+export const canPair = (preview: boolean = import.meta.env.VITE_PREVIEW === '1'): boolean =>
+  preview || isInstalled()
