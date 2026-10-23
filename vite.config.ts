@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 import { NETWORK_ONLY_PATHS } from './src/networkOnly.ts'
+import { isPreviewBranch } from './src/previewBuild.ts'
 
 /** The "/*" block of public/_headers, so `vite preview` runs under the production policy. */
 function productionHeaders(): Record<string, string> {
@@ -25,6 +26,10 @@ function productionHeaders(): Record<string, string> {
 // https://vite.dev/config/
 export default defineConfig({
   preview: { headers: productionHeaders() },
+  // "1" only in a PR preview build, which shows the Pair button outside the installed app (SPEC §5.4, §6.9).
+  define: {
+    'import.meta.env.VITE_PREVIEW': JSON.stringify(isPreviewBranch(process.env.WORKERS_CI_BRANCH) ? '1' : ''),
+  },
   plugins: [
     react(),
     // Installable + offline on the iPad (SPEC §2): a web app manifest, and a service worker that

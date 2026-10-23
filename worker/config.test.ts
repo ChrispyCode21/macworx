@@ -20,7 +20,14 @@ describe('wrangler configs', () => {
   it('give production the Access settings, and previews none, so previews never serve parent routes', () => {
     expect(main.vars.ACCESS_TEAM_DOMAIN).toMatch(/^[a-z0-9-]+\.cloudflareaccess\.com$/)
     expect(main.vars.ACCESS_AUD).toMatch(/^[0-9a-f]{64}$/)
-    expect(main.previews.vars).toBeUndefined()
+    expect(main.previews.vars).toEqual({ PREVIEW: '1' })
+  })
+
+  it('mark only previews, and keep the preview pairing code out of both configs', () => {
+    expect(main.vars.PREVIEW).toBeUndefined()
+    expect(JSON.stringify(main)).not.toContain('PREVIEW_PAIR_CODE')
+    expect(JSON.stringify(previewMigrations)).not.toContain('PREVIEW_PAIR_CODE')
+    expect(previewMigrations.vars).toBeUndefined()
   })
 
   it('rate-limit pairing in production and previews, with separate counters', () => {

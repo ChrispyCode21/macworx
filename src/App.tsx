@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Pair } from './screens/Pair'
 import { ParentPage } from './screens/parent/ParentPage'
 import { payout } from './engine'
-import { getDeviceKey, getQueue, getWorkerState, isInstalled, requestPersistence } from './storage/device'
+import { canPair, getDeviceKey, getQueue, getWorkerState, requestPersistence } from './storage/device'
 import { homeNumbers, nextResult, type HomeNumbers } from './sync/projection'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { Assignment } from './screens/Assignment'
@@ -100,7 +100,7 @@ function ChildApp() {
           onStart={start}
           noSeeds={noSeeds}
           numbers={numbers}
-          onPair={!paired && isInstalled() ? () => setScreen({ name: 'pair' }) : undefined}
+          onPair={!paired && canPair() ? () => setScreen({ name: 'pair' }) : undefined}
         />
       )
     case 'pair':

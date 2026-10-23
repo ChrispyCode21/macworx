@@ -1,4 +1,4 @@
-// Pairs a device by hand until the pairing screen exists (#17, #18): prints a new device key and stores
+// Pairs a device without a pairing code (the Pair screen is the normal way, SPEC §5.4): prints a new device key and stores
 // only its SHA-256 in D1. Give the key to the app as its device key.
 //   node scripts/create-device.mjs --local  "her iPad"   -> the local D1 used by `npm run worker:dev`
 //   node scripts/create-device.mjs --remote "her iPad"   -> production (needs `wrangler login`)
