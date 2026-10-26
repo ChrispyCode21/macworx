@@ -10,12 +10,27 @@ interface Device {
   revokedAt: string | null
 }
 
+const summary = { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 }
+
+/** The Worker's answer to each read view (SPEC §8); `views` replaces any of them. */
+function readViews(path: string, devices: Device[], views: Record<string, unknown> = {}) {
+  const answers: Record<string, unknown> = {
+    '/api/parent/summary': summary,
+    '/api/parent/results': { results: [] },
+    '/api/parent/log': { entries: [] },
+    '/api/parent/devices': { devices },
+    ...views,
+  }
+  return answers[path]
+}
+
 async function parentApi(page: Page, devices: Device[], code = '012345') {
   const calls: string[] = []
   await page.route('/api/parent/**', async (route: Route) => {
     const req = route.request()
     calls.push(`${req.method()} ${new URL(req.url()).pathname}`)
-    if (req.method() === 'GET') return route.fulfill({ json: { devices } })
+    if (req.method() === 'GET')
+      return route.fulfill({ json: readViews(new URL(req.url()).pathname, devices) })
     if (req.method() === 'DELETE') {
       const id = Number(new URL(req.url()).pathname.split('/').pop())
       devices = devices.map((d) => (d.id === id ? { ...d, revokedAt: '2026-10-20T12:00:00Z' } : d))
@@ -83,6 +98,9 @@ test('the Worker refusing (as on a preview) shows a message and never reloads', 
   page.on('load', () => loads++)
   await page.goto('/parent')
   await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
+  await expect(page.getByLabel('Her numbers so far').getByText('—')).toHaveCount(4)
+  await expect(page.getByText('Loading…')).toHaveCount(0)
+  await expect(page.getByText('Not available right now.')).toHaveCount(3)
   await page.waitForTimeout(500)
   expect(loads).toBe(1)
 })
@@ -99,6 +117,83 @@ test('a run-out Access sign-in reloads the page once, not forever', async ({ pag
   await expect.poll(() => loads).toBe(2)
   await page.waitForTimeout(500)
   expect(loads).toBe(2)
+})
+
+test('shows her numbers, results and the activity log in plain words', async ({ page }) => {
+  await page.route('/api/parent/**', (route) =>
+    route.fulfill({
+      json: readViews(new URL(route.request().url()).pathname, [herIpad], {
+        '/api/parent/results': {
+          results: [
+            { id: 2, day: '2026-10-16', answered: 8, correct: 7, finished: false, grade: null, total: 7 },
+            {
+              id: 1,
+              day: '2026-10-15',
+              answered: 20,
+              correct: 18,
+              finished: true,
+              grade: 'Great',
+              total: 22,
+            },
+          ],
+        },
+        '/api/parent/log': {
+          entries: [
+            {
+              id: 2,
+              at: '2026-10-20T15:05:00',
+              email: 'mum@example.com',
+              action: 'unpair',
+              detail: { deviceId: 1 },
+            },
+            {
+              id: 1,
+              at: '2026-10-19T09:00:00',
+              email: 'dad@example.com',
+              action: 'pairing_code',
+              detail: { name: 'Her iPad' },
+            },
+          ],
+        },
+      }),
+    }),
+  )
+  await page.goto('/parent')
+  const strip = page.getByLabel('Her numbers so far')
+  await expect(strip.getByText('41')).toBeVisible()
+  await expect(strip.getByText('3 days')).toBeVisible()
+  await expect(strip.getByText('Oct 16')).toBeVisible()
+  await expect(strip.getByText('5', { exact: true })).toBeVisible()
+
+  const results = page.getByRole('table').first()
+  await expect(results.getByRole('row')).toHaveCount(3)
+  await expect(results.getByRole('row').nth(1)).toHaveText(/Oct 167 of 8Left early7/)
+  await expect(results.getByRole('row').nth(2)).toHaveText(/Oct 1518 of 20Great22/)
+
+  const log = page.getByRole('table').nth(1)
+  await expect(log.getByText('Unpaired Her iPad')).toBeVisible()
+  await expect(log.getByText('Made a pairing code for Her iPad')).toBeVisible()
+  await expect(log.getByText('mum@example.com')).toBeVisible()
+})
+
+test('says so when there are no results or log entries yet', async ({ page }) => {
+  await parentApi(page, [])
+  await page.goto('/parent')
+  await expect(page.getByText('No results yet.')).toBeVisible()
+  await expect(page.getByText('Nothing here yet.')).toBeVisible()
+  await expect(page.getByRole('table')).toHaveCount(0)
+})
+
+test('a new child shows no last counted day', async ({ page }) => {
+  await page.route('/api/parent/**', (route) =>
+    route.fulfill({
+      json: readViews(new URL(route.request().url()).pathname, [], {
+        '/api/parent/summary': { balance: 0, streak: 0, lastDay: null, completed: 0 },
+      }),
+    }),
+  )
+  await page.goto('/parent')
+  await expect(page.getByText('None yet')).toBeVisible()
 })
 
 test('her app at / never shows the parent page', async ({ page }) => {
@@ -147,7 +242,8 @@ test('a later success clears an earlier message', async ({ page }) => {
   await page.route('/api/parent/**', (route) => {
     if (route.request().method() === 'GET' && fail)
       return route.fulfill({ status: 500, json: { error: 'server' } })
-    if (route.request().method() === 'GET') return route.fulfill({ json: { devices: [] } })
+    if (route.request().method() === 'GET')
+      return route.fulfill({ json: readViews(new URL(route.request().url()).pathname, []) })
     return route.fulfill({
       status: 201,
       json: { code: '111222', expiresAt: new Date(Date.now() + 600_000).toISOString() },
@@ -166,7 +262,8 @@ test('Make a code waits for its answer before taking another click', async ({ pa
   let answer: () => void = () => {}
   const posts: number[] = []
   await page.route('/api/parent/**', (route) => {
-    if (route.request().method() === 'GET') return route.fulfill({ json: { devices: [] } })
+    if (route.request().method() === 'GET')
+      return route.fulfill({ json: readViews(new URL(route.request().url()).pathname, []) })
     posts.push(1)
     answer = () =>
       void route.fulfill({

@@ -28,7 +28,6 @@ macworx gives her:
 - Push notifications to the parent.
 - Time limits or timers of any kind.
 - More than one child.
-- Editing anything from the parent side (it is read-only).
 
 ## 4. Principles
 
@@ -65,11 +64,14 @@ macworx gives her:
 
 ### 5.3 Parent dashboard (admin)
 
-The parent dashboard is admin mode: it shows everything and can change anything. It lives at `/parent` on the same app, for a parent's phone or computer; nothing on her screens links to it. It shows:
+The parent dashboard is admin mode: it shows everything and can change anything. It lives at `/parent` on the same app, for a parent's phone or computer; nothing on her screens links to it. It is a plain, lightweight admin page for two parents, with the app's colors but not her playful look: small type, tables for lists, plain words, and never a result framed as a failure (§4). There is no navigation or routing; the page is one screen:
 
-- Each finished assignment: date, every problem with her answer and the right answer, correct count, grade and Macaronis earned.
-- Her balance, streak and purchase history.
-- The paired iPads.
+- **Summary strip** (top): her balance, streak, last counted day and completed assignments.
+- **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
+- **iPads:** pair an iPad and the paired iPads, with Unpair (§6.9).
+- **Activity log:** every change a parent has made, newest first (the latest 50): when, which parent and what changed, in plain words.
+
+On a phone the sections are stacked in that order below the summary. On a wide screen they sit in two columns: Results on the left, iPads and the Activity log on the right.
 
 A parent can:
 
@@ -298,6 +300,9 @@ The parent API (every route needs a valid Access token, §6.9):
 - `GET /api/parent/devices`: the paired and unpaired iPads.
 - `DELETE /api/parent/devices/:id`: unpairs an iPad (logged).
 - `POST /api/parent/pairing-code { name }`: a new pairing code for an iPad with that name (logged).
+- `GET /api/parent/summary`: balance, streak, last counted day and completed assignments.
+- `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade and total paid.
+- `GET /api/parent/log`: the latest 50 admin log entries, newest first: when, which parent, the action and its details.
 
 Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
 
@@ -313,5 +318,6 @@ Ideas outside the MVP. Each needs a spec section before it is built.
 - **Carrying and borrowing:** work space on the stacked problem to mark a carried 1 or regroup from the next place.
 - **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
 - **Difficulty levels:** stretch problems that pay more than warm-ups.
-- **Parent tools:** push notification on a purchase, adding spelling words and assignments, restoring a streak from the dashboard.
+- **Parent tools:** push notification on a purchase, adding spelling words and assignments.
+- **Dashboard detail:** every problem of a result with her answer and the right answer, and purchase history (with the reward shop, §5.2).
 - **More rewards:** the full reward menu beyond the four in §6.7.

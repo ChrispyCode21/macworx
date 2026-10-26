@@ -191,4 +191,121 @@ describe('parent API', () => {
       404,
     )
   })
+
+  describe('read views (SPEC §5.3)', () => {
+    const get = async (path: string) => t.call('GET', path, { key: null, accessToken: await accessToken() })
+
+    const addResult = async (
+      seed: number,
+      day: string,
+      finished: number,
+      grade: string | null,
+      total: number,
+    ) => {
+      await t.db
+        .prepare('INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (?, 1, ?, 1)')
+        .bind(seed, day)
+        .run()
+      await t.db
+        .prepare(
+          `INSERT INTO results (seed, device_id, day, answers, answered, correct, finished, grade, base,
+             accuracy_bonus, streak_bonus, total, created_at) VALUES (?, 1, ?, '[]', ?, ?, ?, ?, ?, 0, 0, ?, ?)`,
+        )
+        .bind(
+          seed,
+          day,
+          finished ? 20 : 8,
+          finished ? 18 : 7,
+          finished,
+          grade,
+          total,
+          total,
+          `${day}T12:00:00Z`,
+        )
+        .run()
+    }
+
+    it('the new routes need an Access token too', async () => {
+      for (const path of ['summary', 'results', 'log'])
+        expect((await t.call('GET', `/api/parent/${path}`, { key: null })).status, path).toBe(401)
+    })
+
+    it('the summary shows her totals', async () => {
+      await t.db
+        .prepare("UPDATE child SET balance = 41, streak = 3, last_day = '2026-10-16', completed = 5")
+        .run()
+      const { status, body } = await get('/api/parent/summary')
+      expect(status).toBe(200)
+      expect(body).toEqual({ balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 })
+    })
+
+    it('the summary of a new child has no last counted day', async () => {
+      expect((await get('/api/parent/summary')).body).toEqual({
+        balance: 0,
+        streak: 0,
+        lastDay: null,
+        completed: 0,
+      })
+    })
+
+    it('lists results newest first, with a left-early one having no grade', async () => {
+      await addResult(1, '2026-10-15', 1, 'Great', 22)
+      await addResult(2, '2026-10-17', 0, null, 7)
+      await addResult(3, '2026-10-16', 1, 'Excellent', 26)
+      const { status, body } = await get('/api/parent/results')
+      expect(status).toBe(200)
+      expect(body.results.map((r: { day: string }) => r.day)).toEqual([
+        '2026-10-17',
+        '2026-10-16',
+        '2026-10-15',
+      ])
+      expect(body.results[0]).toEqual({
+        id: 2,
+        day: '2026-10-17',
+        answered: 8,
+        correct: 7,
+        finished: false,
+        grade: null,
+        total: 7,
+      })
+      expect(body.results[1]).toMatchObject({ finished: true, grade: 'Excellent', total: 26 })
+    })
+
+    it('lists no more than the latest 50 results', async () => {
+      for (let i = 1; i <= 52; i++) await addResult(i, '2026-10-15', 1, 'Good', 10)
+      const { body } = await get('/api/parent/results')
+      expect(body.results).toHaveLength(50)
+      expect(body.results[0].id).toBe(52)
+    })
+
+    it('lists the log newest first, with details as an object', async () => {
+      const token = await accessToken()
+      await t.call('DELETE', '/api/parent/devices/1', { key: null, accessToken: token })
+      await t.call('POST', '/api/parent/pairing-code', {
+        key: null,
+        accessToken: token,
+        body: { name: 'Mum' },
+      })
+      await t.db
+        .prepare(
+          "INSERT INTO admin_log (at, email, action, detail) VALUES ('x', 'p@example.com', 'odd', 'not json')",
+        )
+        .run()
+      const { status, body } = await get('/api/parent/log')
+      expect(status).toBe(200)
+      expect(body.entries.map((e: { action: string }) => e.action)).toEqual(['odd', 'pairing_code', 'unpair'])
+      expect(body.entries[0].detail).toEqual({})
+      expect(body.entries[2]).toMatchObject({
+        email: 'parent@example.com',
+        at: '2026-10-17T12:00:00.000Z',
+        detail: { deviceId: 1 },
+      })
+    })
+
+    it('the read views change nothing', async () => {
+      for (const path of ['summary', 'results', 'log']) await get(`/api/parent/${path}`)
+      const log = await t.db.prepare('SELECT COUNT(*) AS n FROM admin_log').first<{ n: number }>()
+      expect(log?.n).toBe(0)
+    })
+  })
 })

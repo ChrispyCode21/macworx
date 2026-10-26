@@ -40,3 +40,22 @@ export function minutesLeft(iso: string, now: Date): number {
 export function formatCode(code: string): string {
   return code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code
 }
+
+/** "Oct 17", for a calendar day stored as `YYYY-MM-DD`. Read as UTC so no time zone moves it a day. */
+export function formatCalendarDay(day: string): string {
+  return new Date(`${day}T00:00:00Z`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+/** "Oct 17, 3:05 PM", for when something happened, in the viewer's time zone. */
+export function formatMoment(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
