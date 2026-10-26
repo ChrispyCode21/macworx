@@ -8,6 +8,7 @@ import {
   listLog,
   listResults,
   makeCode,
+  MAX_NOTE,
   setStreak,
   unpair,
 } from '../../parent/api'
@@ -26,7 +27,6 @@ import { ResultCorrection } from './ResultCorrection'
 
 const MAX_NAME = 40
 const MAX_STREAK = 3650
-const MAX_NOTE = 200
 const MAX_AMOUNT = 100_000
 
 /** What a failed parent call shows. While the page reloads for a sign-in, nothing. */

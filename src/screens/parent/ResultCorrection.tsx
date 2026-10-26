@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { COPY } from '../../copy'
-import { correctResult, getResultDetail, getSummary } from '../../parent/api'
+import { correctResult, getResultDetail, getSummary, MAX_NOTE } from '../../parent/api'
 import type { ParentResult, ResultDetail } from '../../parent/api'
 import { Button } from '../../ui/Button'
 import { formatCalendarDay, formatNumber, operatorSymbol } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 
-const MAX_NOTE = 200
 const ANSWER = /^\d{1,6}$/
 
 interface Props {

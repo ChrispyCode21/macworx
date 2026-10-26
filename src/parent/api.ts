@@ -95,6 +95,9 @@ export interface LogEntry {
 /** How many results and log entries the Worker sends (SPEC §5.3). */
 export const LIST_LIMIT = 50
 
+/** The longest note the Worker accepts on an adjustment or a correction (SPEC §5.3). */
+export const MAX_NOTE = 200
+
 export const getSummary = () => parentCall<Summary>('/api/parent/summary')
 
 export const listResults = () => parentCall<{ results: ResultRow[] }>('/api/parent/results')
