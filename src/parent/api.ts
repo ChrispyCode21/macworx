@@ -93,6 +93,12 @@ export const listDevices = () => parentCall<{ devices: Device[] }>('/api/parent/
 export const unpair = (id: number) =>
   parentCall<{ ok: true }>(`/api/parent/devices/${id}`, { method: 'DELETE' })
 
+export const adjustBalance = (amount: number, note: string) =>
+  parentCall<{ balance: number }>('/api/parent/balance', {
+    method: 'POST',
+    body: JSON.stringify({ amount, note }),
+  })
+
 export const makeCode = (name: string) =>
   parentCall<{ code: string; expiresAt: string }>('/api/parent/pairing-code', {
     method: 'POST',
