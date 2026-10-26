@@ -69,9 +69,10 @@ The parent dashboard is admin mode: it shows everything and can change anything.
 - **Summary strip** (top): her balance, streak, last counted day and completed assignments.
 - **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
 - **iPads:** pair an iPad and the paired iPads, with Unpair (§6.9).
+- **Adjustments:** set her streak (below).
 - **Activity log:** every change a parent has made, newest first (the latest 50): when, which parent and what changed, in plain words.
 
-On a phone the sections are stacked in that order below the summary. On a wide screen they sit in two columns: Results on the left, iPads and the Activity log on the right.
+On a phone the sections are stacked in that order below the summary. On a wide screen they sit in two columns: Results on the left, iPads, Adjustments and the Activity log on the right.
 
 A parent can:
 
@@ -79,6 +80,8 @@ A parent can:
 - Add or remove Macaronis with a note, for example to fix a mistake or to reward her real homework grades.
 - Set or restore her streak and last counted day.
 - Correct a recorded result.
+
+**Setting her streak:** the Adjustments section has a streak form with two boxes, Streak and Last counted day, filled with her current values, and a Save button. Streak is a whole number from 0 to 3650. Last counted day is a date or empty; it may be empty only when the streak is 0, and may not be more than 1 day after the Worker's date (UTC), so a typo can't stall her streak (§6.8). Saving changes only the streak and last counted day: not her balance, completed assignments or results, and it pays no streak bonus. Her next finished assignment continues from the saved values (§6.5). Each save is logged with the old and new streak and last counted day. If a result is being recorded at the same moment, the Worker works from the newest numbers, and after three lost races it answers 503 and nothing changes.
 
 Every change is logged: what changed, when, and which parent made it. The app's own rules never take anything away (§4); a parent's corrections are the exception.
 
@@ -277,6 +280,23 @@ One 20-problem assignment a day, all correct, starting a fresh streak: day `n` p
 | R3 | Camping, 300 | Balance 295 after day 10, 329 after day 11 → affordable on **day 11** |
 | R4 | Puppy, 10,000 | Balance 9,985 after day 295, 10,019 after day 296 → affordable on **day 296** |
 
+### 7.C Streak edits (§5.3)
+
+The Worker's date is 2026-10-17 UTC. Her state: balance 40, streak 3, last counted day 2026-10-16, completed 5, unless stated.
+
+| ID | Given | Expected |
+|---|---|---|
+| C1 | A parent sets streak 7 and last counted day 2026-10-16 | Streak **7**, last counted day **2026-10-16**; balance **40**, completed **5** and results unchanged; one log entry with old streak 3 and day 2026-10-16, new streak 7 and day 2026-10-16, and the parent's email |
+| C2 | Streak 0 with an empty last counted day (empty string or null) | Streak **0**, no last counted day; logged |
+| C3 | An empty last counted day with streak 3 | Refused (400); nothing changed or logged |
+| C4 | Last counted day 2026-10-18 (1 day after the Worker's date) | Accepted. 2026-10-19 is refused (400); nothing changed or logged |
+| C5 | A streak of -1, 3651, 2.5, "5" or missing | Refused (400); nothing changed or logged. 0 and 3650 are accepted |
+| C6 | A last counted day of "2026-02-30", "10/16/2026", 20261016 or missing | Refused (400); nothing changed or logged. An earlier real day (2026-01-05) is accepted |
+| C7 | A result is recorded between the edit's read and its write | The edit is worked out again from the new row: the result's balance and completed stay, the streak and day are the edited ones, and the log shows the old values it really saw |
+| C8 | The write loses the race three times | 503; nothing changed or logged |
+| C9 | No Access token | Refused (401) |
+| C10 | After a parent sets streak 7 and day 2026-10-16, a finished 20-correct result dated 2026-10-17 arrives | Streak **8**, last counted day **2026-10-17**, payout 20 + 4 + 8 streak = **32** (the edit paid nothing) |
+
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
 The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock and no `Math.random`. Randomness comes from the seed, and dates are passed in. It exposes:
@@ -300,6 +320,7 @@ The parent API (every route needs a valid Access token, §6.9):
 - `GET /api/parent/devices`: the paired and unpaired iPads.
 - `DELETE /api/parent/devices/:id`: unpairs an iPad (logged).
 - `POST /api/parent/pairing-code { name }`: a new pairing code for an iPad with that name (logged).
+- `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
 - `GET /api/parent/summary`: balance, streak, last counted day and completed assignments.
 - `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade and total paid.
 - `GET /api/parent/log`: the latest 50 admin log entries, newest first: when, which parent, the action and its details.
