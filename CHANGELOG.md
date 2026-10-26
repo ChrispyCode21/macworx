@@ -6,6 +6,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Added
+
+- **Set or restore her streak (parents):** an Adjustments section on `/parent` with a streak form. It saves her streak (0 to 3,650) and last counted day, doesn't change her Macaronis or pay a bonus, and shows in the Activity log.
+
 ### Changed
 
 - **Parent page is now a dashboard:** at `/parent`, a summary strip with her Macaroni balance, streak, last counted day and assignments done, then her Results (date, how many right, grade, Macaronis earned), the iPads, and an Activity log of changes made on the page. It is stacked on a phone and in two columns on a wide screen. Pairing and unpairing work as before.

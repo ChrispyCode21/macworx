@@ -355,9 +355,7 @@ describe('parent API', () => {
 
     it('C1: sets streak 7 and day 2026-10-16 → saved, balance and completed untouched, logged', async () => {
       await t.db
-        .prepare(
-          `INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (1, 1, '2026-10-16', 1)`,
-        )
+        .prepare(`INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (1, 1, '2026-10-16', 1)`)
         .run()
       await t.db
         .prepare(
@@ -411,7 +409,14 @@ describe('parent API', () => {
     })
 
     it('C6: a bad or missing day → 400; an earlier real day is accepted', async () => {
-      for (const lastDay of ['2026-02-30', '10/16/2026', 20261016, undefined, '2026-10-16T00:00', ' 2026-10-16'])
+      for (const lastDay of [
+        '2026-02-30',
+        '10/16/2026',
+        20261016,
+        undefined,
+        '2026-10-16T00:00',
+        ' 2026-10-16',
+      ])
         await refused({ streak: 3, lastDay }, 'bad_day')
       expect((await set({ streak: 3, lastDay: '2026-01-05' })).status).toBe(200)
       expect((await child())?.last_day).toBe('2026-01-05')

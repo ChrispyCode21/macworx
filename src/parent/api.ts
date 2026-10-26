@@ -93,6 +93,9 @@ export const listDevices = () => parentCall<{ devices: Device[] }>('/api/parent/
 export const unpair = (id: number) =>
   parentCall<{ ok: true }>(`/api/parent/devices/${id}`, { method: 'DELETE' })
 
+export const setStreak = (streak: number, lastDay: string | null) =>
+  parentCall<Summary>('/api/parent/streak', { method: 'POST', body: JSON.stringify({ streak, lastDay }) })
+
 export const makeCode = (name: string) =>
   parentCall<{ code: string; expiresAt: string }>('/api/parent/pairing-code', {
     method: 'POST',
