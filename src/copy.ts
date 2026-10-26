@@ -106,6 +106,24 @@ export const COPY = {
     }`,
   parentLogOther: 'Made a change',
   parentLogUnknownIpad: 'an iPad',
+  parentMacaroniFormHeading: 'Her Macaronis',
+  parentAdjustIntro:
+    'Add or remove Macaronis, for example to put her balance right or to reward her homework grades.',
+  parentAdd: 'Add',
+  parentRemove: 'Remove',
+  parentAmountLabel: 'How many Macaronis',
+  parentAmountProblem: 'Enter a whole number of Macaronis, from 1 to 100,000.',
+  parentNoteLabel: 'Note',
+  parentNoteHint: 'Why? Up to 200 characters. It goes in the activity log.',
+  parentNoteProblem: 'Add a short note, up to 200 characters, so you remember why.',
+  parentSave: 'Save Macaronis',
+  parentSaved: (balance: number) => `Saved. Her balance is now ${formatNumber(balance)}.`,
+  parentOverdraw: (balance: number) =>
+    `She has ${formatNumber(balance)} Macaronis, so you can't remove more than that. Her balance can't go below 0.`,
+  parentLogAdded: (n: number, note: string) =>
+    `Added ${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}: ${note}`,
+  parentLogRemoved: (n: number, note: string) =>
+    `Removed ${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}: ${note}`,
   parentLoading: 'Loading…',
   parentNoValue: '—',
   parentUnavailable: 'Not available right now.',

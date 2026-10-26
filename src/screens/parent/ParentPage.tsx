@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import {
+  adjustBalance,
   getSummary,
   LIST_LIMIT,
   listDevices,
@@ -24,6 +25,8 @@ import { TextField } from '../../ui/TextField'
 
 const MAX_NAME = 40
 const MAX_STREAK = 3650
+const MAX_NOTE = 200
+const MAX_AMOUNT = 100_000
 
 /** What a failed parent call shows. While the page reloads for a sign-in, nothing. */
 function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
@@ -32,6 +35,8 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
   if (result.error === 'offline') return COPY.parentOffline
   if (result.error === 'bad_name') return COPY.parentNameProblem
   if (result.error === 'bad_streak' || result.error === 'bad_day') return COPY.parentStreakProblem
+  if (result.error === 'bad_amount') return COPY.parentAmountProblem
+  if (result.error === 'bad_note') return COPY.parentNoteProblem
   if (result.error === 'busy') return COPY.parentBusy
   return COPY.parentServerTrouble
 }
@@ -49,6 +54,9 @@ function describe(entry: LogEntry, devices: Device[]): string {
     if (typeof after?.streak === 'number' && (typeof after.lastDay === 'string' || after.lastDay === null))
       return COPY.parentLogStreak(after.streak, after.lastDay)
   }
+  const { amount, note } = entry.detail
+  if (entry.action === 'balance' && typeof amount === 'number' && typeof note === 'string')
+    return amount < 0 ? COPY.parentLogRemoved(-amount, note) : COPY.parentLogAdded(amount, note)
   return COPY.parentLogOther
 }
 
@@ -91,6 +99,12 @@ export function ParentPage() {
     setStreakText(String(s.streak))
     setDayText(s.lastDay ?? '')
   }
+  const [removing, setRemoving] = useState(false)
+  const [amount, setAmount] = useState('')
+  const [note, setNote] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<number | null>(null)
+  const [adjustProblem, setAdjustProblem] = useState<string | null>(null)
 
   // One call at a time, so a run-out Access sign-in reloads the page once, not once per call.
   const refresh = async () => {
@@ -154,6 +168,30 @@ export function ParentPage() {
     fillStreakForm(result.body)
     setStreakSaved(true)
     await refresh()
+  }
+
+  const onSave = async () => {
+    setSaved(null)
+    setAdjustProblem(null)
+    const trimmed = note.trim()
+    const count = /^\d+$/.test(amount.trim()) ? Number(amount.trim()) : 0
+    if (count < 1 || count > MAX_AMOUNT) return setAdjustProblem(COPY.parentAmountProblem)
+    if (trimmed.length < 1 || trimmed.length > MAX_NOTE) return setAdjustProblem(COPY.parentNoteProblem)
+    // One request at a time, so a quick double click can't save the same change twice.
+    setSaving(true)
+    const result = await adjustBalance(removing ? -count : count, trimmed)
+    setSaving(false)
+    if (result.ok) {
+      setAmount('')
+      setNote('')
+      setSaved(result.body.balance)
+      return refresh()
+    }
+    if (result.error === 'overdraw') {
+      const latest = await getSummary()
+      return setAdjustProblem(latest.ok ? COPY.parentOverdraw(latest.body.balance) : failure(latest))
+    }
+    setAdjustProblem(failure(result))
   }
 
   // Before a list or the numbers arrive: "Loading…", or a dash and a note once a call has failed.
@@ -303,6 +341,47 @@ export function ParentPage() {
               {COPY.parentStreakSave}
             </Button>
             <p role="status">{streakSaved ? COPY.parentStreakSaved : ''}</p>
+            <h3>{COPY.parentMacaroniFormHeading}</h3>
+            <p>{COPY.parentAdjustIntro}</p>
+            <div className="parent-choice">
+              <Button
+                variant={removing ? 'secondary' : 'primary'}
+                aria-pressed={!removing}
+                onClick={() => setRemoving(false)}
+              >
+                {COPY.parentAdd}
+              </Button>
+              <Button
+                variant={removing ? 'primary' : 'secondary'}
+                aria-pressed={removing}
+                onClick={() => setRemoving(true)}
+              >
+                {COPY.parentRemove}
+              </Button>
+            </div>
+            <TextField
+              label={COPY.parentAmountLabel}
+              inputMode="numeric"
+              value={amount}
+              maxLength={6}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            <TextField
+              label={COPY.parentNoteLabel}
+              hint={COPY.parentNoteHint}
+              value={note}
+              maxLength={MAX_NOTE}
+              onChange={(e) => setNote(e.target.value)}
+            />
+            <Button onClick={onSave} disabled={saving}>
+              {COPY.parentSave}
+            </Button>
+            {adjustProblem && (
+              <p className="parent-problem" role="alert">
+                {adjustProblem}
+              </p>
+            )}
+            {saved !== null && <p role="status">{COPY.parentSaved(saved)}</p>}
           </section>
 
           <section className="parent-section">

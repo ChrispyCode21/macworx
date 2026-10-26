@@ -26,15 +26,26 @@ function readViews(path: string, devices: Device[], views: Record<string, unknow
 
 async function parentApi(page: Page, devices: Device[], code = '012345') {
   const calls: string[] = []
+  let balance = summary.balance
   await page.route('/api/parent/**', async (route: Route) => {
     const req = route.request()
     calls.push(`${req.method()} ${new URL(req.url()).pathname}`)
     if (req.method() === 'GET')
-      return route.fulfill({ json: readViews(new URL(req.url()).pathname, devices) })
+      return route.fulfill({
+        json: readViews(new URL(req.url()).pathname, devices, {
+          '/api/parent/summary': { ...summary, balance },
+        }),
+      })
     if (req.method() === 'DELETE') {
       const id = Number(new URL(req.url()).pathname.split('/').pop())
       devices = devices.map((d) => (d.id === id ? { ...d, revokedAt: '2026-10-20T12:00:00Z' } : d))
       return route.fulfill({ json: { ok: true } })
+    }
+    if (new URL(req.url()).pathname === '/api/parent/balance') {
+      const { amount } = req.postDataJSON()
+      if (balance + amount < 0) return route.fulfill({ status: 409, json: { error: 'overdraw', balance } })
+      balance += amount
+      return route.fulfill({ json: { balance } })
     }
     const { name } = req.postDataJSON()
     if (!name || name.length > 40) return route.fulfill({ status: 400, json: { error: 'bad_name' } })
@@ -373,6 +384,61 @@ test('Save streak waits for its answer before taking another click', async ({ pa
   expect(posts).toHaveLength(1)
 })
 
+test('adds Macaronis with a note, then removes some', async ({ page }) => {
+  const calls = await parentApi(page, [])
+  await page.goto('/parent')
+  const strip = page.getByLabel('Her numbers so far')
+  await expect(strip.getByText('41')).toBeVisible()
+
+  await page.getByLabel('How many Macaronis').fill('20')
+  await page.getByLabel('Note').fill('Homework grades')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByText('Saved. Her balance is now 61.')).toBeVisible()
+  await expect(strip.getByText('61')).toBeVisible()
+  await expect(page.getByLabel('How many Macaronis')).toHaveValue('')
+
+  await page.getByRole('button', { name: 'Remove' }).click()
+  await page.getByLabel('How many Macaronis').fill('1')
+  await page.getByLabel('Note').fill('Counted twice')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByText('Saved. Her balance is now 60.')).toBeVisible()
+  expect(calls.filter((c) => c.startsWith('POST'))).toEqual([
+    'POST /api/parent/balance',
+    'POST /api/parent/balance',
+  ])
+})
+
+test('asks for a whole number and a note before saving', async ({ page }) => {
+  const calls = await parentApi(page, [])
+  await page.goto('/parent')
+  await page.getByLabel('Note').fill('A note')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Enter a whole number of Macaronis, from 1 to 100,000.')
+  await page.getByLabel('How many Macaronis').fill('2.5')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Enter a whole number of Macaronis, from 1 to 100,000.')
+  await page.getByLabel('How many Macaronis').fill('5')
+  await page.getByLabel('Note').fill('   ')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByRole('alert')).toHaveText(
+    'Add a short note, up to 200 characters, so you remember why.',
+  )
+  expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+})
+
+test('refuses taking away more than she has, in friendly words', async ({ page }) => {
+  await parentApi(page, [])
+  await page.goto('/parent')
+  await page.getByRole('button', { name: 'Remove' }).click()
+  await page.getByLabel('How many Macaronis').fill('50')
+  await page.getByLabel('Note').fill('Too many')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByRole('alert')).toHaveText(
+    "She has 41 Macaronis, so you can't remove more than that. Her balance can't go below 0.",
+  )
+  await expect(page.getByLabel('Her numbers so far').getByText('41')).toBeVisible()
+})
+
 test('a streak change reads in plain words in the activity log', async ({ page }) => {
   await page.route('/api/parent/**', (route) =>
     route.fulfill({
@@ -402,4 +468,34 @@ test('a streak change reads in plain words in the activity log', async ({ page }
   const log = page.getByRole('table')
   await expect(log.getByText('Set the streak to 7 days, last counted day Oct 16')).toBeVisible()
   await expect(log.getByText('Set the streak to 0 days, no last counted day')).toBeVisible()
+})
+
+test('shows adjustments in the activity log in plain words', async ({ page }) => {
+  await page.route('/api/parent/**', (route) =>
+    route.fulfill({
+      json: readViews(new URL(route.request().url()).pathname, [], {
+        '/api/parent/log': {
+          entries: [
+            {
+              id: 2,
+              at: '2026-10-20T15:05:00',
+              email: 'mum@example.com',
+              action: 'balance',
+              detail: { amount: -5, before: 46, after: 41, note: 'Counted twice' },
+            },
+            {
+              id: 1,
+              at: '2026-10-19T09:00:00',
+              email: 'dad@example.com',
+              action: 'balance',
+              detail: { amount: 20, before: 26, after: 46, note: 'Homework grades' },
+            },
+          ],
+        },
+      }),
+    }),
+  )
+  await page.goto('/parent')
+  await expect(page.getByText('Removed 5 Macaronis: Counted twice')).toBeVisible()
+  await expect(page.getByText('Added 20 Macaronis: Homework grades')).toBeVisible()
 })

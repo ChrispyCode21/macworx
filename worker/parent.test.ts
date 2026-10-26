@@ -194,6 +194,144 @@ describe('parent API', () => {
     )
   })
 
+  describe('balance adjustments (SPEC §5.3)', () => {
+    const adjust = async (body: unknown, token?: string) =>
+      t.call('POST', '/api/parent/balance', { key: null, accessToken: token ?? (await accessToken()), body })
+    const state = async () =>
+      t.db
+        .prepare('SELECT balance, streak, last_day, completed FROM child')
+        .first<{ balance: number; streak: number; last_day: string | null; completed: number }>()
+    const logRows = async () =>
+      (await t.db.prepare('SELECT email, action, detail FROM admin_log ORDER BY id').all()).results
+    const setUp = () =>
+      t.db.prepare("UPDATE child SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5").run()
+    const untouched = { streak: 3, last_day: '2026-10-16', completed: 5 }
+
+    /** Runs the next batch only after another writer got in first, `times` times: a lost race. */
+    const raceOnBatch = (times: number, rival: () => Promise<unknown>) => {
+      const real = t.env.DB
+      let left = times
+      t.env.DB = new Proxy(real, {
+        get: (target, prop) =>
+          prop === 'batch'
+            ? async (statements: D1PreparedStatement[]) => {
+                if (left-- > 0) await rival()
+                return target.batch(statements)
+              }
+            : Reflect.get(target, prop).bind(target),
+      })
+      return () => (t.env.DB = real)
+    }
+    const rivalPays = (n: number) => () =>
+      t.db
+        .prepare('UPDATE child SET balance = balance + ?, revision = lower(hex(randomblob(16)))')
+        .bind(n)
+        .run()
+
+    beforeEach(setUp)
+
+    it('B1: adding Macaronis changes only the balance and logs amount, balance before and after, and the note', async () => {
+      const { status, body } = await adjust({ amount: 20, note: '  Homework grades ' })
+      expect(status).toBe(200)
+      expect(body).toEqual({ balance: 60 })
+      expect(await state()).toEqual({ balance: 60, ...untouched })
+      expect(await logRows()).toEqual([
+        {
+          email: 'parent@example.com',
+          action: 'balance',
+          detail: '{"amount":20,"before":40,"after":60,"note":"Homework grades"}',
+        },
+      ])
+      const results = await t.db.prepare('SELECT COUNT(*) AS n FROM results').first<{ n: number }>()
+      expect(results?.n).toBe(0)
+    })
+
+    it('B2: removing Macaronis takes them off the balance', async () => {
+      const { status, body } = await adjust({ amount: -15, note: 'Counted twice' })
+      expect(status).toBe(200)
+      expect(body).toEqual({ balance: 25 })
+      expect(await state()).toMatchObject({ balance: 25 })
+      expect(await logRows()).toHaveLength(1)
+    })
+
+    it('B3: removing more than her balance is refused, with nothing changed or logged', async () => {
+      const { status, body } = await adjust({ amount: -41, note: 'Too many' })
+      expect(status).toBe(409)
+      expect(body).toEqual({ error: 'overdraw', balance: 40 })
+      expect(await state()).toMatchObject({ balance: 40 })
+      expect(await logRows()).toEqual([])
+    })
+
+    it('B4: removing exactly her balance leaves 0', async () => {
+      expect((await adjust({ amount: -40, note: 'All of it' })).body).toEqual({ balance: 0 })
+      expect(await state()).toMatchObject({ balance: 0 })
+      expect(await logRows()).toHaveLength(1)
+    })
+
+    it('B5: a missing, empty, blank or too long note is refused; 200 characters is fine', async () => {
+      for (const note of [undefined, '', '   ', 'x'.repeat(201), 7]) {
+        const { status, body } = await adjust({ amount: 5, note })
+        expect([status, body.error], String(note)).toEqual([400, 'bad_note'])
+      }
+      expect(await state()).toMatchObject({ balance: 40 })
+      expect(await logRows()).toEqual([])
+      expect((await adjust({ amount: 5, note: 'x'.repeat(200) })).status).toBe(200)
+    })
+
+    it('B6: an amount that is zero, too big, not whole or not a number is refused', async () => {
+      for (const amount of [0, 100_001, -100_001, 2.5, '5', null, undefined]) {
+        const { status, body } = await adjust({ amount, note: 'ok' })
+        expect([status, body.error], String(amount)).toEqual([400, 'bad_amount'])
+      }
+      expect((await adjust(undefined)).status).toBe(400)
+      expect(await state()).toMatchObject({ balance: 40 })
+      expect(await logRows()).toEqual([])
+      expect((await adjust({ amount: 100_000, note: 'big' })).body).toEqual({ balance: 100_040 })
+      expect((await adjust({ amount: -40, note: 'back' })).status).toBe(200)
+    })
+
+    it('B7: a result recorded in between is not lost; the adjustment is worked out again', async () => {
+      const restore = raceOnBatch(1, rivalPays(10))
+      const { status, body } = await adjust({ amount: 20, note: 'Race' })
+      restore()
+      expect(status).toBe(200)
+      expect(body).toEqual({ balance: 70 })
+      expect(await state()).toMatchObject({ balance: 70 })
+      expect(await logRows()).toEqual([
+        expect.objectContaining({ detail: '{"amount":20,"before":50,"after":70,"note":"Race"}' }),
+      ])
+    })
+
+    it('B8: a removal that is too big once the balance has dropped is refused', async () => {
+      const restore = raceOnBatch(1, () =>
+        t.db.prepare('UPDATE child SET balance = 5, revision = lower(hex(randomblob(16)))').run(),
+      )
+      const { status, body } = await adjust({ amount: -30, note: 'Race' })
+      restore()
+      expect([status, body]).toEqual([409, { error: 'overdraw', balance: 5 }])
+      expect(await state()).toMatchObject({ balance: 5 })
+      expect(await logRows()).toEqual([])
+    })
+
+    it('B9: losing the race three times is 503, with nothing changed or logged by the adjustment', async () => {
+      const restore = raceOnBatch(3, rivalPays(1))
+      const { status, body } = await adjust({ amount: 20, note: 'Race' })
+      restore()
+      expect([status, body]).toEqual([503, { error: 'busy' }])
+      expect(await state()).toMatchObject({ balance: 43 })
+      expect(await logRows()).toEqual([])
+    })
+
+    it('B10: without an Access token it is refused', async () => {
+      const { status } = await t.call('POST', '/api/parent/balance', {
+        key: null,
+        body: { amount: 5, note: 'x' },
+      })
+      expect(status).toBe(401)
+      expect(await state()).toMatchObject({ balance: 40 })
+    })
+  })
+
   describe('read views (SPEC §5.3)', () => {
     const get = async (path: string) => t.call('GET', path, { key: null, accessToken: await accessToken() })
 

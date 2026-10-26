@@ -96,6 +96,12 @@ export const unpair = (id: number) =>
 export const setStreak = (streak: number, lastDay: string | null) =>
   parentCall<Summary>('/api/parent/streak', { method: 'POST', body: JSON.stringify({ streak, lastDay }) })
 
+export const adjustBalance = (amount: number, note: string) =>
+  parentCall<{ balance: number }>('/api/parent/balance', {
+    method: 'POST',
+    body: JSON.stringify({ amount, note }),
+  })
+
 export const makeCode = (name: string) =>
   parentCall<{ code: string; expiresAt: string }>('/api/parent/pairing-code', {
     method: 'POST',

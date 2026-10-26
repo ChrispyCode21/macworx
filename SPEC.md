@@ -69,10 +69,10 @@ The parent dashboard is admin mode: it shows everything and can change anything.
 - **Summary strip** (top): her balance, streak, last counted day and completed assignments.
 - **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
 - **iPads:** pair an iPad and the paired iPads, with Unpair (§6.9).
-- **Adjustments:** set her streak (below).
+- **Adjustments:** set her streak, and add or remove Macaronis with a note (below).
 - **Activity log:** every change a parent has made, newest first (the latest 50): when, which parent and what changed, in plain words.
 
-On a phone the sections are stacked in that order below the summary. On a wide screen they sit in two columns: Results on the left, iPads, Adjustments and the Activity log on the right.
+On a phone the sections are stacked in that order below the summary. On a wide screen they sit in two columns: Results on the left; iPads, Adjustments and the Activity log on the right.
 
 A parent can:
 
@@ -84,6 +84,14 @@ A parent can:
 **Setting her streak:** the Adjustments section has a streak form with two boxes, Streak and Last counted day, filled with her current values, and a Save button. Streak is a whole number from 0 to 3650. Last counted day is a date or empty; it may be empty only when the streak is 0, and may not be more than 1 day after the Worker's date (UTC), so a typo can't stall her streak (§6.8). Saving changes only the streak and last counted day: not her balance, completed assignments or results, and it pays no streak bonus. Her next finished assignment continues from the saved values (§6.5). Each save is logged with the old and new streak and last counted day. If a result is being recorded at the same moment, the Worker works from the newest numbers, and after three lost races it answers 503 and nothing changes.
 
 Every change is logged: what changed, when, and which parent made it. The app's own rules never take anything away (§4); a parent's corrections are the exception.
+
+**Adding or removing Macaronis:** the Adjustments section has a choice of Add or Remove, a number of Macaronis, a note and a Save button.
+
+- The amount is a whole number from 1 to 100,000; Remove makes it negative. The note is required, 1 to 200 characters (spaces at either end don't count).
+- Her balance can never end below 0. A removal larger than her balance is refused, with a line saying her balance and that it can't go lower. Nothing is changed.
+- It changes her balance only: not her streak, completed assignments or results. Nothing on her screens mentions it; her Home shows the new balance after her next sync (§6.8).
+- The log entry records the amount, her balance before and after, and the note. In the Activity log it reads, for example, "Added 20 Macaronis: Homework grades" or "Removed 5 Macaronis: Counted twice by mistake".
+- If a result is being recorded at the same moment, neither change is lost: the adjustment is worked out again from the new balance (§6.8; ARCHITECTURE "Data"). If it can't be saved after a few tries, the page says to try again in a minute.
 
 ### 5.4 Pair her iPad
 
@@ -269,6 +277,23 @@ Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out th
 | A11 | Eleven preview-code tries from one address within a minute | The eleventh is refused (429) before the code is read |
 | A12 | A preview build, not installed | Home shows **Pair this iPad**; a production build, not installed, does not |
 
+### 7.B Balance adjustments (§5.3)
+
+Her balance is 40 unless stated.
+
+| ID | Given | Expected |
+|---|---|---|
+| B1 | A parent adds 20 with the note "Homework grades" | Balance **60**; one log entry with amount 20, balance before 40 and after 60, the note and the parent's email; streak, last counted day, completed and results unchanged |
+| B2 | A parent removes 15 (amount -15) with a note | Balance **25**; logged |
+| B3 | A parent removes 41 | Refused (409), balance stays **40**, nothing logged |
+| B4 | A parent removes exactly 40 | Balance **0**, logged |
+| B5 | A missing, empty or all-spaces note, or one of 201 characters | Refused (400); nothing changed or logged. A note of 200 characters is accepted |
+| B6 | An amount of 0, 100001, -100001, 2.5 or "5" | Refused (400); nothing changed or logged. 100000 and -40 are accepted |
+| B7 | A result is recorded between the adjustment's read and its write | The adjustment is worked out again from the new balance: both changes apply, and the log shows the balance it really saw |
+| B8 | A removal that was fine when read but the balance is lower when the write happens | Refused (409); balance never goes below 0 |
+| B9 | The write loses the race three times | 503; nothing changed or logged |
+| B10 | No Access token | Refused (401) |
+
 ### 7.R Rewards (§6.4, §6.7)
 
 One 20-problem assignment a day, all correct, starting a fresh streak: day `n` pays 24 + min(n, 10).
@@ -323,6 +348,7 @@ The parent API (every route needs a valid Access token, §6.9):
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
 - `GET /api/parent/summary`: balance, streak, last counted day and completed assignments.
 - `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade and total paid.
+- `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
 - `GET /api/parent/log`: the latest 50 admin log entries, newest first: when, which parent, the action and its details.
 
 Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):

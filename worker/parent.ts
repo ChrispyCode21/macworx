@@ -189,6 +189,57 @@ export async function postStreak(req: ParentRequest): Promise<Response> {
   return error(503, 'busy')
 }
 
+/** The limits on an adjustment (SPEC §5.3). */
+const MAX_AMOUNT = 100_000
+const MAX_NOTE = 200
+
+/** POST /api/parent/balance { amount, note }: adds or removes Macaronis, never below 0 (SPEC §5.3). */
+export async function postBalance(req: ParentRequest): Promise<Response> {
+  const { db, request } = req
+  const body = (await readJson(request)) as { amount?: unknown; note?: unknown } | null | undefined
+  const amount = body?.amount
+  if (
+    typeof amount !== 'number' ||
+    !Number.isInteger(amount) ||
+    amount === 0 ||
+    Math.abs(amount) > MAX_AMOUNT
+  )
+    return error(400, 'bad_amount')
+  const note = typeof body?.note === 'string' ? body.note.trim() : ''
+  if (note.length < 1 || note.length > MAX_NOTE) return error(400, 'bad_note')
+
+  for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
+    const child = await db
+      .prepare('SELECT balance, revision FROM child WHERE id = 1')
+      .first<{ balance: number; revision: string }>()
+    if (!child) return error(500, 'server')
+    const after = child.balance + amount
+    if (after < 0) return json(409, { error: 'overdraw', balance: child.balance })
+
+    // One transaction: the balance changes only if nobody wrote since we read, and the log row is
+    // written only if it did (it checks for this write's new revision).
+    const revision = crypto.randomUUID()
+    const [update] = await db.batch([
+      db
+        .prepare('UPDATE child SET balance = balance + ?, revision = ? WHERE id = 1 AND revision = ?')
+        .bind(amount, revision, child.revision),
+      db
+        .prepare(
+          `INSERT INTO admin_log (at, email, action, detail)
+           SELECT ?, ?, 'balance', ? WHERE (SELECT revision FROM child WHERE id = 1) = ?`,
+        )
+        .bind(
+          req.now.toISOString(),
+          req.email,
+          JSON.stringify({ amount, before: child.balance, after, note }),
+          revision,
+        ),
+    ])
+    if (update.meta.changes === 1) return json(200, { balance: after })
+  }
+  return error(503, 'busy')
+}
+
 /** Parent routes, matched on method and path pattern. */
 export const PARENT_ROUTES: {
   method: string
@@ -200,6 +251,7 @@ export const PARENT_ROUTES: {
   { method: 'GET', pattern: /^\/api\/parent\/log$/, run: listLog },
   { method: 'GET', pattern: /^\/api\/parent\/devices$/, run: listDevices },
   { method: 'DELETE', pattern: /^\/api\/parent\/devices\/(?<id>\d+)$/, run: unpairDevice },
+  { method: 'POST', pattern: /^\/api\/parent\/balance$/, run: postBalance },
   { method: 'POST', pattern: /^\/api\/parent\/pairing-code$/, run: (req) => postPairingCode(req) },
   { method: 'POST', pattern: /^\/api\/parent\/streak$/, run: postStreak },
 ]
