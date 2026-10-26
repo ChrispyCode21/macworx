@@ -189,6 +189,7 @@ export function ParentPage() {
 
   const onSave = async () => {
     setSaved(null)
+    setCorrected(null)
     setAdjustProblem(null)
     const trimmed = note.trim()
     const count = /^\d+$/.test(amount.trim()) ? Number(amount.trim()) : 0
@@ -301,6 +302,7 @@ export function ParentPage() {
               onClose={() => setReviewing(null)}
               onSaved={(balance) => {
                 setReviewing(null)
+                setSaved(null)
                 setCorrected(balance)
                 void refresh()
               }}
