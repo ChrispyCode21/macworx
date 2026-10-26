@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import {
   adjustBalance,
@@ -8,6 +8,7 @@ import {
   listLog,
   listResults,
   makeCode,
+  setStreak,
   unpair,
 } from '../../parent/api'
 import type { Device, LogEntry, ParentResult, ResultRow, Summary } from '../../parent/api'
@@ -23,6 +24,7 @@ import {
 import { TextField } from '../../ui/TextField'
 
 const MAX_NAME = 40
+const MAX_STREAK = 3650
 const MAX_NOTE = 200
 const MAX_AMOUNT = 100_000
 
@@ -32,9 +34,10 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
   if (result.error === 'signed_out') return COPY.parentSignedOut
   if (result.error === 'offline') return COPY.parentOffline
   if (result.error === 'bad_name') return COPY.parentNameProblem
+  if (result.error === 'bad_streak' || result.error === 'bad_day') return COPY.parentStreakProblem
   if (result.error === 'bad_amount') return COPY.parentAmountProblem
   if (result.error === 'bad_note') return COPY.parentNoteProblem
-  if (result.error === 'busy') return COPY.parentAdjustBusy
+  if (result.error === 'busy') return COPY.parentBusy
   return COPY.parentServerTrouble
 }
 
@@ -46,10 +49,30 @@ function describe(entry: LogEntry, devices: Device[]): string {
     const label = devices.find((d) => d.id === entry.detail.deviceId)?.label
     return COPY.parentLogUnpair(label ?? COPY.parentLogUnknownIpad)
   }
+  if (entry.action === 'streak') {
+    const after = entry.detail.after as { streak?: unknown; lastDay?: unknown } | null | undefined
+    if (typeof after?.streak === 'number' && (typeof after.lastDay === 'string' || after.lastDay === null))
+      return COPY.parentLogStreak(after.streak, after.lastDay)
+  }
   const { amount, note } = entry.detail
   if (entry.action === 'balance' && typeof amount === 'number' && typeof note === 'string')
     return amount < 0 ? COPY.parentLogRemoved(-amount, note) : COPY.parentLogAdded(amount, note)
   return COPY.parentLogOther
+}
+
+const WHOLE_NUMBER = /^\d{1,4}$/
+
+/** The streak form's two boxes as the Worker wants them, or null when they can't be sent (SPEC §5.3). */
+function streakFields(
+  streakText: string,
+  dayText: string,
+): { streak: number; lastDay: string | null } | null {
+  const text = streakText.trim()
+  if (!WHOLE_NUMBER.test(text) || Number(text) > MAX_STREAK) return null
+  const streak = Number(text)
+  // The date box only ever holds a real date or nothing; empty goes with a streak of 0 only.
+  if (dayText === '') return streak === 0 ? { streak, lastDay: null } : null
+  return { streak, lastDay: dayText }
 }
 
 /** The parent dashboard at /parent (SPEC §5.3): her numbers, results, iPads and the activity log. */
@@ -64,6 +87,18 @@ export function ParentPage() {
   const [confirming, setConfirming] = useState<Device | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
   const [making, setMaking] = useState(false)
+  const [streakText, setStreakText] = useState('')
+  const [dayText, setDayText] = useState('')
+  const [savingStreak, setSavingStreak] = useState(false)
+  const [streakSaved, setStreakSaved] = useState(false)
+  // The boxes fill from her numbers once, so a later refresh never overwrites what a parent is typing.
+  const prefilled = useRef(false)
+
+  const fillStreakForm = (s: Summary) => {
+    prefilled.current = true
+    setStreakText(String(s.streak))
+    setDayText(s.lastDay ?? '')
+  }
   const [removing, setRemoving] = useState(false)
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
@@ -82,6 +117,7 @@ export function ParentPage() {
     const logResult = await listLog()
     if (!logResult.ok) return setProblem(failure(logResult))
     setSummary(summaryResult.body)
+    if (!prefilled.current) fillStreakForm(summaryResult.body)
     setResults(resultsResult.body.results)
     setDevices(devicesResult.body.devices)
     setLog(logResult.body.entries)
@@ -116,6 +152,21 @@ export function ParentPage() {
     setProblem(null)
     const result = await unpair(device.id)
     if (!result.ok) return setProblem(failure(result))
+    await refresh()
+  }
+
+  const onSaveStreak = async () => {
+    setProblem(null)
+    setStreakSaved(false)
+    const fields = streakFields(streakText, dayText)
+    if (!fields) return setProblem(COPY.parentStreakProblem)
+    // One request at a time, so a quick double click saves once.
+    setSavingStreak(true)
+    const result = await setStreak(fields.streak, fields.lastDay)
+    setSavingStreak(false)
+    if (!result.ok) return setProblem(failure(result))
+    fillStreakForm(result.body)
+    setStreakSaved(true)
     await refresh()
   }
 
@@ -265,6 +316,32 @@ export function ParentPage() {
 
           <section className="parent-section">
             <h2>{COPY.parentAdjustHeading}</h2>
+            <h3>{COPY.parentStreakFormHeading}</h3>
+            <TextField
+              label={COPY.parentStreakLabel}
+              hint={COPY.parentStreakHint}
+              inputMode="numeric"
+              value={streakText}
+              onChange={(e) => {
+                setStreakText(e.target.value)
+                setStreakSaved(false)
+              }}
+            />
+            <TextField
+              label={COPY.parentLastDayLabel}
+              hint={COPY.parentLastDayHint}
+              type="date"
+              value={dayText}
+              onChange={(e) => {
+                setDayText(e.target.value)
+                setStreakSaved(false)
+              }}
+            />
+            <Button onClick={onSaveStreak} disabled={savingStreak}>
+              {COPY.parentStreakSave}
+            </Button>
+            <p role="status">{streakSaved ? COPY.parentStreakSaved : ''}</p>
+            <h3>{COPY.parentMacaroniFormHeading}</h3>
             <p>{COPY.parentAdjustIntro}</p>
             <div className="parent-choice">
               <Button

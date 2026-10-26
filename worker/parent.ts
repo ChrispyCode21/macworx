@@ -1,5 +1,6 @@
 // The parent API (SPEC §5.3, §6.9, §8). Every route here runs only after parentEmail() accepted the request.
-import { error, json, readJson } from './http'
+import { addDays, dayNumber } from '../src/engine'
+import { error, json, readJson, utcDay } from './http'
 import { postPairingCode } from './pair'
 
 export interface ParentRequest {
@@ -132,11 +133,65 @@ export async function unpairDevice(req: ParentRequest): Promise<Response> {
   return json(200, { ok: true })
 }
 
+const MAX_STREAK = 3650
+const WRITE_ATTEMPTS = 3
+
+/** The checked body of POST /api/parent/streak, or the error code to answer with. */
+function parseStreak(body: unknown, now: Date): { streak: number; lastDay: string | null } | string {
+  if (typeof body !== 'object' || body === null) return 'bad_streak'
+  const { streak, lastDay } = body as Record<string, unknown>
+  if (typeof streak !== 'number' || !Number.isInteger(streak) || streak < 0 || streak > MAX_STREAK)
+    return 'bad_streak'
+  if (lastDay === undefined) return 'bad_day'
+  // Empty means no last counted day, and only a streak of 0 can go with that.
+  if (lastDay === null || lastDay === '') return streak === 0 ? { streak, lastDay: null } : 'bad_day'
+  if (typeof lastDay !== 'string') return 'bad_day'
+  try {
+    // addDays is the calendar check: it throws for a bad format and for a day like 2026-02-30.
+    if (addDays(lastDay, 0) !== lastDay) return 'bad_day'
+    if (dayNumber(lastDay) > dayNumber(utcDay(now)) + 1) return 'bad_day'
+  } catch {
+    return 'bad_day'
+  }
+  return { streak, lastDay }
+}
+
+/** POST /api/parent/streak { streak, lastDay }: sets her streak and last counted day (SPEC §5.3). */
+export async function postStreak(req: ParentRequest): Promise<Response> {
+  const { request, db, email, now } = req
+  const parsed = parseStreak(await readJson(request), now)
+  if (typeof parsed === 'string') return error(400, parsed)
+
+  for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
+    const child = await db
+      .prepare('SELECT streak, last_day, revision FROM child WHERE id = 1')
+      .first<{ streak: number; last_day: string | null; revision: string }>()
+    if (!child) return error(500, 'no_child')
+    const revision = crypto.randomUUID()
+    const detail = {
+      before: { streak: child.streak, lastDay: child.last_day },
+      after: parsed,
+    }
+    // One transaction: the update applies only if nobody wrote since we read, and the log row only if it did.
+    const [update] = await db.batch([
+      db
+        .prepare('UPDATE child SET streak = ?, last_day = ?, revision = ? WHERE id = 1 AND revision = ?')
+        .bind(parsed.streak, parsed.lastDay, revision, child.revision),
+      db
+        .prepare(
+          `INSERT INTO admin_log (at, email, action, detail)
+           SELECT ?, ?, 'streak', ? WHERE (SELECT revision FROM child WHERE id = 1) = ?`,
+        )
+        .bind(now.toISOString(), email, JSON.stringify(detail), revision),
+    ])
+    if (update.meta.changes === 1) return getSummary(req)
+  }
+  return error(503, 'busy')
+}
+
 /** The limits on an adjustment (SPEC §5.3). */
 const MAX_AMOUNT = 100_000
 const MAX_NOTE = 200
-/** Tries to write against a moving balance before giving up (ARCHITECTURE "Data"). */
-const WRITE_ATTEMPTS = 3
 
 /** POST /api/parent/balance { amount, note }: adds or removes Macaronis, never below 0 (SPEC §5.3). */
 export async function postBalance(req: ParentRequest): Promise<Response> {
@@ -197,6 +252,6 @@ export const PARENT_ROUTES: {
   { method: 'GET', pattern: /^\/api\/parent\/devices$/, run: listDevices },
   { method: 'DELETE', pattern: /^\/api\/parent\/devices\/(?<id>\d+)$/, run: unpairDevice },
   { method: 'POST', pattern: /^\/api\/parent\/balance$/, run: postBalance },
-  { method: 'POST', pattern: /^\/api\/parent\/balance$/, run: postBalance },
   { method: 'POST', pattern: /^\/api\/parent\/pairing-code$/, run: (req) => postPairingCode(req) },
+  { method: 'POST', pattern: /^\/api\/parent\/streak$/, run: postStreak },
 ]

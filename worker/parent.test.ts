@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clearAccessKeys, parentEmail } from './access'
 import { accessToken, AUD, certsWithUnusableKey, KID, ROTATED_KID, TEAM, testCerts } from './test/access-keys'
+import { generateAssignment } from '../src/engine'
+import { postStreak } from './parent'
 import { createTestDb, DEVICE_KEY, OTHER_KEY } from './test/db'
 
 const NOW = new Date('2026-10-17T12:00:00Z')
@@ -444,6 +446,170 @@ describe('parent API', () => {
       for (const path of ['summary', 'results', 'log']) await get(`/api/parent/${path}`)
       const log = await t.db.prepare('SELECT COUNT(*) AS n FROM admin_log').first<{ n: number }>()
       expect(log?.n).toBe(0)
+    })
+  })
+
+  describe('streak edits (SPEC §5.3)', () => {
+    const set = async (body: unknown) =>
+      t.call('POST', '/api/parent/streak', { key: null, accessToken: await accessToken(), body })
+    const child = () =>
+      t.db.prepare('SELECT balance, streak, last_day, completed FROM child').first<Record<string, unknown>>()
+    const logRows = async () =>
+      (await t.db.prepare('SELECT email, action, detail FROM admin_log ORDER BY id').all()).results
+    const START = { balance: 40, streak: 3, last_day: '2026-10-16', completed: 5 }
+    beforeEach(async () => {
+      await t.db
+        .prepare("UPDATE child SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5")
+        .run()
+    })
+    /** Refused with `code`: nothing changed and nothing logged. */
+    const refused = async (body: unknown, code: string) => {
+      const res = await set(body)
+      expect(res, JSON.stringify(body)).toEqual({ status: 400, body: { error: code } })
+      expect(await child()).toEqual(START)
+      expect(await logRows()).toEqual([])
+    }
+    /** The route run directly, with `beforeBatch` called before each batch, to stand in for a racing write. */
+    const raced = (beforeBatch: () => Promise<void>) => {
+      const db = {
+        prepare: (sql: string) => t.db.prepare(sql),
+        batch: async (statements: D1PreparedStatement[]) => {
+          await beforeBatch()
+          return t.db.batch(statements)
+        },
+      } as unknown as D1Database
+      return postStreak({
+        request: new Request('https://macworx.test/api/parent/streak', {
+          method: 'POST',
+          body: JSON.stringify({ streak: 7, lastDay: '2026-10-16' }),
+        }),
+        url: new URL('https://macworx.test/api/parent/streak'),
+        db,
+        email: 'parent@example.com',
+        now: NOW,
+        params: {},
+      })
+    }
+
+    it('C1: sets streak 7 and day 2026-10-16 → saved, balance and completed untouched, logged', async () => {
+      await t.db
+        .prepare(`INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (1, 1, '2026-10-16', 1)`)
+        .run()
+      await t.db
+        .prepare(
+          `INSERT INTO results (seed, device_id, day, answers, answered, correct, finished, grade, base,
+             accuracy_bonus, streak_bonus, total, created_at) VALUES (1, 1, '2026-10-16', '[]', 20, 20, 1,
+             'Excellent', 20, 4, 3, 27, '2026-10-16T12:00:00Z')`,
+        )
+        .run()
+      const { status, body } = await set({ streak: 7, lastDay: '2026-10-16' })
+      expect(status).toBe(200)
+      expect(body).toEqual({ balance: 40, streak: 7, lastDay: '2026-10-16', completed: 5 })
+      expect(await child()).toEqual({ ...START, streak: 7 })
+      const results = await t.db.prepare('SELECT COUNT(*) AS n, SUM(total) AS sum FROM results').first()
+      expect(results).toEqual({ n: 1, sum: 27 })
+      const rows = await logRows()
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({ email: 'parent@example.com', action: 'streak' })
+      expect(JSON.parse(rows[0].detail as string)).toEqual({
+        before: { streak: 3, lastDay: '2026-10-16' },
+        after: { streak: 7, lastDay: '2026-10-16' },
+      })
+    })
+
+    it('C2: streak 0 with an empty day (empty string or null) → no last counted day, logged', async () => {
+      expect((await set({ streak: 0, lastDay: '' })).status).toBe(200)
+      expect(await child()).toEqual({ ...START, streak: 0, last_day: null })
+      await t.db.prepare("UPDATE child SET streak = 3, last_day = '2026-10-16'").run()
+      expect((await set({ streak: 0, lastDay: null })).status).toBe(200)
+      expect(await child()).toEqual({ ...START, streak: 0, last_day: null })
+      expect(await logRows()).toHaveLength(2)
+    })
+
+    it('C3: an empty day with streak 3 → 400, nothing changed or logged', async () => {
+      await refused({ streak: 3, lastDay: '' }, 'bad_day')
+      await refused({ streak: 3, lastDay: null }, 'bad_day')
+    })
+
+    it('C4: day 2026-10-18 is accepted, 2026-10-19 is refused', async () => {
+      await refused({ streak: 3, lastDay: '2026-10-19' }, 'bad_day')
+      expect((await set({ streak: 3, lastDay: '2026-10-18' })).status).toBe(200)
+      expect((await child())?.last_day).toBe('2026-10-18')
+    })
+
+    it('C5: a streak of -1, 3651, 2.5, "5" or missing → 400; 0 and 3650 are accepted', async () => {
+      for (const streak of [-1, 3651, 2.5, '5', undefined, null])
+        await refused({ streak, lastDay: '2026-10-16' }, 'bad_streak')
+      await refused('nope', 'bad_streak')
+      expect((await set({ streak: 0, lastDay: '2026-10-16' })).status).toBe(200)
+      expect((await set({ streak: 3650, lastDay: '2026-10-16' })).status).toBe(200)
+      expect((await child())?.streak).toBe(3650)
+    })
+
+    it('C6: a bad or missing day → 400; an earlier real day is accepted', async () => {
+      for (const lastDay of [
+        '2026-02-30',
+        '10/16/2026',
+        20261016,
+        undefined,
+        '2026-10-16T00:00',
+        ' 2026-10-16',
+      ])
+        await refused({ streak: 3, lastDay }, 'bad_day')
+      expect((await set({ streak: 3, lastDay: '2026-01-05' })).status).toBe(200)
+      expect((await child())?.last_day).toBe('2026-01-05')
+    })
+
+    it('C7: a result recorded between the read and the write → worked out again from the new row', async () => {
+      let first = true
+      const res = await raced(async () => {
+        if (!first) return
+        first = false
+        // What recording a result does: new balance, completed, streak, day and revision.
+        await t.db
+          .prepare(
+            "UPDATE child SET balance = 65, completed = 6, streak = 4, last_day = '2026-10-17', revision = 'other'",
+          )
+          .run()
+      })
+      expect(res.status).toBe(200)
+      expect(await child()).toEqual({ balance: 65, streak: 7, last_day: '2026-10-16', completed: 6 })
+      const rows = await logRows()
+      expect(rows).toHaveLength(1)
+      expect(JSON.parse(rows[0].detail as string).before).toEqual({ streak: 4, lastDay: '2026-10-17' })
+    })
+
+    it('C8: losing the race three times → 503, nothing changed or logged', async () => {
+      let n = 0
+      const res = await raced(async () => {
+        await t.db.prepare('UPDATE child SET revision = ?').bind(`other-${n++}`).run()
+      })
+      expect(res.status).toBe(503)
+      expect(await res.json()).toEqual({ error: 'busy' })
+      expect(n).toBe(3)
+      expect(await child()).toEqual(START)
+      expect(await logRows()).toEqual([])
+    })
+
+    it('C9: no Access token → 401', async () => {
+      const body = { streak: 7, lastDay: '2026-10-16' }
+      expect((await t.call('POST', '/api/parent/streak', { key: null, body })).status).toBe(401)
+      expect((await t.call('POST', '/api/parent/streak', { body })).status).toBe(401)
+      expect(await child()).toEqual(START)
+    })
+
+    it('C10: after the edit, the next finished result continues from it and the edit paid nothing', async () => {
+      await set({ streak: 7, lastDay: '2026-10-16' })
+      expect((await child())?.balance).toBe(40)
+      const { body: seeds } = await t.call('POST', '/api/seeds')
+      const seed = seeds.seeds[0] as number
+      const answers = generateAssignment(seed).map((p) => p.answer)
+      const { status, body } = await t.call('POST', '/api/results', {
+        body: { seed, day: '2026-10-17', answers },
+      })
+      expect(status).toBe(201)
+      expect(body.result.payout).toMatchObject({ base: 20, accuracyBonus: 4, streakBonus: 8, total: 32 })
+      expect(body.state).toMatchObject({ balance: 72, streak: 8, lastDay: '2026-10-17', completed: 6 })
     })
   })
 })

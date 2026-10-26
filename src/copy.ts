@@ -1,6 +1,6 @@
 // Every piece of text she sees, in one place (SPEC §4: never-negative wording).
 import { ASSIGNMENT_SIZE, type Grade } from './engine'
-import { formatNumber } from './ui/format'
+import { formatCalendarDay, formatNumber } from './ui/format'
 
 export const COPY = {
   title: 'macworx',
@@ -89,9 +89,24 @@ export const COPY = {
   parentIpadsHeading: 'iPads',
   parentLogPairingCode: (name: string) => `Made a pairing code for ${name}`,
   parentLogUnpair: (name: string) => `Unpaired ${name}`,
+  parentAdjustHeading: 'Adjustments',
+  parentStreakFormHeading: 'Her streak',
+  parentStreakLabel: 'Streak (days)',
+  parentStreakHint: 'A whole number from 0 to 3,650.',
+  parentLastDayLabel: 'Last counted day',
+  parentLastDayHint: 'Leave empty only when the streak is 0. It can be at most tomorrow.',
+  parentStreakSave: 'Save streak',
+  parentStreakSaved: 'Streak saved.',
+  parentStreakProblem:
+    'Type a streak from 0 to 3,650 and a last counted day that is not after tomorrow. The day can be empty only when the streak is 0.',
+  parentBusy: 'Her numbers changed while saving. Try again.',
+  parentLogStreak: (streak: number, day: string | null) =>
+    `Set the streak to ${formatNumber(streak)} ${streak === 1 ? 'day' : 'days'}, ${
+      day ? `last counted day ${formatCalendarDay(day)}` : 'no last counted day'
+    }`,
   parentLogOther: 'Made a change',
   parentLogUnknownIpad: 'an iPad',
-  parentAdjustHeading: 'Adjustments',
+  parentMacaroniFormHeading: 'Her Macaronis',
   parentAdjustIntro:
     'Add or remove Macaronis, for example to put her balance right or to reward her homework grades.',
   parentAdd: 'Add',
@@ -101,11 +116,10 @@ export const COPY = {
   parentNoteLabel: 'Note',
   parentNoteHint: 'Why? Up to 200 characters. It goes in the activity log.',
   parentNoteProblem: 'Add a short note, up to 200 characters, so you remember why.',
-  parentSave: 'Save',
+  parentSave: 'Save Macaronis',
   parentSaved: (balance: number) => `Saved. Her balance is now ${formatNumber(balance)}.`,
   parentOverdraw: (balance: number) =>
     `She has ${formatNumber(balance)} Macaronis, so you can't remove more than that. Her balance can't go below 0.`,
-  parentAdjustBusy: "That didn't save because her numbers were changing. Try again in a minute.",
   parentLogAdded: (n: number, note: string) =>
     `Added ${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}: ${note}`,
   parentLogRemoved: (n: number, note: string) =>
