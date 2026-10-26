@@ -129,7 +129,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 | `build` | Type-check (app, Worker, configs, e2e) and production build. |
 | `test:e2e` | Playwright, WebKit and Chromium, iPad portrait (820×1180) and landscape (1180×820): the app loads without sideways scrolling, links its manifest, and opens offline. |
 
-CI (`.github/workflows/ci.yml`) runs the same checks as two jobs, **Checks** and **Playwright**. `security.yml` adds CodeQL and dependency review. Dependabot opens weekly grouped updates. `merge-gate.yml` labels each PR `touches-data` or `touches-gates` from its paths, so nightshift's reviewer leaves those PRs for the owner to merge (PIPELINE.md, "Who merges").
+CI (`.github/workflows/ci.yml`) runs the same checks as two jobs, **Checks** and **Playwright**. Playwright runs in Microsoft's `mcr.microsoft.com/playwright` container, so no browsers or system libraries are installed at run time; the image tag, the exact `@playwright/test` version in `package.json` and the lockfile move together (`check:conventions` fails if they differ). `security.yml` adds CodeQL and dependency review. Dependabot opens weekly grouped updates. `merge-gate.yml` labels each PR `touches-data` or `touches-gates` from its paths, so nightshift's reviewer leaves those PRs for the owner to merge (PIPELINE.md, "Who merges").
 
 `.github/rulesets/main.json` protects `main`: PRs only, no force-push or deletion, and all the checks above must pass. Apply it once with:
 

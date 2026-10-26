@@ -109,6 +109,20 @@ for (const f of source.filter((f) => f !== join('src', 'engine', 'config.ts'))) 
 for (const f of source) check(f, wordingRules)
 for (const f of tests) check(f, testRules)
 
+// The Playwright job runs in Microsoft's image, whose tag must match the installed Playwright exactly.
+const playwrightVersion = JSON.parse(readFileSync('package.json', 'utf8')).devDependencies['@playwright/test']
+const lockedVersion = JSON.parse(readFileSync('package-lock.json', 'utf8')).packages[
+  'node_modules/@playwright/test'
+].version
+const imageVersion = readFileSync('.github/workflows/ci.yml', 'utf8').match(
+  /mcr\.microsoft\.com\/playwright:v(\S+?)-/,
+)?.[1]
+if (playwrightVersion !== lockedVersion || imageVersion !== lockedVersion)
+  problems.push(
+    `Playwright versions differ: package.json "${playwrightVersion}" (must be exact), package-lock.json ${lockedVersion}, ` +
+      `.github/workflows/ci.yml image ${imageVersion}. Bump all three together.`,
+  )
+
 if (problems.length > 0) {
   console.error(`Convention problems (CLAUDE.md, "Architecture rules"):\n\n${problems.join('\n\n')}`)
   process.exit(1)
