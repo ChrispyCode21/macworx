@@ -31,8 +31,7 @@ export function ResultCorrection({ id, failureText, onClose, onSaved }: Props) {
       setDetail(result.body.result)
       setAnswers(result.body.result.problems.map((p) => String(p.answer)))
     })
-    // Opens once per result; the page remounts this component for another one.
-  }, [id])
+  }, [id, failureText])
 
   const onSave = async () => {
     if (!detail) return
