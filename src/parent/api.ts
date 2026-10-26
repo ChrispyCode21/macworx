@@ -71,6 +71,19 @@ export interface ResultRow {
   total: number
 }
 
+export interface ProblemView {
+  operation: 'addition' | 'subtraction' | 'multiplication'
+  a: number
+  b: number
+  /** Her answer. */
+  answer: number
+  rightAnswer: number
+}
+
+export interface ResultDetail extends ResultRow {
+  problems: ProblemView[]
+}
+
 export interface LogEntry {
   id: number
   at: string
@@ -100,6 +113,15 @@ export const adjustBalance = (amount: number, note: string) =>
   parentCall<{ balance: number }>('/api/parent/balance', {
     method: 'POST',
     body: JSON.stringify({ amount, note }),
+  })
+
+export const getResultDetail = (id: number) =>
+  parentCall<{ result: ResultDetail }>(`/api/parent/results/${id}`)
+
+export const correctResult = (id: number, answers: number[], note: string) =>
+  parentCall<{ result: ResultDetail; balance: number }>(`/api/parent/results/${id}/correct`, {
+    method: 'POST',
+    body: JSON.stringify({ answers, note }),
   })
 
 export const makeCode = (name: string) =>

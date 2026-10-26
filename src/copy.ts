@@ -124,6 +124,33 @@ export const COPY = {
     `Added ${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}: ${note}`,
   parentLogRemoved: (n: number, note: string) =>
     `Removed ${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}: ${note}`,
+  parentColReview: 'Review',
+  parentReview: 'Review',
+  parentReviewLabel: (day: string) => `Review the result of ${day}`,
+  parentCorrectionHeading: (day: string, correct: number, answered: number) =>
+    `Result of ${day}: ${formatNumber(correct)} of ${formatNumber(answered)} right`,
+  parentCorrectionIntro:
+    'Change any of her answers, add a note and save. Her Macaronis and balance update to match.',
+  parentColNumber: 'No.',
+  parentColProblem: 'Problem',
+  parentColHerAnswer: 'Her answer',
+  parentColRightAnswer: 'Right answer',
+  parentAnswerLabel: (n: number) => `Answer ${n}`,
+  parentRightAnswer: (n: number) => `Right answer: ${formatNumber(n)}`,
+  parentCorrectionSave: 'Save correction',
+  parentCancel: 'Cancel',
+  parentCorrectionLoading: 'Loading the problems…',
+  parentAnswerProblem: 'Each answer must be a whole number from 0 to 999,999.',
+  parentNoChange: 'Nothing has changed yet.',
+  parentUnknownResult: "That result isn't there any more. Reload the page.",
+  parentCorrectionOverdraw: (balance: number) =>
+    `She has ${formatNumber(balance)} Macaronis, and this change would take more than that. Her balance can't go below 0, so nothing was changed.`,
+  parentLogCorrected: (day: string, before: number, after: number, diff: number, note: string) =>
+    `Corrected the result of ${day}: ${formatNumber(before)} to ${formatNumber(after)} right, ${
+      diff === 0
+        ? 'no change in Macaronis'
+        : `${diff > 0 ? '+' : '−'}${formatNumber(Math.abs(diff))} Macaronis`
+    }: ${note}`,
   parentLoading: 'Loading…',
   parentNoValue: '—',
   parentUnavailable: 'Not available right now.',

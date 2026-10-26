@@ -383,6 +383,25 @@ p {
   letter-spacing: 0.1em;
 }
 
+.parent-correction {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap);
+  padding: var(--gap);
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+
+.parent-correction .parent-table th {
+  background: transparent;
+}
+
+.parent-differs td {
+  font-weight: 700;
+}
+
 .parent-choice {
   display: flex;
   gap: var(--gap);
