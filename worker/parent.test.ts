@@ -953,5 +953,64 @@ describe('parent API', () => {
       })
       expect(again.body.result).toMatchObject({ correct: 18 })
     })
+
+    it('D4/D13: results the Worker recorded itself, left early and finished, open and correct', async () => {
+      const { body: seeds } = await t.call('POST', '/api/seeds')
+      const [earlySeed, fullSeed] = seeds.seeds as number[]
+      const record = async (seed: number, count: number, nRight: number) => {
+        const problems = generateAssignment(seed)
+        const answers = problems.slice(0, count).map((p, i) => (i < nRight ? p.answer : p.answer + 1))
+        const res = await t.call('POST', '/api/results', { body: { seed, day: '2026-10-17', answers } })
+        expect(res.status).toBe(201)
+        const stored = await t.db
+          .prepare('SELECT id, total, streak_bonus FROM results WHERE seed = ?')
+          .bind(seed)
+          .first<{ id: number; total: number; streak_bonus: number }>()
+        return { problems, answers, ...stored! }
+      }
+      const open = async (id: number) =>
+        t.call('GET', `/api/parent/results/${id}`, { key: null, accessToken: await accessToken() })
+      const balance = async () => (await child())!.balance
+
+      // Left early: 8 answered, 7 right, base only; corrected to 5 right.
+      const early = await record(earlySeed, 8, 7)
+      expect(early.total).toBe(7)
+      const opened = await open(early.id)
+      expect(opened.status).toBe(200)
+      expect(opened.body.result.problems).toHaveLength(8)
+      let before = await balance()
+      const fixedEarly = await t.call('POST', `/api/parent/results/${early.id}/correct`, {
+        key: null,
+        accessToken: await accessToken(),
+        body: {
+          answers: early.problems.slice(0, 8).map((p, i) => (i < 5 ? p.answer : p.answer + 1)),
+          note: 'Fix',
+        },
+      })
+      expect(fixedEarly.status).toBe(200)
+      expect(fixedEarly.body.result).toMatchObject({ correct: 5, grade: null, total: 5, finished: false })
+      expect(fixedEarly.body.balance).toBe(before - 2)
+
+      // Finished: 15 right of 20; corrected to 18 right (base 18, accuracy 3, stored streak bonus kept).
+      const full = await record(fullSeed, 20, 15)
+      expect((await open(full.id)).status).toBe(200)
+      before = await balance()
+      const fixedFull = await t.call('POST', `/api/parent/results/${full.id}/correct`, {
+        key: null,
+        accessToken: await accessToken(),
+        body: {
+          answers: full.problems.map((p, i) => (i < 18 ? p.answer : p.answer + 1)),
+          note: 'Fix',
+        },
+      })
+      expect(fixedFull.status).toBe(200)
+      expect(fixedFull.body.result).toMatchObject({
+        correct: 18,
+        grade: 'Great',
+        total: 18 + 3 + full.streak_bonus,
+        finished: true,
+      })
+      expect(fixedFull.body.balance).toBe(before + (18 + 3 + full.streak_bonus - full.total))
+    })
   })
 })
