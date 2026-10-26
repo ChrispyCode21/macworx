@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Correct a recorded result (parents):** open a result on `/parent`, see each problem with her answer and the right answer, change answers with a note, and her Macaronis, grade and balance update at her next sync. It shows in the Activity log (for example "Corrected the result of Oct 16: 15 to 18 right, +3 Macaronis: Marked a right answer wrong").
 - **Set or restore her streak (parents):** an Adjustments section on `/parent` with a streak form. It saves her streak (0 to 3,650) and last counted day, doesn't change her Macaronis or pay a bonus, and shows in the Activity log.
 - **Add or remove Macaronis (parents):** an Adjustments section on `/parent` with Add or Remove, a number, a note and Save. Her balance can't go below 0; a removal that's too big is refused in plain words. Every change appears in the Activity log (for example "Added 20 Macaronis: Homework grades"). Her Home shows the new balance after her next sync.
 
