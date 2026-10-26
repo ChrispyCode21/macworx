@@ -54,6 +54,40 @@ export interface Device {
   revokedAt: string | null
 }
 
+export interface Summary {
+  balance: number
+  streak: number
+  lastDay: string | null
+  completed: number
+}
+
+export interface ResultRow {
+  id: number
+  day: string
+  answered: number
+  correct: number
+  finished: boolean
+  grade: string | null
+  total: number
+}
+
+export interface LogEntry {
+  id: number
+  at: string
+  email: string
+  action: string
+  detail: Record<string, unknown>
+}
+
+/** How many results and log entries the Worker sends (SPEC §5.3). */
+export const LIST_LIMIT = 50
+
+export const getSummary = () => parentCall<Summary>('/api/parent/summary')
+
+export const listResults = () => parentCall<{ results: ResultRow[] }>('/api/parent/results')
+
+export const listLog = () => parentCall<{ entries: LogEntry[] }>('/api/parent/log')
+
 export const listDevices = () => parentCall<{ devices: Device[] }>('/api/parent/devices')
 
 export const unpair = (id: number) =>

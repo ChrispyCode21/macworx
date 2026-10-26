@@ -27,6 +27,82 @@ export async function listDevices({ db }: ParentRequest): Promise<Response> {
   })
 }
 
+/** How many results and log entries the dashboard lists (SPEC §5.3). */
+const LIST_LIMIT = 50
+
+/** GET /api/parent/summary: her totals. */
+export async function getSummary({ db }: ParentRequest): Promise<Response> {
+  const row = await db
+    .prepare('SELECT balance, streak, last_day, completed FROM child WHERE id = 1')
+    .first<{ balance: number; streak: number; last_day: string | null; completed: number }>()
+  if (!row) return error(500, 'server')
+  return json(200, {
+    balance: row.balance,
+    streak: row.streak,
+    lastDay: row.last_day,
+    completed: row.completed,
+  })
+}
+
+/** GET /api/parent/results: the latest recorded results, newest first. */
+export async function listResults({ db }: ParentRequest): Promise<Response> {
+  const { results } = await db
+    .prepare(
+      `SELECT id, day, answered, correct, finished, grade, total FROM results
+       ORDER BY day DESC, id DESC LIMIT ?`,
+    )
+    .bind(LIST_LIMIT)
+    .all<{
+      id: number
+      day: string
+      answered: number
+      correct: number
+      finished: number
+      grade: string | null
+      total: number
+    }>()
+  return json(200, {
+    results: results.map((r) => ({
+      id: r.id,
+      day: r.day,
+      answered: r.answered,
+      correct: r.correct,
+      finished: r.finished === 1,
+      grade: r.grade,
+      total: r.total,
+    })),
+  })
+}
+
+/** GET /api/parent/log: the latest admin log entries, newest first. */
+export async function listLog({ db }: ParentRequest): Promise<Response> {
+  const { results } = await db
+    .prepare('SELECT id, at, email, action, detail FROM admin_log ORDER BY id DESC LIMIT ?')
+    .bind(LIST_LIMIT)
+    .all<{ id: number; at: string; email: string; action: string; detail: string }>()
+  return json(200, {
+    entries: results.map((e) => ({
+      id: e.id,
+      at: e.at,
+      email: e.email,
+      action: e.action,
+      detail: parseDetail(e.detail),
+    })),
+  })
+}
+
+/** An entry's details as an object; anything that isn't one reads as empty. */
+function parseDetail(text: string): Record<string, unknown> {
+  try {
+    const value: unknown = JSON.parse(text)
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {}
+  } catch {
+    return {}
+  }
+}
+
 /** A statement recording one admin change (SPEC §5.3), to run in the same batch as the change. */
 export function logChange(db: D1Database, { email, now }: ParentRequest, action: string, detail: object) {
   return db
@@ -62,6 +138,9 @@ export const PARENT_ROUTES: {
   pattern: RegExp
   run: (req: ParentRequest) => Promise<Response>
 }[] = [
+  { method: 'GET', pattern: /^\/api\/parent\/summary$/, run: getSummary },
+  { method: 'GET', pattern: /^\/api\/parent\/results$/, run: listResults },
+  { method: 'GET', pattern: /^\/api\/parent\/log$/, run: listLog },
   { method: 'GET', pattern: /^\/api\/parent\/devices$/, run: listDevices },
   { method: 'DELETE', pattern: /^\/api\/parent\/devices\/(?<id>\d+)$/, run: unpairDevice },
   { method: 'POST', pattern: /^\/api\/parent\/pairing-code$/, run: (req) => postPairingCode(req) },

@@ -264,13 +264,90 @@ p {
 /* The parent page (SPEC §5.3): a plain, readable page for a phone or computer. */
 .parent {
   box-sizing: border-box;
-  max-width: 640px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: var(--space);
   display: flex;
   flex-direction: column;
   gap: var(--space);
   font-size: 0.8rem;
+}
+
+.parent h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.parent h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.parent h3 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* The summary strip: four numbers side by side, two by two on a narrow phone. */
+.parent-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--gap);
+  margin: 0;
+}
+
+.parent-summary > div {
+  padding: var(--gap);
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+
+.parent-summary dt {
+  opacity: 0.8;
+}
+
+.parent-summary dd {
+  margin: 4px 0 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* One column on a phone; Results beside iPads and the activity log on a wide screen. */
+.parent-columns,
+.parent-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+@media (min-width: 900px) {
+  .parent-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.parent-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.parent-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.parent-table th,
+.parent-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--soft);
+}
+
+.parent-table th {
+  background: var(--soft);
 }
 
 .parent-section {

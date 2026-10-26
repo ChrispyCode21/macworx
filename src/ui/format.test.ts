@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeProblem } from '../engine'
-import { formatEquation, formatNumber, operatorSymbol } from './format'
+import { formatCalendarDay, formatEquation, formatMoment, formatNumber, operatorSymbol } from './format'
 
 describe('display formatting', () => {
   it('uses thousands separators', () => {
@@ -16,5 +16,14 @@ describe('display formatting', () => {
 
   it('writes a worked equation', () => {
     expect(formatEquation(makeProblem('subtraction', 74885, 27353))).toBe('74,885 − 27,353 = 47,532')
+  })
+
+  it('writes a calendar day without a time zone moving it', () => {
+    expect(formatCalendarDay('2026-10-17')).toBe('Oct 17')
+    expect(formatCalendarDay('2026-01-01')).toBe('Jan 1')
+  })
+
+  it('writes a moment with its time', () => {
+    expect(formatMoment('2026-10-17T15:05:00')).toBe('Oct 17, 3:05 PM')
   })
 })
