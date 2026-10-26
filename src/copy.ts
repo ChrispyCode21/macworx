@@ -92,6 +92,8 @@ export const COPY = {
   parentLogOther: 'Made a change',
   parentLogUnknownIpad: 'an iPad',
   parentLoading: 'Loading…',
+  parentNoValue: '—',
+  parentUnavailable: 'Not available right now.',
   home: 'Home',
 } as const
 

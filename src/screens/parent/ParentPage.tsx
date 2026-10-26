@@ -96,6 +96,10 @@ export function ParentPage() {
     await refresh()
   }
 
+  // Before a list or the numbers arrive: "Loading…", or a dash and a note once a call has failed.
+  const pending = <span className="parent-pending">{problem ? COPY.parentNoValue : COPY.parentLoading}</span>
+  const unavailable = problem ? <p>{COPY.parentUnavailable}</p> : null
+
   const left = code ? minutesLeft(code.expiresAt, now) : 0
 
   return (
@@ -110,11 +114,11 @@ export function ParentPage() {
       <dl className="parent-summary" aria-label={COPY.parentSummaryLabel}>
         <div>
           <dt>{COPY.parentBalance}</dt>
-          <dd>{summary ? formatNumber(summary.balance) : COPY.parentLoading}</dd>
+          <dd>{summary ? formatNumber(summary.balance) : pending}</dd>
         </div>
         <div>
           <dt>{COPY.parentStreak}</dt>
-          <dd>{summary ? COPY.parentStreakValue(summary.streak) : COPY.parentLoading}</dd>
+          <dd>{summary ? COPY.parentStreakValue(summary.streak) : pending}</dd>
         </div>
         <div>
           <dt>{COPY.parentLastDay}</dt>
@@ -123,18 +127,19 @@ export function ParentPage() {
               ? summary.lastDay
                 ? formatCalendarDay(summary.lastDay)
                 : COPY.parentNoLastDay
-              : COPY.parentLoading}
+              : pending}
           </dd>
         </div>
         <div>
           <dt>{COPY.parentCompleted}</dt>
-          <dd>{summary ? formatNumber(summary.completed) : COPY.parentLoading}</dd>
+          <dd>{summary ? formatNumber(summary.completed) : pending}</dd>
         </div>
       </dl>
 
       <div className="parent-columns">
         <section className="parent-section">
           <h2>{COPY.parentResultsHeading}</h2>
+          {results === null && unavailable}
           {results?.length === 0 && <p>{COPY.parentNoResults}</p>}
           {results && results.length > 0 && (
             <div className="parent-table-wrap">
@@ -190,6 +195,7 @@ export function ParentPage() {
               </div>
             )}
             <h3>{COPY.parentDevicesHeading}</h3>
+            {devices === null && unavailable}
             {devices?.length === 0 && <p>{COPY.parentNoDevices}</p>}
             <ul className="parent-devices">
               {devices?.map((d) => (
@@ -212,6 +218,7 @@ export function ParentPage() {
 
           <section className="parent-section">
             <h2>{COPY.parentLogHeading}</h2>
+            {log === null && unavailable}
             {log?.length === 0 && <p>{COPY.parentNoLog}</p>}
             {log && log.length > 0 && (
               <div className="parent-table-wrap">

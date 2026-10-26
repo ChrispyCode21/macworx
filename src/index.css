@@ -12,6 +12,12 @@
   --not-right-edge: #f0947a;
   --space: 24px;
   --gap: 16px;
+  --gap-small: 8px;
+  /* The parent page's type sizes (SPEC §5.3). */
+  --size-body: 0.8rem;
+  --size-label: 0.9rem;
+  --size-heading: 1.1rem;
+  --size-title: 1.4rem;
   --radius: 20px;
   --tap: 56px;
   --tap-large: 88px;
@@ -270,22 +276,22 @@ p {
   display: flex;
   flex-direction: column;
   gap: var(--space);
-  font-size: 0.8rem;
+  font-size: var(--size-body);
 }
 
 .parent h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: var(--size-title);
 }
 
 .parent h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--size-heading);
 }
 
 .parent h3 {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--size-label);
 }
 
 /* The summary strip: four numbers side by side, two by two on a narrow phone. */
@@ -307,8 +313,8 @@ p {
 }
 
 .parent-summary dd {
-  margin: 4px 0 0;
-  font-size: 1.4rem;
+  margin: var(--gap-small) 0 0;
+  font-size: var(--size-title);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -329,6 +335,11 @@ p {
   }
 }
 
+.parent-summary .parent-pending {
+  font-size: var(--size-body);
+  font-weight: 400;
+}
+
 .parent-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -341,7 +352,7 @@ p {
 
 .parent-table th,
 .parent-table td {
-  padding: 8px;
+  padding: var(--gap-small);
   text-align: left;
   border-bottom: 1px solid var(--soft);
 }
