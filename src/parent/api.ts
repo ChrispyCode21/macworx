@@ -71,6 +71,19 @@ export interface ResultRow {
   total: number
 }
 
+export interface ProblemView {
+  operation: 'addition' | 'subtraction' | 'multiplication'
+  a: number
+  b: number
+  /** Her answer. */
+  answer: number
+  rightAnswer: number
+}
+
+export interface ResultDetail extends ResultRow {
+  problems: ProblemView[]
+}
+
 export interface LogEntry {
   id: number
   at: string
@@ -81,6 +94,9 @@ export interface LogEntry {
 
 /** How many results and log entries the Worker sends (SPEC §5.3). */
 export const LIST_LIMIT = 50
+
+/** The longest note the Worker accepts on an adjustment or a correction (SPEC §5.3). */
+export const MAX_NOTE = 200
 
 export const getSummary = () => parentCall<Summary>('/api/parent/summary')
 
@@ -100,6 +116,15 @@ export const adjustBalance = (amount: number, note: string) =>
   parentCall<{ balance: number }>('/api/parent/balance', {
     method: 'POST',
     body: JSON.stringify({ amount, note }),
+  })
+
+export const getResultDetail = (id: number) =>
+  parentCall<{ result: ResultDetail }>(`/api/parent/results/${id}`)
+
+export const correctResult = (id: number, answers: number[], note: string) =>
+  parentCall<{ result: ResultDetail; balance: number }>(`/api/parent/results/${id}/correct`, {
+    method: 'POST',
+    body: JSON.stringify({ answers, note }),
   })
 
 export const makeCode = (name: string) =>

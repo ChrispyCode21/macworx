@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clearAccessKeys, parentEmail } from './access'
 import { accessToken, AUD, certsWithUnusableKey, KID, ROTATED_KID, TEAM, testCerts } from './test/access-keys'
 import { generateAssignment } from '../src/engine'
-import { postStreak } from './parent'
+import { postCorrection, postStreak } from './parent'
 import { createTestDb, DEVICE_KEY, OTHER_KEY } from './test/db'
 
 const NOW = new Date('2026-10-17T12:00:00Z')
@@ -610,6 +610,407 @@ describe('parent API', () => {
       expect(status).toBe(201)
       expect(body.result.payout).toMatchObject({ base: 20, accuracyBonus: 4, streakBonus: 8, total: 32 })
       expect(body.state).toMatchObject({ balance: 72, streak: 8, lastDay: '2026-10-17', completed: 6 })
+    })
+  })
+
+  describe('result corrections (SPEC §5.3)', () => {
+    const SEED = 4242
+    const right = generateAssignment(SEED).map((p) => p.answer)
+    /** Answers with the first `n` of `count` right and the rest one too high. */
+    const withCorrect = (n: number, count = 20) => right.slice(0, count).map((a, i) => (i < n ? a : a + 1))
+    const correct = async (id: number | string, body: unknown, token?: string) =>
+      t.call('POST', `/api/parent/results/${id}/correct`, {
+        key: null,
+        accessToken: token ?? (await accessToken()),
+        body,
+      })
+    const child = () =>
+      t.db
+        .prepare('SELECT balance, streak, last_day, completed FROM child')
+        .first<{ balance: number; streak: number; last_day: string | null; completed: number }>()
+    const logRows = async () =>
+      (await t.db.prepare('SELECT email, action, detail FROM admin_log ORDER BY id').all()).results
+    const row = () => t.db.prepare('SELECT * FROM results WHERE id = 1').first<Record<string, unknown>>()
+    const START = { balance: 100, streak: 4, last_day: '2026-10-16', completed: 6 }
+    /** The one recorded result, id 1. */
+    const addResult = async (o: {
+      finished: boolean
+      answered: number
+      correct: number
+      grade: string | null
+      streakBonus: number
+      total: number
+    }) => {
+      await t.db
+        .prepare('INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (?, 1, ?, 1)')
+        .bind(SEED, '2026-10-16')
+        .run()
+      const base = o.correct
+      const acc = o.finished ? Math.floor(o.correct / 5) : 0
+      await t.db
+        .prepare(
+          `INSERT INTO results (seed, device_id, day, answers, answered, correct, finished, grade, base,
+             accuracy_bonus, streak_bonus, total, created_at) VALUES (?, 1, '2026-10-16', ?, ?, ?, ?, ?, ?, ?, ?, ?, '2026-10-16T12:00:00Z')`,
+        )
+        .bind(
+          SEED,
+          JSON.stringify(withCorrect(o.correct, o.answered)),
+          o.answered,
+          o.correct,
+          o.finished ? 1 : 0,
+          o.grade,
+          base,
+          acc,
+          o.streakBonus,
+          o.total,
+        )
+        .run()
+    }
+    const finished15 = () =>
+      addResult({ finished: true, answered: 20, correct: 15, grade: 'Improving', streakBonus: 3, total: 21 })
+    beforeEach(async () => {
+      await t.db
+        .prepare("UPDATE child SET balance = 100, streak = 4, last_day = '2026-10-16', completed = 6")
+        .run()
+    })
+    /** Refused with `status` and `code`: nothing changed and nothing logged. */
+    const refused = async (body: unknown, status: number, code: string) => {
+      const before = await row()
+      const res = await correct(1, body)
+      expect([res.status, res.body.error], JSON.stringify(body)).toEqual([status, code])
+      expect(await row()).toEqual(before)
+      expect(await child()).toEqual(START)
+      expect(await logRows()).toEqual([])
+    }
+    /** The route run directly, with `beforeBatch` called before each batch, to stand in for a racing write. */
+    const raced = (beforeBatch: () => Promise<void>) => {
+      const db = {
+        prepare: (sql: string) => t.db.prepare(sql),
+        batch: async (statements: D1PreparedStatement[]) => {
+          await beforeBatch()
+          return t.db.batch(statements)
+        },
+      } as unknown as D1Database
+      return postCorrection({
+        request: new Request('https://macworx.test/api/parent/results/1/correct', {
+          method: 'POST',
+          body: JSON.stringify({ answers: withCorrect(18), note: 'Race' }),
+        }),
+        url: new URL('https://macworx.test/api/parent/results/1/correct'),
+        db,
+        email: 'parent@example.com',
+        now: NOW,
+        params: { id: '1' },
+      })
+    }
+
+    it('D1: 18 correct → total 24 Great, balance 103, streak bonus kept, logged', async () => {
+      await finished15()
+      const { status, body } = await correct(1, {
+        answers: withCorrect(18),
+        note: ' Marked right answer wrong ',
+      })
+      expect(status).toBe(200)
+      expect(body.balance).toBe(103)
+      expect(body.result).toMatchObject({ correct: 18, grade: 'Great', total: 24, finished: true })
+      expect(await row()).toMatchObject({
+        correct: 18,
+        grade: 'Great',
+        base: 18,
+        accuracy_bonus: 3,
+        streak_bonus: 3,
+        total: 24,
+        answers: JSON.stringify(withCorrect(18)),
+      })
+      expect(await child()).toEqual({ ...START, balance: 103 })
+      const rows = await logRows()
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({ email: 'parent@example.com', action: 'correction' })
+      expect(JSON.parse(rows[0].detail as string)).toEqual({
+        resultId: 1,
+        day: '2026-10-16',
+        before: { correct: 15, grade: 'Improving', total: 21 },
+        after: { correct: 18, grade: 'Great', total: 24 },
+        balanceBefore: 100,
+        balanceAfter: 103,
+        note: 'Marked right answer wrong',
+      })
+      const at = await t.db.prepare('SELECT at FROM admin_log').first<{ at: string }>()
+      expect(at?.at).toBe('2026-10-17T12:00:00.000Z')
+    })
+
+    it('D1: changed answers with the same correct count are accepted: total and balance stay, logged', async () => {
+      await finished15()
+      const answers = withCorrect(15).map((a, i) => (i >= 15 ? a + 1 : a))
+      const { status, body } = await correct(1, { answers, note: 'Typo' })
+      expect(status).toBe(200)
+      expect(body.balance).toBe(100)
+      expect(await row()).toMatchObject({ correct: 15, total: 21, answers: JSON.stringify(answers) })
+      expect(await child()).toEqual(START)
+      expect(await logRows()).toHaveLength(1)
+    })
+
+    it('D2: 10 correct → total 15 Improving, balance 94', async () => {
+      await finished15()
+      const { status, body } = await correct(1, { answers: withCorrect(10), note: 'Fix' })
+      expect(status).toBe(200)
+      expect(body.result).toMatchObject({ correct: 10, grade: 'Improving', total: 15 })
+      expect(await row()).toMatchObject({ base: 10, accuracy_bonus: 2, streak_bonus: 3, total: 15 })
+      expect((await child())?.balance).toBe(94)
+    })
+
+    it('D3: 20 correct, no streak bonus, corrected to 0 → total raised to the minimum of 1, balance 77', async () => {
+      await addResult({
+        finished: true,
+        answered: 20,
+        correct: 20,
+        grade: 'Excellent',
+        streakBonus: 0,
+        total: 24,
+      })
+      const { status, body } = await correct(1, { answers: withCorrect(0), note: 'Fix' })
+      expect(status).toBe(200)
+      expect(body.result).toMatchObject({ correct: 0, grade: 'Improving', total: 1 })
+      expect(await row()).toMatchObject({ base: 0, accuracy_bonus: 0, total: 1 })
+      expect((await child())?.balance).toBe(77)
+    })
+
+    it('D4: a left-early result corrected to 5 correct → total 5, no grade, balance 98, completed unchanged', async () => {
+      await addResult({ finished: false, answered: 8, correct: 7, grade: null, streakBonus: 0, total: 7 })
+      const { status, body } = await correct(1, { answers: withCorrect(5, 8), note: 'Fix' })
+      expect(status).toBe(200)
+      expect(body.result).toMatchObject({ correct: 5, grade: null, total: 5, finished: false })
+      expect(await row()).toMatchObject({
+        finished: 0,
+        grade: null,
+        base: 5,
+        accuracy_bonus: 0,
+        streak_bonus: 0,
+        total: 5,
+      })
+      expect(await child()).toEqual({ ...START, balance: 98 })
+    })
+
+    it('D5: the wrong number of answers, or one that is not a whole number from 0 to 999999 → 400', async () => {
+      await finished15()
+      await refused({ answers: withCorrect(18).slice(0, 19), note: 'x' }, 400, 'bad_answers')
+      await refused({ answers: [...withCorrect(18), 1], note: 'x' }, 400, 'bad_answers')
+      await refused({ answers: [], note: 'x' }, 400, 'bad_answers')
+      await refused({ note: 'x' }, 400, 'bad_answers')
+      for (const bad of [-1, 1_000_000, 2.5, '5', null]) {
+        const answers = withCorrect(18)
+        answers[0] = bad as number
+        await refused({ answers, note: 'x' }, 400, 'bad_answers')
+      }
+      const edge = withCorrect(18)
+      edge[19] = 999_999
+      expect((await correct(1, { answers: edge, note: 'x' })).status).toBe(200)
+    })
+
+    it('D6: a missing, empty, blank or too long note → 400; 200 characters is accepted', async () => {
+      await finished15()
+      for (const note of [undefined, '', '   ', 'x'.repeat(201), 7])
+        await refused({ answers: withCorrect(18), note }, 400, 'bad_note')
+      expect((await correct(1, { answers: withCorrect(18), note: 'x'.repeat(200) })).status).toBe(200)
+    })
+
+    it('D7: the same answers as the stored ones → 400, nothing changed or logged', async () => {
+      await finished15()
+      await refused({ answers: withCorrect(15), note: 'Nothing' }, 400, 'no_change')
+    })
+
+    it('D8: a correction that would take the balance below 0 is refused; exactly 0 is accepted', async () => {
+      await addResult({
+        finished: true,
+        answered: 20,
+        correct: 20,
+        grade: 'Excellent',
+        streakBonus: 0,
+        total: 24,
+      })
+      await t.db.prepare('UPDATE child SET balance = 10').run()
+      const before = await row()
+      const res = await correct(1, { answers: withCorrect(0), note: 'Fix' })
+      expect([res.status, res.body]).toEqual([409, { error: 'overdraw', balance: 10 }])
+      expect(await row()).toEqual(before)
+      expect((await child())?.balance).toBe(10)
+      expect(await logRows()).toEqual([])
+
+      await t.db.prepare('UPDATE child SET balance = 23').run()
+      const ok = await correct(1, { answers: withCorrect(0), note: 'Fix' })
+      expect([ok.status, ok.body.balance]).toEqual([200, 0])
+      expect((await child())?.balance).toBe(0)
+      expect(await logRows()).toHaveLength(1)
+    })
+
+    it('D9: a result id that does not exist → 404, nothing changed or logged', async () => {
+      const res = await correct(99, { answers: withCorrect(18), note: 'x' })
+      expect([res.status, res.body.error]).toEqual([404, 'unknown_result'])
+      expect(await child()).toEqual(START)
+      expect(await logRows()).toEqual([])
+    })
+
+    it('D10: a result recorded in between → the correction is worked out again from the new balance', async () => {
+      await finished15()
+      let first = true
+      const res = await raced(async () => {
+        if (!first) return
+        first = false
+        await t.db.prepare('UPDATE child SET balance = 130, completed = 7, revision = ?').bind('other').run()
+      })
+      expect(res.status).toBe(200)
+      expect(await child()).toEqual({ ...START, balance: 133, completed: 7 })
+      const rows = await logRows()
+      expect(rows).toHaveLength(1)
+      expect(JSON.parse(rows[0].detail as string)).toMatchObject({ balanceBefore: 130, balanceAfter: 133 })
+    })
+
+    it('D10: the overdraw check runs again on every attempt', async () => {
+      await addResult({
+        finished: true,
+        answered: 20,
+        correct: 20,
+        grade: 'Excellent',
+        streakBonus: 0,
+        total: 24,
+      })
+      await t.db.prepare('UPDATE child SET balance = 30').run()
+      let first = true
+      const res = await raced(async () => {
+        if (!first) return
+        first = false
+        await t.db.prepare('UPDATE child SET balance = 2, revision = ?').bind('other').run()
+      })
+      // 18 correct pays 21 instead of 24: a drop of 3, which the balance of 2 can't take.
+      expect([res.status, await res.json()]).toEqual([409, { error: 'overdraw', balance: 2 }])
+      expect((await child())?.balance).toBe(2)
+      expect(await logRows()).toEqual([])
+    })
+
+    it('D11: losing the race three times → 503, nothing changed or logged', async () => {
+      await finished15()
+      let n = 0
+      const res = await raced(async () => {
+        await t.db.prepare('UPDATE child SET revision = ?').bind(`other-${n++}`).run()
+      })
+      expect([res.status, await res.json()]).toEqual([503, { error: 'busy' }])
+      expect(n).toBe(3)
+      expect(await child()).toEqual(START)
+      expect((await row())?.correct).toBe(15)
+      expect(await logRows()).toEqual([])
+    })
+
+    it('D12: no Access token → 401', async () => {
+      await finished15()
+      const body = { answers: withCorrect(18), note: 'x' }
+      expect((await t.call('POST', '/api/parent/results/1/correct', { key: null, body })).status).toBe(401)
+      expect((await t.call('POST', '/api/parent/results/1/correct', { body })).status).toBe(401)
+      expect((await t.call('GET', '/api/parent/results/1', { key: null })).status).toBe(401)
+      expect(await child()).toEqual(START)
+    })
+
+    it('D13: a result opens with each problem, her answer and the right answer, the same every time', async () => {
+      await finished15()
+      const open = async () =>
+        t.call('GET', '/api/parent/results/1', { key: null, accessToken: await accessToken() })
+      const { status, body } = await open()
+      expect(status).toBe(200)
+      expect(body.result).toMatchObject({
+        id: 1,
+        day: '2026-10-16',
+        answered: 20,
+        correct: 15,
+        finished: true,
+      })
+      const problems = generateAssignment(SEED)
+      expect(body.result.problems).toEqual(
+        problems.map((p, i) => ({
+          operation: p.operation,
+          a: p.a,
+          b: p.b,
+          answer: withCorrect(15)[i],
+          rightAnswer: p.answer,
+        })),
+      )
+      expect((await open()).body).toEqual(body)
+      expect(
+        (await t.call('GET', '/api/parent/results/99', { key: null, accessToken: await accessToken() }))
+          .status,
+      ).toBe(404)
+    })
+
+    it('D14: after a correction her iPad sees the new balance and, as her latest finished result, its grade', async () => {
+      await finished15()
+      expect((await t.call('GET', '/api/state')).body).toMatchObject({
+        balance: 100,
+        latestGrade: 'Improving',
+      })
+      await correct(1, { answers: withCorrect(18), note: 'Fix' })
+      expect((await t.call('GET', '/api/state')).body).toMatchObject({ balance: 103, latestGrade: 'Great' })
+      // Sending the seed again returns the corrected result.
+      const again = await t.call('POST', '/api/results', {
+        body: { seed: SEED, day: '2026-10-16', answers: withCorrect(15) },
+      })
+      expect(again.body.result).toMatchObject({ correct: 18 })
+    })
+
+    it('D4/D13: results the Worker recorded itself, left early and finished, open and correct', async () => {
+      const { body: seeds } = await t.call('POST', '/api/seeds')
+      const [earlySeed, fullSeed] = seeds.seeds as number[]
+      const record = async (seed: number, count: number, nRight: number) => {
+        const problems = generateAssignment(seed)
+        const answers = problems.slice(0, count).map((p, i) => (i < nRight ? p.answer : p.answer + 1))
+        const res = await t.call('POST', '/api/results', { body: { seed, day: '2026-10-17', answers } })
+        expect(res.status).toBe(201)
+        const stored = await t.db
+          .prepare('SELECT id, total, streak_bonus FROM results WHERE seed = ?')
+          .bind(seed)
+          .first<{ id: number; total: number; streak_bonus: number }>()
+        return { problems, answers, ...stored! }
+      }
+      const open = async (id: number) =>
+        t.call('GET', `/api/parent/results/${id}`, { key: null, accessToken: await accessToken() })
+      const balance = async () => (await child())!.balance
+
+      // Left early: 8 answered, 7 right, base only; corrected to 5 right.
+      const early = await record(earlySeed, 8, 7)
+      expect(early.total).toBe(7)
+      const opened = await open(early.id)
+      expect(opened.status).toBe(200)
+      expect(opened.body.result.problems).toHaveLength(8)
+      let before = await balance()
+      const fixedEarly = await t.call('POST', `/api/parent/results/${early.id}/correct`, {
+        key: null,
+        accessToken: await accessToken(),
+        body: {
+          answers: early.problems.slice(0, 8).map((p, i) => (i < 5 ? p.answer : p.answer + 1)),
+          note: 'Fix',
+        },
+      })
+      expect(fixedEarly.status).toBe(200)
+      expect(fixedEarly.body.result).toMatchObject({ correct: 5, grade: null, total: 5, finished: false })
+      expect(fixedEarly.body.balance).toBe(before - 2)
+
+      // Finished: 15 right of 20; corrected to 18 right (base 18, accuracy 3, stored streak bonus kept).
+      const full = await record(fullSeed, 20, 15)
+      expect((await open(full.id)).status).toBe(200)
+      before = await balance()
+      const fixedFull = await t.call('POST', `/api/parent/results/${full.id}/correct`, {
+        key: null,
+        accessToken: await accessToken(),
+        body: {
+          answers: full.problems.map((p, i) => (i < 18 ? p.answer : p.answer + 1)),
+          note: 'Fix',
+        },
+      })
+      expect(fixedFull.status).toBe(200)
+      expect(fixedFull.body.result).toMatchObject({
+        correct: 18,
+        grade: 'Great',
+        total: 18 + 3 + full.streak_bonus,
+        finished: true,
+      })
+      expect(fixedFull.body.balance).toBe(before + (18 + 3 + full.streak_bonus - full.total))
     })
   })
 })

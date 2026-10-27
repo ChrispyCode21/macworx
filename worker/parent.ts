@@ -1,5 +1,16 @@
 // The parent API (SPEC §5.3, §6.9, §8). Every route here runs only after parentEmail() accepted the request.
-import { addDays, dayNumber } from '../src/engine'
+import {
+  addDays,
+  ASSIGNMENT_SIZE,
+  checkAnswer,
+  dayNumber,
+  generateAssignment,
+  grade,
+  leftEarlyPayout,
+  MAX_ANSWER,
+  PAYOUT,
+  payout,
+} from '../src/engine'
 import { error, json, readJson, utcDay } from './http'
 import { postPairingCode } from './pair'
 
@@ -240,6 +251,175 @@ export async function postBalance(req: ParentRequest): Promise<Response> {
   return error(503, 'busy')
 }
 
+interface StoredResult {
+  id: number
+  seed: number
+  day: string
+  answers: string
+  answered: number
+  correct: number
+  finished: number
+  grade: string | null
+  streak_bonus: number
+  total: number
+}
+
+const RESULT_COLUMNS = 'id, seed, day, answers, answered, correct, finished, grade, streak_bonus, total'
+
+/** A stored result's answers, or null when they don't match its answered count. */
+function storedAnswers(row: StoredResult): number[] | null {
+  try {
+    const value: unknown = JSON.parse(row.answers)
+    return Array.isArray(value) && value.length === row.answered && value.every((a) => typeof a === 'number')
+      ? (value as number[])
+      : null
+  } catch {
+    return null
+  }
+}
+
+/** One result with its problems, her answers and the right answers (SPEC §8). */
+function resultView(row: StoredResult, answers: number[]) {
+  const problems = generateAssignment(row.seed)
+  return {
+    id: row.id,
+    day: row.day,
+    answered: row.answered,
+    correct: row.correct,
+    finished: row.finished === 1,
+    grade: row.grade,
+    total: row.total,
+    problems: answers.map((answer, i) => ({
+      operation: problems[i].operation,
+      a: problems[i].a,
+      b: problems[i].b,
+      answer,
+      rightAnswer: problems[i].answer,
+    })),
+  }
+}
+
+/** GET /api/parent/results/:id: one recorded result with its problems. */
+export async function getResult({ db, params }: ParentRequest): Promise<Response> {
+  const id = Number(params.id)
+  if (!Number.isInteger(id) || id < 1) return error(404, 'unknown_result')
+  const row = await db
+    .prepare(`SELECT ${RESULT_COLUMNS} FROM results WHERE id = ?`)
+    .bind(id)
+    .first<StoredResult>()
+  if (!row) return error(404, 'unknown_result')
+  const answers = storedAnswers(row)
+  if (!answers) return error(500, 'server')
+  return json(200, { result: resultView(row, answers) })
+}
+
+/** What a result pays and how it grades once its answers are `answers` (SPEC §5.3, §6.4). */
+function rescore(row: StoredResult, answers: number[]) {
+  const problems = generateAssignment(row.seed)
+  const correct = answers.filter((a, i) => checkAnswer(problems[i], a)).length
+  if (row.finished !== 1) {
+    const p = leftEarlyPayout({ correct, answered: row.answered, problemCount: ASSIGNMENT_SIZE })
+    return { correct, grade: null, base: p.base, accuracyBonus: 0, total: p.total }
+  }
+  // The streak bonus stays as originally paid, so only base and accuracy come from the engine.
+  const p = payout({ correct, problemCount: row.answered, firstOfDay: false, streak: 0 })
+  return {
+    correct,
+    grade: grade(correct, row.answered) as string,
+    base: p.base,
+    accuracyBonus: p.accuracyBonus,
+    total: Math.max(PAYOUT.minimum, p.base + p.accuracyBonus + row.streak_bonus),
+  }
+}
+
+/** POST /api/parent/results/:id/correct { answers, note }: corrects a recorded result (SPEC §5.3). */
+export async function postCorrection(req: ParentRequest): Promise<Response> {
+  const { db, request, params } = req
+  const id = Number(params.id)
+  if (!Number.isInteger(id) || id < 1) return error(404, 'unknown_result')
+  const body = (await readJson(request)) as { answers?: unknown; note?: unknown } | null | undefined
+  const answers = body?.answers
+  if (
+    !Array.isArray(answers) ||
+    answers.length < 1 ||
+    answers.length > ASSIGNMENT_SIZE ||
+    !answers.every((a) => typeof a === 'number' && Number.isInteger(a) && a >= 0 && a <= MAX_ANSWER)
+  )
+    return error(400, 'bad_answers')
+  const note = typeof body?.note === 'string' ? body.note.trim() : ''
+  if (note.length < 1 || note.length > MAX_NOTE) return error(400, 'bad_note')
+  const newAnswers = answers as number[]
+
+  for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
+    // Everything is read again on every attempt: another write may have changed the balance or result.
+    const row = await db
+      .prepare(`SELECT ${RESULT_COLUMNS} FROM results WHERE id = ?`)
+      .bind(id)
+      .first<StoredResult>()
+    if (!row) return error(404, 'unknown_result')
+    const old = storedAnswers(row)
+    if (!old) return error(500, 'server')
+    if (newAnswers.length !== row.answered) return error(400, 'bad_answers')
+    if (newAnswers.every((a, i) => a === old[i])) return error(400, 'no_change')
+    const child = await db
+      .prepare('SELECT balance, revision FROM child WHERE id = 1')
+      .first<{ balance: number; revision: string }>()
+    if (!child) return error(500, 'server')
+
+    const next = rescore(row, newAnswers)
+    const diff = next.total - row.total
+    const balanceAfter = child.balance + diff
+    if (balanceAfter < 0) return json(409, { error: 'overdraw', balance: child.balance })
+
+    // One transaction: the balance changes only if nobody wrote since we read; the result and the log
+    // row are written only if it did (they check for this write's new revision).
+    const revision = crypto.randomUUID()
+    const detail = {
+      resultId: id,
+      day: row.day,
+      before: { correct: row.correct, grade: row.grade, total: row.total },
+      after: { correct: next.correct, grade: next.grade, total: next.total },
+      balanceBefore: child.balance,
+      balanceAfter,
+      note,
+    }
+    const [update] = await db.batch([
+      db
+        .prepare('UPDATE child SET balance = balance + ?, revision = ? WHERE id = 1 AND revision = ?')
+        .bind(diff, revision, child.revision),
+      db
+        .prepare(
+          `UPDATE results SET answers = ?, correct = ?, grade = ?, base = ?, accuracy_bonus = ?, total = ?
+           WHERE id = ? AND (SELECT revision FROM child WHERE id = 1) = ?`,
+        )
+        .bind(
+          JSON.stringify(newAnswers),
+          next.correct,
+          next.grade,
+          next.base,
+          next.accuracyBonus,
+          next.total,
+          id,
+          revision,
+        ),
+      db
+        .prepare(
+          `INSERT INTO admin_log (at, email, action, detail)
+           SELECT ?, ?, 'correction', ? WHERE (SELECT revision FROM child WHERE id = 1) = ?`,
+        )
+        .bind(req.now.toISOString(), req.email, JSON.stringify(detail), revision),
+    ])
+    if (update.meta.changes === 1) {
+      const view = resultView(
+        { ...row, correct: next.correct, grade: next.grade, total: next.total },
+        newAnswers,
+      )
+      return json(200, { result: view, balance: balanceAfter })
+    }
+  }
+  return error(503, 'busy')
+}
+
 /** Parent routes, matched on method and path pattern. */
 export const PARENT_ROUTES: {
   method: string
@@ -248,6 +428,8 @@ export const PARENT_ROUTES: {
 }[] = [
   { method: 'GET', pattern: /^\/api\/parent\/summary$/, run: getSummary },
   { method: 'GET', pattern: /^\/api\/parent\/results$/, run: listResults },
+  { method: 'GET', pattern: /^\/api\/parent\/results\/(?<id>\d+)$/, run: getResult },
+  { method: 'POST', pattern: /^\/api\/parent\/results\/(?<id>\d+)\/correct$/, run: postCorrection },
   { method: 'GET', pattern: /^\/api\/parent\/log$/, run: listLog },
   { method: 'GET', pattern: /^\/api\/parent\/devices$/, run: listDevices },
   { method: 'DELETE', pattern: /^\/api\/parent\/devices\/(?<id>\d+)$/, run: unpairDevice },

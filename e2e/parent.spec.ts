@@ -499,3 +499,146 @@ test('shows adjustments in the activity log in plain words', async ({ page }) =>
   await expect(page.getByText('Removed 5 Macaronis: Counted twice')).toBeVisible()
   await expect(page.getByText('Added 20 Macaronis: Homework grades')).toBeVisible()
 })
+
+// Correcting a recorded result (SPEC §5.3).
+const reviewed = {
+  id: 7,
+  day: '2026-10-16',
+  answered: 3,
+  correct: 2,
+  finished: false,
+  grade: null,
+  total: 2,
+  problems: [
+    { operation: 'addition', a: 12, b: 30, answer: 42, rightAnswer: 42 },
+    { operation: 'subtraction', a: 50, b: 8, answer: 40, rightAnswer: 42 },
+    { operation: 'multiplication', a: 6, b: 7, answer: 42, rightAnswer: 42 },
+  ],
+}
+const reviewedRow = {
+  id: 7,
+  day: '2026-10-16',
+  answered: 3,
+  correct: 2,
+  finished: false,
+  grade: null,
+  total: 2,
+}
+
+/** The Worker's answers with one result listed; `reply` answers the correction (and counts what was sent). */
+async function correctionApi(page: Page, reply: () => { status: number; json: unknown }) {
+  const posts: unknown[] = []
+  await page.route('/api/parent/**', async (route: Route) => {
+    const req = route.request()
+    const path = new URL(req.url()).pathname
+    if (req.method() === 'POST' && path === '/api/parent/results/7/correct') {
+      posts.push(req.postDataJSON())
+      return route.fulfill(reply())
+    }
+    if (path === '/api/parent/results/7') return route.fulfill({ json: { result: reviewed } })
+    return route.fulfill({ json: readViews(path, [], { '/api/parent/results': { results: [reviewedRow] } }) })
+  })
+  return posts
+}
+
+const openReview = async (page: Page) => {
+  await page.goto('/parent')
+  await page.getByRole('button', { name: 'Review the result of Oct 16' }).click()
+}
+
+test('a Results row opens the correction view with each problem, her answer and the right answer', async ({
+  page,
+}) => {
+  await correctionApi(page, () => ({ status: 200, json: {} }))
+  await openReview(page)
+  await expect(page.getByText('Result of Oct 16: 2 of 3 right')).toBeVisible()
+  await expect(page.getByText('50 − 8')).toBeVisible()
+  await expect(page.getByLabel('Answer 2')).toHaveValue('40')
+  await expect(page.getByText('Right answer: 42')).toHaveCount(3)
+})
+
+test('changing an answer with a note sends the correction, closes the view and shows her balance', async ({
+  page,
+}) => {
+  const posts = await correctionApi(page, () => ({
+    status: 200,
+    json: { result: { ...reviewed, correct: 3, total: 3 }, balance: 42 },
+  }))
+  await openReview(page)
+  await page.getByLabel('Answer 2').fill('42')
+  await page.locator('.parent-correction').getByLabel('Note').fill(' Marked a right answer wrong ')
+  await page.getByRole('button', { name: 'Save correction' }).click()
+  await expect(page.getByText('Saved. Her balance is now 42.')).toBeVisible()
+  await expect(page.getByText('Result of Oct 16: 2 of 3 right')).toHaveCount(0)
+  expect(posts).toEqual([{ answers: [42, 42, 42], note: 'Marked a right answer wrong' }])
+})
+
+test('asks for a note, and for a change, before sending', async ({ page }) => {
+  const posts = await correctionApi(page, () => ({ status: 200, json: {} }))
+  await openReview(page)
+  await page.getByLabel('Answer 2').fill('42')
+  await page.getByRole('button', { name: 'Save correction' }).click()
+  await expect(page.getByText('Add a short note, up to 200 characters, so you remember why.')).toBeVisible()
+  await page.getByLabel('Answer 2').fill('40')
+  await page.locator('.parent-correction').getByLabel('Note').fill('Why')
+  await page.getByRole('button', { name: 'Save correction' }).click()
+  await expect(page.getByText('Nothing has changed yet.')).toBeVisible()
+  expect(posts).toEqual([])
+})
+
+test('a refused correction says her balance, and a busy one says to try again', async ({ page }) => {
+  let reply: { status: number; json: unknown } = { status: 409, json: { error: 'overdraw', balance: 41 } }
+  const posts = await correctionApi(page, () => reply)
+  await openReview(page)
+  await page.getByLabel('Answer 2').fill('1')
+  await page.locator('.parent-correction').getByLabel('Note').fill('Fix')
+  await page.getByRole('button', { name: 'Save correction' }).click()
+  await expect(page.getByText(/She has 41 Macaronis/)).toBeVisible()
+  reply = { status: 503, json: { error: 'busy' } }
+  await page.getByRole('button', { name: 'Save correction' }).click()
+  await expect(page.getByText('Her numbers changed while saving. Try again.')).toBeVisible()
+  expect(posts).toHaveLength(2)
+})
+
+test('Cancel closes the correction view without sending anything', async ({ page }) => {
+  const posts = await correctionApi(page, () => ({ status: 200, json: {} }))
+  await openReview(page)
+  await page.getByLabel('Answer 2').fill('1')
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await expect(page.getByText('Result of Oct 16: 2 of 3 right')).toHaveCount(0)
+  expect(posts).toEqual([])
+})
+
+test('a correction reads in plain words in the activity log', async ({ page }) => {
+  await page.route('/api/parent/**', (route) =>
+    route.fulfill({
+      json: readViews(new URL(route.request().url()).pathname, [], {
+        '/api/parent/log': {
+          entries: [
+            {
+              id: 1,
+              at: '2026-10-20T15:05:00',
+              email: 'mum@example.com',
+              action: 'correction',
+              detail: {
+                resultId: 7,
+                day: '2026-10-16',
+                before: { correct: 15, grade: 'Improving', total: 21 },
+                after: { correct: 18, grade: 'Great', total: 24 },
+                balanceBefore: 100,
+                balanceAfter: 103,
+                note: 'Marked a right answer wrong',
+              },
+            },
+          ],
+        },
+      }),
+    }),
+  )
+  await page.goto('/parent')
+  await expect(
+    page.getByText(
+      'Corrected the result of Oct 16: 15 to 18 right, +3 Macaronis: Marked a right answer wrong',
+    ),
+  ).toBeVisible()
+})
