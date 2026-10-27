@@ -19,7 +19,7 @@ macworx gives her:
 - **Offline:** assignments work with no connection. Results sync when the iPad is back online. Buying a reward needs a connection (§5.2).
 - **Hosting:** Cloudflare Workers serve the app's static files and an `/api/*` Worker. Data lives in Cloudflare D1.
 - **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record. The Worker hands out the seeds assignments are generated from (§6.8).
-- **Users:** one child and her parents. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. A request without a valid key is refused and changes nothing. The parent side (`/parent`, `/api/parent/*`) sits behind Cloudflare Access, and the Worker also checks every parent request's Access token itself, refusing any request without a valid one (§6.9).
+- **Users:** parents and one or more children. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. Each device belongs to exactly one child, and a child request acts for its device's child. A request without a valid key is refused and changes nothing. A device can't move to another child: a parent unpairs it and pairs it again. The parent side (`/parent`, every path under it, and `/api/parent/*`) sits behind Cloudflare Access, and the Worker also checks every parent request's Access token itself, refusing any request without a valid one (§6.9).
 
 ## 3. Non-goals (MVP)
 
@@ -27,11 +27,11 @@ macworx gives her:
 - The spinner and the loot box.
 - Push notifications to the parent.
 - Time limits or timers of any kind.
-- More than one child.
+- Sign-ins for children.
 
 ## 4. Principles
 
-1. **Course-correct, never punish.** The app's rules never take away anything she has earned. A missed answer shows the right one and moves on. (A parent can correct anything in the dashboard, §5.3.)
+1. **Course-correct, never punish.** The app's rules never take away anything she has earned. A missed answer shows the right one and moves on. (A parent can correct anything in the parent portal, §5.3.)
 2. **Never-negative wording.** No text frames a result as failure. Grades are Excellent, Great, Good and Improving.
 3. **Rewards come from effort.** Every Macaroni is earned by finishing work. There is no way to skip the work.
 4. **No time pressure.** No timers, no limits, and no penalty beyond a streak starting over.
@@ -60,54 +60,89 @@ macworx gives her:
 
 1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7).
 2. She can buy any reward whose price is at most her balance, but only while the iPad can reach the Worker. The Worker checks the price against its own balance, deducts it and records the purchase, so the Worker's balance is always the one spent.
-3. A parent sees the purchase on the dashboard and grants the reward in real life.
+3. A parent sees the purchase on the portal's Shop screen (§5.3) and grants the reward in real life.
 
-### 5.3 Parent dashboard (admin)
+### 5.3 Parent portal (admin)
 
-The parent dashboard is admin mode: it shows everything and can change anything. It lives at `/parent` on the same app, for a parent's phone or computer; nothing on her screens links to it. It is a plain, lightweight admin page for two parents, with the app's colors but not her playful look: small type, tables for lists, plain words, and never a result framed as a failure (§4). There is no navigation or routing; the page is one screen:
+The parent portal is admin mode: it shows everything and can change anything, for each child. It is a multi-screen app on the same origin, for a parent's phone, tablet or computer, in the app's colors and the system font but not her playful look. It never frames a result as a failure (§4).
 
-- **Summary strip** (top): her balance, streak, last counted day and completed assignments.
+**Getting there:** Home shows a visible **Parents** link. A parent never has to type an address. The link is a full page load, not a route inside her app, so Cloudflare Access can ask for a sign-in (§6.9). The portal works on a phone.
+
+**Screens and routes:** five screens, each at its own address. `/parent` and any unknown `/parent/…` address show Overview.
+
+| Screen | Route |
+|---|---|
+| Overview | `/parent/overview` |
+| Points | `/parent/points` |
+| Streak | `/parent/streak` |
+| Devices | `/parent/devices` |
+| Shop | `/parent/shop` |
+
+Choosing a tab changes the address without reloading the page. Back and Forward move between tabs, and every address opens directly and survives a reload.
+
+**Navigation:** below 768px wide (a phone) the five tabs are a bar at the bottom of the screen. From 768px wide (a tablet, including an iPad in portrait) the portal uses the wide layout of the iPad frames in docs/DESIGN.md. The screens, their content and their behavior are the same in both.
+
+**Children and the child switcher:** a household has one or more children. Every screen has a child switcher showing the selected child's name and initials; choosing another child shows that child's numbers, results, devices and activity on every screen. The selection is remembered in that browser; with none remembered, the first child is selected. A parent can add a child and rename one, with a name (1 to 40 characters), a grade (short text) and initials (1 to 3 letters, filled from the name until changed). Children can't be deleted. Adding and renaming are logged. A new household has one child, named "Child", which a parent renames.
+
+**Sample data:** a screen shows only what the app really has, or what is plainly marked as sample. A value that can be worked out from real data is worked out (a device's last sync is the time of the latest result from it). A value the app has no source for, such as a personal best streak, a device's Online or Offline state and its browser and system line, is shown as sample data: it carries a visible "Sample" label, it lives in one clearly named place in the code so that real data can replace it, and it never reads as real. The portal never invents behavior.
+
+**Overview** has, for the selected child:
+
+- **Summary:** her balance, streak, last counted day and completed assignments.
+- **Today's homework:** one number, the assignments she completed today (the parent's calendar day, not the last 24 hours). It has no "of" total. Any subject it names comes from data, never from fixed text.
 - **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade. A row opens the correction view (below).
-- **iPads:** pair an iPad and the paired iPads, with Unpair (§6.9).
-- **Adjustments:** set her streak, and add or remove Macaronis with a note (below).
-- **Activity log:** every change a parent has made, newest first (the latest 50): when, which parent and what changed, in plain words.
 
-On a phone the sections are stacked in that order below the summary. On a wide screen they sit in two columns: Results on the left; iPads, Adjustments and the Activity log on the right.
+**Points** has, for the selected child:
+
+- Her balance, and **Adjust balance** to add or remove Macaronis (below).
+- **Recent activity:** every change a parent has made to her, newest first (the latest 50): when, which parent and what changed, in plain words.
+
+**Streak** has, for the selected child, her streak, her last counted day and a form to correct them (below).
+
+**Devices** has, for the selected child:
+
+- Her paired devices, each with its name, when it last synced (the time of the latest result from it, or "No results yet"), its status and browser line (sample data until the app has a source), and Unpair (§6.9).
+- **Pair a device** for this child (§5.4, §6.9).
+
+**Shop** shows the rewards of §6.7 as in her shop (icon, name, price), read-only: the buy buttons are disabled. **Last redeemed** lists purchases (§5.2); with none it shows an empty state. Prices are fixed (§6.7).
 
 A parent can:
 
-- Pair an iPad and unpair one (§6.9).
+- Add a child, rename one, and switch between children.
+- Pair a device to a child and unpair one (§6.9).
 - Add or remove Macaronis with a note, for example to fix a mistake or to reward her real homework grades.
 - Set or restore her streak and last counted day.
 - Correct a recorded result.
 
-**Setting her streak:** the Adjustments section has a streak form with two boxes, Streak and Last counted day, filled with her current values, and a Save button. Streak is a whole number from 0 to 3650. Last counted day is a date or empty; it may be empty only when the streak is 0, and may not be more than 1 day after the Worker's date (UTC), so a typo can't stall her streak (§6.8). Saving changes only the streak and last counted day: not her balance, completed assignments or results, and it pays no streak bonus. Her next finished assignment continues from the saved values (§6.5). Each save is logged with the old and new streak and last counted day. If a result is being recorded at the same moment, the Worker works from the newest numbers, and after three lost races it answers 503 and nothing changes.
+**Review, then Confirm:** every change to Macaronis or to a streak takes two steps. The parent fills in the form and chooses Review, which shows exactly what will change (for example, balance 40 to 60). Confirm saves it; Back returns to the form with nothing saved. There is no PIN; Cloudflare Access is the sign-in. Unpairing keeps its own warning (§6.9).
 
-Every change is logged: what changed, when, and which parent made it. The app's own rules never take anything away (§4); a parent's corrections are the exception.
+**Setting her streak:** the Streak screen has a form with two boxes, Streak and Last counted day, filled with her current values, and a Review button. Under the boxes it shows the range the streak implies: the days from (last counted day minus streak plus 1) to the last counted day. Streak is a whole number from 0 to 3650. Last counted day is a date or empty; it may be empty only when the streak is 0, and may not be more than 1 day after the Worker's date (UTC), so a typo can't stall her streak (§6.8). Confirming changes only the streak and last counted day: not her balance, completed assignments or results, and it pays no streak bonus. Her next finished assignment continues from the saved values (§6.5). Each save is logged with the old and new streak and last counted day. If a result is being recorded at the same moment, the Worker works from the newest numbers, and after three lost races it answers 503 and nothing changes.
 
-**Adding or removing Macaronis:** the Adjustments section has a choice of Add or Remove, a number of Macaronis, a note and a Save button.
+Every change is logged: what changed, when, which parent made it and which child it was for. The app's own rules never take anything away (§4); a parent's corrections are the exception.
+
+**Adding or removing Macaronis:** the Adjust balance form on the Points screen has a choice of Add or Remove, a number of Macaronis, a note and a Review button.
 
 - The amount is a whole number from 1 to 100,000; Remove makes it negative. The note is required, 1 to 200 characters (spaces at either end don't count).
 - Her balance can never end below 0. A removal larger than her balance is refused, with a line saying her balance and that it can't go lower. Nothing is changed.
 - It changes her balance only: not her streak, completed assignments or results. Nothing on her screens mentions it; her Home shows the new balance after her next sync (§6.8).
-- The log entry records the amount, her balance before and after, and the note. In the Activity log it reads, for example, "Added 20 Macaronis: Homework grades" or "Removed 5 Macaronis: Counted twice by mistake".
+- The log entry records the amount, her balance before and after, and the note. In Recent activity it reads, for example, "Added 20 Macaronis: Homework grades" or "Removed 5 Macaronis: Counted twice by mistake".
 - If a result is being recorded at the same moment, neither change is lost: the adjustment is worked out again from the new balance (§6.8; ARCHITECTURE "Data"). If it can't be saved after a few tries, the page says to try again in a minute.
 
 **Correcting a result:**
 
-- A Results row opens a correction view in place (no routing): the problems one by one (20, or fewer for a result she left early), each showing the problem, her answer in a number box the parent can change, and the right answer; a required note (1 to 200 characters, spaces at either end don't count); and Save and Cancel.
+- A Results row on Overview opens a correction view in place (no change of address): the problems one by one (20, or fewer for a result she left early), each showing the problem, her answer in a number box the parent can change, and the right answer; a required note (1 to 200 characters, spaces at either end don't count); and Save and Cancel.
 - The Worker regenerates the problems from the result's seed and re-scores the edited answers with the engine. It replaces the answers, correct count, grade, base, accuracy bonus and total. The streak bonus stays as originally paid. A finished result still pays at least the minimum (§6.4), worked out from the stored streak bonus. A result she left early stays base only, with no grade.
 - The number of answers is fixed: a correction never turns a result she left early into a finished one or the reverse. Answers are whole numbers from 0 to 999,999, and the edited answers must differ from the stored ones.
 - Her balance changes by the difference in total, up or down. It can never end below 0: a correction that would take it below 0 is refused, with a line saying her balance and that it can't go lower. Nothing is changed. Completed assignments, streak and last counted day do not change.
-- The log entry records the result's day, the old and new correct count, grade and total, her balance before and after, and the note. In the Activity log it reads, for example, "Corrected the result of 16 Oct: 15 to 18 right, +3 Macaronis: Marked a right answer wrong".
+- The log entry records the result's day, the old and new correct count, grade and total, her balance before and after, and the note. In Recent activity it reads, for example, "Corrected the result of 16 Oct: 15 to 18 right, +3 Macaronis: Marked a right answer wrong".
 - Nothing on her screens mentions it; her Home shows the new numbers after her next sync (§6.8).
 - If a result is being recorded at the same moment, neither change is lost: the correction is worked out again from the new numbers. After three lost races the Worker answers 503, nothing changes, and the page says to try again in a minute.
 
-### 5.4 Pair her iPad
+### 5.4 Pair her device
 
-1. Until her iPad is paired, she can still practice; Home also shows a **Pair this iPad** button. It shows only when the app runs installed from the home screen, because Safari and the installed app keep separate storage, so a pairing done in Safari wouldn't reach her app. A PR preview build shows it in a browser tab too (§6.9), so paired screens can be checked on a phone or tablet.
-2. A parent makes a code on the parent dashboard (§5.3, §6.9). On the Pair screen, the code is typed on the same number pad into six boxes, filled left to right, and sent with **Pair**.
-3. Paired: the screen says so and the button disappears from Home. The iPad keeps its device key.
+1. Until her iPad is paired, she can still practice; Home also shows a **Pair this device** button. It shows only when the app runs installed from the home screen, because Safari and the installed app keep separate storage, so a pairing done in Safari wouldn't reach her app. A PR preview build shows it in a browser tab too (§6.9), so paired screens can be checked on a phone or tablet.
+2. A parent chooses the child on the portal's Devices screen and makes a code for her (§5.3, §6.9). On the Pair screen, the code is typed on the same number pad into six boxes, filled left to right, and sent with **Pair**.
+3. Paired: the screen says so and the button disappears from Home. The device keeps its device key and belongs to the child the code was made for.
 4. Not paired: a friendly line says what to do (ask for a new code, wait a minute, connect to Wi-Fi, or try again soon), and the boxes clear.
 5. Whenever Home opens with a stored key, the iPad checks it with the Worker. If a parent has unpaired the iPad, the iPad forgets the key and the button comes back.
 
@@ -180,6 +215,7 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 
 ### 6.8 Saving results
 
+- **Whose numbers:** seeds, results and numbers belong to the child of the device that sends them. A child's balance, streak, last counted day and completed assignments are hers alone.
 - **Seeds:** the Worker hands each iPad up to 20 unused seeds at a time and accepts each seed once. An iPad keeps its unused seeds so assignments work offline.
 - **Recording:** the Worker regenerates the assignment from its seed and re-scores her answers. 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
 - **The same result twice:** sending a result for a seed that's already recorded returns the recorded result and counts nothing again, so a retry after a lost connection is safe.
@@ -195,10 +231,10 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 ### 6.9 Parent access and pairing
 
 - **Parent access:** every `/api/parent/*` request must carry a valid Cloudflare Access token for this app: signed by the team's keys, issued by the team, for this application, not expired, with the parent's email. Anything else is refused (401), including when the Worker isn't configured for Access, so PR previews never serve parent routes.
-- **Pairing:** the parent names the iPad (up to 40 characters) and gets a 6-digit code, valid for 10 minutes and for one use. Making a new code voids any earlier unused one. Five wrong tries void the code. On the iPad, entering the right code pairs it: the Worker returns its device key once and stores only the key's SHA-256.
+- **Pairing:** the parent chooses a child, names the device (up to 40 characters) and gets a 6-digit code for that child, valid for 10 minutes and for one use. Making a new code, for any child, voids any earlier unused one. The device that enters the right code is paired to that child. Five wrong tries void the code. On the iPad, entering the right code pairs it: the Worker returns its device key once and stores only the key's SHA-256.
 - **Pairing rate limit:** at most 10 pairing tries a minute from one network address (an IPv6 address counts by its /64 block, roughly one home or connection). Beyond that the Worker answers 429 without looking at the code. This slows a flood of guesses; it can't stop someone who sends a few wrong guesses a minute from voiding a code, since 5 wrong tries void it. If that ever happens, the parent makes a new code later. The code's own one use, 10 minutes and 5 tries are what keep an iPad from being paired by anyone else. If the Worker has no rate limiter, pairing is refused (503) rather than left unguarded.
-- **Preview pairing:** a PR preview can pair without a parent, so paired screens can be checked on a phone. The preview's own 6-digit code is a secret held in Cloudflare's preview settings, never in the repo. Typing it on the Pair screen pairs the device: the Worker makes a new device named "Preview" in the preview database and returns its key once. The code can be used any number of times and never expires; the pairing rate limit still applies first, and it is the only guard against guessing. It works only when the Worker is marked as a preview, has no Access settings and holds a valid code; any other code goes through the normal checks. Production never has the preview mark and always has Access settings, so the preview code does nothing there. A preview build also shows the Pair button outside the installed app (§5.4).
-- **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The dashboard warns before unpairing: "Results this iPad hasn't sent yet won't be saved."
+- **Preview pairing:** a PR preview can pair without a parent, so paired screens can be checked on a phone. The preview's own 6-digit code is a secret held in Cloudflare's preview settings, never in the repo. Typing it on the Pair screen pairs the device: the Worker makes a new device named "Preview" for the first child in the preview database and returns its key once. The code can be used any number of times and never expires; the pairing rate limit still applies first, and it is the only guard against guessing. It works only when the Worker is marked as a preview, has no Access settings and holds a valid code; any other code goes through the normal checks. Production never has the preview mark and always has Access settings, so the preview code does nothing there. A preview build also shows the Pair button outside the installed app (§5.4).
+- **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The portal warns before unpairing: "Results this device hasn't sent yet won't be saved."
 
 ## 7. Worked examples → test cases
 
@@ -286,7 +322,7 @@ Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out th
 | A9 | The preview code sent to a Worker that has the Access settings, or lacks the preview mark, or has no preview code | Refused (400), no device |
 | A10 | On a preview, a wrong code | Refused (400) like any wrong code |
 | A11 | Eleven preview-code tries from one address within a minute | The eleventh is refused (429) before the code is read |
-| A12 | A preview build, not installed | Home shows **Pair this iPad**; a production build, not installed, does not |
+| A12 | A preview build, not installed | Home shows **Pair this device**; a production build, not installed, does not |
 
 ### 7.B Balance adjustments (§5.3)
 
@@ -372,11 +408,11 @@ The Worker's child API (every route needs the iPad's device key):
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
 - `POST /api/results`: records a result (§6.8) and returns it with the new state.
 
-The parent API (every route needs a valid Access token, §6.9):
+The parent API (every route needs a valid Access token, §6.9). Routes that read or change a child's data take that child's id, and a parent can list, add and rename children. Child routes act for the device's child. The routes below are listed by what they do for one child.
 
-- `GET /api/parent/devices`: the paired and unpaired iPads.
-- `DELETE /api/parent/devices/:id`: unpairs an iPad (logged).
-- `POST /api/parent/pairing-code { name }`: a new pairing code for an iPad with that name (logged).
+- `GET /api/parent/devices`: the paired and unpaired devices.
+- `DELETE /api/parent/devices/:id`: unpairs a device (logged).
+- `POST /api/parent/pairing-code { name }`: a new pairing code for a device with that name (logged).
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
 - `GET /api/parent/summary`: balance, streak, last counted day and completed assignments.
 - `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade and total paid.
@@ -400,5 +436,7 @@ Ideas outside the MVP. Each needs a spec section before it is built.
 - **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
 - **Difficulty levels:** stretch problems that pay more than warm-ups.
 - **Parent tools:** push notification on a purchase, adding spelling words and assignments.
-- **Dashboard detail:** purchase history (with the reward shop, §5.2).
+- **Portal detail:** purchase history beyond Last redeemed (with the reward shop, §5.2).
+- **Editable rewards:** a parent changes the rewards and prices from the portal.
+- **Child sign-ins:** a child who uses more than one device, or moves a device to another child.
 - **More rewards:** the full reward menu beyond the four in §6.7.

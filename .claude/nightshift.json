@@ -8,7 +8,7 @@
     "milestones": "semver",
     "authors": "owner",
     "branchPrefix": "agent/issue-",
-    "docs": ["SPEC.md", "CLAUDE.md", "ARCHITECTURE.md"],
+    "docs": ["SPEC.md", "CLAUDE.md", "ARCHITECTURE.md", "docs/DESIGN.md"],
     "spec": { "path": "SPEC.md", "recordDecisionsFirst": true },
     "workedExamples": { "paths": ["src/engine/"], "approveOnIssue": true, "section": "SPEC.md §7" },
     "neverEdit": [".github/workflows/", ".github/rulesets/", ".claude/"],
