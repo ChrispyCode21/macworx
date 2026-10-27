@@ -38,7 +38,7 @@ Standing instructions for every Claude session in this repo. Every run reads thi
 
 - `main` is protected. Work on a branch, push it, and open a PR with the template.
 - **One slice per PR:** one issue, one behavior.
-- **Size:** aim for 300 changed lines or fewer, not counting tests, lockfiles and generated files. Over 500, split it before asking for review.
+- **Size:** aim for 300 changed lines or fewer, not counting tests, lockfiles and generated files. Over 500, split it before asking for review. Parent portal slices may reach 600.
 - Tests ship in the same PR as the code they cover.
 - Run `npm run check:all` before pushing. Never push red and wait for CI to find it.
 - No drive-by refactors. Add them to the cleanup issue instead.
