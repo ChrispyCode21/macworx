@@ -23,7 +23,6 @@ import {
   minutesLeft,
 } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
-import { ResultCorrection } from './ResultCorrection'
 
 const MAX_NAME = 40
 const MAX_STREAK = 3650
@@ -120,8 +119,6 @@ export function ParentPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState<number | null>(null)
   const [adjustProblem, setAdjustProblem] = useState<string | null>(null)
-  const [reviewing, setReviewing] = useState<number | null>(null)
-  const [corrected, setCorrected] = useState<number | null>(null)
 
   // One call at a time, so a run-out Access sign-in reloads the page once, not once per call.
   const refresh = async () => {
@@ -189,7 +186,6 @@ export function ParentPage() {
 
   const onSave = async () => {
     setSaved(null)
-    setCorrected(null)
     setAdjustProblem(null)
     const trimmed = note.trim()
     const count = /^\d+$/.test(amount.trim()) ? Number(amount.trim()) : 0
@@ -266,7 +262,6 @@ export function ParentPage() {
                     <th scope="col">{COPY.parentColRight}</th>
                     <th scope="col">{COPY.parentColGrade}</th>
                     <th scope="col">{COPY.parentColEarned}</th>
-                    <th scope="col">{COPY.parentColReview}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -276,39 +271,12 @@ export function ParentPage() {
                       <td>{COPY.parentRightOf(r.correct, r.answered)}</td>
                       <td>{r.finished && r.grade ? r.grade : COPY.parentLeftEarly}</td>
                       <td>{formatNumber(r.total)}</td>
-                      <td>
-                        <Button
-                          variant="secondary"
-                          aria-label={COPY.parentReviewLabel(formatCalendarDay(r.day))}
-                          onClick={() => {
-                            setCorrected(null)
-                            setReviewing(r.id)
-                          }}
-                        >
-                          {COPY.parentReview}
-                        </Button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-          {reviewing !== null && (
-            <ResultCorrection
-              key={reviewing}
-              id={reviewing}
-              failureText={failure}
-              onClose={() => setReviewing(null)}
-              onSaved={(balance) => {
-                setReviewing(null)
-                setSaved(null)
-                setCorrected(balance)
-                void refresh()
-              }}
-            />
-          )}
-          {corrected !== null && <p role="status">{COPY.parentSaved(corrected)}</p>}
           {results?.length === LIST_LIMIT && <p>{COPY.parentLatest(LIST_LIMIT)}</p>}
         </section>
 

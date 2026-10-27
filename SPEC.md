@@ -31,7 +31,7 @@ macworx gives her:
 
 ## 4. Principles
 
-1. **Course-correct, never punish.** The app's rules never take away anything she has earned. A missed answer shows the right one and moves on. (A parent can correct anything in the parent portal, §5.3.)
+1. **Course-correct, never punish.** The app's rules never take away anything she has earned. A missed answer shows the right one and moves on. (A parent can adjust her Macaronis and streak in the parent portal, §5.3.)
 2. **Never-negative wording.** No text frames a result as failure. Grades are Excellent, Great, Good and Improving.
 3. **Rewards come from effort.** Every Macaroni is earned by finishing work. There is no way to skip the work.
 4. **No time pressure.** No timers, no limits, and no penalty beyond a streak starting over.
@@ -90,7 +90,7 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 
 - **Summary:** her balance, streak, last counted day and completed assignments.
 - **Today's homework:** one number, the assignments she completed today (the parent's calendar day, not the last 24 hours). It has no "of" total. Any subject it names comes from data, never from fixed text.
-- **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade. A row opens the correction view (below).
+- **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
 
 **Points** has, for the selected child:
 
@@ -112,13 +112,14 @@ A parent can:
 - Pair a device to a child and unpair one (§6.9).
 - Add or remove Macaronis with a note, for example to fix a mistake or to reward her real homework grades.
 - Set or restore her streak and last counted day.
-- Correct a recorded result.
 
 **Review, then Confirm:** every change to Macaronis or to a streak takes two steps. The parent fills in the form and chooses Review, which shows exactly what will change (for example, balance 40 to 60). Confirm saves it; Back returns to the form with nothing saved. There is no PIN; Cloudflare Access is the sign-in. Unpairing keeps its own warning (§6.9).
 
 **Setting her streak:** the Streak screen has a form with two boxes, Streak and Last counted day, filled with her current values, and a Review button. Under the boxes it shows the range the streak implies: the days from (last counted day minus streak plus 1) to the last counted day. Streak is a whole number from 0 to 3650. Last counted day is a date or empty; it may be empty only when the streak is 0, and may not be more than 1 day after the Worker's date (UTC), so a typo can't stall her streak (§6.8). Confirming changes only the streak and last counted day: not her balance, completed assignments or results, and it pays no streak bonus. Her next finished assignment continues from the saved values (§6.5). Each save is logged with the old and new streak and last counted day. If a result is being recorded at the same moment, the Worker works from the newest numbers, and after three lost races it answers 503 and nothing changes.
 
-Every change is logged: what changed, when, which parent made it and which child it was for. The app's own rules never take anything away (§4); a parent's corrections are the exception.
+Every change is logged: what changed, when, which parent made it and which child it was for. The app's own rules never take anything away (§4); a parent's adjustments are the exception.
+
+A recorded result and her answers never change; Add or Remove on the Points screen is the only way a parent changes the Macaronis she has earned. Recent activity still reads older result corrections in plain words, for example "Corrected the result of Oct 16: 15 to 18 right, +3 Macaronis: Marked a right answer wrong".
 
 **Adding or removing Macaronis:** the Adjust balance form on the Points screen has a choice of Add or Remove, a number of Macaronis, a note and a Review button.
 
@@ -127,16 +128,6 @@ Every change is logged: what changed, when, which parent made it and which child
 - It changes her balance only: not her streak, completed assignments or results. Nothing on her screens mentions it; her Home shows the new balance after her next sync (§6.8).
 - The log entry records the amount, her balance before and after, and the note. In Recent activity it reads, for example, "Added 20 Macaronis: Homework grades" or "Removed 5 Macaronis: Counted twice by mistake".
 - If a result is being recorded at the same moment, neither change is lost: the adjustment is worked out again from the new balance (§6.8; ARCHITECTURE "Data"). If it can't be saved after a few tries, the page says to try again in a minute.
-
-**Correcting a result:**
-
-- A Results row on Overview opens a correction view in place (no change of address): the problems one by one (20, or fewer for a result she left early), each showing the problem, her answer in a number box the parent can change, and the right answer; a required note (1 to 200 characters, spaces at either end don't count); and Save and Cancel.
-- The Worker regenerates the problems from the result's seed and re-scores the edited answers with the engine. It replaces the answers, correct count, grade, base, accuracy bonus and total. The streak bonus stays as originally paid. A finished result still pays at least the minimum (§6.4), worked out from the stored streak bonus. A result she left early stays base only, with no grade.
-- The number of answers is fixed: a correction never turns a result she left early into a finished one or the reverse. Answers are whole numbers from 0 to 999,999, and the edited answers must differ from the stored ones.
-- Her balance changes by the difference in total, up or down. It can never end below 0: a correction that would take it below 0 is refused, with a line saying her balance and that it can't go lower. Nothing is changed. Completed assignments, streak and last counted day do not change.
-- The log entry records the result's day, the old and new correct count, grade and total, her balance before and after, and the note. In Recent activity it reads, for example, "Corrected the result of 16 Oct: 15 to 18 right, +3 Macaronis: Marked a right answer wrong".
-- Nothing on her screens mentions it; her Home shows the new numbers after her next sync (§6.8).
-- If a result is being recorded at the same moment, neither change is lost: the correction is worked out again from the new numbers. After three lost races the Worker answers 503, nothing changes, and the page says to try again in a minute.
 
 ### 5.4 Pair her device
 
@@ -222,7 +213,6 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 - **Day range:** a result's day may be no earlier than the day before its seed was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. A day that had to be moved means the iPad's clock was wrong, so that result doesn't touch the streak: it's paid its base and accuracy bonus and counts as completed, but the streak, last counted day and streak bonus stay as they were. Because of this, her last counted day is never more than a day ahead of the real date, and a clock that's off by more than a day can't reset her streak. (A clock off by only a day looks the same as a time-zone difference, so it counts like any other day.)
 - **Results that arrive late:** a result whose day is earlier than her last counted day counts as that same last day for the streak (no streak change, no streak bonus) and is still paid.
 - **Completed assignments** counts finished assignments only.
-- **Corrections:** a parent's correction (§5.3) replaces a recorded result's answers, correct count, grade and payout. Sending that result's seed again returns the corrected result; her iPad's numbers change at its next sync.
 - **On the iPad:** a paired iPad keeps its unused seeds, the results it hasn't sent yet, and the Worker's latest state in its own storage, and asks the browser to keep that storage. Each assignment uses the next stored seed, and its result is dated with the iPad's own day. Results go to the Worker one at a time, oldest first, whenever the app opens, Home shows, a result is saved, or the connection comes back; the Worker's numbers replace the iPad's. Home shows the Worker's latest numbers with each result not yet sent applied on top, oldest first, using the engine. Every result adds what it pays to the balance. A finished result also adds 1 to completed assignments, moves the streak (§6.5; a result dated before her last counted day counts as that day) and sets the latest grade. A result she left early adds only its base. Each result is applied with the day the iPad dated it. The Worker's numbers replace these after each sync. A result the Worker refuses as not valid is dropped, so it can't hold up the rest. When the iPad tops up its seeds, it leaves out seeds in its unsent results and the one she's working on. A stored seed she leaves without answering anything goes to the back of the list.
 - **No seeds:** when a paired iPad has no seeds left and can't reach the Worker, Start shows "Connect to Wi-Fi to get more problems!"
 - **Before the iPad has numbers:** a paired iPad that hasn't yet received the Worker's state, and an iPad that isn't paired, show no numbers on Home (not a balance of 0). A finished result leaves out the streak bonus: its total is base plus accuracy bonus, with the minimum applied.
@@ -369,26 +359,13 @@ The Worker's date is 2026-10-17 UTC. Her state: balance 40, streak 3, last count
 | C9 | No Access token | Refused (401) |
 | C10 | After a parent sets streak 7 and day 2026-10-16, a finished 20-correct result dated 2026-10-17 arrives | Streak **8**, last counted day **2026-10-17**, payout 20 + 4 + 8 streak = **32** (the edit paid nothing) |
 
-### 7.D Result corrections (§5.3)
+### 7.D Recorded results (§8)
 
-Her balance is 100 unless stated. The result is a finished one of 15 correct out of 20 with a stored streak bonus of 3 (base 15, accuracy bonus 3, streak bonus 3, total 21, grade Improving). Her streak is 4, last counted day 2026-10-16, completed 6.
+A parent opens a result the Worker recorded.
 
 | ID | Given | Expected |
 |---|---|---|
-| D1 | A parent changes answers so 18 are correct, note "Marked right answer wrong" | Correct **18**, base 18, accuracy bonus 3, streak bonus **3** (as stored), total **24**, grade **Great**; balance **103**; one log entry with old correct 15, grade Improving, total 21, new correct 18, grade Great, total 24, balance before 100 and after 103, the note, the time and the parent's email; streak, last counted day and completed unchanged. Answers changed with the correct count still 15 are accepted: total and balance stay, and the change is logged |
-| D2 | Answers changed so 10 are correct | Total 10 + 2 + 3 = **15**, grade **Improving**, balance **94** |
-| D3 | A finished result of 20 correct with streak bonus 0 (total 24), corrected to 0 correct | Total raised to the minimum: **1**, grade Improving, balance **77** |
-| D4 | A result she left early, 8 answered, 7 correct (total 7), corrected to 5 correct | Total **5**, still no grade and not finished, no bonuses; balance **98**; completed unchanged |
-| D5 | Fewer or more answers than the result has, or an answer that is not a whole number from 0 to 999999 (-1, 1000000, 2.5, "5") | Refused (400); nothing changed or logged |
-| D6 | A missing, empty or all-spaces note, or one of 201 characters | Refused (400); nothing changed or logged. A note of 200 characters is accepted |
-| D7 | The same answers as the stored ones | Refused (400); nothing changed or logged |
-| D8 | The D3 result (total 24) corrected to 0 correct (total 1, 23 lower), with balance 10 | Refused (409) with the balance 10; nothing changed or logged. With balance 23 the same correction is accepted and the balance becomes exactly **0** |
-| D9 | A result id that does not exist | Refused (404); nothing changed or logged |
-| D10 | A result is recorded between the correction's read and its write | The correction is worked out again from the new balance: both changes apply, and the log shows the balance it really saw |
-| D11 | The write loses the race three times | 503; nothing changed or logged |
-| D12 | No Access token | Refused (401) |
 | D13 | A parent opens a recorded result | Each problem with its operation, numbers, her answer and the right answer, in order; the same seed always shows the same problems |
-| D14 | After a correction, her iPad syncs | `GET /api/state` shows the new balance and, when the result is her latest finished one, its new grade |
 
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
@@ -418,7 +395,6 @@ The parent API (every route needs a valid Access token, §6.9). Routes that read
 - `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade and total paid.
 - `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
 - `GET /api/parent/results/:id`: one recorded result with its problems: day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
-- `POST /api/parent/results/:id/correct { answers, note }`: corrects a result (§5.3). 400 for bad answers, a bad note or answers equal to the stored ones, 404 for an unknown result, 409 when her balance would end below 0 (logged nothing), 503 when it can't be saved after 3 tries. Returns the corrected result and the new balance (logged).
 - `GET /api/parent/log`: the latest 50 admin log entries, newest first: when, which parent, the action and its details.
 
 Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
