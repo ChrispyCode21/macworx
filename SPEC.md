@@ -64,7 +64,7 @@ macworx gives her:
 
 ### 5.3 Parent portal (admin)
 
-The parent portal is admin mode: it shows everything and can change anything, for each of her children. It is a multi-screen app on the same origin, for a parent's phone, tablet or computer, in the app's colors and the system font but not her playful look. It never frames a result as a failure (§4).
+The parent portal is admin mode: it shows everything and can change anything, for each child. It is a multi-screen app on the same origin, for a parent's phone, tablet or computer, in the app's colors and the system font but not her playful look. It never frames a result as a failure (§4).
 
 **Getting there:** Home shows a visible **Parents** link. A parent never has to type an address. The link is a full page load, not a route inside her app, so Cloudflare Access can ask for a sign-in (§6.9). The portal works on a phone.
 
@@ -80,7 +80,7 @@ The parent portal is admin mode: it shows everything and can change anything, fo
 
 Choosing a tab changes the address without reloading the page. Back and Forward move between tabs, and every address opens directly and survives a reload.
 
-**Navigation:** below 768px wide (a phone) the five tabs are a bar at the bottom of the screen. From 768px wide (a tablet, including an iPad in portrait) the portal uses the wide layout, with the tabs along the side and each screen's content in wider columns. The screens, their content and their behavior are the same in both.
+**Navigation:** below 768px wide (a phone) the five tabs are a bar at the bottom of the screen. From 768px wide (a tablet, including an iPad in portrait) the portal uses the wide layout of the iPad frames in docs/DESIGN.md. The screens, their content and their behavior are the same in both.
 
 **Children and the child switcher:** a household has one or more children. Every screen has a child switcher showing the selected child's name and initials; choosing another child shows that child's numbers, results, devices and activity on every screen. The selection is remembered in that browser; with none remembered, the first child is selected. A parent can add a child and rename one, with a name (1 to 40 characters), a grade (short text) and initials (1 to 3 letters, filled from the name until changed). Children can't be deleted. Adding and renaming are logged. A new household has one child, named "Child", which a parent renames.
 
@@ -134,7 +134,7 @@ Every change is logged: what changed, when, which parent made it and which child
 - The Worker regenerates the problems from the result's seed and re-scores the edited answers with the engine. It replaces the answers, correct count, grade, base, accuracy bonus and total. The streak bonus stays as originally paid. A finished result still pays at least the minimum (§6.4), worked out from the stored streak bonus. A result she left early stays base only, with no grade.
 - The number of answers is fixed: a correction never turns a result she left early into a finished one or the reverse. Answers are whole numbers from 0 to 999,999, and the edited answers must differ from the stored ones.
 - Her balance changes by the difference in total, up or down. It can never end below 0: a correction that would take it below 0 is refused, with a line saying her balance and that it can't go lower. Nothing is changed. Completed assignments, streak and last counted day do not change.
-- The log entry records the result's day, the old and new correct count, grade and total, her balance before and after, and the note. In the Activity log it reads, for example, "Corrected the result of 16 Oct: 15 to 18 right, +3 Macaronis: Marked a right answer wrong".
+- The log entry records the result's day, the old and new correct count, grade and total, her balance before and after, and the note. In Recent activity it reads, for example, "Corrected the result of 16 Oct: 15 to 18 right, +3 Macaronis: Marked a right answer wrong".
 - Nothing on her screens mentions it; her Home shows the new numbers after her next sync (§6.8).
 - If a result is being recorded at the same moment, neither change is lost: the correction is worked out again from the new numbers. After three lost races the Worker answers 503, nothing changes, and the page says to try again in a minute.
 
