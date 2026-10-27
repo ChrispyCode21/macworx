@@ -475,7 +475,7 @@ Final decisions applied to every Figma string:
 
 ## 15. Data mapping
 
-Legend: **Real** = already returned by an existing route. **Derived** = computed from real data (may need a new field on an existing route). **Placeholder** = no source; dummy data from one module, `src/parent/placeholders.ts`, each export named for what it fakes, plus a follow-up issue (decision 11). Existing API: `src/parent/api.ts`, `worker/parent.ts` routes `GET /api/parent/summary|results|results/:id|log|devices`, `DELETE /api/parent/devices/:id`, `POST /api/parent/balance|streak|pairing-code`. Do not use `POST .../results/:id/correct` or `correctResult` (being removed, decision 12). Old `correction` log entries still render.
+Legend: **Real** = already returned by an existing route. **Derived** = computed from real data (may need a new field on an existing route). **Placeholder** = no source; dummy data from one module, `src/parent/placeholders.ts`, each export named for what it fakes, plus a follow-up issue (decision 11). Existing API: `src/parent/api.ts`, `worker/parent.ts` routes `GET /api/parent/summary|results|results/:id|log|devices`, `DELETE /api/parent/devices/:id`, `POST /api/parent/balance|streak|pairing-code`. Do not use `POST .../results/:id/correct` or `correctResult` (removed, decision 12). Old `correction` log entries still render.
 
 | Element | Kind | Source |
 |---|---|---|
