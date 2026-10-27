@@ -91,6 +91,7 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 - **Summary:** her balance, streak, last counted day and completed assignments.
 - **Today's homework:** one number, the assignments she completed today (the parent's calendar day, not the last 24 hours). It has no "of" total. Any subject it names comes from data, never from fixed text.
 - **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
+
 **Points** has, for the selected child:
 
 - Her balance, and **Adjust balance** to add or remove Macaronis (below).
@@ -118,7 +119,7 @@ A parent can:
 
 Every change is logged: what changed, when, which parent made it and which child it was for. The app's own rules never take anything away (§4); a parent's adjustments are the exception.
 
-A recorded result and her answers never change; Add or Remove on the Points screen is the only way a parent changes the Macaronis she has earned.
+A recorded result and her answers never change; Add or Remove on the Points screen is the only way a parent changes the Macaronis she has earned. Recent activity still reads older result corrections in plain words, for example "Corrected the result of Oct 16: 15 to 18 right, +3 Macaronis: Marked a right answer wrong".
 
 **Adding or removing Macaronis:** the Adjust balance form on the Points screen has a choice of Add or Remove, a number of Macaronis, a note and a Review button.
 
@@ -365,6 +366,7 @@ A parent opens a result the Worker recorded.
 | ID | Given | Expected |
 |---|---|---|
 | D13 | A parent opens a recorded result | Each problem with its operation, numbers, her answer and the right answer, in order; the same seed always shows the same problems |
+
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
 The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock and no `Math.random`. Randomness comes from the seed, and dates are passed in. It exposes:
