@@ -25,6 +25,7 @@ Read this whole file before building any `/parent/*` screen. It replaces SPEC §
 ## 1. How to use this contract
 
 - Ten reference frames, in `docs/design/`: phone frames are 402 px wide (native), wide frames are 1194x834 (iPad landscape).
+- The source Figma file is not linked here (the repo is public). The owner keeps its link in `FIGMA_URL` in `.env.local`, which git ignores and unattended runs don't have: build from this file and the PNGs, and treat the node ids below as names only.
 
 | Screen | Phone PNG | Wide PNG | Phone node id | Wide node id |
 |---|---|---|---|---|
