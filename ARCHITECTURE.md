@@ -77,7 +77,7 @@ SPEC §6.8. `src/storage/device.ts` keeps four `localStorage` entries: the devic
 
 ## Data
 
-D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql`, `0002_admin_log.sql` and `0003_pairing.sql`:
+D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql`, `0002_admin_log.sql`, `0003_pairing.sql` and `0004_children.sql`:
 
 | Table | Holds |
 |---|---|
@@ -86,10 +86,11 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 | `results` | Each recorded assignment as the Worker re-scored it: her answers (JSON), counts, grade and payout. A recorded result never changes. Older `admin_log` rows with action `correction` may exist and still read in the activity log. |
 | `pairing_codes` | Pairing codes: the code's SHA-256, the iPad's name, expiry, wrong tries, and when it was used or voided. Only the newest usable code counts. |
 | `admin_log` | Every change a parent makes in admin mode (SPEC §5.3): when, which parent (Access email), the action and a JSON detail. Written in the same batch as the change. |
+| `children` | One row per child: name, grade, initials, created_at and her own balance, streak, last counted day, completed and `revision`. Nothing reads it yet (see "Multiple children"). |
 | `child` | One row: balance, streak, last counted day, completed assignments. A parent restores a broken streak from the dashboard (`POST /api/parent/streak`), which edits `streak` and `last_day` here and changes `revision` in the same statement (see below). |
 
 - **One write at a time:** recording a result is one D1 batch. Its first statement updates `child` only if `revision` still has the value read before the write, and sets a new random revision. The result insert and the seed update apply only if the new revision is in place. So a lost race changes nothing; the Worker re-reads and retries (3 tries, then 503), and a repeat of the same seed returns the recorded result.
-- **Multiple children (target design, not built):** SPEC §2 and §5.3 describe a household with many children, each device belonging to one child, and pairing codes made for a chosen child. The target is a `children` table seeded from the one existing `child` row, and a `child_id` column (default 1) on `devices`, `results`, `admin_log` and `pairing_codes`, added by migrations that only add (the `child` table keeps its `CHECK (id = 1)` and is not edited). Until those land, the code and the tables below hold one child.
+- **Multiple children (schema built, API not switched):** SPEC §2 and §5.3 describe a household with many children, each device belonging to one child, and pairing codes made for a chosen child. `0004_children.sql` adds the `children` table (seeded with child 1, named "Child", copied from `child`) and `child_id INTEGER NOT NULL DEFAULT 1` on `devices`, `results`, `admin_log` and `pairing_codes` (no REFERENCES: SQLite ADD COLUMN). It only adds; `child` keeps its `CHECK (id = 1)` and is not edited, so the running Worker is unaffected. Each child's balance, streak, last counted day, completed and `revision` live on her `children` row, so the guarded-by-`revision` updates switch from `child WHERE id = 1` to `children WHERE id = ?`. There is no trigger copying `child` to `children`: D1 counts a trigger's writes in `meta.changes`, and the Worker checks that it changed exactly 1 row. So until the API reads `children`, `child` is the live copy, and the migration that switches the API over must copy `child` into `children` again.
 - **Editing by hand** (a fallback; the dashboard does this now): `UPDATE child SET streak = 5, last_day = '2026-10-17', revision = lower(hex(randomblob(16))) WHERE id = 1`. Changing `revision` makes a result being recorded at that moment retry from the edited row rather than overwrite it.
 - **Seeds and the app:** `POST /api/seeds` returns every seed the Worker still counts as unused, including ones the iPad has used offline but not synced yet. The app leaves out seeds in its result queue and the one in progress.
 - **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them in the build step, before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
