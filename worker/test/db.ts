@@ -10,10 +10,10 @@ import { AUD, TEAM, testCerts } from './access-keys'
 export const DEVICE_KEY = 'test-device-key-0123456789abcdef'
 export const OTHER_KEY = 'other-device-key-0123456789abcdef'
 
-/** Every SQL statement in migrations/, in order. */
-export function migrationStatements(): string[] {
+/** Every SQL statement in migrations/, in order, up to and including the file `upTo` (default: all). */
+export function migrationStatements(upTo?: string): string[] {
   return readdirSync('migrations')
-    .filter((f) => f.endsWith('.sql'))
+    .filter((f) => f.endsWith('.sql') && (upTo === undefined || f <= upTo))
     .sort()
     .flatMap((f) =>
       readFileSync(join('migrations', f), 'utf8')
