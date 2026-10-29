@@ -50,6 +50,11 @@ export function formatCalendarDay(day: string): string {
   })
 }
 
+/** "Tuesday, October 27", for the parent's calendar day (the viewer's time zone). */
+export function formatLongDay(date: Date): string {
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+}
+
 /** "Oct 17, 3:05 PM", for when something happened, in the viewer's time zone. */
 export function formatMoment(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {

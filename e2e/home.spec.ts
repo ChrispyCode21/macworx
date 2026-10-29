@@ -128,3 +128,33 @@ test('the streak bonus shows on the first assignment of the day, not the second'
   await expect(page.locator('.home-numbers')).toContainText('152 Macaronis')
   await expect(page.locator('.home-numbers')).toContainText('7 assignments done')
 })
+
+test('Home shows a Parents link that opens the portal with a full page load', async ({ page }) => {
+  await openApp(page, false)
+  // Routes added later answer first, so the portal's reads get real answers.
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    const child = { id: 1, name: 'Child', grade: '', initials: 'C' }
+    const empty = {
+      balance: 0,
+      streak: 0,
+      lastDay: null,
+      completed: 0,
+      results: [],
+      entries: [],
+      devices: [],
+    }
+    return route.fulfill({ json: path === '/api/parent/children' ? { children: [child] } : empty })
+  })
+  const link = page.getByRole('link', { name: 'Parents' })
+  await expect(link).toBeVisible()
+  await expect(link).toHaveAttribute('href', '/parent/overview')
+  // A document request, not a route inside her app, so Cloudflare Access can ask for a sign-in.
+  const documentLoad = page.waitForRequest(
+    (req) => req.isNavigationRequest() && new URL(req.url()).pathname === '/parent/overview',
+  )
+  await link.click()
+  await documentLoad
+  await expect(page).toHaveURL(/\/parent\/overview$/)
+  await expect(page.getByRole('heading', { name: 'A little progress, daily.' })).toBeVisible()
+})

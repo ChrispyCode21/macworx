@@ -6,8 +6,9 @@ import type { ComponentProps } from 'react'
  * - secondary: a quieter action (Done for now, Home)
  * - key: a number pad key
  * - check: the number pad's Check key
+ * - bare: no look of its own, for a control the caller styles (the portal's child switcher and its rows)
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'key' | 'check'
+export type ButtonVariant = 'primary' | 'secondary' | 'key' | 'check' | 'bare'
 
 interface Props extends Omit<ComponentProps<'button'>, 'type' | 'className'> {
   variant?: ButtonVariant

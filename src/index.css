@@ -13,11 +13,6 @@
   --space: 24px;
   --gap: 16px;
   --gap-small: 8px;
-  /* The parent page's type sizes (SPEC §5.3). */
-  --size-body: 0.8rem;
-  --size-label: 0.9rem;
-  --size-heading: 1.1rem;
-  --size-title: 1.4rem;
   --radius: 20px;
   --tap: 56px;
   --tap-large: 88px;
@@ -267,77 +262,334 @@ p {
   min-height: 1.5em;
 }
 
-/* The parent page (SPEC §5.3): a plain, readable page for a phone or computer. */
+/* The Parents link on Home (SPEC §5.3): small and quiet, with a tap area big enough for a finger. */
+.home-parents {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--gap);
+  color: var(--answer-ink);
+  font-size: 1rem;
+  text-decoration: underline;
+}
+
+/* parent portal: start */
+/* The parent portal (SPEC §5.3, docs/DESIGN.md): px only, no shadows, no letter-spacing, weights 400 and 600. */
 .parent {
+  --p-bg: #fff6dc;
+  --p-surface: #ffffff;
+  --p-divider: #efdba5;
+  --p-primary: #f2a516;
+  --p-primary-ink: #3b2a05;
+  --p-hero-muted: #5a3f08;
+  --p-hero-track: #c98a10;
+  --p-hero-fill: #3b2a05;
+  --p-accent-ink: #8a5a00;
+  --p-chip: #fde9b8;
+  --p-warm: #f6dc9e;
+  --p-avatar: #f2c46b;
+  --p-warn-soft: #f6e7cf;
+  --p-warn-ink: #7a4a00;
+  --p-danger-soft: #ffe0d6;
+  --p-danger-ink: #8a3b22;
+  --p-text: #3b2a05;
+  --p-muted: #6b5420;
   box-sizing: border-box;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space);
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  gap: var(--space);
-  font-size: var(--size-body);
+  background: var(--p-bg);
+  color: var(--p-text);
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: 0;
 }
 
-.parent h1 {
+.parent *,
+.parent *::before,
+.parent *::after {
+  box-sizing: border-box;
+}
+
+.parent h1,
+.parent h2,
+.parent h3,
+.parent p {
   margin: 0;
-  font-size: var(--size-title);
+  font-weight: 400;
 }
 
-.parent h2 {
-  margin: 0;
-  font-size: var(--size-heading);
+/* Phone (below 768px): header on top, the child switcher and content, the five tabs fixed at the bottom. */
+.portal-header {
+  order: 0;
+  height: calc(54px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 22px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.parent h3 {
-  margin: 0;
-  font-size: var(--size-label);
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 23px;
+  line-height: normal;
 }
 
-/* The summary strip: four numbers side by side, two by two on a narrow phone. */
+.portal-chip {
+  padding: 4px 9px;
+  border-radius: 100px;
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: normal;
+  text-transform: uppercase;
+}
+
+.portal-side {
+  display: contents;
+}
+
+.portal-brand-side,
+.portal-assurance {
+  display: none;
+}
+
+.portal-switcher {
+  order: 1;
+  margin: 16px 22px 0;
+}
+
+.portal-switcher .button-bare {
+  width: 100%;
+  height: 58px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--p-warm);
+  color: var(--p-text);
+  font: inherit;
+  text-align: left;
+}
+
+.portal-switcher .button-bare svg {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: var(--p-accent-ink);
+}
+
+.portal-switcher ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.portal-switcher li .button-bare {
+  border: 1px solid var(--p-divider);
+  background: var(--p-surface);
+}
+
+.portal-switcher li .button-bare[aria-current='true'] {
+  background: var(--p-chip);
+}
+
+.portal-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100px;
+  background: var(--p-avatar);
+  color: var(--p-text);
+  font-size: 13px;
+  line-height: normal;
+  text-transform: uppercase;
+}
+
+.portal-who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.portal-who-name {
+  font-size: 14px;
+  color: var(--p-text);
+}
+
+.portal-who-sub {
+  font-size: 11px;
+  color: var(--p-muted);
+}
+
+.portal-nav {
+  order: 3;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  padding: 10px 12px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--p-divider);
+  background: var(--p-surface);
+}
+
+.portal-nav a {
+  flex: 1;
+  height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 12px;
+  background: var(--p-surface);
+  color: var(--p-muted);
+  font-size: 10px;
+  line-height: normal;
+  text-decoration: none;
+}
+
+.portal-nav a[aria-current='page'] {
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+}
+
+.portal-nav a:focus-visible {
+  outline: 2px solid var(--p-accent-ink);
+  outline-offset: 2px;
+}
+
+.portal-nav-icon {
+  display: flex;
+}
+
+.portal-nav-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.portal-content {
+  order: 2;
+  flex: 1;
+  min-width: 0;
+  /* Clear the fixed tabs: their height (70px) and 24px of room. */
+  padding: 22px 22px calc(94px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.portal-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.portal-eyebrow {
+  display: none;
+}
+
+.portal-heading h1 {
+  font-size: 29px;
+  line-height: 1.45;
+  color: var(--p-text);
+  outline: none;
+}
+
+.portal-sub {
+  font-size: 13px;
+  color: var(--p-muted);
+}
+
+.portal-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.portal-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--p-muted);
+}
+
+/* The moved sections, as panels (docs/DESIGN.md §7). */
+.parent-problem {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--p-warn-soft);
+  color: var(--p-warn-ink);
+  font-size: 12px;
+}
+
 .parent-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   margin: 0;
 }
 
 .parent-summary > div {
-  padding: var(--gap);
-  border-radius: var(--radius);
-  background: var(--soft);
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--p-chip);
 }
 
 .parent-summary dt {
-  opacity: 0.8;
+  font-size: 11px;
+  color: var(--p-muted);
 }
 
 .parent-summary dd {
-  margin: var(--gap-small) 0 0;
-  font-size: var(--size-title);
-  font-weight: 700;
+  margin: 6px 0 0;
+  font-size: 26px;
+  line-height: normal;
   font-variant-numeric: tabular-nums;
 }
 
-/* One column on a phone; Results beside iPads and the activity log on a wide screen. */
-.parent-columns,
-.parent-side {
+.parent-summary .parent-pending {
+  font-size: 14px;
+}
+
+.parent-section {
   display: flex;
   flex-direction: column;
-  gap: var(--space);
+  align-items: stretch;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--p-divider);
+  border-radius: 20px;
+  background: var(--p-surface);
 }
 
-@media (min-width: 900px) {
-  .parent-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-  }
+.parent-section h2 {
+  font-size: 17px;
+  line-height: 1.45;
 }
 
-.parent-summary .parent-pending {
-  font-size: var(--size-body);
-  font-weight: 400;
+.parent-section h3 {
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .parent-table-wrap {
@@ -348,44 +600,46 @@ p {
 .parent-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 12px;
 }
 
 .parent-table th,
 .parent-table td {
-  padding: var(--gap-small);
+  padding: 8px;
   text-align: left;
-  border-bottom: 1px solid var(--soft);
+  border-bottom: 1px solid var(--p-divider);
 }
 
 .parent-table th {
-  background: var(--soft);
+  background: var(--p-chip);
+  color: var(--p-muted);
+  font-weight: 600;
 }
 
-.parent-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--gap);
-}
-
-.parent-problem,
 .parent-confirm,
 .parent-code {
-  padding: var(--gap);
-  border-radius: var(--radius);
-  background: var(--soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--p-chip);
 }
 
 .parent-code-digits {
-  font-size: 2.4rem;
+  font-size: 58px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.1em;
+  line-height: normal;
 }
 
 .parent-choice {
   display: flex;
-  gap: var(--gap);
+  gap: 12px;
+}
+
+.parent-choice .button {
+  flex: 1;
 }
 
 .parent-devices {
@@ -399,15 +653,244 @@ p {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--gap);
-  padding: var(--gap) 0;
-  border-bottom: 1px solid var(--soft);
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--p-divider);
 }
 
 .parent-device-name {
-  font-weight: 700;
+  font-weight: 600;
   flex: 1;
 }
+
+/* Buttons and boxes at the parent size (48px tall); the child app's stay as they are. */
+.parent .button-primary,
+.parent .button-secondary {
+  height: 48px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.parent .button-primary {
+  background: var(--p-primary);
+  color: var(--p-primary-ink);
+}
+
+.parent .button-secondary {
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+}
+
+.parent .button:focus-visible,
+.parent .text-field-input:focus-visible {
+  outline: 2px solid var(--p-accent-ink);
+  outline-offset: 2px;
+}
+
+.parent .text-field {
+  gap: 7px;
+}
+
+.parent .text-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--p-muted);
+}
+
+.parent .text-field-input {
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid var(--p-divider);
+  border-radius: 12px;
+  background: var(--p-bg);
+  color: var(--p-text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.parent .text-field-input:focus-visible {
+  border-color: var(--p-accent-ink);
+}
+
+.parent .text-field-hint {
+  font-size: 11px;
+  color: var(--p-muted);
+  opacity: 1;
+}
+
+/* Wide (768px and up): a side bar replaces the header and the tabs. The 1024px two-column grids belong to the screens. */
+@media (min-width: 768px) {
+  .parent {
+    flex-direction: row;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .portal-header,
+  .portal-note {
+    display: none;
+  }
+
+  .portal-side {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 28px;
+    width: 216px;
+    height: 100dvh;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    padding: 26px 16px 24px;
+    border-right: 1px solid var(--p-divider);
+    background: var(--p-surface);
+  }
+
+  .portal-brand-side {
+    display: flex;
+    padding-left: 8px;
+    font-size: 25px;
+  }
+
+  .portal-switcher {
+    order: 0;
+    margin: 0;
+  }
+
+  .portal-switcher .button-bare {
+    height: auto;
+    min-height: 76px;
+    padding: 10px;
+    gap: 7px;
+  }
+
+  .portal-switcher .button-bare svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .portal-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .portal-who {
+    gap: 3px;
+  }
+
+  .portal-who-name {
+    font-size: 13px;
+  }
+
+  .portal-who-sub {
+    font-size: 10px;
+  }
+
+  .portal-nav {
+    order: 0;
+    position: static;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    border-top: 0;
+    background: none;
+  }
+
+  .portal-nav a {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+
+  .portal-nav a[aria-current='page'] {
+    font-weight: 600;
+  }
+
+  .portal-nav-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .portal-assurance {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: auto;
+    padding: 0 8px;
+  }
+
+  .portal-assurance .portal-chip {
+    padding: 5px 10px;
+  }
+
+  .portal-assurance p {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 11px;
+    color: var(--p-muted);
+  }
+
+  .portal-assurance svg {
+    flex-shrink: 0;
+  }
+
+  .portal-content {
+    order: 0;
+    padding: 24px 32px;
+    gap: 24px;
+  }
+
+  .portal-heading {
+    gap: 6px;
+  }
+
+  .portal-eyebrow {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--p-accent-ink);
+  }
+
+  .portal-heading h1 {
+    font-size: 30px;
+    line-height: 1.25;
+  }
+
+  .parent-section {
+    padding: 22px;
+  }
+
+  .parent-section h2 {
+    font-size: 18px;
+    line-height: normal;
+    min-height: 28px;
+  }
+
+  .parent-summary dd {
+    font-size: 30px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .parent-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+/* parent portal: end */
 
 .text-field {
   display: flex;
