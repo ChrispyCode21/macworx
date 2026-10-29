@@ -73,7 +73,7 @@ describe('pairing (SPEC §6.9)', () => {
     const { code } = await makeCode()
     for (let i = 0; i < 5; i++) expect((await pair(wrong(code))).status).toBe(400)
     expect((await pair(code)).status).toBe(400)
-    expect(await deviceCount()).toBe(2) // the two test devices only
+    expect(await deviceCount()).toBe(3) // the three test devices only
   })
 
   it('four wrong tries, then the right one on the fifth → paired', async () => {

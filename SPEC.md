@@ -385,17 +385,20 @@ The Worker's child API (every route needs the iPad's device key):
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
 - `POST /api/results`: records a result (§6.8) and returns it with the new state.
 
-The parent API (every route needs a valid Access token, §6.9). Routes that read or change a child's data take that child's id, and a parent can list, add and rename children. Child routes act for the device's child. The routes below are listed by what they do for one child.
+Child routes read and write only the device's child: the numbers are hers, and the seeds and results are the device's.
 
-- `GET /api/parent/devices`: the paired and unpaired devices.
-- `DELETE /api/parent/devices/:id`: unpairs a device (logged).
-- `POST /api/parent/pairing-code { name }`: a new pairing code for a device with that name (logged).
+The parent API (every route needs a valid Access token, §6.9). A parent can list, add and rename children. Every parent route that reads or changes a child's data takes that child's id as the `child` query parameter, for example `GET /api/parent/summary?child=2` or `POST /api/parent/balance?child=2`. A missing or non-numeric `child` is 400 `bad_child`; a child that doesn't exist is 404 `unknown_child`; nothing is read or changed. A device, result or log entry that belongs to another child is 404 (`unknown_device`, `unknown_result`) and is never shown or changed. The routes below are listed by what they do for the chosen child.
+
+- `GET /api/parent/children`: the household's children in the order they were added: id, name, grade and initials. It takes no `child`.
+- `GET /api/parent/devices`: the chosen child's paired and unpaired devices.
+- `DELETE /api/parent/devices/:id`: unpairs a device of the chosen child (logged).
+- `POST /api/parent/pairing-code { name }`: a new pairing code for a device with that name; the device that uses it belongs to the chosen child (logged).
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
 - `GET /api/parent/summary`: balance, streak, last counted day and completed assignments.
 - `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade and total paid.
 - `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
 - `GET /api/parent/results/:id`: one recorded result with its problems: day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
-- `GET /api/parent/log`: the latest 50 admin log entries, newest first: when, which parent, the action and its details.
+- `GET /api/parent/log`: the latest 50 admin log entries for the chosen child, newest first: when, which parent, the action and its details.
 
 Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
 

@@ -65,7 +65,7 @@ export async function handle(
     if (!route) return error(404, 'not_found')
     const device = await deviceFor(request, env.DB)
     if (device === null) return error(401, 'unauthorized')
-    return await route({ request, url, db: env.DB, device, now })
+    return await route({ request, url, db: env.DB, device: device.id, childId: device.childId, now })
   } catch (e) {
     // Every error body is { error: code }, even an unexpected one (worker/http.ts).
     console.error(e)

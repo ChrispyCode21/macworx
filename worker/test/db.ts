@@ -9,6 +9,8 @@ import { AUD, TEAM, testCerts } from './access-keys'
 
 export const DEVICE_KEY = 'test-device-key-0123456789abcdef'
 export const OTHER_KEY = 'other-device-key-0123456789abcdef'
+/** A device of the second child. */
+export const CHILD2_KEY = 'child2-device-key-0123456789abcdef'
 
 /** Every SQL statement in migrations/, in order, up to and including the file `upTo` (default: all). */
 export function migrationStatements(upTo?: string): string[] {
@@ -47,13 +49,21 @@ export async function createTestDb({ access = true }: { access?: boolean } = {})
   )
   const db = (await mf.getD1Database('DB')) as unknown as D1Database
   for (const sql of migrationStatements()) await db.prepare(sql).run()
-  for (const [key, label] of [
-    [DEVICE_KEY, 'her iPad'],
-    [OTHER_KEY, 'another iPad'],
-  ])
+  // Child 1 is the seeded child (two devices); child 2 is a second child with one device.
+  await db
+    .prepare(
+      `INSERT INTO children (id, name, grade, initials, created_at, balance, streak, last_day, completed, revision)
+       VALUES (2, 'Second', '', 'S', '2026-10-17T00:00:00Z', 0, 0, NULL, 0, 'second-child-revision')`,
+    )
+    .run()
+  for (const [key, label, childId] of [
+    [DEVICE_KEY, 'her iPad', 1],
+    [OTHER_KEY, 'another iPad', 1],
+    [CHILD2_KEY, 'second iPad', 2],
+  ] as const)
     await db
-      .prepare('INSERT INTO devices (key_hash, label, created_at) VALUES (?, ?, ?)')
-      .bind(await sha256Hex(key), label, '2026-10-17T00:00:00Z')
+      .prepare('INSERT INTO devices (key_hash, label, created_at, child_id) VALUES (?, ?, ?, ?)')
+      .bind(await sha256Hex(key), label, '2026-10-17T00:00:00Z', childId)
       .run()
 
   const env: Env = {
@@ -74,8 +84,19 @@ export async function createTestDb({ access = true }: { access?: boolean } = {})
       now = new Date('2026-10-17T12:00:00Z'),
       accessToken,
       ip = '203.0.113.7',
-    }: { body?: unknown; key?: string | null; now?: Date; accessToken?: string; ip?: string } = {},
+      child = 1,
+    }: {
+      body?: unknown
+      key?: string | null
+      now?: Date
+      accessToken?: string
+      ip?: string
+      /** The chosen child of a parent route (`?child=`), child 1 unless given; null sends none. */
+      child?: number | null
+    } = {},
   ) {
+    if (path.startsWith('/api/parent/') && path !== '/api/parent/children' && child !== null)
+      path += `${path.includes('?') ? '&' : '?'}child=${child}`
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (key) headers.Authorization = `Bearer ${key}`
     if (accessToken) headers['Cf-Access-Jwt-Assertion'] = accessToken
