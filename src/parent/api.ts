@@ -85,28 +85,58 @@ export const LIST_LIMIT = 50
 /** The longest note the Worker accepts on an adjustment (SPEC §5.3). */
 export const MAX_NOTE = 200
 
-export const getSummary = () => parentCall<Summary>('/api/parent/summary')
+export interface Child {
+  id: number
+  name: string
+  grade: string
+  initials: string
+}
 
-export const listResults = () => parentCall<{ results: ResultRow[] }>('/api/parent/results')
+/** The child every call below is for (SPEC §8: the `child` query parameter). */
+let selected: number | null = null
 
-export const listLog = () => parentCall<{ entries: LogEntry[] }>('/api/parent/log')
+export const chooseChild = (id: number | null) => {
+  selected = id
+}
 
-export const listDevices = () => parentCall<{ devices: Device[] }>('/api/parent/devices')
+export const getChildren = () => parentCall<{ children: Child[] }>('/api/parent/children')
 
-export const unpair = (id: number) =>
-  parentCall<{ ok: true }>(`/api/parent/devices/${id}`, { method: 'DELETE' })
+/**
+ * A call for the selected child. With none chosen yet, the first child is chosen (SPEC §5.3); a failure to
+ * list the children, or a household with none, comes back as the call's own failure.
+ */
+async function scoped<T>(path: string, init?: RequestInit): Promise<ParentResult<T>> {
+  if (selected === null) {
+    const found = await getChildren()
+    if (!found.ok) return found
+    const [first] = found.body.children
+    if (!first) return { ok: false, status: 404, error: 'no_child' }
+    selected = first.id
+  }
+  return parentCall<T>(`${path}?child=${selected}`, init)
+}
+
+export const getSummary = () => scoped<Summary>('/api/parent/summary')
+
+export const listResults = () => scoped<{ results: ResultRow[] }>('/api/parent/results')
+
+export const listLog = () => scoped<{ entries: LogEntry[] }>('/api/parent/log')
+
+export const listDevices = () => scoped<{ devices: Device[] }>('/api/parent/devices')
+
+export const unpair = (id: number) => scoped<{ ok: true }>(`/api/parent/devices/${id}`, { method: 'DELETE' })
 
 export const setStreak = (streak: number, lastDay: string | null) =>
-  parentCall<Summary>('/api/parent/streak', { method: 'POST', body: JSON.stringify({ streak, lastDay }) })
+  scoped<Summary>('/api/parent/streak', { method: 'POST', body: JSON.stringify({ streak, lastDay }) })
 
 export const adjustBalance = (amount: number, note: string) =>
-  parentCall<{ balance: number }>('/api/parent/balance', {
+  scoped<{ balance: number }>('/api/parent/balance', {
     method: 'POST',
     body: JSON.stringify({ amount, note }),
   })
 
 export const makeCode = (name: string) =>
-  parentCall<{ code: string; expiresAt: string }>('/api/parent/pairing-code', {
+  scoped<{ code: string; expiresAt: string }>('/api/parent/pairing-code', {
     method: 'POST',
     body: JSON.stringify({ name }),
   })

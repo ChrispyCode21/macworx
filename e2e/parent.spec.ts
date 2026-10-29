@@ -15,6 +15,7 @@ const summary = { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 }
 /** The Worker's answer to each read view (SPEC §8); `views` replaces any of them. */
 function readViews(path: string, devices: Device[], views: Record<string, unknown> = {}) {
   const answers: Record<string, unknown> = {
+    '/api/parent/children': { children: [{ id: 1, name: 'Child', grade: '', initials: 'C' }] },
     '/api/parent/summary': summary,
     '/api/parent/results': { results: [] },
     '/api/parent/log': { entries: [] },
@@ -81,6 +82,8 @@ test('asks for a name before making a code', async ({ page }) => {
   await page.getByRole('button', { name: 'Make a code' }).click()
   await expect(page.getByText('Give the iPad a name of up to 40 characters.')).toBeVisible()
   expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+  // The page asks for the children first, then reads the first child's numbers.
+  expect(calls.slice(0, 2)).toEqual(['GET /api/parent/children', 'GET /api/parent/summary'])
 })
 
 test('unpairs an iPad after the warning, and keeps it when asked', async ({ page }) => {
