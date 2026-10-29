@@ -69,6 +69,13 @@ describe('migration 0005', () => {
     })
   })
 
+  it('leaves children 1 as it was when there is no child row', async () => {
+    const before = await rows('SELECT * FROM children WHERE id = 1')
+    await db.prepare('DELETE FROM child').run()
+    await migrate()
+    expect(await rows('SELECT * FROM children WHERE id = 1')).toEqual(before)
+  })
+
   it('leaves child as it was', async () => {
     await db.prepare("UPDATE child SET balance = 55, revision = 'r9' WHERE id = 1").run()
     await migrate()

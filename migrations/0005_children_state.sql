@@ -8,4 +8,4 @@ UPDATE children SET
   last_day = (SELECT last_day FROM child WHERE id = 1),
   completed = (SELECT completed FROM child WHERE id = 1),
   revision = (SELECT revision FROM child WHERE id = 1)
-WHERE id = 1;
+WHERE id = 1 AND EXISTS (SELECT 1 FROM child WHERE id = 1);
