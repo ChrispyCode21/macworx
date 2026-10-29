@@ -59,7 +59,10 @@ export function previewPairCode(env: {
   return /^\d{6}$/.test(env.PREVIEW_PAIR_CODE ?? '') ? env.PREVIEW_PAIR_CODE : undefined
 }
 
-/** POST /api/parent/pairing-code { name } → { code, expiresAt }. The device that uses it belongs to the chosen child. Voids any earlier unused code, for any child. */
+/**
+ * POST /api/parent/pairing-code { name } → { code, expiresAt }. The device that uses it belongs
+ * to the chosen child. Voids any earlier unused code, for any child.
+ */
 export async function postPairingCode(req: ParentRequest): Promise<Response> {
   const { request, db, now } = req
   const childId = await childOf(req)
