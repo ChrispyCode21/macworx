@@ -24,6 +24,7 @@ import {
   minutesLeft,
 } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
+import { Shop } from './Shop'
 
 const MAX_NAME = 40
 const MAX_STREAK = 3650
@@ -95,7 +96,7 @@ function streakFields(
  * split across the tabs. All state lives here, so switching tabs never refetches or clears a half-typed form;
  * the Portal remounts it when another child is chosen.
  */
-export function ParentPage({ tab }: { tab: Tab }) {
+export function ParentPage({ tab, childName }: { tab: Tab; childName: string | null }) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [results, setResults] = useState<ResultRow[] | null>(null)
   const [log, setLog] = useState<LogEntry[] | null>(null)
@@ -243,6 +244,10 @@ export function ParentPage({ tab }: { tab: Tab }) {
         <p className="parent-problem" role="alert">
           {problem}
         </p>
+      )}
+
+      {tab === 'shop' && (
+        <Shop name={childName} balance={summary?.balance ?? null} problem={problem !== null} />
       )}
 
       {tab === 'overview' && (

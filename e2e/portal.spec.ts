@@ -50,8 +50,39 @@ test('every tab opens directly, with its title and one current link', async ({ p
     await expect(current(page)).toHaveText(tab.label)
     await expect(nav(page).getByRole('link')).toHaveCount(5)
   }
-  // Shop has no screen of its own yet: only the shell.
-  await expect(page.locator('.parent-section')).toHaveCount(0)
+  // The last tab, Shop, has its screen.
+  await expect(page.locator('.shop')).toBeVisible()
+})
+
+test('the Shop screen is read-only: rewards, a disabled editor and an empty Last redeemed', async ({
+  page,
+}) => {
+  await portalApi(page)
+  await page.goto('/parent/shop')
+  const shop = page.locator('.shop')
+  await expect(shop.getByText('Ada has 41 Macaronis')).toBeVisible()
+  await expect(shop.getByText('1 reward within reach.')).toBeVisible()
+  await expect(shop.getByText('4 active')).toBeVisible()
+  await expect(shop.getByText('30 Macaronis · Within reach')).toBeVisible()
+  await expect(shop.getByText('75 Macaronis · 34 more to go')).toBeVisible()
+  await expect(shop.getByText('300 Macaronis · 259 more to go')).toBeVisible()
+  await expect(shop.getByText('10,000 Macaronis · 9,959 more to go')).toBeVisible()
+  for (const name of ['Ice Cream', 'Pet Store', 'Camping', 'Puppy'])
+    await expect(shop.locator('.shop-name', { hasText: name })).toBeVisible()
+
+  await expect(shop.getByText('Editing rewards is coming soon.')).toBeVisible()
+  await expect(shop.getByText('Read-only')).toBeVisible()
+  await expect(shop.getByText('No rewards redeemed yet.')).toBeVisible()
+
+  const controls = shop.locator('button, input')
+  expect(await controls.count()).toBeGreaterThanOrEqual(10)
+  for (const control of await controls.all()) await expect(control).toBeDisabled()
+
+  // At 1024px and wider the editor sits to the right of the rewards list; below, under it.
+  const list = await shop.locator('.shop-rewards').boundingBox()
+  const editor = await shop.locator('.shop-editor').boundingBox()
+  if (page.viewportSize()!.width >= 1024) expect(editor!.x).toBeGreaterThan(list!.x + list!.width - 1)
+  else expect(editor!.y).toBeGreaterThan(list!.y + list!.height - 1)
 })
 
 test('/parent and unknown addresses show Overview and keep their address', async ({ page }) => {

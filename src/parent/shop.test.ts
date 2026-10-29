@@ -28,7 +28,12 @@ describe('reachOf', () => {
   })
 
   it('keeps the rewards in config order', () => {
-    expect(reachOf(0).rewards.map((r) => r.reward.name)).toEqual(['Ice Cream', 'Pet Store', 'Camping', 'Puppy'])
+    expect(reachOf(0).rewards.map((r) => r.reward.name)).toEqual([
+      'Ice Cream',
+      'Pet Store',
+      'Camping',
+      'Puppy',
+    ])
   })
 
   it('reaches nothing and has no count while the balance is unknown', () => {
