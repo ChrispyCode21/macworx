@@ -35,7 +35,15 @@ const portal = css.slice(css.indexOf(START), css.indexOf(END))
 
 describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
   it('is delimited by its markers', () => {
+    expect(css.indexOf(START)).toBeGreaterThanOrEqual(0)
+    expect(css.indexOf(END)).toBeGreaterThan(css.indexOf(START))
     expect(portal.length).toBeGreaterThan(START.length)
+  })
+
+  it('uses font weights 400 and 600 only', () => {
+    const weights = [...portal.matchAll(/font-weight:\s*(\d+)/g)].map((m) => m[1])
+    expect(weights.length).toBeGreaterThan(0)
+    for (const weight of weights) expect(['400', '600']).toContain(weight)
   })
 
   it('defines every colour token with its exact value', () => {
