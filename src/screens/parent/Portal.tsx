@@ -99,6 +99,8 @@ export function Portal() {
     let live = true
     void getChildren().then((result) => {
       if (!live) return
+      // The page is reloading for Access to sign in again: show nothing, not a refusal in the meantime.
+      if (!result.ok && result.error === 'reloading') return
       const picked = result.ok ? pickChild(result.body.children, readSelectedChild()) : null
       if (!result.ok || !picked) return setLoad({ status: 'unavailable' })
       // Before the screens mount, so their first reads are for this child.

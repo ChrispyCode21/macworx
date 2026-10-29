@@ -218,6 +218,30 @@ test('Escape closes the child list', async ({ page }) => {
   await expect(switcher).toHaveAttribute('aria-expanded', 'false')
 })
 
+test('an Access reload on the first children call never flashes the sign-in alert', async ({ page }) => {
+  // Records whether an alert ever shows, on any load of the page.
+  await page.addInitScript(() => {
+    new MutationObserver(() => {
+      if (document.querySelector('[role="alert"]')) sessionStorage.setItem('test.alertSeen', '1')
+    }).observe(document, { childList: true, subtree: true })
+  })
+  const calls = await portalApi(page)
+  let first = true
+  await page.route('/api/parent/children', (route) => {
+    if (!first) return route.fallback()
+    first = false
+    // Like an Access sign-in page: not JSON.
+    return route.fulfill({ status: 200, contentType: 'text/html', body: '<html>Sign in</html>' })
+  })
+  let loads = 0
+  page.on('load', () => loads++)
+  await page.goto('/parent/overview')
+  await expect.poll(() => loads).toBe(2)
+  await expect(page.getByText("Ada's overview")).toBeVisible()
+  expect(await page.evaluate(() => sessionStorage.getItem('test.alertSeen'))).toBeNull()
+  expect(reads(calls, 'children')).toHaveLength(1)
+})
+
 test('a refused Worker shows the message on every tab, never a blank page or Loading', async ({ page }) => {
   await page.route('/api/parent/**', (route) =>
     route.fulfill({ status: 401, json: { error: 'unauthorized' } }),
