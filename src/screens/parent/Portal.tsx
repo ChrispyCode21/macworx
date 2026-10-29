@@ -221,8 +221,10 @@ export function Portal() {
           {sub && <p className="portal-sub">{sub}</p>}
         </div>
         <main className="portal-main">
-          {load.status === 'ready' && <ParentPage key={load.selected.id} tab={tab} />}
-          {load.status === 'unavailable' && <ParentPage key="none" tab={tab} />}
+          {load.status === 'ready' && (
+            <ParentPage key={load.selected.id} tab={tab} childName={load.selected.name} />
+          )}
+          {load.status === 'unavailable' && <ParentPage key="none" tab={tab} childName={null} />}
         </main>
         {tab === 'overview' && (
           <p className="portal-note">

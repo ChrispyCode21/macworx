@@ -104,7 +104,7 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 - Her paired devices, each with its name, when it last synced (the time of the latest result from it, or "No results yet"), its status and browser line (sample data until the app has a source), and Unpair (§6.9).
 - **Pair a device** for this child (§5.4, §6.9).
 
-**Shop** shows the rewards of §6.7 as in her shop (icon, name, price), read-only: the buy buttons are disabled. **Last redeemed** lists purchases (§5.2); with none it shows an empty state. Prices are fixed (§6.7).
+**Shop** shows the rewards of §6.7 as in her shop (icon, name, price), read-only: every button and field is disabled. A summary says how many of them are within reach of her balance (a price at most her balance). Each reward says "Within reach" or how many Macaronis more it needs. An edit panel for the first reward is shown with every control disabled and the note "Editing rewards is coming soon." **Last redeemed** lists purchases (§5.2); with none it shows "No rewards redeemed yet." Prices are fixed (§6.7).
 
 A parent can:
 
