@@ -130,6 +130,8 @@ export function ParentPage({ tab }: { tab: Tab }) {
 
   // One call at a time, so a run-out Access sign-in reloads the page once, not once per call.
   const refresh = async () => {
+    // A replaced page sends no more reads, even when a save it started finishes after the switch.
+    if (!live.current) return
     const summaryResult = await getSummary()
     if (!live.current) return
     if (!summaryResult.ok) return setProblem(failure(summaryResult))
@@ -171,6 +173,7 @@ export function ParentPage({ tab }: { tab: Tab }) {
     // One request at a time: a second code voids the first, so a quick double click must not race.
     setMaking(true)
     const result = await makeCode(trimmed)
+    if (!live.current) return
     setMaking(false)
     if (!result.ok) return setProblem(failure(result))
     setNow(new Date())
@@ -181,6 +184,7 @@ export function ParentPage({ tab }: { tab: Tab }) {
     setConfirming(null)
     setProblem(null)
     const result = await unpair(device.id)
+    if (!live.current) return
     if (!result.ok) return setProblem(failure(result))
     await refresh()
   }
@@ -193,6 +197,7 @@ export function ParentPage({ tab }: { tab: Tab }) {
     // One request at a time, so a quick double click saves once.
     setSavingStreak(true)
     const result = await setStreak(fields.streak, fields.lastDay)
+    if (!live.current) return
     setSavingStreak(false)
     if (!result.ok) return setProblem(failure(result))
     fillStreakForm(result.body)
@@ -210,6 +215,7 @@ export function ParentPage({ tab }: { tab: Tab }) {
     // One request at a time, so a quick double click can't save the same change twice.
     setSaving(true)
     const result = await adjustBalance(removing ? -count : count, trimmed)
+    if (!live.current) return
     setSaving(false)
     if (result.ok) {
       setAmount('')
@@ -219,6 +225,7 @@ export function ParentPage({ tab }: { tab: Tab }) {
     }
     if (result.error === 'overdraw') {
       const latest = await getSummary()
+      if (!live.current) return
       return setAdjustProblem(latest.ok ? COPY.parentOverdraw(latest.body.balance) : failure(latest))
     }
     setAdjustProblem(failure(result))

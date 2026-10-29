@@ -208,6 +208,30 @@ test('with storage blocked, the portal still works', async ({ page }) => {
   await expect(page.getByText("Bo's overview")).toBeVisible()
 })
 
+test('a save that finishes after a child switch sends no more reads', async ({ page }) => {
+  const calls = await portalApi(page)
+  let release: () => void = () => {}
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await page.route('/api/parent/adjust*', async (route) => {
+    await held
+    return route.fulfill({ json: { balance: 42 } })
+  })
+  await page.goto('/parent/points')
+  await expect(page.getByLabel('How many Macaronis')).toBeVisible()
+  await page.getByLabel('How many Macaronis').fill('1')
+  await page.getByLabel('Note').fill('A note')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+
+  await page.locator('.portal-switcher > button').click()
+  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /Bo/ }).click()
+  await expect.poll(() => reads(calls, 'log').length).toBe(2)
+  await page.waitForTimeout(200)
+  calls.length = 0
+  release()
+  await page.waitForTimeout(300)
+  expect(calls.filter((c) => !c.startsWith('/api/parent/adjust'))).toEqual([])
+})
+
 test('Escape closes the child list', async ({ page }) => {
   await portalApi(page)
   await page.goto('/parent/overview')
