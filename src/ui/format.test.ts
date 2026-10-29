@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { makeProblem } from '../engine'
-import { formatCalendarDay, formatEquation, formatMoment, formatNumber, operatorSymbol } from './format'
+import {
+  formatCalendarDay,
+  formatEquation,
+  formatLongDay,
+  formatMoment,
+  formatNumber,
+  operatorSymbol,
+} from './format'
 
 describe('display formatting', () => {
   it('uses thousands separators', () => {
@@ -21,6 +28,10 @@ describe('display formatting', () => {
   it('writes a calendar day without a time zone moving it', () => {
     expect(formatCalendarDay('2026-10-17')).toBe('Oct 17')
     expect(formatCalendarDay('2026-01-01')).toBe('Jan 1')
+  })
+
+  it('writes a long day for the portal heading', () => {
+    expect(formatLongDay(new Date(2026, 9, 27))).toBe('Tuesday, October 27')
   })
 
   it('writes a moment with its time', () => {

@@ -31,6 +31,10 @@ export function Home({ onStart, onPair, noSeeds, numbers }: Props) {
           {COPY.pairThisIpad}
         </Button>
       )}
+      {/* A plain link, so it is a full page load and Cloudflare Access can ask for a sign-in (SPEC §5.3). */}
+      <a className="home-parents" href="/parent/overview">
+        {COPY.parentsLink}
+      </a>
     </main>
   )
 }

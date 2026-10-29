@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pair } from './screens/Pair'
-import { ParentPage } from './screens/parent/ParentPage'
+import { Portal } from './screens/parent/Portal'
 import { payout } from './engine'
 import { canPair, getDeviceKey, getQueue, getWorkerState, requestPersistence } from './storage/device'
 import { homeNumbers, nextResult, type HomeNumbers } from './sync/projection'
@@ -20,10 +20,10 @@ function practiceSeed(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0]
 }
 
-/** /parent is a full page load (behind Cloudflare Access), never a route inside her app (SPEC §5.3). */
+/** /parent and its tabs are a full page load (behind Cloudflare Access), never a route inside her app (SPEC §5.3). */
 export function App() {
   return location.pathname === '/parent' || location.pathname.startsWith('/parent/') ? (
-    <ParentPage />
+    <Portal />
   ) : (
     <ChildApp />
   )

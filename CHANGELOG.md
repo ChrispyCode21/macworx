@@ -8,13 +8,14 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Parent portal shell:** `/parent` is now five tabs (Overview, Macaronis, Streak, Devices, Shop) at `/parent/overview`, `/parent/points`, `/parent/streak`, `/parent/devices` and `/parent/shop`, with a header, a child switcher, tabs along the bottom on a phone and a side bar from 768px wide, in the macworx colors. Home has a **Parents** link. Today's sections moved into the tabs unchanged; the Shop tab is empty until its screen arrives.
 - **Set or restore her streak (parents):** an Adjustments section on `/parent` with a streak form. It saves her streak (0 to 3,650) and last counted day, doesn't change her Macaronis or pay a bonus, and shows in the Activity log.
 - **Add or remove Macaronis (parents):** an Adjustments section on `/parent` with Add or Remove, a number, a note and Save. Her balance can't go below 0; a removal that's too big is refused in plain words. Every change appears in the Activity log (for example "Added 20 Macaronis: Homework grades"). Her Home shows the new balance after her next sync.
 
 ### Changed
 
 - **Behind the scenes: each child's numbers are kept separate:** the parent and child sides now keep each child's numbers, results, devices and activity apart, and a pairing code is made for a chosen child (no visible change yet).
-- **Parent page is now a dashboard:** at `/parent`, a summary strip with her Macaroni balance, streak, last counted day and assignments done, then her Results (date, how many right, grade, Macaronis earned), the iPads, and an Activity log of changes made on the page. It is stacked on a phone and in two columns on a wide screen. Pairing and unpairing work as before.
+- **Parent page is now a dashboard:** at `/parent`, a summary strip with her Macaroni balance, streak, last counted day and assignments done, then her Results (date, how many right, grade, Macaronis earned), the iPads, and an Activity log of changes made on the page. Its sections now live in the portal's tabs. Pairing and unpairing work as before.
 
 ## [0.3.0] - 2026-10-22
 

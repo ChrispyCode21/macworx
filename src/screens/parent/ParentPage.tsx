@@ -13,6 +13,7 @@ import {
   unpair,
 } from '../../parent/api'
 import type { Device, LogEntry, ParentResult, ResultRow, Summary } from '../../parent/api'
+import type { Tab } from '../../parent/route'
 import { Button } from '../../ui/Button'
 import {
   formatCalendarDay,
@@ -89,8 +90,12 @@ function streakFields(
   return { streak, lastDay: dayText }
 }
 
-/** The parent dashboard at /parent (SPEC §5.3): her numbers, results, iPads and the activity log. */
-export function ParentPage() {
+/**
+ * The parent portal's screen contents (SPEC §5.3): her numbers, results, iPads, adjustments and activity log,
+ * split across the tabs. All state lives here, so switching tabs never refetches or clears a half-typed form;
+ * the Portal remounts it when another child is chosen.
+ */
+export function ParentPage({ tab }: { tab: Tab }) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [results, setResults] = useState<ResultRow[] | null>(null)
   const [log, setLog] = useState<LogEntry[] | null>(null)
@@ -120,15 +125,24 @@ export function ParentPage() {
   const [saved, setSaved] = useState<number | null>(null)
   const [adjustProblem, setAdjustProblem] = useState<string | null>(null)
 
+  // False once the portal has replaced this page (another child was chosen): the reads in flight stop.
+  const live = useRef(false)
+
   // One call at a time, so a run-out Access sign-in reloads the page once, not once per call.
   const refresh = async () => {
+    // A replaced page sends no more reads, even when a save it started finishes after the switch.
+    if (!live.current) return
     const summaryResult = await getSummary()
+    if (!live.current) return
     if (!summaryResult.ok) return setProblem(failure(summaryResult))
     const resultsResult = await listResults()
+    if (!live.current) return
     if (!resultsResult.ok) return setProblem(failure(resultsResult))
     const devicesResult = await listDevices()
+    if (!live.current) return
     if (!devicesResult.ok) return setProblem(failure(devicesResult))
     const logResult = await listLog()
+    if (!live.current) return
     if (!logResult.ok) return setProblem(failure(logResult))
     setSummary(summaryResult.body)
     if (!prefilled.current) fillStreakForm(summaryResult.body)
@@ -138,7 +152,11 @@ export function ParentPage() {
     setProblem(null)
   }
   useEffect(() => {
+    live.current = true
     void refresh()
+    return () => {
+      live.current = false
+    }
   }, [])
 
   // The code card counts down; check every 15 seconds.
@@ -155,6 +173,7 @@ export function ParentPage() {
     // One request at a time: a second code voids the first, so a quick double click must not race.
     setMaking(true)
     const result = await makeCode(trimmed)
+    if (!live.current) return
     setMaking(false)
     if (!result.ok) return setProblem(failure(result))
     setNow(new Date())
@@ -165,6 +184,7 @@ export function ParentPage() {
     setConfirming(null)
     setProblem(null)
     const result = await unpair(device.id)
+    if (!live.current) return
     if (!result.ok) return setProblem(failure(result))
     await refresh()
   }
@@ -177,6 +197,7 @@ export function ParentPage() {
     // One request at a time, so a quick double click saves once.
     setSavingStreak(true)
     const result = await setStreak(fields.streak, fields.lastDay)
+    if (!live.current) return
     setSavingStreak(false)
     if (!result.ok) return setProblem(failure(result))
     fillStreakForm(result.body)
@@ -194,6 +215,7 @@ export function ParentPage() {
     // One request at a time, so a quick double click can't save the same change twice.
     setSaving(true)
     const result = await adjustBalance(removing ? -count : count, trimmed)
+    if (!live.current) return
     setSaving(false)
     if (result.ok) {
       setAmount('')
@@ -203,6 +225,7 @@ export function ParentPage() {
     }
     if (result.error === 'overdraw') {
       const latest = await getSummary()
+      if (!live.current) return
       return setAdjustProblem(latest.ok ? COPY.parentOverdraw(latest.body.balance) : failure(latest))
     }
     setAdjustProblem(failure(result))
@@ -215,147 +238,156 @@ export function ParentPage() {
   const left = code ? minutesLeft(code.expiresAt, now) : 0
 
   return (
-    <main className="parent">
-      <h1>{COPY.parentTitle}</h1>
+    <>
       {problem && (
         <p className="parent-problem" role="alert">
           {problem}
         </p>
       )}
 
-      <dl className="parent-summary" aria-label={COPY.parentSummaryLabel}>
-        <div>
-          <dt>{COPY.parentBalance}</dt>
-          <dd>{summary ? formatNumber(summary.balance) : pending}</dd>
-        </div>
-        <div>
-          <dt>{COPY.parentStreak}</dt>
-          <dd>{summary ? COPY.parentStreakValue(summary.streak) : pending}</dd>
-        </div>
-        <div>
-          <dt>{COPY.parentLastDay}</dt>
-          <dd>
-            {summary
-              ? summary.lastDay
-                ? formatCalendarDay(summary.lastDay)
-                : COPY.parentNoLastDay
-              : pending}
-          </dd>
-        </div>
-        <div>
-          <dt>{COPY.parentCompleted}</dt>
-          <dd>{summary ? formatNumber(summary.completed) : pending}</dd>
-        </div>
-      </dl>
-
-      <div className="parent-columns">
-        <section className="parent-section">
-          <h2>{COPY.parentResultsHeading}</h2>
-          {results === null && unavailable}
-          {results?.length === 0 && <p>{COPY.parentNoResults}</p>}
-          {results && results.length > 0 && (
-            <div className="parent-table-wrap">
-              <table className="parent-table">
-                <thead>
-                  <tr>
-                    <th scope="col">{COPY.parentColDate}</th>
-                    <th scope="col">{COPY.parentColRight}</th>
-                    <th scope="col">{COPY.parentColGrade}</th>
-                    <th scope="col">{COPY.parentColEarned}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((r) => (
-                    <tr key={r.id}>
-                      <td>{formatCalendarDay(r.day)}</td>
-                      <td>{COPY.parentRightOf(r.correct, r.answered)}</td>
-                      <td>{r.finished && r.grade ? r.grade : COPY.parentLeftEarly}</td>
-                      <td>{formatNumber(r.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {tab === 'overview' && (
+        <>
+          <dl className="parent-summary" aria-label={COPY.parentSummaryLabel}>
+            <div>
+              <dt>{COPY.parentBalance}</dt>
+              <dd>{summary ? formatNumber(summary.balance) : pending}</dd>
             </div>
-          )}
-          {results?.length === LIST_LIMIT && <p>{COPY.parentLatest(LIST_LIMIT)}</p>}
-        </section>
+            <div>
+              <dt>{COPY.parentStreak}</dt>
+              <dd>{summary ? COPY.parentStreakValue(summary.streak) : pending}</dd>
+            </div>
+            <div>
+              <dt>{COPY.parentLastDay}</dt>
+              <dd>
+                {summary
+                  ? summary.lastDay
+                    ? formatCalendarDay(summary.lastDay)
+                    : COPY.parentNoLastDay
+                  : pending}
+              </dd>
+            </div>
+            <div>
+              <dt>{COPY.parentCompleted}</dt>
+              <dd>{summary ? formatNumber(summary.completed) : pending}</dd>
+            </div>
+          </dl>
 
-        <div className="parent-side">
           <section className="parent-section">
-            <h2>{COPY.parentIpadsHeading}</h2>
-            <h3>{COPY.parentPairHeading}</h3>
-            <TextField
-              label={COPY.parentNameLabel}
-              hint={COPY.parentNameHint}
-              value={name}
-              maxLength={MAX_NAME}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Button onClick={onMakeCode} disabled={making}>
-              {COPY.parentMakeCode}
-            </Button>
-            {code && (
-              <div className="parent-code" aria-live="polite">
-                {left > 0 ? (
-                  <>
-                    <p className="parent-code-digits">{formatCode(code.code)}</p>
-                    <p>{COPY.parentCodeWithin(left)}</p>
-                  </>
-                ) : (
-                  <p>{COPY.parentCodeRanOut}</p>
-                )}
+            <h2>{COPY.parentResultsHeading}</h2>
+            {results === null && unavailable}
+            {results?.length === 0 && <p>{COPY.parentNoResults}</p>}
+            {results && results.length > 0 && (
+              <div className="parent-table-wrap">
+                <table className="parent-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{COPY.parentColDate}</th>
+                      <th scope="col">{COPY.parentColRight}</th>
+                      <th scope="col">{COPY.parentColGrade}</th>
+                      <th scope="col">{COPY.parentColEarned}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((r) => (
+                      <tr key={r.id}>
+                        <td>{formatCalendarDay(r.day)}</td>
+                        <td>{COPY.parentRightOf(r.correct, r.answered)}</td>
+                        <td>{r.finished && r.grade ? r.grade : COPY.parentLeftEarly}</td>
+                        <td>{formatNumber(r.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
-            <h3>{COPY.parentDevicesHeading}</h3>
-            {devices === null && unavailable}
-            {devices?.length === 0 && <p>{COPY.parentNoDevices}</p>}
-            <ul className="parent-devices">
-              {devices?.map((d) => (
-                <li key={d.id} className="parent-device">
-                  <span className="parent-device-name">{d.label}</span>
-                  <span>
-                    {d.revokedAt
-                      ? COPY.parentUnpairedOn(formatDay(d.revokedAt))
-                      : COPY.parentPairedOn(formatDay(d.createdAt))}
-                  </span>
-                  {!d.revokedAt && (
-                    <Button variant="secondary" onClick={() => setConfirming(d)}>
-                      {COPY.parentUnpair}
-                    </Button>
-                  )}
-                </li>
-              ))}
-            </ul>
+            {results?.length === LIST_LIMIT && <p>{COPY.parentLatest(LIST_LIMIT)}</p>}
           </section>
+        </>
+      )}
 
+      {tab === 'devices' && (
+        <section className="parent-section">
+          <h2>{COPY.parentIpadsHeading}</h2>
+          <h3>{COPY.parentPairHeading}</h3>
+          <TextField
+            label={COPY.parentNameLabel}
+            hint={COPY.parentNameHint}
+            value={name}
+            maxLength={MAX_NAME}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Button onClick={onMakeCode} disabled={making}>
+            {COPY.parentMakeCode}
+          </Button>
+          {code && (
+            <div className="parent-code" aria-live="polite">
+              {left > 0 ? (
+                <>
+                  <p className="parent-code-digits">{formatCode(code.code)}</p>
+                  <p>{COPY.parentCodeWithin(left)}</p>
+                </>
+              ) : (
+                <p>{COPY.parentCodeRanOut}</p>
+              )}
+            </div>
+          )}
+          <h3>{COPY.parentDevicesHeading}</h3>
+          {devices === null && unavailable}
+          {devices?.length === 0 && <p>{COPY.parentNoDevices}</p>}
+          <ul className="parent-devices">
+            {devices?.map((d) => (
+              <li key={d.id} className="parent-device">
+                <span className="parent-device-name">{d.label}</span>
+                <span>
+                  {d.revokedAt
+                    ? COPY.parentUnpairedOn(formatDay(d.revokedAt))
+                    : COPY.parentPairedOn(formatDay(d.createdAt))}
+                </span>
+                {!d.revokedAt && (
+                  <Button variant="secondary" onClick={() => setConfirming(d)}>
+                    {COPY.parentUnpair}
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === 'streak' && (
+        <section className="parent-section">
+          <h2>{COPY.parentStreakFormHeading}</h2>
+          <TextField
+            label={COPY.parentStreakLabel}
+            hint={COPY.parentStreakHint}
+            inputMode="numeric"
+            value={streakText}
+            onChange={(e) => {
+              setStreakText(e.target.value)
+              setStreakSaved(false)
+            }}
+          />
+          <TextField
+            label={COPY.parentLastDayLabel}
+            hint={COPY.parentLastDayHint}
+            type="date"
+            value={dayText}
+            onChange={(e) => {
+              setDayText(e.target.value)
+              setStreakSaved(false)
+            }}
+          />
+          <Button onClick={onSaveStreak} disabled={savingStreak}>
+            {COPY.parentStreakSave}
+          </Button>
+          <p role="status">{streakSaved ? COPY.parentStreakSaved : ''}</p>
+        </section>
+      )}
+
+      {tab === 'points' && (
+        <>
           <section className="parent-section">
-            <h2>{COPY.parentAdjustHeading}</h2>
-            <h3>{COPY.parentStreakFormHeading}</h3>
-            <TextField
-              label={COPY.parentStreakLabel}
-              hint={COPY.parentStreakHint}
-              inputMode="numeric"
-              value={streakText}
-              onChange={(e) => {
-                setStreakText(e.target.value)
-                setStreakSaved(false)
-              }}
-            />
-            <TextField
-              label={COPY.parentLastDayLabel}
-              hint={COPY.parentLastDayHint}
-              type="date"
-              value={dayText}
-              onChange={(e) => {
-                setDayText(e.target.value)
-                setStreakSaved(false)
-              }}
-            />
-            <Button onClick={onSaveStreak} disabled={savingStreak}>
-              {COPY.parentStreakSave}
-            </Button>
-            <p role="status">{streakSaved ? COPY.parentStreakSaved : ''}</p>
-            <h3>{COPY.parentMacaroniFormHeading}</h3>
+            <h2>{COPY.parentMacaroniFormHeading}</h2>
             <p>{COPY.parentAdjustIntro}</p>
             <div className="parent-choice">
               <Button
@@ -426,10 +458,10 @@ export function ParentPage() {
             )}
             {log?.length === LIST_LIMIT && <p>{COPY.parentLatest(LIST_LIMIT)}</p>}
           </section>
-        </div>
-      </div>
+        </>
+      )}
 
-      {confirming && (
+      {tab === 'devices' && confirming && (
         <div
           className="parent-confirm"
           role="alertdialog"
@@ -442,6 +474,6 @@ export function ParentPage() {
           </Button>
         </div>
       )}
-    </main>
+    </>
   )
 }

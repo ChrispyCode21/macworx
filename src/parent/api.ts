@@ -3,6 +3,8 @@
 // Access can ask the parent to sign in again. A JSON answer is the Worker's own and never reloads (it's
 // what a preview, which has no Access, always gets), so a refusal there can't loop.
 
+import { pickChild, readSelectedChild } from './selection'
+
 const RELOADED = 'macworx.parentReloaded'
 
 /** The one-reload flag. Storage that refuses reads as "already reloaded", so it can never loop. */
@@ -109,9 +111,10 @@ async function scoped<T>(path: string, init?: RequestInit): Promise<ParentResult
   if (selected === null) {
     const found = await getChildren()
     if (!found.ok) return found
-    const [first] = found.body.children
-    if (!first) return { ok: false, status: 404, error: 'no_child' }
-    selected = first.id
+    // The remembered child when there is one, else the first (SPEC §5.3).
+    const picked = pickChild(found.body.children, readSelectedChild())
+    if (!picked) return { ok: false, status: 404, error: 'no_child' }
+    selected = picked.id
   }
   return parentCall<T>(`${path}?child=${selected}`, init)
 }
