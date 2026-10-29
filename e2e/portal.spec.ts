@@ -192,6 +192,20 @@ test('a remembered child who is gone falls back to the first', async ({ page }) 
   expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=1'])
 })
 
+test('when the first children call fails, the screens still use the remembered child', async ({ page }) => {
+  const calls = await portalApi(page)
+  await page.addInitScript(() => localStorage.setItem('macworx.parentChild', '2'))
+  let first = true
+  await page.route('/api/parent/children', (route) => {
+    if (!first) return route.fallback()
+    first = false
+    return route.fulfill({ status: 503, json: { error: 'server' } })
+  })
+  await page.goto('/parent/overview')
+  await expect.poll(() => reads(calls, 'summary').length).toBe(1)
+  expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=2'])
+})
+
 test('with storage blocked, the portal still works', async ({ page }) => {
   await portalApi(page)
   await page.addInitScript(() => {
@@ -238,7 +252,24 @@ test('Escape closes the child list', async ({ page }) => {
   const switcher = page.locator('.portal-switcher > button')
   await switcher.click()
   await expect(switcher).toHaveAttribute('aria-expanded', 'true')
+  await expect(switcher).toHaveAttribute('aria-controls', 'portal-children')
+  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button').first().focus()
   await page.keyboard.press('Escape')
+  await expect(switcher).toHaveAttribute('aria-expanded', 'false')
+  await expect(switcher).not.toHaveAttribute('aria-controls')
+  await expect(switcher).toBeFocused()
+})
+
+test('choosing a child returns focus to the switcher, and a tab change closes the list', async ({ page }) => {
+  await portalApi(page)
+  await page.goto('/parent/overview')
+  const switcher = page.locator('.portal-switcher > button')
+  await switcher.click()
+  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /Bo/ }).click()
+  await expect(switcher).toBeFocused()
+  await switcher.click()
+  await expect(switcher).toHaveAttribute('aria-expanded', 'true')
+  await nav(page).getByRole('link', { name: 'Streak' }).click()
   await expect(switcher).toHaveAttribute('aria-expanded', 'false')
 })
 

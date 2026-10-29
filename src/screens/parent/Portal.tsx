@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { MouseEvent, ReactNode } from 'react'
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import { COPY } from '../../copy'
 import { chooseChild, getChildren } from '../../parent/api'
 import type { Child } from '../../parent/api'
@@ -88,6 +88,7 @@ export function Portal() {
   const [load, setLoad] = useState<Load>({ status: 'loading' })
   const [open, setOpen] = useState(false)
   const title = useRef<HTMLHeadingElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const onPop = () => setTab(tabFromPath(location.pathname))
@@ -116,6 +117,7 @@ export function Portal() {
     if (next === tab) return
     history.pushState(null, '', tabPath(next))
     setTab(next)
+    setOpen(false)
     window.scrollTo(0, 0)
     title.current?.focus()
   }
@@ -131,6 +133,14 @@ export function Portal() {
     rememberChild(child.id)
     setLoad({ ...load, selected: child })
     setOpen(false)
+    // The row that had focus is gone: focus goes back to the button that opened the list.
+    trigger.current?.focus()
+  }
+
+  const onSwitcherKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || !open) return
+    setOpen(false)
+    trigger.current?.focus()
   }
 
   const child = load.status === 'ready' ? load.selected : null
@@ -153,11 +163,12 @@ export function Portal() {
         </span>
 
         {load.status === 'ready' && (
-          <div className="portal-switcher" onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}>
+          <div className="portal-switcher" onKeyDown={onSwitcherKey}>
             <Button
+              ref={trigger}
               variant="bare"
               aria-expanded={open}
-              aria-controls="portal-children"
+              aria-controls={open ? 'portal-children' : undefined}
               onClick={() => setOpen(!open)}
             >
               <Avatar child={load.selected} />
