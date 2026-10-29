@@ -82,6 +82,47 @@ describe('child routes act for the device child', () => {
     expect(sent).toEqual({ status: 404, body: { error: 'unknown_seed' } })
     expect(await count('SELECT COUNT(*) AS n FROM results')).toBe(0)
   })
+
+  it('never hands one device seeds that belong to the other', async () => {
+    const mine = await t.call('POST', '/api/seeds', { key: DEVICE_KEY })
+    const theirs = await t.call('POST', '/api/seeds', { key: CHILD2_KEY })
+    expect(theirs.body.seeds.length).toBeGreaterThan(0)
+    for (const seed of theirs.body.seeds) expect(mine.body.seeds).not.toContain(seed)
+    expect(
+      await count(
+        'SELECT COUNT(*) AS n FROM seeds WHERE device_id = 1 AND seed IN (SELECT seed FROM seeds WHERE device_id = 2)',
+      ),
+    ).toBe(0)
+  })
+
+  it('does not treat child 1 recorded seed as applied for child 2', async () => {
+    const first = await finish(DEVICE_KEY)
+    const seed = (await t.db
+      .prepare('SELECT seed FROM results WHERE child_id = 1')
+      .first<{ seed: number }>())!.seed
+    const two = await t.call('GET', `/api/state?pending=${seed}`, { key: CHILD2_KEY })
+    expect(first.status).toBe(201)
+    expect(two.status).toBe(200)
+    expect(two.body.applied).toEqual([])
+    expect(two.body).toMatchObject({ balance: (await row(2))!.balance, completed: 0 })
+  })
+
+  it('refuses a seed already recorded by the other device and changes nothing', async () => {
+    await finish(DEVICE_KEY)
+    const recorded = (await t.db
+      .prepare('SELECT seed, day FROM results')
+      .first<{ seed: number; day: string }>())!
+    const answers = generateAssignment(recorded.seed).map((p) => p.answer)
+    const before = [await row(1), await row(2)]
+    const sent = await t.call('POST', '/api/results', {
+      key: CHILD2_KEY,
+      body: { seed: recorded.seed, day: recorded.day, answers },
+      now: at(recorded.day),
+    })
+    expect(sent).toEqual({ status: 404, body: { error: 'unknown_seed' } })
+    expect([await row(1), await row(2)]).toEqual(before)
+    expect(await count('SELECT COUNT(*) AS n FROM results')).toBe(1)
+  })
 })
 
 describe('parent reads are scoped to the chosen child', () => {
@@ -142,6 +183,14 @@ describe('parent writes change only the chosen child', () => {
     expect(await row(1)).toEqual(before1)
     expect(await count('SELECT COUNT(*) AS n FROM admin_log WHERE child_id = 2')).toBe(2)
     expect(await count('SELECT COUNT(*) AS n FROM admin_log WHERE child_id = 1')).toBe(0)
+  })
+
+  it('a streak set for child 1 leaves child 2 unchanged', async () => {
+    const before2 = await row(2)
+    const streak = await parent('POST', '/api/parent/streak', { streak: 4, lastDay: '2026-10-16' }, 1)
+    expect(streak.body).toMatchObject({ streak: 4, lastDay: '2026-10-16' })
+    expect(await row(2)).toEqual(before2)
+    expect(await count('SELECT COUNT(*) AS n FROM admin_log WHERE child_id = 2')).toBe(0)
   })
 
   it('an overdraw is checked against the chosen child balance', async () => {
