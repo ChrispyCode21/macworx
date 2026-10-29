@@ -13,10 +13,34 @@ export interface ParentRequest {
   params: Record<string, string>
 }
 
-/** GET /api/parent/devices */
-export async function listDevices({ db }: ParentRequest): Promise<Response> {
+/**
+ * The chosen child's id from the `child` query parameter (SPEC §8), or the error response to answer with:
+ * 400 bad_child for a missing or non-numeric id, 404 unknown_child for one that doesn't exist.
+ */
+export async function childOf({ url, db }: ParentRequest): Promise<number | Response> {
+  const raw = url.searchParams.get('child') ?? ''
+  const id = /^\d{1,9}$/.test(raw) ? Number(raw) : 0
+  if (id < 1) return error(400, 'bad_child')
+  const row = await db.prepare('SELECT id FROM children WHERE id = ?').bind(id).first()
+  return row ? id : error(404, 'unknown_child')
+}
+
+/** GET /api/parent/children: the household's children in the order they were added. */
+export async function listChildren({ db }: ParentRequest): Promise<Response> {
   const { results } = await db
-    .prepare('SELECT id, label, created_at, revoked_at FROM devices ORDER BY id')
+    .prepare('SELECT id, name, grade, initials FROM children ORDER BY id')
+    .all<{ id: number; name: string; grade: string; initials: string }>()
+  return json(200, { children: results })
+}
+
+/** GET /api/parent/devices: the chosen child's devices. */
+export async function listDevices(req: ParentRequest): Promise<Response> {
+  const { db } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
+  const { results } = await db
+    .prepare('SELECT id, label, created_at, revoked_at FROM devices WHERE child_id = ? ORDER BY id')
+    .bind(childId)
     .all<{ id: number; label: string; created_at: string; revoked_at: string | null }>()
   return json(200, {
     devices: results.map((d) => ({
@@ -32,9 +56,13 @@ export async function listDevices({ db }: ParentRequest): Promise<Response> {
 const LIST_LIMIT = 50
 
 /** GET /api/parent/summary: her totals. */
-export async function getSummary({ db }: ParentRequest): Promise<Response> {
+export async function getSummary(req: ParentRequest): Promise<Response> {
+  const { db } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const row = await db
-    .prepare('SELECT balance, streak, last_day, completed FROM child WHERE id = 1')
+    .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = ?')
+    .bind(childId)
     .first<{ balance: number; streak: number; last_day: string | null; completed: number }>()
   if (!row) return error(500, 'server')
   return json(200, {
@@ -46,13 +74,16 @@ export async function getSummary({ db }: ParentRequest): Promise<Response> {
 }
 
 /** GET /api/parent/results: the latest recorded results, newest first. */
-export async function listResults({ db }: ParentRequest): Promise<Response> {
+export async function listResults(req: ParentRequest): Promise<Response> {
+  const { db } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const { results } = await db
     .prepare(
       `SELECT id, day, answered, correct, finished, grade, total FROM results
-       ORDER BY day DESC, id DESC LIMIT ?`,
+       WHERE child_id = ? ORDER BY day DESC, id DESC LIMIT ?`,
     )
-    .bind(LIST_LIMIT)
+    .bind(childId, LIST_LIMIT)
     .all<{
       id: number
       day: string
@@ -76,10 +107,15 @@ export async function listResults({ db }: ParentRequest): Promise<Response> {
 }
 
 /** GET /api/parent/log: the latest admin log entries, newest first. */
-export async function listLog({ db }: ParentRequest): Promise<Response> {
+export async function listLog(req: ParentRequest): Promise<Response> {
+  const { db } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const { results } = await db
-    .prepare('SELECT id, at, email, action, detail FROM admin_log ORDER BY id DESC LIMIT ?')
-    .bind(LIST_LIMIT)
+    .prepare(
+      'SELECT id, at, email, action, detail FROM admin_log WHERE child_id = ? ORDER BY id DESC LIMIT ?',
+    )
+    .bind(childId, LIST_LIMIT)
     .all<{ id: number; at: string; email: string; action: string; detail: string }>()
   return json(200, {
     entries: results.map((e) => ({
@@ -105,20 +141,28 @@ function parseDetail(text: string): Record<string, unknown> {
 }
 
 /** A statement recording one admin change (SPEC §5.3), to run in the same batch as the change. */
-export function logChange(db: D1Database, { email, now }: ParentRequest, action: string, detail: object) {
+export function logChange(
+  db: D1Database,
+  { email, now }: ParentRequest,
+  childId: number,
+  action: string,
+  detail: object,
+) {
   return db
-    .prepare('INSERT INTO admin_log (at, email, action, detail) VALUES (?, ?, ?, ?)')
-    .bind(now.toISOString(), email, action, JSON.stringify(detail))
+    .prepare('INSERT INTO admin_log (at, email, action, detail, child_id) VALUES (?, ?, ?, ?, ?)')
+    .bind(now.toISOString(), email, action, JSON.stringify(detail), childId)
 }
 
 /** DELETE /api/parent/devices/:id: unpairs an iPad. Its key is refused from then on (§6.9). */
 export async function unpairDevice(req: ParentRequest): Promise<Response> {
   const { db, now, params } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const id = Number(params.id)
   if (!Number.isInteger(id) || id < 1) return error(404, 'unknown_device')
   const device = await db
-    .prepare('SELECT revoked_at FROM devices WHERE id = ?')
-    .bind(id)
+    .prepare('SELECT revoked_at FROM devices WHERE id = ? AND child_id = ?')
+    .bind(id, childId)
     .first<{ revoked_at: string | null }>()
   if (!device) return error(404, 'unknown_device')
   // Unpairing twice is fine: the first time is the one recorded, and the only one logged.
@@ -127,7 +171,7 @@ export async function unpairDevice(req: ParentRequest): Promise<Response> {
       db
         .prepare('UPDATE devices SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL')
         .bind(now.toISOString(), id),
-      logChange(db, req, 'unpair', { deviceId: id }),
+      logChange(db, req, childId, 'unpair', { deviceId: id }),
     ])
   }
   return json(200, { ok: true })
@@ -159,12 +203,15 @@ function parseStreak(body: unknown, now: Date): { streak: number; lastDay: strin
 /** POST /api/parent/streak { streak, lastDay }: sets her streak and last counted day (SPEC §5.3). */
 export async function postStreak(req: ParentRequest): Promise<Response> {
   const { request, db, email, now } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const parsed = parseStreak(await readJson(request), now)
   if (typeof parsed === 'string') return error(400, parsed)
 
   for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
     const child = await db
-      .prepare('SELECT streak, last_day, revision FROM child WHERE id = 1')
+      .prepare('SELECT streak, last_day, revision FROM children WHERE id = ?')
+      .bind(childId)
       .first<{ streak: number; last_day: string | null; revision: string }>()
     if (!child) return error(500, 'no_child')
     const revision = crypto.randomUUID()
@@ -175,14 +222,14 @@ export async function postStreak(req: ParentRequest): Promise<Response> {
     // One transaction: the update applies only if nobody wrote since we read, and the log row only if it did.
     const [update] = await db.batch([
       db
-        .prepare('UPDATE child SET streak = ?, last_day = ?, revision = ? WHERE id = 1 AND revision = ?')
-        .bind(parsed.streak, parsed.lastDay, revision, child.revision),
+        .prepare('UPDATE children SET streak = ?, last_day = ?, revision = ? WHERE id = ? AND revision = ?')
+        .bind(parsed.streak, parsed.lastDay, revision, childId, child.revision),
       db
         .prepare(
-          `INSERT INTO admin_log (at, email, action, detail)
-           SELECT ?, ?, 'streak', ? WHERE (SELECT revision FROM child WHERE id = 1) = ?`,
+          `INSERT INTO admin_log (at, email, action, detail, child_id)
+           SELECT ?, ?, 'streak', ?, ? WHERE (SELECT revision FROM children WHERE id = ?) = ?`,
         )
-        .bind(now.toISOString(), email, JSON.stringify(detail), revision),
+        .bind(now.toISOString(), email, JSON.stringify(detail), childId, childId, revision),
     ])
     if (update.meta.changes === 1) return getSummary(req)
   }
@@ -196,6 +243,8 @@ const MAX_NOTE = 200
 /** POST /api/parent/balance { amount, note }: adds or removes Macaronis, never below 0 (SPEC §5.3). */
 export async function postBalance(req: ParentRequest): Promise<Response> {
   const { db, request } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const body = (await readJson(request)) as { amount?: unknown; note?: unknown } | null | undefined
   const amount = body?.amount
   if (
@@ -210,7 +259,8 @@ export async function postBalance(req: ParentRequest): Promise<Response> {
 
   for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
     const child = await db
-      .prepare('SELECT balance, revision FROM child WHERE id = 1')
+      .prepare('SELECT balance, revision FROM children WHERE id = ?')
+      .bind(childId)
       .first<{ balance: number; revision: string }>()
     if (!child) return error(500, 'server')
     const after = child.balance + amount
@@ -221,17 +271,19 @@ export async function postBalance(req: ParentRequest): Promise<Response> {
     const revision = crypto.randomUUID()
     const [update] = await db.batch([
       db
-        .prepare('UPDATE child SET balance = balance + ?, revision = ? WHERE id = 1 AND revision = ?')
-        .bind(amount, revision, child.revision),
+        .prepare('UPDATE children SET balance = balance + ?, revision = ? WHERE id = ? AND revision = ?')
+        .bind(amount, revision, childId, child.revision),
       db
         .prepare(
-          `INSERT INTO admin_log (at, email, action, detail)
-           SELECT ?, ?, 'balance', ? WHERE (SELECT revision FROM child WHERE id = 1) = ?`,
+          `INSERT INTO admin_log (at, email, action, detail, child_id)
+           SELECT ?, ?, 'balance', ?, ? WHERE (SELECT revision FROM children WHERE id = ?) = ?`,
         )
         .bind(
           req.now.toISOString(),
           req.email,
           JSON.stringify({ amount, before: child.balance, after, note }),
+          childId,
+          childId,
           revision,
         ),
     ])
@@ -289,12 +341,15 @@ function resultView(row: StoredResult, answers: number[]) {
 }
 
 /** GET /api/parent/results/:id: one recorded result with its problems. */
-export async function getResult({ db, params }: ParentRequest): Promise<Response> {
+export async function getResult(req: ParentRequest): Promise<Response> {
+  const { db, params } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const id = Number(params.id)
   if (!Number.isInteger(id) || id < 1) return error(404, 'unknown_result')
   const row = await db
-    .prepare(`SELECT ${RESULT_COLUMNS} FROM results WHERE id = ?`)
-    .bind(id)
+    .prepare(`SELECT ${RESULT_COLUMNS} FROM results WHERE id = ? AND child_id = ?`)
+    .bind(id, childId)
     .first<StoredResult>()
   if (!row) return error(404, 'unknown_result')
   const answers = storedAnswers(row)
@@ -308,6 +363,7 @@ export const PARENT_ROUTES: {
   pattern: RegExp
   run: (req: ParentRequest) => Promise<Response>
 }[] = [
+  { method: 'GET', pattern: /^\/api\/parent\/children$/, run: listChildren },
   { method: 'GET', pattern: /^\/api\/parent\/summary$/, run: getSummary },
   { method: 'GET', pattern: /^\/api\/parent\/results$/, run: listResults },
   { method: 'GET', pattern: /^\/api\/parent\/results\/(?<id>\d+)$/, run: getResult },

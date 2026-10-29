@@ -199,12 +199,16 @@ describe('parent API', () => {
       t.call('POST', '/api/parent/balance', { key: null, accessToken: token ?? (await accessToken()), body })
     const state = async () =>
       t.db
-        .prepare('SELECT balance, streak, last_day, completed FROM child')
+        .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = 1')
         .first<{ balance: number; streak: number; last_day: string | null; completed: number }>()
     const logRows = async () =>
       (await t.db.prepare('SELECT email, action, detail FROM admin_log ORDER BY id').all()).results
     const setUp = () =>
-      t.db.prepare("UPDATE child SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5").run()
+      t.db
+        .prepare(
+          "UPDATE children SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5 WHERE id = 1",
+        )
+        .run()
     const untouched = { streak: 3, last_day: '2026-10-16', completed: 5 }
 
     /** Runs the next batch only after another writer got in first, `times` times: a lost race. */
@@ -224,7 +228,9 @@ describe('parent API', () => {
     }
     const rivalPays = (n: number) => () =>
       t.db
-        .prepare('UPDATE child SET balance = balance + ?, revision = lower(hex(randomblob(16)))')
+        .prepare(
+          'UPDATE children SET balance = balance + ?, revision = lower(hex(randomblob(16))) WHERE id = 1',
+        )
         .bind(n)
         .run()
 
@@ -304,7 +310,9 @@ describe('parent API', () => {
 
     it('B8: a removal that is too big once the balance has dropped is refused', async () => {
       const restore = raceOnBatch(1, () =>
-        t.db.prepare('UPDATE child SET balance = 5, revision = lower(hex(randomblob(16)))').run(),
+        t.db
+          .prepare('UPDATE children SET balance = 5, revision = lower(hex(randomblob(16))) WHERE id = 1')
+          .run(),
       )
       const { status, body } = await adjust({ amount: -30, note: 'Race' })
       restore()
@@ -372,7 +380,9 @@ describe('parent API', () => {
 
     it('the summary shows her totals', async () => {
       await t.db
-        .prepare("UPDATE child SET balance = 41, streak = 3, last_day = '2026-10-16', completed = 5")
+        .prepare(
+          "UPDATE children SET balance = 41, streak = 3, last_day = '2026-10-16', completed = 5 WHERE id = 1",
+        )
         .run()
       const { status, body } = await get('/api/parent/summary')
       expect(status).toBe(200)
@@ -453,13 +463,17 @@ describe('parent API', () => {
     const set = async (body: unknown) =>
       t.call('POST', '/api/parent/streak', { key: null, accessToken: await accessToken(), body })
     const child = () =>
-      t.db.prepare('SELECT balance, streak, last_day, completed FROM child').first<Record<string, unknown>>()
+      t.db
+        .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = 1')
+        .first<Record<string, unknown>>()
     const logRows = async () =>
       (await t.db.prepare('SELECT email, action, detail FROM admin_log ORDER BY id').all()).results
     const START = { balance: 40, streak: 3, last_day: '2026-10-16', completed: 5 }
     beforeEach(async () => {
       await t.db
-        .prepare("UPDATE child SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5")
+        .prepare(
+          "UPDATE children SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5 WHERE id = 1",
+        )
         .run()
     })
     /** Refused with `code`: nothing changed and nothing logged. */
@@ -483,7 +497,7 @@ describe('parent API', () => {
           method: 'POST',
           body: JSON.stringify({ streak: 7, lastDay: '2026-10-16' }),
         }),
-        url: new URL('https://macworx.test/api/parent/streak'),
+        url: new URL('https://macworx.test/api/parent/streak?child=1'),
         db,
         email: 'parent@example.com',
         now: NOW,
@@ -520,7 +534,7 @@ describe('parent API', () => {
     it('C2: streak 0 with an empty day (empty string or null) → no last counted day, logged', async () => {
       expect((await set({ streak: 0, lastDay: '' })).status).toBe(200)
       expect(await child()).toEqual({ ...START, streak: 0, last_day: null })
-      await t.db.prepare("UPDATE child SET streak = 3, last_day = '2026-10-16'").run()
+      await t.db.prepare("UPDATE children SET streak = 3, last_day = '2026-10-16' WHERE id = 1").run()
       expect((await set({ streak: 0, lastDay: null })).status).toBe(200)
       expect(await child()).toEqual({ ...START, streak: 0, last_day: null })
       expect(await logRows()).toHaveLength(2)
@@ -568,7 +582,7 @@ describe('parent API', () => {
         // What recording a result does: new balance, completed, streak, day and revision.
         await t.db
           .prepare(
-            "UPDATE child SET balance = 65, completed = 6, streak = 4, last_day = '2026-10-17', revision = 'other'",
+            "UPDATE children SET balance = 65, completed = 6, streak = 4, last_day = '2026-10-17', revision = 'other' WHERE id = 1",
           )
           .run()
       })
@@ -582,7 +596,7 @@ describe('parent API', () => {
     it('C8: losing the race three times → 503, nothing changed or logged', async () => {
       let n = 0
       const res = await raced(async () => {
-        await t.db.prepare('UPDATE child SET revision = ?').bind(`other-${n++}`).run()
+        await t.db.prepare('UPDATE children SET revision = ? WHERE id = 1').bind(`other-${n++}`).run()
       })
       expect(res.status).toBe(503)
       expect(await res.json()).toEqual({ error: 'busy' })
@@ -620,7 +634,7 @@ describe('parent API', () => {
     const withCorrect = (n: number, count = 20) => right.slice(0, count).map((a, i) => (i < n ? a : a + 1))
     const child = () =>
       t.db
-        .prepare('SELECT balance, streak, last_day, completed FROM child')
+        .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = 1')
         .first<{ balance: number; streak: number; last_day: string | null; completed: number }>()
     const logRows = async () =>
       (await t.db.prepare('SELECT email, action, detail FROM admin_log ORDER BY id').all()).results
@@ -664,7 +678,9 @@ describe('parent API', () => {
       addResult({ finished: true, answered: 20, correct: 15, grade: 'Improving', streakBonus: 3, total: 21 })
     beforeEach(async () => {
       await t.db
-        .prepare("UPDATE child SET balance = 100, streak = 4, last_day = '2026-10-16', completed = 6")
+        .prepare(
+          "UPDATE children SET balance = 100, streak = 4, last_day = '2026-10-16', completed = 6 WHERE id = 1",
+        )
         .run()
     })
     it('no route changes a recorded result: the old correct path is 404, or 401 without Access', async () => {

@@ -19,6 +19,8 @@ export interface ChildRequest {
   url: URL
   db: D1Database
   device: number
+  /** The device's child: every number here is hers. */
+  childId: number
   now: Date
 }
 
@@ -65,12 +67,14 @@ function toResult(row: ResultRow) {
   }
 }
 
-async function readState(db: D1Database, device: number, pending: number[] = []) {
+async function readState(db: D1Database, device: number, childId: number, pending: number[] = []) {
   const child = await db
-    .prepare('SELECT balance, streak, last_day, completed FROM child WHERE id = 1')
+    .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = ?')
+    .bind(childId)
     .first<ChildRow>()
   const latest = await db
-    .prepare('SELECT grade FROM results WHERE finished = 1 ORDER BY id DESC LIMIT 1')
+    .prepare('SELECT grade FROM results WHERE child_id = ? AND finished = 1 ORDER BY id DESC LIMIT 1')
+    .bind(childId)
     .first<{ grade: string }>()
   const applied = pending.length
     ? (
@@ -94,11 +98,11 @@ async function readState(db: D1Database, device: number, pending: number[] = [])
 }
 
 /** GET /api/state?pending=1,2,3 */
-export async function getState({ url, db, device }: ChildRequest): Promise<Response> {
+export async function getState({ url, db, device, childId }: ChildRequest): Promise<Response> {
   const raw = url.searchParams.get('pending')
   const pending = raw ? raw.split(',').map(Number) : []
   if (pending.length > MAX_PENDING || !pending.every(isUint32)) return error(400, 'bad_pending')
-  return json(200, await readState(db, device, pending))
+  return json(200, await readState(db, device, childId, pending))
 }
 
 /** POST /api/seeds: tops the device up to 20 unused seeds and returns them. */
@@ -166,14 +170,14 @@ const findResult = (db: D1Database, seed: number) =>
   db.prepare('SELECT * FROM results WHERE seed = ?').bind(seed).first<ResultRow>()
 
 /** POST /api/results { seed, day, answers } (SPEC §6.8). */
-export async function postResult({ request, db, device, now }: ChildRequest): Promise<Response> {
+export async function postResult({ request, db, device, childId, now }: ChildRequest): Promise<Response> {
   const body = parseResult(await readJson(request))
   if (!body) return error(400, 'bad_result')
 
   const recorded = await findResult(db, body.seed)
   if (recorded) {
     if (recorded.device_id !== device) return error(404, 'unknown_seed')
-    return json(200, { result: toResult(recorded), state: await readState(db, device) })
+    return json(200, { result: toResult(recorded), state: await readState(db, device, childId) })
   }
   const seedRow = await db
     .prepare('SELECT device_id, issued_day FROM seeds WHERE seed = ?')
@@ -191,7 +195,8 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
 
   for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
     const child = await db
-      .prepare('SELECT balance, streak, last_day, completed, revision FROM child WHERE id = 1')
+      .prepare('SELECT balance, streak, last_day, completed, revision FROM children WHERE id = ?')
+      .bind(childId)
       .first<ChildRow>()
     if (!child) return error(500, 'no_child')
 
@@ -219,21 +224,32 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
     const [update] = await db.batch([
       db
         .prepare(
-          `UPDATE child SET balance = balance + ?, completed = completed + ?, streak = ?, last_day = ?,
-           revision = ? WHERE id = 1 AND revision = ? AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)
+          `UPDATE children SET balance = balance + ?, completed = completed + ?, streak = ?, last_day = ?,
+           revision = ? WHERE id = ? AND revision = ? AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)
            AND EXISTS (SELECT 1 FROM devices WHERE id = ? AND revoked_at IS NULL)`,
         )
-        .bind(earned.total, finished ? 1 : 0, streak, lastDay, revision, child.revision, body.seed, device),
+        .bind(
+          earned.total,
+          finished ? 1 : 0,
+          streak,
+          lastDay,
+          revision,
+          childId,
+          child.revision,
+          body.seed,
+          device,
+        ),
       db
         .prepare(
-          `INSERT INTO results (seed, device_id, day, answers, answered, correct, finished, grade, base,
+          `INSERT INTO results (seed, device_id, child_id, day, answers, answered, correct, finished, grade, base,
            accuracy_bonus, streak_bonus, total, created_at)
-           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT revision FROM child WHERE id = 1) = ?
+           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT revision FROM children WHERE id = ?) = ?
            AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)`,
         )
         .bind(
           body.seed,
           device,
+          childId,
           day,
           JSON.stringify(body.answers),
           answered,
@@ -245,20 +261,23 @@ export async function postResult({ request, db, device, now }: ChildRequest): Pr
           earned.streakBonus,
           earned.total,
           now.toISOString(),
+          childId,
           revision,
           body.seed,
         ),
       db
-        .prepare('UPDATE seeds SET used = 1 WHERE seed = ? AND (SELECT revision FROM child WHERE id = 1) = ?')
-        .bind(body.seed, revision),
+        .prepare(
+          'UPDATE seeds SET used = 1 WHERE seed = ? AND (SELECT revision FROM children WHERE id = ?) = ?',
+        )
+        .bind(body.seed, childId, revision),
     ])
     if (update.meta.changes === 1) {
       const saved = await findResult(db, body.seed)
-      return json(201, { result: toResult(saved!), state: await readState(db, device) })
+      return json(201, { result: toResult(saved!), state: await readState(db, device, childId) })
     }
     // Someone else wrote first; if it was this same result, return it instead of recording it twice.
     const raced = await findResult(db, body.seed)
-    if (raced) return json(200, { result: toResult(raced), state: await readState(db, device) })
+    if (raced) return json(200, { result: toResult(raced), state: await readState(db, device, childId) })
     // Or the iPad was unpaired while this upload was on its way: refused like any later request (§6.9).
     const active = await db
       .prepare('SELECT 1 AS ok FROM devices WHERE id = ? AND revoked_at IS NULL')

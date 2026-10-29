@@ -107,7 +107,7 @@ describe('saving results (SPEC §6.8)', () => {
   })
 
   it('W5: a result dated before her last counted day counts as that day: streak unchanged, still paid', async () => {
-    await t.db.prepare("UPDATE child SET streak = 4, last_day = '2026-10-17'").run()
+    await t.db.prepare("UPDATE children SET streak = 4, last_day = '2026-10-17' WHERE id = 1").run()
     // Handed out on 10-14, so 10-15 is in range and stays 10-15: two days before her last counted day,
     // which without the §6.8 rule would restart the streak (S8) and move her last day backwards.
     const s = await seed('2026-10-14')
@@ -121,7 +121,7 @@ describe('saving results (SPEC §6.8)', () => {
   })
 
   it('W6: left early, 8 answered, 7 correct → paid 7; streak, last day and completed unchanged; no grade', async () => {
-    await t.db.prepare("UPDATE child SET streak = 3, last_day = '2026-10-16'").run()
+    await t.db.prepare("UPDATE children SET streak = 3, last_day = '2026-10-16' WHERE id = 1").run()
     const { status, body } = await finish('2026-10-17', { correct: 7, count: 8 })
     expect(status).toBe(201)
     expect(body.result).toMatchObject({ answered: 8, correct: 7, finished: false, grade: null })
@@ -136,7 +136,7 @@ describe('saving results (SPEC §6.8)', () => {
   })
 
   it('W7: a finished result dated 2026-10-20 (clock wrong) → recorded 10-18, paid 24, streak untouched', async () => {
-    await t.db.prepare("UPDATE child SET streak = 5, last_day = '2026-10-16'").run()
+    await t.db.prepare("UPDATE children SET streak = 5, last_day = '2026-10-16' WHERE id = 1").run()
     const { body } = await finish('2026-10-20', { now: '2026-10-17' })
     expect(body.result).toMatchObject({ day: '2026-10-18', grade: 'Excellent' })
     expect(body.result.payout).toEqual({ base: 20, accuracyBonus: 4, streakBonus: 0, total: 24 })
@@ -217,7 +217,7 @@ describe('saving results (SPEC §6.8)', () => {
   })
 
   it('a day moved up from too early leaves the streak alone too', async () => {
-    await t.db.prepare("UPDATE child SET streak = 5, last_day = '2026-10-14'").run()
+    await t.db.prepare("UPDATE children SET streak = 5, last_day = '2026-10-14' WHERE id = 1").run()
     const { body } = await finish('2026-10-01', { now: '2026-10-17' })
     expect(body.result.day).toBe('2026-10-16')
     expect(body.result.payout.streakBonus).toBe(0)
@@ -286,7 +286,7 @@ describe('review fixes', () => {
     const s = await seed()
     const request = { body: { seed: s, day: '2026-10-17', answers: answers(s) } }
     await t.call('POST', '/api/results', request)
-    await t.db.prepare("UPDATE child SET revision = 'reset'").run()
+    await t.db.prepare("UPDATE children SET revision = 'reset' WHERE id = 1").run()
     const again = await t.call('POST', '/api/results', request)
     expect(again.status).toBe(200)
     expect(again.body.state).toMatchObject({ balance: 25, completed: 1 })
@@ -315,11 +315,14 @@ describe('an upload on its way when the iPad is unpaired', () => {
       url: new URL('https://macworx.test/api/results'),
       db: t.db,
       device: 1,
+      childId: 1,
       now: at('2026-10-17'),
     })
     expect(response.status).toBe(401)
     const count = await t.db.prepare('SELECT COUNT(*) AS n FROM results').first<{ n: number }>()
     expect(count?.n).toBe(0)
-    expect((await t.db.prepare('SELECT balance FROM child').first<{ balance: number }>())?.balance).toBe(0)
+    expect(
+      (await t.db.prepare('SELECT balance FROM children WHERE id = 1').first<{ balance: number }>())?.balance,
+    ).toBe(0)
   })
 })

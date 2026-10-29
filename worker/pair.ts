@@ -2,7 +2,7 @@
 // its device key. POST /api/pair is the one write route with no key or token (CLAUDE.md); the code is the gate.
 import { sha256Hex } from './auth'
 import { error, json, readJson } from './http'
-import { logChange, type ParentRequest } from './parent'
+import { childOf, logChange, type ParentRequest } from './parent'
 
 const CODE_LIFE_MS = 10 * 60 * 1000
 const MAX_TRIES = 5
@@ -59,9 +59,11 @@ export function previewPairCode(env: {
   return /^\d{6}$/.test(env.PREVIEW_PAIR_CODE ?? '') ? env.PREVIEW_PAIR_CODE : undefined
 }
 
-/** POST /api/parent/pairing-code { name } → { code, expiresAt }. Voids any earlier unused code. */
+/** POST /api/parent/pairing-code { name } → { code, expiresAt }. The device that uses it belongs to the chosen child. Voids any earlier unused code, for any child. */
 export async function postPairingCode(req: ParentRequest): Promise<Response> {
   const { request, db, now } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
   const body = (await readJson(request)) as { name?: unknown } | undefined
   const name = typeof body?.name === 'string' ? body.name.trim() : ''
   if (name.length < 1 || name.length > MAX_NAME) return error(400, 'bad_name')
@@ -73,9 +75,11 @@ export async function postPairingCode(req: ParentRequest): Promise<Response> {
       .prepare('UPDATE pairing_codes SET voided_at = ? WHERE used_at IS NULL AND voided_at IS NULL')
       .bind(now.toISOString()),
     db
-      .prepare('INSERT INTO pairing_codes (code_hash, name, created_at, expires_at) VALUES (?, ?, ?, ?)')
-      .bind(await sha256Hex(code), name, now.toISOString(), expiresAt),
-    logChange(db, req, 'pairing_code', { name }),
+      .prepare(
+        'INSERT INTO pairing_codes (code_hash, name, created_at, expires_at, child_id) VALUES (?, ?, ?, ?, ?)',
+      )
+      .bind(await sha256Hex(code), name, now.toISOString(), expiresAt, childId),
+    logChange(db, req, childId, 'pairing_code', { name }),
   ])
   return json(201, { code, expiresAt })
 }
@@ -108,10 +112,15 @@ export async function postPair({
   // A PR preview's own code pairs a new device each time, without a parent's code (SPEC §6.9).
   if (previewCode !== undefined && (await sha256Hex(code)) === (await sha256Hex(previewCode))) {
     const key = newKey()
-    await db
-      .prepare('INSERT INTO devices (key_hash, label, created_at) VALUES (?, ?, ?)')
-      .bind(await sha256Hex(key), 'Preview', at)
+    // The first child. ORDER BY id LIMIT 1 (not MIN) so a household with no child inserts no row.
+    const made = await db
+      .prepare(
+        `INSERT INTO devices (key_hash, label, created_at, child_id)
+         SELECT ?, 'Preview', ?, id FROM children ORDER BY id LIMIT 1`,
+      )
+      .bind(await sha256Hex(key), at)
       .run()
+    if (made.meta.changes !== 1) return error(500, 'server')
     return json(201, { key })
   }
 
@@ -155,8 +164,8 @@ export async function postPair({
       .bind(at, claim, tried.id, hash, MAX_TRIES, at),
     db
       .prepare(
-        `INSERT INTO devices (key_hash, label, created_at)
-         SELECT ?, name, ? FROM pairing_codes WHERE id = ? AND claim = ?`,
+        `INSERT INTO devices (key_hash, label, created_at, child_id)
+         SELECT ?, name, ?, child_id FROM pairing_codes WHERE id = ? AND claim = ?`,
       )
       .bind(await sha256Hex(key), at, tried.id, claim),
   ])
