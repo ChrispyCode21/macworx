@@ -12,8 +12,8 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
 | `src/storage/` | The iPad's own storage (`device.ts`): its device key, unused seeds, unsent results and the Worker's latest state. |
 | `src/sync/` | Saving her results (`sync.ts`): taking a stored seed, queueing a result, and syncing with the Worker. `projection.ts` applies unsent results to the Worker's numbers for Home and the result. |
-| `src/parent/` | The portal's calls (`api.ts`): every `/api/parent` call for the selected child, and reloading once when Access's sign-in has run out. Its tab addresses (`route.ts`), the remembered child (`selection.ts`) and its icons (`icons.tsx`). |
-| `src/screens/parent/` | The portal shell and router (`Portal.tsx`) and the screens' contents (`ParentPage.tsx`). |
+| `src/parent/` | The portal's calls (`api.ts`): every `/api/parent` call for the selected child, and reloading once when Access's sign-in has run out. Its tab addresses (`route.ts`), the remembered child (`selection.ts`), its icons (`icons.tsx`) and `shop.ts`, which works out which rewards her balance reaches. |
+| `src/screens/parent/` | The portal shell and router (`Portal.tsx`), the screens' contents (`ParentPage.tsx`) and the Shop screen (`Shop.tsx`: rewards from `REWARDS`, read-only, nothing stored; no rewards or purchases table). |
 | `src/pairing/` | The iPad's pairing call: `/api/pair`. |
 | `src/assignment/` | Pure helpers for the assignment screen: answer boxes and number pad typing. |
 | `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |

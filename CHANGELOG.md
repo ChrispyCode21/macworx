@@ -8,7 +8,8 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
-- **Parent portal shell:** `/parent` is now five tabs (Overview, Macaronis, Streak, Devices, Shop) at `/parent/overview`, `/parent/points`, `/parent/streak`, `/parent/devices` and `/parent/shop`, with a header, a child switcher, tabs along the bottom on a phone and a side bar from 768px wide, in the macworx colors. Home has a **Parents** link. Today's sections moved into the tabs unchanged; the Shop tab is empty until its screen arrives.
+- **Parent portal shell:** `/parent` is now five tabs (Overview, Macaronis, Streak, Devices, Shop) at `/parent/overview`, `/parent/points`, `/parent/streak`, `/parent/devices` and `/parent/shop`, with a header, a child switcher, tabs along the bottom on a phone and a side bar from 768px wide, in the macworx colors. Home has a **Parents** link. Today's sections moved into the tabs unchanged.
+- **Parent portal Shop screen (read-only):** the Shop tab lists the four rewards with their prices and how far her balance is from each, shows an edit panel with every control disabled ("Editing rewards is coming soon."), and an empty "Last redeemed". Nothing is stored.
 - **Set or restore her streak (parents):** an Adjustments section on `/parent` with a streak form. It saves her streak (0 to 3,650) and last counted day, doesn't change her Macaronis or pay a bonus, and shows in the Activity log.
 - **Add or remove Macaronis (parents):** an Adjustments section on `/parent` with Add or Remove, a number, a note and Save. Her balance can't go below 0; a removal that's too big is refused in plain words. Every change appears in the Activity log (for example "Added 20 Macaronis: Homework grades"). Her Home shows the new balance after her next sync.
 
