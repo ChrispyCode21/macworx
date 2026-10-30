@@ -780,7 +780,7 @@ p {
   flex: 1;
 }
 
-.device-actions .button-danger {
+.parent .device-actions .button-danger {
   display: flex;
   align-items: center;
   justify-content: center;

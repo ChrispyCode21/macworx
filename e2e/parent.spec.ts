@@ -118,9 +118,10 @@ test('unpairs a device after the warning, and keeps it when asked', async ({ pag
 })
 
 test('a device card shows when it last synced, and labels the sample items', async ({ page }) => {
+  // Pin the page's clock to a fixed local noon so "today" cannot drift with the wall clock.
+  await page.clock.setFixedTime(new Date(2026, 9, 17, 12, 0))
   const sync = new Date(2020, 5, 3, 16, 5).toISOString()
-  const today = new Date()
-  today.setHours(9, 7, 0, 0)
+  const today = new Date(2026, 9, 17, 9, 7)
   await parentApi(page, [
     herIpad,
     { ...herIpad, id: 2, label: 'Kitchen tablet', lastResultAt: sync },
