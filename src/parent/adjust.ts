@@ -17,8 +17,7 @@ export function balanceAfter(balance: number, amount: number): number {
 export type AdjustProblem = 'bad_amount' | 'bad_note' | 'below_zero'
 
 export type AdjustCheck =
-  | { ok: true; amount: number; note: string; after: number }
-  | { ok: false; problem: AdjustProblem }
+  { ok: true; amount: number; note: string; after: number } | { ok: false; problem: AdjustProblem }
 
 /** Checks the amount, then the note, then that the balance would not end below 0. */
 export function checkAdjust({

@@ -13,12 +13,20 @@ const entry = (action: string, detail: Record<string, unknown>): LogEntry => ({
 })
 
 const devices: Device[] = [
-  { id: 7, label: 'Kitchen iPad', createdAt: '2026-10-01T00:00:00.000Z', revokedAt: null, lastResultAt: null },
+  {
+    id: 7,
+    label: 'Kitchen iPad',
+    createdAt: '2026-10-01T00:00:00.000Z',
+    revokedAt: null,
+    lastResultAt: null,
+  },
 ]
 
 suite('describe', () => {
   it('reads a balance addition with its signed amount', () => {
-    expect(describe(entry('balance', { amount: 20, before: 40, after: 60, note: 'Homework grades' }), [])).toEqual({
+    expect(
+      describe(entry('balance', { amount: 20, before: 40, after: 60, note: 'Homework grades' }), []),
+    ).toEqual({
       kind: 'balance',
       title: COPY.parentLogAdded(20, 'Homework grades'),
       amount: 20,
@@ -88,10 +96,12 @@ suite('describe', () => {
       kind: 'child',
       title: COPY.parentLogChildAdded('Mia'),
     })
-    expect(describe(entry('child_rename', { before: { name: 'Mia' }, after: { name: 'Maya' } }), [])).toEqual({
-      kind: 'child',
-      title: COPY.parentLogChildRenamed('Mia', 'Maya'),
-    })
+    expect(describe(entry('child_rename', { before: { name: 'Mia' }, after: { name: 'Maya' } }), [])).toEqual(
+      {
+        kind: 'child',
+        title: COPY.parentLogChildRenamed('Mia', 'Maya'),
+      },
+    )
     expect(describe(entry('child_rename', { before: { name: 'Mia' }, after: { name: 'Mia' } }), [])).toEqual({
       kind: 'child',
       title: COPY.parentLogChildChanged('Mia'),
@@ -99,7 +109,10 @@ suite('describe', () => {
   })
 
   it('reads an unknown action as other', () => {
-    expect(describe(entry('mystery', { amount: 3 }), [])).toEqual({ kind: 'other', title: COPY.parentLogOther })
+    expect(describe(entry('mystery', { amount: 3 }), [])).toEqual({
+      kind: 'other',
+      title: COPY.parentLogOther,
+    })
   })
 
   it('gives an amount only for balance entries', () => {

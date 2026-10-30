@@ -3,14 +3,7 @@ import { COPY } from '../copy'
 import { formatCalendarDay } from '../ui/format'
 import type { Device, LogEntry } from './api'
 
-export type ActivityKind =
-  | 'balance'
-  | 'streak'
-  | 'pairing_code'
-  | 'unpair'
-  | 'correction'
-  | 'child'
-  | 'other'
+export type ActivityKind = 'balance' | 'streak' | 'pairing_code' | 'unpair' | 'correction' | 'child' | 'other'
 
 export interface Activity {
   kind: ActivityKind
