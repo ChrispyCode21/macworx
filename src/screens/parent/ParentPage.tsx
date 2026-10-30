@@ -15,15 +15,9 @@ import {
 import type { Device, LogEntry, ParentResult, ResultRow, Summary } from '../../parent/api'
 import type { Tab } from '../../parent/route'
 import { Button } from '../../ui/Button'
-import {
-  formatCalendarDay,
-  formatCode,
-  formatDay,
-  formatMoment,
-  formatNumber,
-  minutesLeft,
-} from '../../ui/format'
+import { formatCalendarDay, formatMoment, formatNumber, minutesLeft } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
+import { DevicesScreen } from './DevicesScreen'
 import { Shop } from './Shop'
 
 const MAX_NAME = 40
@@ -321,52 +315,18 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
       )}
 
       {tab === 'devices' && (
-        <section className="parent-section">
-          <h2>{COPY.parentIpadsHeading}</h2>
-          <h3>{COPY.parentPairHeading}</h3>
-          <TextField
-            label={COPY.parentNameLabel}
-            hint={COPY.parentNameHint}
-            value={name}
-            maxLength={MAX_NAME}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Button onClick={onMakeCode} disabled={making}>
-            {COPY.parentMakeCode}
-          </Button>
-          {code && (
-            <div className="parent-code" aria-live="polite">
-              {left > 0 ? (
-                <>
-                  <p className="parent-code-digits">{formatCode(code.code)}</p>
-                  <p>{COPY.parentCodeWithin(left)}</p>
-                </>
-              ) : (
-                <p>{COPY.parentCodeRanOut}</p>
-              )}
-            </div>
-          )}
-          <h3>{COPY.parentDevicesHeading}</h3>
-          {devices === null && unavailable}
-          {devices?.length === 0 && <p>{COPY.parentNoDevices}</p>}
-          <ul className="parent-devices">
-            {devices?.map((d) => (
-              <li key={d.id} className="parent-device">
-                <span className="parent-device-name">{d.label}</span>
-                <span>
-                  {d.revokedAt
-                    ? COPY.parentUnpairedOn(formatDay(d.revokedAt))
-                    : COPY.parentPairedOn(formatDay(d.createdAt))}
-                </span>
-                {!d.revokedAt && (
-                  <Button variant="secondary" onClick={() => setConfirming(d)}>
-                    {COPY.parentUnpair}
-                  </Button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <DevicesScreen
+          devices={devices}
+          unavailable={unavailable}
+          onUnpair={setConfirming}
+          name={name}
+          maxName={MAX_NAME}
+          onName={setName}
+          making={making}
+          onMakeCode={onMakeCode}
+          code={code}
+          left={left}
+        />
       )}
 
       {tab === 'streak' && (
