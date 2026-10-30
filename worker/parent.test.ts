@@ -579,6 +579,16 @@ describe('parent API', () => {
       })
     }
 
+    it('ignores a malformed today on the POST: the write has committed, so it answers 200', async () => {
+      const res = await t.call('POST', '/api/parent/streak?today=abc', {
+        key: null,
+        accessToken: await accessToken(),
+        body: { streak: 7, lastDay: '2026-10-16' },
+      })
+      expect(res.status).toBe(200)
+      expect(await child()).toEqual({ ...START, streak: 7 })
+    })
+
     it('C1: sets streak 7 and day 2026-10-16 → saved, balance and completed untouched, logged', async () => {
       await t.db
         .prepare(`INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (1, 1, '2026-10-16', 1)`)

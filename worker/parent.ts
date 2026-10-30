@@ -91,6 +91,11 @@ export async function getSummary(req: ParentRequest): Promise<Response> {
   if (childId instanceof Response) return childId
   const today = parseToday(req.url, req.now)
   if (today === null) return error(400, 'bad_day')
+  return summaryOf(db, childId, today)
+}
+
+/** Her totals and what she earned on `today`; the reads behind GET /api/parent/summary and POST /streak. */
+async function summaryOf(db: ParentRequest['db'], childId: number, today: string): Promise<Response> {
   const earned = await db
     .prepare('SELECT COALESCE(SUM(total), 0) AS n FROM results WHERE child_id = ? AND day = ?')
     .bind(childId, today)
@@ -269,7 +274,8 @@ export async function postStreak(req: ParentRequest): Promise<Response> {
         )
         .bind(now.toISOString(), email, JSON.stringify(detail), childId, childId, revision),
     ])
-    if (update.meta.changes === 1) return getSummary(req)
+    // The write has committed: answer from the Worker's own day, never a `today` the caller sent.
+    if (update.meta.changes === 1) return summaryOf(db, childId, utcDay(now))
   }
   return error(503, 'busy')
 }
