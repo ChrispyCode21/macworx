@@ -333,6 +333,16 @@ test('a new child shows no last counted day', async ({ page }) => {
   await expect(page.getByText('None yet')).toBeVisible()
 })
 
+test('a bad_day on the summary read says something went wrong, not a streak problem', async ({ page }) => {
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/parent/summary') return route.fulfill({ status: 400, json: { error: 'bad_day' } })
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/overview')
+  await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
+})
+
 test('her app at / never shows the parent page', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
