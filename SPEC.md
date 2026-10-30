@@ -102,7 +102,8 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 **Devices** has, for the selected child:
 
 - A count of her connected devices ("1 connected"), then one card for each connected device. An unpaired device is not listed (the activity log still names it). A card shows the device's name, "Added {date}", when it last synced, its status and browser line, and Unpair (§6.9). Last synced is the time of the latest result from the device: "Synced today, 4:05 pm" for today, "Synced Oct 12" for any other day, or "No results yet". The status (Online or Offline) and the browser line are sample data until the app has a source, each with a visible "Sample" label. Renaming a device and "View details" are shown disabled until they exist.
-- **Pair a device** for this child (§5.4, §6.9).
+- **Pair a device** for this child (§5.4, §6.9): a panel with a device name box (1 to 40 characters; the box takes no more than 40, and a blank name, or one of only spaces, shows "Give the device a name of up to 40 characters." and makes no code) and a Generate pairing code button. Once made, the code shows as one string with "Expires in N minutes." counting down, then "This code has run out. Make a new one." A footnote says codes expire after 10 minutes and are private.
+- **Before you disconnect** says that removing a device stops it saving progress for the child, while her synced homework, balance and streak stay safe (it uses her name, balance and streak), and that unpairing is reviewed, then confirmed, and work not yet synced stays on the device. A **Child access only** note says paired devices can't open parent controls.
 
 **Shop** shows the rewards of §6.7 as in her shop (icon, name, price), read-only: every button and field is disabled. A summary says how many of them are within reach of her balance (a price at most her balance). Each reward says "Within reach" or how many Macaronis more it needs. An edit panel for the first reward is shown with every control disabled and the note "Editing rewards is coming soon." **Last redeemed** lists purchases (§5.2); with none it shows "No rewards redeemed yet." Prices are fixed (§6.7).
 
@@ -131,11 +132,11 @@ A recorded result and her answers never change; Add or Remove on the Points scre
 
 ### 5.4 Pair her device
 
-1. Until her iPad is paired, she can still practice; Home also shows a **Pair this device** button. It shows only when the app runs installed from the home screen, because Safari and the installed app keep separate storage, so a pairing done in Safari wouldn't reach her app. A PR preview build shows it in a browser tab too (§6.9), so paired screens can be checked on a phone or tablet.
+1. Until her device is paired, she can still practice; Home also shows a **Pair this device** button. It shows only when the app runs installed from the home screen, because Safari and the installed app keep separate storage, so a pairing done in Safari wouldn't reach her app. A PR preview build shows it in a browser tab too (§6.9), so paired screens can be checked on a phone or tablet.
 2. A parent chooses the child on the portal's Devices screen and makes a code for her (§5.3, §6.9). On the Pair screen, the code is typed on the same number pad into six boxes, filled left to right, and sent with **Pair**.
 3. Paired: the screen says so and the button disappears from Home. The device keeps its device key and belongs to the child the code was made for.
 4. Not paired: a friendly line says what to do (ask for a new code, wait a minute, connect to Wi-Fi, or try again soon), and the boxes clear.
-5. Whenever Home opens with a stored key, the iPad checks it with the Worker. If a parent has unpaired the iPad, the iPad forgets the key and the button comes back.
+5. Whenever Home opens with a stored key, the device checks it with the Worker. If a parent has unpaired the device, the device forgets the key and the button comes back.
 
 ## 6. Domain rules
 
