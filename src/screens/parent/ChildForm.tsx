@@ -3,11 +3,19 @@ import { COPY } from '../../copy'
 import { addChild, renameChild } from '../../parent/api'
 import type { Child, ParentResult } from '../../parent/api'
 import { checkChildFields, cleanName, fillInitials, MAX_GRADE, MAX_INITIALS, MAX_NAME } from '../../parent/childFields'
+import type { FieldError } from '../../parent/childFields'
 import { Button } from '../../ui/Button'
 import { Segmented } from '../../ui/Segmented'
 import { TextField } from '../../ui/TextField'
 
 export type ChildMode = 'add' | 'rename'
+
+/** The kind words for a field the rules refuse. */
+function fieldProblem(error: FieldError): string {
+  if (error === 'bad_name') return COPY.parentChildNameProblem
+  if (error === 'bad_grade') return COPY.parentChildGradeProblem
+  return COPY.parentChildInitialsProblem
+}
 
 /** What a refused save says, in kind words. While the page reloads for a sign-in, nothing. */
 function problemText(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
@@ -19,11 +27,9 @@ function problemText(result: Extract<ParentResult<unknown>, { ok: false }>): str
     case 'offline':
       return COPY.parentOffline
     case 'bad_name':
-      return COPY.parentChildNameProblem
     case 'bad_grade':
-      return COPY.parentChildGradeProblem
     case 'bad_initials':
-      return COPY.parentChildInitialsProblem
+      return fieldProblem(result.error)
     case 'busy':
       return COPY.parentBusy
     default:
@@ -79,14 +85,7 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
     setProblem(null)
     setNotice(null)
     const checked = checkChildFields(fields)
-    if (!checked.ok)
-      return setProblem(
-        checked.error === 'bad_name'
-          ? COPY.parentChildNameProblem
-          : checked.error === 'bad_grade'
-            ? COPY.parentChildGradeProblem
-            : COPY.parentChildInitialsProblem,
-      )
+    if (!checked.ok) return setProblem(fieldProblem(checked.error))
     // One request at a time, so a quick double click saves once.
     setSaving(true)
     const result =
