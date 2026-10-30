@@ -67,11 +67,34 @@ export async function listDevices(req: ParentRequest): Promise<Response> {
 /** How many results and log entries the dashboard lists (SPEC §5.3). */
 const LIST_LIMIT = 50
 
-/** GET /api/parent/summary: her totals. */
+/**
+ * The parent's calendar day from the optional `today` query parameter: the Worker's UTC day when absent,
+ * else a real YYYY-MM-DD date within 1 day of it. Null for anything else.
+ */
+function parseToday(url: URL, now: Date): string | null {
+  const given = url.searchParams.get('today')
+  const utc = utcDay(now)
+  if (given === null) return utc
+  try {
+    // addDays is the calendar check: it throws for a bad format and for a day like 2026-02-30.
+    if (addDays(given, 0) !== given) return null
+    return Math.abs(dayNumber(given) - dayNumber(utc)) <= 1 ? given : null
+  } catch {
+    return null
+  }
+}
+
+/** GET /api/parent/summary: her totals, and what she earned on the parent's calendar day. */
 export async function getSummary(req: ParentRequest): Promise<Response> {
   const { db } = req
   const childId = await childOf(req)
   if (childId instanceof Response) return childId
+  const today = parseToday(req.url, req.now)
+  if (today === null) return error(400, 'bad_day')
+  const earned = await db
+    .prepare('SELECT COALESCE(SUM(total), 0) AS n FROM results WHERE child_id = ? AND day = ?')
+    .bind(childId, today)
+    .first<{ n: number }>()
   const row = await db
     .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = ?')
     .bind(childId)
@@ -82,6 +105,7 @@ export async function getSummary(req: ParentRequest): Promise<Response> {
     streak: row.streak,
     lastDay: row.last_day,
     completed: row.completed,
+    earnedToday: earned?.n ?? 0,
   })
 }
 
@@ -92,7 +116,7 @@ export async function listResults(req: ParentRequest): Promise<Response> {
   if (childId instanceof Response) return childId
   const { results } = await db
     .prepare(
-      `SELECT id, day, answered, correct, finished, grade, total FROM results
+      `SELECT id, day, answered, correct, finished, grade, total, created_at FROM results
        WHERE child_id = ? ORDER BY day DESC, id DESC LIMIT ?`,
     )
     .bind(childId, LIST_LIMIT)
@@ -104,6 +128,7 @@ export async function listResults(req: ParentRequest): Promise<Response> {
       finished: number
       grade: string | null
       total: number
+      created_at: string
     }>()
   return json(200, {
     results: results.map((r) => ({
@@ -114,6 +139,7 @@ export async function listResults(req: ParentRequest): Promise<Response> {
       finished: r.finished === 1,
       grade: r.grade,
       total: r.total,
+      createdAt: r.created_at,
     })),
   })
 }

@@ -139,11 +139,26 @@ describe('parent reads are scoped to the chosen child', () => {
     expect(two.body.balance).not.toBe(41)
   })
 
+  it('earned today counts the chosen child results only', async () => {
+    const total = (child: number) =>
+      count('SELECT COALESCE(SUM(total), 0) AS n FROM results WHERE child_id = ?', child)
+    const earned = async (child: number, day: string) =>
+      (await parent('GET', `/api/parent/summary?today=${day}`, undefined, child)).body.earnedToday
+    expect(await earned(1, '2026-10-16')).toBe(await total(1))
+    expect(await earned(2, '2026-10-17')).toBe(await total(2))
+    expect(await earned(1, '2026-10-17')).toBe(0)
+    expect(await earned(2, '2026-10-16')).toBe(0)
+    expect(await total(1)).toBeGreaterThan(0)
+    expect(await total(2)).toBeGreaterThan(0)
+  })
+
   it('results and one result', async () => {
     const one = await parent('GET', '/api/parent/results', undefined, 1)
     const two = await parent('GET', '/api/parent/results', undefined, 2)
     expect(one.body.results.map((r: { day: string }) => r.day)).toEqual(['2026-10-16'])
     expect(two.body.results.map((r: { day: string }) => r.day)).toEqual(['2026-10-17'])
+    expect(one.body.results[0].createdAt).toBe('2026-10-16T12:00:00.000Z')
+    expect(two.body.results[0].createdAt).toBe('2026-10-17T12:00:00.000Z')
     const id1 = one.body.results[0].id
     expect((await parent('GET', `/api/parent/results/${id1}`, undefined, 1)).status).toBe(200)
     expect(await parent('GET', `/api/parent/results/${id1}`, undefined, 2)).toEqual({

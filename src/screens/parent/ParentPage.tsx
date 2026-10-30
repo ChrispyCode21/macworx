@@ -13,6 +13,8 @@ import {
   unpair,
 } from '../../parent/api'
 import type { Device, LogEntry, ParentResult, ResultRow, Summary } from '../../parent/api'
+import { describe } from '../../parent/activity'
+import { parseAmount } from '../../parent/adjust'
 import type { Tab } from '../../parent/route'
 import { Button } from '../../ui/Button'
 import { formatCalendarDay, formatMoment, formatNumber, minutesLeft } from '../../ui/format'
@@ -22,7 +24,6 @@ import { Shop } from './Shop'
 
 const MAX_NAME = 40
 const MAX_STREAK = 3650
-const MAX_AMOUNT = 100_000
 
 /** What a failed parent call shows. While the page reloads for a sign-in, nothing. */
 function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
@@ -35,49 +36,6 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
   if (result.error === 'bad_note') return COPY.parentNoteProblem
   if (result.error === 'busy') return COPY.parentBusy
   return COPY.parentServerTrouble
-}
-
-/** What an activity log entry says, in plain words. Actions this page doesn't know read as a general change. */
-function describe(entry: LogEntry, devices: Device[]): string {
-  if (entry.action === 'pairing_code' && typeof entry.detail.name === 'string')
-    return COPY.parentLogPairingCode(entry.detail.name)
-  if (entry.action === 'unpair') {
-    const label = devices.find((d) => d.id === entry.detail.deviceId)?.label
-    return COPY.parentLogUnpair(label ?? COPY.parentLogUnknownDevice)
-  }
-  if (entry.action === 'streak') {
-    const after = entry.detail.after as { streak?: unknown; lastDay?: unknown } | null | undefined
-    if (typeof after?.streak === 'number' && (typeof after.lastDay === 'string' || after.lastDay === null))
-      return COPY.parentLogStreak(after.streak, after.lastDay)
-  }
-  if (entry.action === 'correction') {
-    const { day, before, after, note: why } = entry.detail
-    const b = before as { correct?: unknown; total?: unknown } | null | undefined
-    const a = after as { correct?: unknown; total?: unknown } | null | undefined
-    if (
-      typeof day === 'string' &&
-      typeof why === 'string' &&
-      typeof b?.correct === 'number' &&
-      typeof b.total === 'number' &&
-      typeof a?.correct === 'number' &&
-      typeof a.total === 'number'
-    )
-      return COPY.parentLogCorrected(formatCalendarDay(day), b.correct, a.correct, a.total - b.total, why)
-  }
-  if (entry.action === 'child_add' && typeof entry.detail.name === 'string')
-    return COPY.parentLogChildAdded(entry.detail.name)
-  if (entry.action === 'child_rename') {
-    const b = entry.detail.before as { name?: unknown } | null | undefined
-    const a = entry.detail.after as { name?: unknown } | null | undefined
-    if (typeof b?.name === 'string' && typeof a?.name === 'string')
-      return b.name === a.name
-        ? COPY.parentLogChildChanged(a.name)
-        : COPY.parentLogChildRenamed(b.name, a.name)
-  }
-  const { amount, note } = entry.detail
-  if (entry.action === 'balance' && typeof amount === 'number' && typeof note === 'string')
-    return amount < 0 ? COPY.parentLogRemoved(-amount, note) : COPY.parentLogAdded(amount, note)
-  return COPY.parentLogOther
 }
 
 const WHOLE_NUMBER = /^\d{1,4}$/
@@ -139,7 +97,9 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     if (!live.current) return
     const summaryResult = await getSummary()
     if (!live.current) return
-    if (!summaryResult.ok) return setProblem(failure(summaryResult))
+    // A bad_day on this read means the device clock is far off, not a streak problem: the generic message.
+    if (!summaryResult.ok)
+      return setProblem(summaryResult.error === 'bad_day' ? COPY.parentServerTrouble : failure(summaryResult))
     const resultsResult = await listResults()
     if (!live.current) return
     if (!resultsResult.ok) return setProblem(failure(resultsResult))
@@ -214,8 +174,8 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     setSaved(null)
     setAdjustProblem(null)
     const trimmed = note.trim()
-    const count = /^\d+$/.test(amount.trim()) ? Number(amount.trim()) : 0
-    if (count < 1 || count > MAX_AMOUNT) return setAdjustProblem(COPY.parentAmountProblem)
+    const count = parseAmount(amount)
+    if (count === null) return setAdjustProblem(COPY.parentAmountProblem)
     if (trimmed.length < 1 || trimmed.length > MAX_NOTE) return setAdjustProblem(COPY.parentNoteProblem)
     // One request at a time, so a quick double click can't save the same change twice.
     setSaving(true)
@@ -427,7 +387,7 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
                       <tr key={entry.id}>
                         <td>{formatMoment(entry.at)}</td>
                         <td>{entry.email}</td>
-                        <td>{describe(entry, devices ?? [])}</td>
+                        <td>{describe(entry, devices ?? []).title}</td>
                       </tr>
                     ))}
                   </tbody>
