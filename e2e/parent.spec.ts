@@ -343,6 +343,26 @@ test('a bad_day on the summary read says something went wrong, not a streak prob
   await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
 })
 
+test('a bad_day on the re-read after a refused removal says something went wrong, not a streak problem', async ({
+  page,
+}) => {
+  let summaryReads = 0
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (route.request().method() === 'POST')
+      return route.fulfill({ status: 409, json: { error: 'overdraw', balance: 41 } })
+    if (path === '/api/parent/summary' && ++summaryReads > 1)
+      return route.fulfill({ status: 400, json: { error: 'bad_day' } })
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/points')
+  await page.getByRole('button', { name: 'Remove' }).click()
+  await page.getByLabel('How many Macaronis').fill('50')
+  await page.getByLabel('Note').fill('Too many')
+  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
+})
+
 test('her app at / never shows the parent page', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()

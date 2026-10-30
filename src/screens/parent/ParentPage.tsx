@@ -38,6 +38,11 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
   return COPY.parentServerTrouble
 }
 
+/** What a failed summary read shows: a bad_day there means the device clock is far off, not a streak problem. */
+function summaryFailure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
+  return result.error === 'bad_day' ? COPY.parentServerTrouble : failure(result)
+}
+
 const WHOLE_NUMBER = /^\d{1,4}$/
 
 /** The streak form's two boxes as the Worker wants them, or null when they can't be sent (SPEC §5.3). */
@@ -97,9 +102,7 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     if (!live.current) return
     const summaryResult = await getSummary()
     if (!live.current) return
-    // A bad_day on this read means the device clock is far off, not a streak problem: the generic message.
-    if (!summaryResult.ok)
-      return setProblem(summaryResult.error === 'bad_day' ? COPY.parentServerTrouble : failure(summaryResult))
+    if (!summaryResult.ok) return setProblem(summaryFailure(summaryResult))
     const resultsResult = await listResults()
     if (!live.current) return
     if (!resultsResult.ok) return setProblem(failure(resultsResult))
@@ -191,7 +194,7 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     if (result.error === 'overdraw') {
       const latest = await getSummary()
       if (!live.current) return
-      return setAdjustProblem(latest.ok ? COPY.parentOverdraw(latest.body.balance) : failure(latest))
+      return setAdjustProblem(latest.ok ? COPY.parentOverdraw(latest.body.balance) : summaryFailure(latest))
     }
     setAdjustProblem(failure(result))
   }
