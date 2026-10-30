@@ -669,30 +669,130 @@ p {
   flex: 1;
 }
 
-.parent-devices {
+/* Devices screen (docs/DESIGN.md §12) */
+.device-count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.device-count .device-meta {
+  flex: 1;
+  font-size: 12px;
+}
+
+.device-list {
   list-style: none;
   padding: 0;
   margin: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.parent-device {
+.device-chip {
+  padding: 4px 9px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.device-chip-soft {
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+}
+
+.device-chip-warn {
+  background: var(--p-warn-soft);
+  color: var(--p-warn-ink);
+}
+
+.device-identity,
+.device-connection,
+.device-actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--p-divider);
 }
 
-.parent-device-name {
-  font-weight: 600;
+.device-connection {
+  justify-content: space-between;
+}
+
+.device-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+}
+
+.device-detail {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+
+.device-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--p-text);
+  overflow-wrap: anywhere;
+}
+
+.device-meta {
+  font-size: 11px;
+  color: var(--p-muted);
+}
+
+.device-sample {
+  font-size: 11px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--p-muted);
+}
+
+.device-identity .button-bare {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: var(--p-accent-ink);
+}
+
+.device-actions {
+  gap: 8px;
+}
+
+.device-actions .button-soft {
+  flex: 1;
+}
+
+.parent .device-actions .button-danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 48px;
+  padding: 0;
 }
 
 /* Buttons and boxes at the parent size (48px tall); the child app's stay as they are. */
 .parent .button-primary,
-.parent .button-secondary {
+.parent .button-secondary,
+.parent .button-soft {
   height: 48px;
   min-width: 0;
   min-height: 0;
@@ -709,7 +809,8 @@ p {
   color: var(--p-primary-ink);
 }
 
-.parent .button-secondary {
+.parent .button-secondary,
+.parent .button-soft {
   background: var(--p-chip);
   color: var(--p-accent-ink);
 }
@@ -905,6 +1006,36 @@ p {
     font-size: 18px;
     line-height: normal;
     min-height: 28px;
+  }
+
+  .device-list {
+    gap: 16px;
+  }
+
+  .device-card.parent-section {
+    gap: 16px;
+    padding: 22px;
+  }
+
+  .device-chip {
+    padding: 5px 10px;
+  }
+
+  .device-tile {
+    width: 48px;
+    height: 52px;
+  }
+
+  .device-detail {
+    gap: 4px;
+  }
+
+  .device-name {
+    font-size: 16px;
+  }
+
+  .device-actions {
+    gap: 10px;
   }
 
   .parent-summary dd {

@@ -161,6 +161,43 @@ describe('parent reads are scoped to the chosen child', () => {
     expect(await labels(2)).toEqual(['second iPad'])
   })
 
+  it('devices carry lastResultAt: null with no results, the latest per device, only the chosen child', async () => {
+    const list = async (child: number) =>
+      (await parent('GET', '/api/parent/devices', undefined, child)).body.devices as {
+        id: number
+        label: string
+        createdAt: string
+        revokedAt: string | null
+        lastResultAt: string | null
+      }[]
+    const before = await list(1)
+    // Device 1 has the one seeded result; device 2 has none.
+    expect(before.map((d) => d.lastResultAt)).toEqual(['2026-10-16T12:00:00.000Z', null])
+
+    await finish(DEVICE_KEY, '2026-10-15')
+    await finish(DEVICE_KEY, '2026-10-17')
+    await finish(DEVICE_KEY, '2026-10-16')
+    await finish(CHILD2_KEY, '2026-10-18')
+
+    const after = await list(1)
+    expect(after.map((d) => d.lastResultAt)).toEqual(['2026-10-17T12:00:00.000Z', null])
+    // Nothing else about the rows changes, and the other child's device is absent.
+    expect(after.map(({ lastResultAt: _, ...rest }) => rest)).toEqual(
+      before.map(({ lastResultAt: _, ...rest }) => rest),
+    )
+    expect((await list(2)).map((d) => [d.label, d.lastResultAt])).toEqual([
+      ['second iPad', '2026-10-18T12:00:00.000Z'],
+    ])
+  })
+
+  it('an unpaired device still lists its lastResultAt', async () => {
+    await finish(DEVICE_KEY, '2026-10-17')
+    await parent('DELETE', '/api/parent/devices/1', undefined, 1)
+    const devices = (await parent('GET', '/api/parent/devices', undefined, 1)).body.devices
+    expect(devices[0].revokedAt).not.toBeNull()
+    expect(devices[0].lastResultAt).toBe('2026-10-17T12:00:00.000Z')
+  })
+
   it('log', async () => {
     await parent('POST', '/api/parent/balance', { amount: 5, note: 'One' }, 1)
     await parent('POST', '/api/parent/balance', { amount: 7, note: 'Two' }, 2)

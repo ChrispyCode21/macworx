@@ -2,12 +2,35 @@ import { describe, expect, it } from 'vitest'
 import { makeProblem } from '../engine'
 import {
   formatCalendarDay,
+  formatClock,
   formatEquation,
   formatLongDay,
   formatMoment,
   formatNumber,
+  isSameLocalDay,
   operatorSymbol,
 } from './format'
+
+describe('formatClock', () => {
+  // Built from local dates so the test holds in any time zone.
+  it('writes the time with lowercase am/pm', () => {
+    expect(formatClock(new Date(2026, 9, 17, 16, 5).toISOString())).toBe('4:05 pm')
+    expect(formatClock(new Date(2026, 9, 17, 0, 9).toISOString())).toBe('12:09 am')
+    expect(formatClock(new Date(2026, 9, 17, 23, 30).toISOString())).toBe('11:30 pm')
+  })
+})
+
+describe('isSameLocalDay', () => {
+  const now = new Date(2026, 9, 17, 18, 0)
+  it('is true for any time on the same day', () => {
+    expect(isSameLocalDay(new Date(2026, 9, 17, 0, 9).toISOString(), now)).toBe(true)
+    expect(isSameLocalDay(new Date(2026, 9, 17, 23, 30).toISOString(), now)).toBe(true)
+  })
+  it('is false for another day', () => {
+    expect(isSameLocalDay(new Date(2026, 9, 16, 23, 59).toISOString(), now)).toBe(false)
+    expect(isSameLocalDay(new Date(2026, 9, 12, 9, 0).toISOString(), now)).toBe(false)
+  })
+})
 
 describe('display formatting', () => {
   it('uses thousands separators', () => {

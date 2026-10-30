@@ -101,7 +101,7 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 
 **Devices** has, for the selected child:
 
-- Her paired devices, each with its name, when it last synced (the time of the latest result from it, or "No results yet"), its status and browser line (sample data until the app has a source), and Unpair (§6.9).
+- A count of her connected devices ("1 connected"), then one card for each connected device. An unpaired device is not listed (the activity log still names it). A card shows the device's name, "Added {date}", when it last synced, its status and browser line, and Unpair (§6.9). Last synced is the time of the latest result from the device: "Synced today, 4:05 pm" for today, "Synced Oct 12" for any other day, or "No results yet". The status (Online or Offline) and the browser line are sample data until the app has a source, each with a visible "Sample" label. Renaming a device and "View details" are shown disabled until they exist.
 - **Pair a device** for this child (§5.4, §6.9).
 
 **Shop** shows the rewards of §6.7 as in her shop (icon, name, price), read-only: every button and field is disabled. A summary says how many of them are within reach of her balance (a price at most her balance). Each reward says "Within reach" or how many Macaronis more it needs. An edit panel for the first reward is shown with every control disabled and the note "Editing rewards is coming soon." **Last redeemed** lists purchases (§5.2); with none it shows "No rewards redeemed yet." Prices are fixed (§6.7).
@@ -393,7 +393,7 @@ The parent API (every route needs a valid Access token, §6.9). A parent can lis
 - `POST /api/parent/children { name, grade?, initials? }`: adds a child with a balance of 0 and returns her (201): id, name, grade and initials. An empty or missing `initials` is filled from the name. Logged for the new child.
 - `PATCH /api/parent/children/:id { name?, grade?, initials? }`: changes the fields sent and returns her (200); fields not sent stay as they were. An empty `initials` is filled from the name (the new name if one is sent). Logged for that child with the old and new fields; a change that changes nothing is a 200 with no log row. Errors for both: 400 `bad_name`, `bad_grade`, `bad_initials` (also when nothing can be filled from the name) and `bad_body` (not JSON, or nothing to change); 404 `unknown_child` for an id that doesn't exist (PATCH); 503 `busy` after 3 lost races (PATCH).
 - There is no route to delete a child.
-- `GET /api/parent/devices`: the chosen child's paired and unpaired devices.
+- `GET /api/parent/devices`: the chosen child's paired and unpaired devices, each with `id`, `label`, `createdAt`, `revokedAt` and `lastResultAt` (the time the Worker recorded that device's latest result, or null when it has none).
 - `DELETE /api/parent/devices/:id`: unpairs a device of the chosen child (logged).
 - `POST /api/parent/pairing-code { name }`: a new pairing code for a device with that name; the device that uses it belongs to the chosen child (logged).
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).

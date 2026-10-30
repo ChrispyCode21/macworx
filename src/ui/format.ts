@@ -31,6 +31,18 @@ export function formatDay(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+/** "4:05 pm": a time of day in the viewer's time zone, with lowercase am/pm. */
+export function formatClock(iso: string): string {
+  return new Date(iso)
+    .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    .replace(/\s?([AP])M$/, (_m, ap: string) => ` ${ap.toLowerCase()}m`)
+}
+
+/** Whether `iso` falls on the same day as `now`, in the viewer's time zone. */
+export function isSameLocalDay(iso: string, now: Date): boolean {
+  return new Date(iso).toDateString() === now.toDateString()
+}
+
 /** Whole minutes left until `iso`, rounded up; 0 once it has passed. */
 export function minutesLeft(iso: string, now: Date): number {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - now.getTime()) / 60_000))

@@ -8,6 +8,7 @@ interface Device {
   label: string
   createdAt: string
   revokedAt: string | null
+  lastResultAt: string | null
 }
 
 const summary = { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 }
@@ -58,20 +59,26 @@ async function parentApi(page: Page, devices: Device[], code = '012345') {
   return calls
 }
 
-const herIpad: Device = { id: 1, label: 'Her iPad', createdAt: '2026-10-19T12:00:00Z', revokedAt: null }
+const herIpad: Device = {
+  id: 1,
+  label: 'Her iPad',
+  createdAt: '2026-10-19T12:00:00Z',
+  revokedAt: null,
+  lastResultAt: null,
+}
 
-test('makes a code for a named iPad and counts it down', async ({ page }) => {
+test('makes a code for a named device and counts it down', async ({ page }) => {
   await page.clock.install()
   await parentApi(page, [])
   await page.goto('/parent/devices')
   await expect(page.getByRole('heading', { name: "Child's devices, connected." })).toBeVisible()
-  await expect(page.getByText('No iPads paired yet.')).toBeVisible()
-  await page.getByLabel('iPad name').fill('Her iPad')
+  await expect(page.getByText('No devices paired yet.')).toBeVisible()
+  await page.getByLabel('Device name').fill('Her iPad')
   await page.getByRole('button', { name: 'Make a code' }).click()
   await expect(page.getByText('012 345')).toBeVisible()
-  await expect(page.getByText('Enter it on the iPad within 10 minutes.')).toBeVisible()
+  await expect(page.getByText('Enter it on the device within 10 minutes.')).toBeVisible()
   await page.clock.fastForward('09:30')
-  await expect(page.getByText('Enter it on the iPad within 1 minute.')).toBeVisible()
+  await expect(page.getByText('Enter it on the device within 1 minute.')).toBeVisible()
   await page.clock.fastForward('01:00')
   await expect(page.getByText('This code has run out. Make a new one.')).toBeVisible()
 })
@@ -80,30 +87,55 @@ test('asks for a name before making a code', async ({ page }) => {
   const calls = await parentApi(page, [])
   await page.goto('/parent/devices')
   // Let the page finish loading: a load that ends later clears any message.
-  await expect(page.getByText('No iPads paired yet.')).toBeVisible()
+  await expect(page.getByText('No devices paired yet.')).toBeVisible()
   await page.getByRole('button', { name: 'Make a code' }).click()
-  await expect(page.getByText('Give the iPad a name of up to 40 characters.')).toBeVisible()
+  await expect(page.getByText('Give the device a name of up to 40 characters.')).toBeVisible()
   expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
   // The page asks for the children first, then reads the first child's numbers.
   expect(calls.slice(0, 2)).toEqual(['GET /api/parent/children', 'GET /api/parent/summary'])
 })
 
-test('unpairs an iPad after the warning, and keeps it when asked', async ({ page }) => {
+test('unpairs a device after the warning, and keeps it when asked', async ({ page }) => {
   const calls = await parentApi(page, [herIpad])
   await page.goto('/parent/devices')
-  await expect(page.getByText('Paired Oct 19')).toBeVisible()
+  await expect(page.getByText('Added Oct 19')).toBeVisible()
+  await expect(page.getByText('1 connected')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Unpair' }).click()
-  const warning = "Unpair Her iPad? Results this iPad hasn't sent yet won't be saved."
+  await page.getByRole('button', { name: 'Unpair Her iPad' }).click()
+  const warning = "Unpair Her iPad? Results this device hasn't sent yet won't be saved."
   await expect(page.getByRole('alertdialog').getByText(warning)).toBeVisible()
   await page.getByRole('button', { name: 'Keep it paired' }).click()
   expect(calls).not.toContain('DELETE /api/parent/devices/1')
+  await expect(page.getByText('Added Oct 19')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Unpair' }).click()
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Unpair' }).click()
-  await expect(page.getByText('Unpaired Oct 20')).toBeVisible()
+  await page.getByRole('button', { name: 'Unpair Her iPad' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Unpair', exact: true }).click()
+  // An unpaired device drops off the list.
+  await expect(page.getByText('0 connected')).toBeVisible()
+  await expect(page.getByText('Added Oct 19')).toHaveCount(0)
   expect(calls).toContain('DELETE /api/parent/devices/1')
-  await expect(page.getByRole('button', { name: 'Unpair' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Unpair/ })).toHaveCount(0)
+})
+
+test('a device card shows when it last synced, and labels the sample items', async ({ page }) => {
+  // Pin the page's clock to a fixed local noon so "today" cannot drift with the wall clock.
+  await page.clock.setFixedTime(new Date(2026, 9, 17, 12, 0))
+  const sync = new Date(2020, 5, 3, 16, 5).toISOString()
+  const today = new Date(2026, 9, 17, 9, 7)
+  await parentApi(page, [
+    herIpad,
+    { ...herIpad, id: 2, label: 'Kitchen tablet', lastResultAt: sync },
+    { ...herIpad, id: 3, label: 'Den tablet', lastResultAt: today.toISOString() },
+  ])
+  await page.goto('/parent/devices')
+  await expect(page.getByText('3 connected')).toBeVisible()
+  await expect(page.getByText('No results yet')).toHaveCount(1)
+  await expect(page.getByText('Synced Jun 3')).toBeVisible()
+  await expect(page.getByText('Synced today, 9:07 am')).toBeVisible()
+  // The status and the browser line are sample data, labelled on each card.
+  await expect(page.getByText('Sample', { exact: true })).toHaveCount(6)
+  await expect(page.getByRole('button', { name: 'View details' }).first()).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Rename Her iPad' })).toBeDisabled()
 })
 
 test('the Worker refusing (as on a preview) shows a message and never reloads', async ({ page }) => {
@@ -237,7 +269,7 @@ test('a successful call clears the reload flag, so a later run-out can reload ag
   await parentApi(page, [herIpad])
   await page.addInitScript(() => sessionStorage.setItem('macworx.parentReloaded', '1'))
   await page.goto('/parent/devices')
-  await expect(page.getByText('Paired Oct 19')).toBeVisible()
+  await expect(page.getByText('Added Oct 19')).toBeVisible()
   expect(await page.evaluate(() => sessionStorage.getItem('macworx.parentReloaded'))).toBeNull()
 })
 
@@ -273,7 +305,7 @@ test('a later success clears an earlier message', async ({ page }) => {
   await page.goto('/parent/devices')
   await expect(page.getByRole('alert')).toBeVisible()
   fail = false
-  await page.getByLabel('iPad name').fill('Her iPad')
+  await page.getByLabel('Device name').fill('Her iPad')
   await page.getByRole('button', { name: 'Make a code' }).click()
   await expect(page.getByText('111 222')).toBeVisible()
   await expect(page.getByRole('alert')).toHaveCount(0)
@@ -293,7 +325,7 @@ test('Make a code waits for its answer before taking another click', async ({ pa
       })
   })
   await page.goto('/parent/devices')
-  await page.getByLabel('iPad name').fill('Her iPad')
+  await page.getByLabel('Device name').fill('Her iPad')
   await page.getByRole('button', { name: 'Make a code' }).click()
   await expect(page.getByRole('button', { name: 'Make a code' })).toBeDisabled()
   answer()

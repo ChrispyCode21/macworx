@@ -8,8 +8,9 @@ import type { ComponentProps } from 'react'
  * - check: the number pad's Check key
  * - bare: no look of its own, for a control the caller styles (the portal's child switcher and its rows)
  * - danger: the parent portal's destructive action
+ * - soft: the parent portal's quiet filled action (View details)
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'key' | 'check' | 'bare' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'key' | 'check' | 'bare' | 'danger' | 'soft'
 
 interface Props extends Omit<ComponentProps<'button'>, 'type' | 'className'> {
   variant?: ButtonVariant
