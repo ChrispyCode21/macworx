@@ -64,6 +64,8 @@ export interface Summary {
   streak: number
   lastDay: string | null
   completed: number
+  /** The Macaronis she earned on the parent's calendar day (results only, not adjustments). */
+  earnedToday: number
 }
 
 export interface ResultRow {
@@ -74,6 +76,8 @@ export interface ResultRow {
   finished: boolean
   grade: string | null
   total: number
+  /** When the Worker recorded the result, an ISO timestamp. */
+  createdAt: string
 }
 
 export interface LogEntry {
@@ -89,6 +93,16 @@ export const LIST_LIMIT = 50
 
 /** The longest note the Worker accepts on an adjustment (SPEC §5.3). */
 export const MAX_NOTE = 200
+
+/** The largest amount the Worker accepts on an adjustment (SPEC §5.3). */
+export const MAX_AMOUNT = 100_000
+
+/** The browser's local calendar day as YYYY-MM-DD: the parent's "today" (SPEC §5.3). */
+export function localDay(date: Date = new Date()): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
 
 export interface Child {
   id: number
@@ -118,7 +132,11 @@ export const renameChild = (id: number, fields: ChildFields) =>
  * A call for the selected child. With none chosen yet, the first child is chosen (SPEC §5.3); a failure to
  * list the children, or a household with none, comes back as the call's own failure.
  */
-async function scoped<T>(path: string, init?: RequestInit): Promise<ParentResult<T>> {
+async function scoped<T>(
+  path: string,
+  init?: RequestInit,
+  extra?: Record<string, string>,
+): Promise<ParentResult<T>> {
   if (selected === null) {
     const found = await getChildren()
     if (!found.ok) return found
@@ -127,10 +145,13 @@ async function scoped<T>(path: string, init?: RequestInit): Promise<ParentResult
     if (!picked) return { ok: false, status: 404, error: 'no_child' }
     selected = picked.id
   }
-  return parentCall<T>(`${path}?child=${selected}`, init)
+  const more = Object.entries(extra ?? {})
+    .map(([key, value]) => `&${key}=${encodeURIComponent(value)}`)
+    .join('')
+  return parentCall<T>(`${path}?child=${selected}${more}`, init)
 }
 
-export const getSummary = () => scoped<Summary>('/api/parent/summary')
+export const getSummary = () => scoped<Summary>('/api/parent/summary', undefined, { today: localDay() })
 
 export const listResults = () => scoped<{ results: ResultRow[] }>('/api/parent/results')
 
