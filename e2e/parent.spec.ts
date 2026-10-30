@@ -26,7 +26,12 @@ function readViews(path: string, devices: Device[], views: Record<string, unknow
   return answers[path]
 }
 
-async function parentApi(page: Page, devices: Device[], code = '012345') {
+async function parentApi(
+  page: Page,
+  devices: Device[],
+  code = '012345',
+  views: Record<string, unknown> = {},
+) {
   const calls: string[] = []
   let balance = summary.balance
   await page.route('/api/parent/**', async (route: Route) => {
@@ -36,6 +41,7 @@ async function parentApi(page: Page, devices: Device[], code = '012345') {
       return route.fulfill({
         json: readViews(new URL(req.url()).pathname, devices, {
           '/api/parent/summary': { ...summary, balance },
+          ...views,
         }),
       })
     if (req.method() === 'DELETE') {
@@ -73,12 +79,17 @@ test('makes a code for a named device and counts it down', async ({ page }) => {
   await page.goto('/parent/devices')
   await expect(page.getByRole('heading', { name: "Child's devices, connected." })).toBeVisible()
   await expect(page.getByText('No devices paired yet.')).toBeVisible()
-  await page.getByLabel('Device name').fill('Her iPad')
-  await page.getByRole('button', { name: 'Make a code' }).click()
+  await expect(page.getByText('Connect another device')).toBeVisible()
+  await expect(
+    page.getByText("Open macworx on Child's device, then enter the one-time pairing code."),
+  ).toBeVisible()
+  await expect(page.getByText('Codes expire after 10 minutes. Keep yours private.')).toBeVisible()
+  await page.getByLabel('Device name').fill('Kitchen tablet')
+  await page.getByRole('button', { name: 'Generate pairing code' }).click()
   await expect(page.getByText('012 345')).toBeVisible()
-  await expect(page.getByText('Enter it on the device within 10 minutes.')).toBeVisible()
+  await expect(page.getByText('Expires in 10 minutes.')).toBeVisible()
   await page.clock.fastForward('09:30')
-  await expect(page.getByText('Enter it on the device within 1 minute.')).toBeVisible()
+  await expect(page.getByText('Expires in 1 minute.')).toBeVisible()
   await page.clock.fastForward('01:00')
   await expect(page.getByText('This code has run out. Make a new one.')).toBeVisible()
 })
@@ -88,11 +99,84 @@ test('asks for a name before making a code', async ({ page }) => {
   await page.goto('/parent/devices')
   // Let the page finish loading: a load that ends later clears any message.
   await expect(page.getByText('No devices paired yet.')).toBeVisible()
-  await page.getByRole('button', { name: 'Make a code' }).click()
-  await expect(page.getByText('Give the device a name of up to 40 characters.')).toBeVisible()
+  const message = page.getByText('Give the device a name of up to 40 characters.')
+  const make = page.getByRole('button', { name: 'Generate pairing code' })
+  await make.click()
+  await expect(message).toBeVisible()
+  // A name of only spaces is as good as none.
+  await page.getByLabel('Device name').fill('    ')
+  await make.click()
+  await expect(message).toBeVisible()
+  // The box takes no more than 40 characters.
+  await page.getByLabel('Device name').fill('x'.repeat(41))
+  await expect(page.getByLabel('Device name')).toHaveValue('x'.repeat(40))
   expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
   // The page asks for the children first, then reads the first child's numbers.
   expect(calls.slice(0, 2)).toEqual(['GET /api/parent/children', 'GET /api/parent/summary'])
+})
+
+test('makes the code for the chosen child', async ({ page }) => {
+  const posts: { url: string; body: unknown }[] = []
+  page.on('request', (req) => {
+    if (req.method() === 'POST') posts.push({ url: req.url(), body: req.postDataJSON() })
+  })
+  await parentApi(page, [], '246810', {
+    '/api/parent/children': {
+      children: [
+        { id: 1, name: 'Ada', grade: '', initials: 'A' },
+        { id: 2, name: 'Bo', grade: '', initials: 'B' },
+      ],
+    },
+  })
+  await page.goto('/parent/devices')
+  await page.locator('.portal-switcher > button').click()
+  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /^Bo/ }).click()
+  await expect(
+    page.getByText("Open macworx on Bo's device, then enter the one-time pairing code."),
+  ).toBeVisible()
+  await page.getByLabel('Device name').fill('Den tablet')
+  await page.getByRole('button', { name: 'Generate pairing code' }).click()
+  await expect(page.getByText('246 810')).toBeVisible()
+  expect(posts).toHaveLength(1)
+  expect(new URL(posts[0].url).searchParams.get('child')).toBe('2')
+  expect(posts[0].body).toEqual({ name: 'Den tablet' })
+})
+
+test('says what disconnecting does, with her name, balance and streak', async ({ page }) => {
+  await parentApi(page, [])
+  await page.goto('/parent/devices')
+  await expect(page.getByText('Before you disconnect')).toBeVisible()
+  await expect(
+    page.getByText(
+      "Removing a device stops it from saving progress for Child. Child's synced homework, 41 Macaronis and 3-day streak stay safe.",
+    ),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      "You'll review the device name, then confirm. Anything not yet synced from that device stays on it.",
+    ),
+  ).toBeVisible()
+  await expect(page.getByText('Child access only')).toBeVisible()
+  await expect(page.getByText("Paired devices can't open parent controls.")).toBeVisible()
+})
+
+test('the pair panel sits beside the device cards when wide, and below them on a tablet', async ({
+  page,
+}) => {
+  await parentApi(page, [herIpad])
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/parent/devices')
+  const card = page.locator('.device-card')
+  const panel = page.locator('.pair-panel')
+  await expect(card).toBeVisible()
+  const wideCard = (await card.boundingBox())!
+  const widePanel = (await panel.boundingBox())!
+  expect(widePanel.x).toBeGreaterThan(wideCard.x + wideCard.width)
+
+  await page.setViewportSize({ width: 820, height: 1000 })
+  const narrowCard = (await card.boundingBox())!
+  const narrowPanel = (await panel.boundingBox())!
+  expect(narrowPanel.y).toBeGreaterThan(narrowCard.y + narrowCard.height)
 })
 
 test('unpairs a device after the warning, and keeps it when asked', async ({ page }) => {
@@ -305,13 +389,13 @@ test('a later success clears an earlier message', async ({ page }) => {
   await page.goto('/parent/devices')
   await expect(page.getByRole('alert')).toBeVisible()
   fail = false
-  await page.getByLabel('Device name').fill('Her iPad')
-  await page.getByRole('button', { name: 'Make a code' }).click()
+  await page.getByLabel('Device name').fill('Kitchen tablet')
+  await page.getByRole('button', { name: 'Generate pairing code' }).click()
   await expect(page.getByText('111 222')).toBeVisible()
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
 
-test('Make a code waits for its answer before taking another click', async ({ page }) => {
+test('Generate pairing code waits for its answer before taking another click', async ({ page }) => {
   let answer: () => void = () => {}
   const posts: number[] = []
   await page.route('/api/parent/**', (route) => {
@@ -325,9 +409,9 @@ test('Make a code waits for its answer before taking another click', async ({ pa
       })
   })
   await page.goto('/parent/devices')
-  await page.getByLabel('Device name').fill('Her iPad')
-  await page.getByRole('button', { name: 'Make a code' }).click()
-  await expect(page.getByRole('button', { name: 'Make a code' })).toBeDisabled()
+  await page.getByLabel('Device name').fill('Kitchen tablet')
+  await page.getByRole('button', { name: 'Generate pairing code' }).click()
+  await expect(page.getByRole('button', { name: 'Generate pairing code' })).toBeDisabled()
   answer()
   await expect(page.getByText('333 444')).toBeVisible()
   expect(posts).toHaveLength(1)

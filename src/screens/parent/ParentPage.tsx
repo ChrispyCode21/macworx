@@ -96,7 +96,7 @@ function streakFields(
 }
 
 /**
- * The parent portal's screen contents (SPEC §5.3): her numbers, results, iPads, adjustments and activity log,
+ * The parent portal's screen contents (SPEC §5.3): her numbers, results, devices, adjustments and activity log,
  * split across the tabs. All state lives here, so switching tabs never refetches or clears a half-typed form;
  * the Portal remounts it when another child is chosen.
  */
@@ -326,6 +326,9 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
           onMakeCode={onMakeCode}
           code={code}
           left={left}
+          childName={childName}
+          balance={summary?.balance ?? null}
+          streak={summary?.streak ?? null}
         />
       )}
 

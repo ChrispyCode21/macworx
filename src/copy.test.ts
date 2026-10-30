@@ -26,6 +26,15 @@ describe('pairing copy', () => {
     expect(COPY.parentDisconnectSafe('Mia', 1234, 1)).toContain('1,234 Macaronis and 1-day streak')
   })
 
+  it('names the device owner, or just the device when no child is known', () => {
+    expect(COPY.parentPairBody('Mia')).toBe(
+      "Open macworx on Mia's device, then enter the one-time pairing code.",
+    )
+    expect(COPY.parentPairBody(null)).toBe(
+      'Open macworx on the device, then enter the one-time pairing code.',
+    )
+  })
+
   it('counts down in minutes', () => {
     expect(COPY.parentCodeExpires(10)).toBe('Expires in 10 minutes.')
     expect(COPY.parentCodeExpires(1)).toBe('Expires in 1 minute.')

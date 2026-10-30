@@ -78,8 +78,8 @@ export const COPY = {
   parentSwitcherSub: (grade: string) => `${grade} · Child profile`,
   parentPairSection: 'A new place to learn',
   parentPairTitle: 'Connect another device',
-  parentPairBody: (name: string) =>
-    `Open macworx on ${name}'s device, then enter the one-time pairing code.`,
+  parentPairBody: (name: string | null) =>
+    `Open macworx on ${name ? `${name}'s` : 'the'} device, then enter the one-time pairing code.`,
   parentNameLabel: 'Device name',
   parentNameHint: 'Up to 40 characters, e.g. "Kitchen tablet"',
   parentMakeCode: 'Generate pairing code',
