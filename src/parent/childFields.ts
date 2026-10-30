@@ -32,7 +32,9 @@ export function fillInitials(name: string): string {
     .slice(0, 2)
     .map((word) => Array.from(word)[0] ?? '')
     .filter((first) => LETTER.test(first))
-  return Array.from(letters.join('').toUpperCase()).slice(0, MAX_INITIALS).join('')
+    // One letter per word: a letter that capitalises to several ("ß" to "SS") keeps its first.
+    .map((first) => Array.from(first.toUpperCase())[0])
+  return letters.slice(0, MAX_INITIALS).join('')
 }
 
 /** The trimmed name, or null when it isn't 1 to 40 characters without control characters. */

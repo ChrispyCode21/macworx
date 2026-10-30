@@ -67,6 +67,10 @@ describe('fillInitials', () => {
     expect(fillInitials('Ann Marie Smith')).toBe('AM')
     expect(fillInitials('  éva  ödön ')).toBe('ÉÖ')
   })
+  it('keeps one letter per word when a capital is two letters', () => {
+    expect(fillInitials('Ann ßob')).toBe('AS')
+    expect(fillInitials('ßob')).toBe('S')
+  })
   it('lets a word that does not start with a letter add nothing', () => {
     expect(fillInitials('123')).toBe('')
     expect(fillInitials('3rd Sam')).toBe('S')
