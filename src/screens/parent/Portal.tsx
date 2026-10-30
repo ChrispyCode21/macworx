@@ -162,17 +162,24 @@ export function Portal() {
     showForm('rename')
   }
   const onAdded = (child: Child) => {
-    if (load.status !== 'ready') return
+    // Called after an await, so it updates from the latest state, not the render where Save was pressed.
     chooseChild(child.id)
     rememberChild(child.id)
-    setLoad({ ...load, children: [...load.children, child], selected: child })
+    setLoad((l) => (l.status !== 'ready' ? l : { ...l, children: [...l.children, child], selected: child }))
     setChildMode('add')
     title.current?.focus()
   }
   const onRenamed = (child: Child) => {
-    if (load.status !== 'ready') return
-    const selected = load.selected.id === child.id ? child : load.selected
-    setLoad({ ...load, children: load.children.map((c) => (c.id === child.id ? child : c)), selected })
+    // Called after an await: a functional update keeps a child switched to meanwhile.
+    setLoad((l) =>
+      l.status !== 'ready'
+        ? l
+        : {
+            ...l,
+            children: l.children.map((c) => (c.id === child.id ? child : c)),
+            selected: l.selected.id === child.id ? child : l.selected,
+          },
+    )
     // The page reads again, so the activity log shows the rename.
     setRenames((n) => n + 1)
     trigger.current?.focus()

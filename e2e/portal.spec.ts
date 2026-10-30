@@ -455,6 +455,33 @@ test('typed initials stay, and Rename can be chosen from the panel', async ({ pa
   await expect(page.locator('.portal-switcher .portal-avatar').first()).toHaveText('AX')
 })
 
+test('a rename that finishes after a child switch leaves the switched-to child selected', async ({ page }) => {
+  const calls = await portalApi(page)
+  let release: () => void = () => {}
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await page.route('/api/parent/children/1', async (route) => {
+    await held
+    return route.fallback()
+  })
+  await page.goto('/parent/overview')
+  await panel(page).getByRole('radio', { name: 'Rename' }).click()
+  await panel(page).getByLabel('Name', { exact: true }).fill('Ada Q')
+  await panel(page).getByRole('button', { name: 'Save' }).click()
+
+  await page.locator('.portal-switcher > button').click()
+  await switcherList(page).getByRole('button', { name: /^Bo/ }).first().click()
+  await expect(page.getByText("Bo's overview")).toBeVisible()
+  await expect.poll(() => reads(calls, 'summary').length).toBe(2)
+  calls.length = 0
+  release()
+
+  await expect(panel(page).getByRole('status')).toHaveText('Saved. Ada Q is up to date.')
+  await expect(page.locator('.portal-switcher > button')).toContainText('Bo')
+  await expect(page.getByText("Bo's overview")).toBeVisible()
+  await expect.poll(() => reads(calls, 'summary').length).toBe(1)
+  expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=2'])
+})
+
 test('Escape closes the list and returns focus to the switcher after the Rename button', async ({ page }) => {
   await portalApi(page)
   await page.goto('/parent/overview')
