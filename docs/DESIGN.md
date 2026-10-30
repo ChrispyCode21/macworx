@@ -383,7 +383,7 @@ Copy: title "Macaronis, kept fair." Subline "Adjust {name}'s balance without cha
      | `balance` | coins | `parentLogAdded(n, note)` / `parentLogRemoved(n, note)` |
      | `streak` | flame | `parentLogStreak(streak, day)` |
      | `pairing_code` | scan-line | `parentLogPairingCode(name)` |
-     | `unpair` | unlink | `parentLogUnpair(name)` (device name; `parentLogUnknownIpad` becomes a "device" string, decision 7) |
+     | `unpair` | unlink | `parentLogUnpair(name)` (device name; `parentLogUnknownDevice` is a "device" string, decision 7) |
      | `correction` (old entries only) | check | `parentLogCorrected(...)`, kept so old logs render (decision 12) |
      | anything else | history | `parentLogOther` |
 

@@ -160,7 +160,7 @@ export const COPY = {
   parentSwitcherAdd: 'Add a child',
   parentSwitcherRename: 'Rename',
   parentSwitcherRenameLabel: (name: string) => `Rename ${name}`,
-  parentLogUnknownIpad: 'a device',
+  parentLogUnknownDevice: 'a device',
   parentMacaroniFormHeading: 'Her Macaronis',
   parentAdjustIntro:
     'Add or remove Macaronis, for example to put her balance right or to reward her homework grades.',

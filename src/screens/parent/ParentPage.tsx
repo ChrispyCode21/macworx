@@ -43,7 +43,7 @@ function describe(entry: LogEntry, devices: Device[]): string {
     return COPY.parentLogPairingCode(entry.detail.name)
   if (entry.action === 'unpair') {
     const label = devices.find((d) => d.id === entry.detail.deviceId)?.label
-    return COPY.parentLogUnpair(label ?? COPY.parentLogUnknownIpad)
+    return COPY.parentLogUnpair(label ?? COPY.parentLogUnknownDevice)
   }
   if (entry.action === 'streak') {
     const after = entry.detail.after as { streak?: unknown; lastDay?: unknown } | null | undefined
