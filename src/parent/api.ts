@@ -55,6 +55,8 @@ export interface Device {
   label: string
   createdAt: string
   revokedAt: string | null
+  /** When the Worker recorded the device's latest result, or null when it has sent none. */
+  lastResultAt: string | null
 }
 
 export interface Summary {

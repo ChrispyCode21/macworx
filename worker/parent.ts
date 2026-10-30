@@ -40,15 +40,26 @@ export async function listDevices(req: ParentRequest): Promise<Response> {
   const childId = await childOf(req)
   if (childId instanceof Response) return childId
   const { results } = await db
-    .prepare('SELECT id, label, created_at, revoked_at FROM devices WHERE child_id = ? ORDER BY id')
+    .prepare(
+      `SELECT id, label, created_at, revoked_at,
+              (SELECT MAX(created_at) FROM results WHERE results.device_id = devices.id) AS last_result_at
+       FROM devices WHERE child_id = ? ORDER BY id`,
+    )
     .bind(childId)
-    .all<{ id: number; label: string; created_at: string; revoked_at: string | null }>()
+    .all<{
+      id: number
+      label: string
+      created_at: string
+      revoked_at: string | null
+      last_result_at: string | null
+    }>()
   return json(200, {
     devices: results.map((d) => ({
       id: d.id,
       label: d.label,
       createdAt: d.created_at,
       revokedAt: d.revoked_at,
+      lastResultAt: d.last_result_at,
     })),
   })
 }

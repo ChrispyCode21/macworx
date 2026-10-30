@@ -31,6 +31,19 @@ export function formatDay(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+/** "Synced today, 4:05 pm", "Synced Oct 12" or "No results yet": a device's last sync, in the viewer's time zone. */
+export function formatSynced(iso: string | null, now: Date): string {
+  if (iso === null) return 'No results yet'
+  const at = new Date(iso)
+  if (at.toDateString() === now.toDateString()) {
+    const time = at
+      .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      .replace(/\s?([AP])M$/, (_m, ap: string) => ` ${ap.toLowerCase()}m`)
+    return `Synced today, ${time}`
+  }
+  return `Synced ${formatDay(iso)}`
+}
+
 /** Whole minutes left until `iso`, rounded up; 0 once it has passed. */
 export function minutesLeft(iso: string, now: Date): number {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - now.getTime()) / 60_000))

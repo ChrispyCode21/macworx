@@ -6,8 +6,28 @@ import {
   formatLongDay,
   formatMoment,
   formatNumber,
+  formatSynced,
   operatorSymbol,
 } from './format'
+
+describe('formatSynced', () => {
+  // Built from local dates so the test holds in any time zone.
+  const now = new Date(2026, 9, 17, 18, 0)
+  it('says "No results yet" for a device with none', () => {
+    expect(formatSynced(null, now)).toBe('No results yet')
+  })
+  it('writes the time, lowercase, for today', () => {
+    expect(formatSynced(new Date(2026, 9, 17, 16, 5).toISOString(), now)).toBe('Synced today, 4:05 pm')
+    expect(formatSynced(new Date(2026, 9, 17, 0, 9).toISOString(), now)).toBe('Synced today, 12:09 am')
+  })
+  it('treats a time later today as today', () => {
+    expect(formatSynced(new Date(2026, 9, 17, 23, 30).toISOString(), now)).toBe('Synced today, 11:30 pm')
+  })
+  it('writes the date for any other day', () => {
+    expect(formatSynced(new Date(2026, 9, 12, 9, 0).toISOString(), now)).toBe('Synced Oct 12')
+    expect(formatSynced(new Date(2026, 9, 16, 23, 59).toISOString(), now)).toBe('Synced Oct 16')
+  })
+})
 
 describe('display formatting', () => {
   it('uses thousands separators', () => {
