@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { addChild, renameChild } from '../../parent/api'
 import type { Child, ParentResult } from '../../parent/api'
-import { checkChildFields, cleanName, fillInitials, MAX_GRADE, MAX_NAME } from '../../parent/childFields'
+import { checkChildFields, cleanName, fillInitials, MAX_GRADE, MAX_INITIALS, MAX_NAME } from '../../parent/childFields'
 import { Button } from '../../ui/Button'
 import { Segmented } from '../../ui/Segmented'
 import { TextField } from '../../ui/TextField'
@@ -115,6 +115,8 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
           onMode(next)
         }}
       />
+      {/* maxLength counts UTF-16 units, so doubling the limit leaves room for emoji and other astral
+          characters; the real limit, in characters, is checked on Save (childFields.ts). */}
       <TextField
         ref={nameBox}
         label={COPY.parentChildNameLabel}
@@ -133,7 +135,7 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
         hint={COPY.parentChildInitialsHint}
         value={fields.initials}
         placeholder={fillInitials(fields.name)}
-        maxLength={6}
+        maxLength={MAX_INITIALS * 2}
         autoCapitalize="characters"
         onChange={(e) => edit({ initials: e.target.value })}
       />
