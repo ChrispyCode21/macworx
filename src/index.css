@@ -1049,6 +1049,184 @@ p {
   }
 }
 
+/* Devices: pair panel, disconnect note, Access card (docs/DESIGN.md §7, §8, §12). Phone order is the DOM order. */
+.devices {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.devices-left,
+.devices-right {
+  display: contents;
+}
+
+.devices-heading {
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.pair-panel .button-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pair-intro {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pair-intro-icon {
+  display: flex;
+  color: var(--p-accent-ink);
+}
+
+.pair-intro-text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pair-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.pair-body {
+  font-size: 12px;
+  color: var(--p-muted);
+}
+
+.pair-footnote {
+  font-size: 11px;
+  color: var(--p-muted);
+}
+
+.pair-note {
+  font-size: 12px;
+}
+
+.safeguard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.safeguard svg {
+  flex: none;
+}
+
+.safeguard span {
+  flex: 1;
+}
+
+.safeguard-info {
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+}
+
+.access-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--p-warm);
+  color: var(--p-accent-ink);
+}
+
+.access-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.access-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.access-body {
+  font-size: 12px;
+  color: var(--p-text);
+}
+
+@media (min-width: 768px) {
+  .devices-heading {
+    font-size: 18px;
+    line-height: normal;
+    min-height: 28px;
+  }
+
+  .pair-panel {
+    gap: 16px;
+  }
+
+  .pair-intro-text {
+    gap: 6px;
+  }
+
+  .pair-intro-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .safeguard {
+    gap: 10px;
+  }
+
+  .safeguard svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .access-card {
+    padding: 16px;
+  }
+
+  .access-card > svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .access-text {
+    gap: 4px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .devices {
+    display: grid;
+    grid-template-columns: minmax(0, 480fr) minmax(0, 410fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .devices-left,
+  .devices-right {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .devices-left {
+    gap: 16px;
+  }
+
+  .devices-right {
+    gap: 22px;
+  }
+}
+
 /* Shop screen (docs/DESIGN.md §13): read-only. The phone's order is the DOM order. */
 .parent .button-danger {
   height: 48px;
