@@ -4,7 +4,7 @@ import type { Device } from '../../parent/api'
 import { TabletIcon, PencilIcon, UnlinkIcon } from '../../parent/icons'
 import { deviceBrowserLine, deviceStatus } from '../../parent/placeholders'
 import { Button } from '../../ui/Button'
-import { formatCode, formatDay, formatSynced } from '../../ui/format'
+import { formatClock, formatCode, formatDay, isSameLocalDay } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 
 interface Props {
@@ -21,6 +21,14 @@ interface Props {
   code: { code: string } | null
   /** Whole minutes left on the code. */
   left: number
+}
+
+/** A device's last sync: today's time, another day's date, or none yet. */
+function syncedLine(iso: string | null, now: Date): string {
+  if (iso === null) return COPY.parentNoResultsYet
+  return isSameLocalDay(iso, now)
+    ? COPY.parentSyncedToday(formatClock(iso))
+    : COPY.parentSyncedOn(formatDay(iso))
 }
 
 /** The Devices tab (SPEC §5.3): a card per connected device, then Pair a device. */
@@ -79,7 +87,7 @@ export function DevicesScreen({
                 </span>{' '}
                 <span className="device-sample">{COPY.parentSample}</span>
               </span>
-              <p className="device-meta">{formatSynced(d.lastResultAt, now)}</p>
+              <p className="device-meta">{syncedLine(d.lastResultAt, now)}</p>
             </div>
             <hr className="shop-divider" />
             <div className="device-actions">
