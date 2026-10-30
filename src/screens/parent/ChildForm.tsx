@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { addChild, renameChild } from '../../parent/api'
 import type { Child, ParentResult } from '../../parent/api'
-import { checkChildFields, cleanName, fillInitials, MAX_GRADE, MAX_INITIALS, MAX_NAME } from '../../parent/childFields'
+import { checkChildFields, fillInitials, MAX_GRADE, MAX_INITIALS, MAX_NAME } from '../../parent/childFields'
 import type { FieldError } from '../../parent/childFields'
 import { Button } from '../../ui/Button'
 import { Segmented } from '../../ui/Segmented'
@@ -138,7 +138,7 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
         autoCapitalize="characters"
         onChange={(e) => edit({ initials: e.target.value })}
       />
-      <Button onClick={onSave} disabled={saving || cleanName(fields.name) === null}>
+      <Button onClick={onSave} disabled={saving || fields.name.trim() === ''}>
         {COPY.parentChildSave}
       </Button>
       {problem && (

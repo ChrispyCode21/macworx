@@ -444,6 +444,17 @@ test('Rename on a row opens Overview in Rename mode for that child; the initials
   await expect(switcherList(page).locator('.portal-avatar').nth(1)).toHaveText('ZY')
 })
 
+test('a name over 40 characters can be saved and says why it is not', async ({ page }) => {
+  const calls = await portalApi(page)
+  await page.goto('/parent/overview')
+  await panel(page).getByLabel('Name', { exact: true }).fill('A'.repeat(41))
+  await expect(panel(page).getByRole('button', { name: 'Save' })).toBeEnabled()
+  calls.length = 0
+  await panel(page).getByRole('button', { name: 'Save' }).click()
+  await expect(panel(page).getByRole('alert')).toHaveText('Give the name 1 to 40 characters.')
+  expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+})
+
 test('typed initials stay, and Rename can be chosen from the panel', async ({ page }) => {
   await portalApi(page)
   await page.goto('/parent/overview')
