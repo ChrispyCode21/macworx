@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Add and rename a child (parents):** Overview has a Children panel with Add a child and Rename, for a name (1 to 40 characters), an optional grade and initials (filled from the name until you type your own). The child switcher list has a Rename button on each child and an "Add a child" row; a new child is selected right away. Children can't be deleted, and both changes show in the Activity log.
 - **Parent portal shell:** `/parent` is now five tabs (Overview, Macaronis, Streak, Devices, Shop) at `/parent/overview`, `/parent/points`, `/parent/streak`, `/parent/devices` and `/parent/shop`, with a header, a child switcher, tabs along the bottom on a phone and a side bar from 768px wide, in the macworx colors. Home has a **Parents** link. Today's sections moved into the tabs unchanged.
 - **Parent portal Shop screen (read-only):** the Shop tab lists the four rewards with their prices and how far her balance is from each, shows an edit panel with every control disabled ("Editing rewards is coming soon."), and an empty "Last redeemed". Nothing is stored.
 - **Set or restore her streak (parents):** an Adjustments section on `/parent` with a streak form. It saves her streak (0 to 3,650) and last counted day, doesn't change her Macaronis or pay a bonus, and shows in the Activity log.
