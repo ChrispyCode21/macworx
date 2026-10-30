@@ -22,11 +22,35 @@ const READS = ['summary', 'results', 'devices', 'log']
 /** Answers every read; `calls` holds each one as `/api/parent/summary?child=1`. */
 async function portalApi(page: Page) {
   const calls: string[] = []
+  const list = children.map((c) => ({ ...c }))
+  const filled = (name: string) =>
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0].toUpperCase())
+      .join('')
   await page.route('/api/parent/**', (route) => {
     const url = new URL(route.request().url())
-    calls.push(url.pathname + url.search)
+    calls.push(`${route.request().method()} ${url.pathname}${url.search}`.replace(/^GET /, ''))
+    const body = route.request().postDataJSON() as { name: string; grade?: string; initials?: string }
+    if (route.request().method() === 'POST' && url.pathname === '/api/parent/children') {
+      const child = {
+        id: list.length + 1,
+        name: body.name,
+        grade: body.grade ?? '',
+        initials: body.initials || filled(body.name),
+      }
+      list.push(child)
+      return route.fulfill({ status: 201, json: child })
+    }
+    if (route.request().method() === 'PATCH') {
+      const child = list.find((c) => `/api/parent/children/${c.id}` === url.pathname)!
+      Object.assign(child, { ...body, initials: body.initials || filled(body.name) })
+      return route.fulfill({ json: child })
+    }
     const answers: Record<string, unknown> = {
-      '/api/parent/children': { children },
+      '/api/parent/children': { children: list },
       '/api/parent/summary': { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 },
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
@@ -195,9 +219,10 @@ test('the child switcher picks the first child, switches every read, and is reme
   await expect(switcher).toContainText('4th grade · Child profile')
   await switcher.click()
   const list = page.getByRole('list', { name: 'Choose a child' })
-  await expect(list.getByRole('button')).toHaveCount(2)
+  // Each child has a choose button and a Rename button, and the list ends with "Add a child".
+  await expect(list.getByRole('button')).toHaveCount(5)
   calls.length = 0
-  await list.getByRole('button', { name: /Bo/ }).click()
+  await list.getByRole('button', { name: /^Bo/ }).click()
   await expect(page.getByText("Bo's overview")).toBeVisible()
   await expect(list).toHaveCount(0)
   await expect.poll(() => reads(calls, 'log').length).toBe(1)
@@ -249,7 +274,7 @@ test('with storage blocked, the portal still works', async ({ page }) => {
   await page.goto('/parent/overview')
   await expect(page.getByText("Ada's overview")).toBeVisible()
   await page.locator('.portal-switcher > button').click()
-  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /Bo/ }).click()
+  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /^Bo/ }).click()
   await expect(page.getByText("Bo's overview")).toBeVisible()
 })
 
@@ -268,7 +293,7 @@ test('a save that finishes after a child switch sends no more reads', async ({ p
   await page.getByRole('button', { name: 'Save Macaronis' }).click()
 
   await page.locator('.portal-switcher > button').click()
-  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /Bo/ }).click()
+  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /^Bo/ }).click()
   await expect.poll(() => reads(calls, 'log').length).toBe(2)
   await page.waitForTimeout(200)
   calls.length = 0
@@ -296,7 +321,7 @@ test('choosing a child returns focus to the switcher, and a tab change closes th
   await page.goto('/parent/overview')
   const switcher = page.locator('.portal-switcher > button')
   await switcher.click()
-  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /Bo/ }).click()
+  await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /^Bo/ }).click()
   await expect(switcher).toBeFocused()
   await switcher.click()
   await expect(switcher).toHaveAttribute('aria-expanded', 'true')
@@ -343,4 +368,100 @@ test('a refused Worker shows the message on every tab, never a blank page or Loa
     await expect(page.getByText('Loading…')).toHaveCount(0)
     await expect(page.getByText('Not available right now.')).toHaveCount(lists[tab.path])
   }
+})
+
+const panel = (page: Page) => page.getByRole('region', { name: 'Children' })
+const switcherList = (page: Page) => page.getByRole('list', { name: 'Choose a child' })
+
+test('the child list has a Rename button per child and an "Add a child" row', async ({ page }) => {
+  await portalApi(page)
+  await page.goto('/parent/overview')
+  await page.locator('.portal-switcher > button').click()
+  await expect(switcherList(page).getByRole('button', { name: 'Rename Ada' })).toBeVisible()
+  await expect(switcherList(page).getByRole('button', { name: 'Rename Bo' })).toBeVisible()
+  await expect(switcherList(page).getByRole('button', { name: 'Add a child' })).toBeVisible()
+})
+
+test('"Add a child" opens Overview in Add mode with Name focused, and adding selects the new child', async ({
+  page,
+}) => {
+  const calls = await portalApi(page)
+  await page.goto('/parent/streak')
+  await page.locator('.portal-switcher > button').click()
+  await switcherList(page).getByRole('button', { name: 'Add a child' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('A little progress, daily.')
+  expect(new URL(page.url()).pathname).toBe('/parent/overview')
+  await expect(page.locator('.portal-switcher > button')).toHaveAttribute('aria-expanded', 'false')
+  await expect(panel(page).getByRole('radio', { name: 'Add a child' })).toBeChecked()
+  await expect(panel(page).getByLabel('Name')).toBeFocused()
+
+  const save = panel(page).getByRole('button', { name: 'Save' })
+  await expect(save).toBeDisabled()
+  await panel(page).getByLabel('Name').fill('Mary Jane')
+  await expect(panel(page).getByLabel('Initials')).toHaveAttribute('placeholder', 'MJ')
+  await expect(save).toBeEnabled()
+  calls.length = 0
+  await save.click()
+
+  await expect(page.getByText("Mary Jane's overview")).toBeVisible()
+  await expect(page.locator('.portal-switcher > button')).toContainText('Mary Jane')
+  await expect(panel(page).getByRole('status')).toHaveText('Added Mary Jane.')
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused()
+  await expect.poll(() => reads(calls, 'log').length).toBe(1)
+  expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=3'])
+  expect(calls).toContain('POST /api/parent/children')
+
+  // The choice is remembered.
+  calls.length = 0
+  await page.reload()
+  await expect.poll(() => reads(calls, 'summary').length).toBe(1)
+  expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=3'])
+})
+
+test('Rename on a row opens Overview in Rename mode for that child; the initials follow the new name', async ({
+  page,
+}) => {
+  const calls = await portalApi(page)
+  await page.goto('/parent/overview')
+  await page.locator('.portal-switcher > button').click()
+  await switcherList(page).getByRole('button', { name: 'Rename Bo' }).click()
+  await expect(page.getByText("Bo's overview")).toBeVisible()
+  await expect(panel(page).getByRole('radio', { name: 'Rename' })).toBeChecked()
+  await expect(panel(page).getByLabel('Name')).toHaveValue('Bo')
+  await expect(panel(page).getByLabel('Name')).toBeFocused()
+  // Her initials are the ones filled from her name, so the box starts empty and follows the name.
+  await expect(panel(page).getByLabel('Initials')).toHaveValue('')
+
+  await panel(page).getByLabel('Name').fill('Zed Yu')
+  calls.length = 0
+  await panel(page).getByRole('button', { name: 'Save' }).click()
+  await expect(panel(page).getByRole('status')).toHaveText('Saved. Zed Yu is up to date.')
+  await expect(page.locator('.portal-switcher > button')).toContainText('Zed Yu')
+  await expect(page.locator('.portal-switcher > button')).toBeFocused()
+  expect(calls).toContain('PATCH /api/parent/children/2')
+  await page.locator('.portal-switcher > button').click()
+  await expect(switcherList(page).getByRole('button', { name: 'Rename Zed Yu' })).toBeVisible()
+  await expect(page.locator('.portal-avatar').nth(1)).toHaveText('ZY')
+})
+
+test('typed initials stay, and Rename can be chosen from the panel', async ({ page }) => {
+  await portalApi(page)
+  await page.goto('/parent/overview')
+  await panel(page).getByRole('radio', { name: 'Rename' }).click()
+  await expect(panel(page).getByLabel('Name')).toHaveValue('Ada')
+  await expect(panel(page).getByLabel('Grade (optional)')).toHaveValue('4th grade')
+  await panel(page).getByLabel('Initials').fill('ax')
+  await panel(page).getByRole('button', { name: 'Save' }).click()
+  await expect(page.locator('.portal-switcher .portal-avatar').first()).toHaveText('AX')
+})
+
+test('Escape closes the list and returns focus to the switcher after the Rename button', async ({ page }) => {
+  await portalApi(page)
+  await page.goto('/parent/overview')
+  const switcher = page.locator('.portal-switcher > button')
+  await switcher.click()
+  await switcherList(page).getByRole('button', { name: 'Rename Ada' }).focus()
+  await page.keyboard.press('Escape')
+  await expect(switcher).toHaveAttribute('aria-expanded', 'false')
+  await expect(switcher).toBeFocused()
 })

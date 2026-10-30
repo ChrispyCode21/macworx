@@ -9,6 +9,7 @@ import {
   FlameIcon,
   LayoutDashboardIcon,
   LockKeyholeIcon,
+  PlusIcon,
   ShoppingBagIcon,
   SmartphoneIcon,
   SproutIcon,
@@ -18,6 +19,8 @@ import type { Tab } from '../../parent/route'
 import { pickChild, readSelectedChild, rememberChild } from '../../parent/selection'
 import { Button } from '../../ui/Button'
 import { formatLongDay } from '../../ui/format'
+import { ChildForm } from './ChildForm'
+import type { ChildMode } from './ChildForm'
 import { ParentPage } from './ParentPage'
 
 const NAV: Record<Tab, { label: string; icon: (size: number) => ReactNode }> = {
@@ -87,6 +90,9 @@ export function Portal() {
   const [tab, setTab] = useState<Tab>(() => tabFromPath(location.pathname))
   const [load, setLoad] = useState<Load>({ status: 'loading' })
   const [open, setOpen] = useState(false)
+  const [childMode, setChildMode] = useState<ChildMode>('add')
+  const [focusName, setFocusName] = useState(false)
+  const [renames, setRenames] = useState(0)
   const title = useRef<HTMLHeadingElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
 
@@ -137,6 +143,41 @@ export function Portal() {
     trigger.current?.focus()
   }
 
+  // Opens Overview's Children panel in a mode, with the Name box focused (the list is a way in to it).
+  const showForm = (mode: ChildMode) => {
+    setChildMode(mode)
+    setFocusName(true)
+    setOpen(false)
+    if (tab !== 'overview') {
+      history.pushState(null, '', tabPath('overview'))
+      setTab('overview')
+      window.scrollTo(0, 0)
+    }
+  }
+  const renameRow = (child: Child) => {
+    if (load.status !== 'ready') return
+    chooseChild(child.id)
+    rememberChild(child.id)
+    setLoad({ ...load, selected: child })
+    showForm('rename')
+  }
+  const onAdded = (child: Child) => {
+    if (load.status !== 'ready') return
+    chooseChild(child.id)
+    rememberChild(child.id)
+    setLoad({ ...load, children: [...load.children, child], selected: child })
+    setChildMode('add')
+    title.current?.focus()
+  }
+  const onRenamed = (child: Child) => {
+    if (load.status !== 'ready') return
+    const selected = load.selected.id === child.id ? child : load.selected
+    setLoad({ ...load, children: load.children.map((c) => (c.id === child.id ? child : c)), selected })
+    // The page reads again, so the activity log shows the rename.
+    setRenames((n) => n + 1)
+    trigger.current?.focus()
+  }
+
   const onSwitcherKey = (e: KeyboardEvent) => {
     if (e.key !== 'Escape' || !open) return
     setOpen(false)
@@ -178,7 +219,7 @@ export function Portal() {
             {open && (
               <ul id="portal-children" aria-label={COPY.parentSwitcherLabel}>
                 {load.children.map((c) => (
-                  <li key={c.id}>
+                  <li key={c.id} className="portal-child-row">
                     <Button
                       variant="bare"
                       aria-current={c.id === load.selected.id ? 'true' : undefined}
@@ -187,8 +228,21 @@ export function Portal() {
                       <Avatar child={c} />
                       <Who child={c} />
                     </Button>
+                    <Button
+                      variant="bare"
+                      aria-label={COPY.parentSwitcherRenameLabel(c.name)}
+                      onClick={() => renameRow(c)}
+                    >
+                      {COPY.parentSwitcherRename}
+                    </Button>
                   </li>
                 ))}
+                <li className="portal-add-row">
+                  <Button variant="bare" onClick={() => showForm('add')}>
+                    <PlusIcon size={18} />
+                    {COPY.parentSwitcherAdd}
+                  </Button>
+                </li>
               </ul>
             )}
           </div>
@@ -222,7 +276,18 @@ export function Portal() {
         </div>
         <main className="portal-main">
           {load.status === 'ready' && (
-            <ParentPage key={load.selected.id} tab={tab} childName={load.selected.name} />
+            <ParentPage key={`${load.selected.id}-${renames}`} tab={tab} childName={load.selected.name} />
+          )}
+          {load.status === 'ready' && tab === 'overview' && (
+            <ChildForm
+              mode={childMode}
+              onMode={setChildMode}
+              child={load.selected}
+              focusName={focusName}
+              onFocused={() => setFocusName(false)}
+              onAdded={onAdded}
+              onRenamed={onRenamed}
+            />
           )}
           {load.status === 'unavailable' && <ParentPage key="none" tab={tab} childName={null} />}
         </main>

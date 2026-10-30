@@ -88,7 +88,10 @@ describe('checkChildFields', () => {
   })
   it('names the first field that is wrong', () => {
     expect(checkChildFields({ name: '' })).toEqual({ ok: false, error: 'bad_name' })
-    expect(checkChildFields({ name: 'Sam', grade: 'g'.repeat(21) })).toEqual({ ok: false, error: 'bad_grade' })
+    expect(checkChildFields({ name: 'Sam', grade: 'g'.repeat(21) })).toEqual({
+      ok: false,
+      error: 'bad_grade',
+    })
     expect(checkChildFields({ name: '123' })).toEqual({ ok: false, error: 'bad_initials' })
   })
 })

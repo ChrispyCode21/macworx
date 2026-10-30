@@ -58,7 +58,9 @@ export function cleanInitials(raw: unknown, name: string): string | null {
   if (raw !== undefined && raw !== null && typeof raw !== 'string') return null
   const typed = (raw ?? '').trim()
   const initials = typed === '' ? fillInitials(name) : typed.toUpperCase()
-  return length(initials) >= 1 && length(initials) <= MAX_INITIALS && INITIALS.test(initials) ? initials : null
+  return length(initials) >= 1 && length(initials) <= MAX_INITIALS && INITIALS.test(initials)
+    ? initials
+    : null
 }
 
 /** A whole child's fields checked together: the cleaned fields, or the first field's error code. */

@@ -36,7 +36,13 @@ describe('POST /api/parent/children', () => {
     const { status, body } = await add({ name: ' Mary Jane ', grade: '4th grade', initials: 'mj' })
     expect(status).toBe(201)
     expect(body).toEqual({ id: 3, name: 'Mary Jane', grade: '4th grade', initials: 'MJ' })
-    expect(await row(3)).toMatchObject({ name: 'Mary Jane', balance: 0, streak: 0, completed: 0, last_day: null })
+    expect(await row(3)).toMatchObject({
+      name: 'Mary Jane',
+      balance: 0,
+      streak: 0,
+      completed: 0,
+      last_day: null,
+    })
     expect((await row(3))!.revision).not.toBe('')
   })
 
@@ -143,7 +149,9 @@ describe('PATCH /api/parent/children/:id', () => {
 
   it('keeps balance, streak, last day, completed count and devices', async () => {
     await t.db
-      .prepare("UPDATE children SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5 WHERE id = 1")
+      .prepare(
+        "UPDATE children SET balance = 40, streak = 3, last_day = '2026-10-16', completed = 5 WHERE id = 1",
+      )
       .run()
     await rename(1, { name: 'Mary Jane', initials: '' })
     expect(await row(1)).toMatchObject({ balance: 40, streak: 3, last_day: '2026-10-16', completed: 5 })

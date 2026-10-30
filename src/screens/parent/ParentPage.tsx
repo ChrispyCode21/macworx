@@ -70,6 +70,16 @@ function describe(entry: LogEntry, devices: Device[]): string {
     )
       return COPY.parentLogCorrected(formatCalendarDay(day), b.correct, a.correct, a.total - b.total, why)
   }
+  if (entry.action === 'child_add' && typeof entry.detail.name === 'string')
+    return COPY.parentLogChildAdded(entry.detail.name)
+  if (entry.action === 'child_rename') {
+    const b = entry.detail.before as { name?: unknown } | null | undefined
+    const a = entry.detail.after as { name?: unknown } | null | undefined
+    if (typeof b?.name === 'string' && typeof a?.name === 'string')
+      return b.name === a.name
+        ? COPY.parentLogChildChanged(a.name)
+        : COPY.parentLogChildRenamed(b.name, a.name)
+  }
   const { amount, note } = entry.detail
   if (entry.action === 'balance' && typeof amount === 'number' && typeof note === 'string')
     return amount < 0 ? COPY.parentLogRemoved(-amount, note) : COPY.parentLogAdded(amount, note)

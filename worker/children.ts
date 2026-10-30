@@ -70,7 +70,9 @@ export async function patchChild(req: ParentRequest): Promise<Response> {
     const revision = crypto.randomUUID()
     const [update] = await db.batch([
       db
-        .prepare('UPDATE children SET name = ?, grade = ?, initials = ?, revision = ? WHERE id = ? AND revision = ?')
+        .prepare(
+          'UPDATE children SET name = ?, grade = ?, initials = ?, revision = ? WHERE id = ? AND revision = ?',
+        )
         .bind(name, grade, initials, revision, id, stored.revision),
       db
         .prepare(
