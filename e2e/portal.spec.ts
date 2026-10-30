@@ -481,7 +481,9 @@ test('typed initials stay, and Rename can be chosen from the panel', async ({ pa
   await expect(page.locator('.portal-switcher .portal-avatar').first()).toHaveText('AX')
 })
 
-test('a rename that finishes after a child switch leaves the switched-to child selected', async ({ page }) => {
+test('a rename that finishes after a child switch leaves the switched-to child selected', async ({
+  page,
+}) => {
   const calls = await portalApi(page)
   let release: () => void = () => {}
   const held = new Promise<void>((resolve) => (release = resolve))
