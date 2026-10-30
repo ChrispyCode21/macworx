@@ -393,11 +393,11 @@ test('"Add a child" opens Overview in Add mode with Name focused, and adding sel
   expect(new URL(page.url()).pathname).toBe('/parent/overview')
   await expect(page.locator('.portal-switcher > button')).toHaveAttribute('aria-expanded', 'false')
   await expect(panel(page).getByRole('radio', { name: 'Add a child' })).toBeChecked()
-  await expect(panel(page).getByLabel('Name')).toBeFocused()
+  await expect(panel(page).getByLabel('Name', { exact: true })).toBeFocused()
 
   const save = panel(page).getByRole('button', { name: 'Save' })
   await expect(save).toBeDisabled()
-  await panel(page).getByLabel('Name').fill('Mary Jane')
+  await panel(page).getByLabel('Name', { exact: true }).fill('Mary Jane')
   await expect(panel(page).getByLabel('Initials')).toHaveAttribute('placeholder', 'MJ')
   await expect(save).toBeEnabled()
   calls.length = 0
@@ -427,12 +427,12 @@ test('Rename on a row opens Overview in Rename mode for that child; the initials
   await switcherList(page).getByRole('button', { name: 'Rename Bo' }).click()
   await expect(page.getByText("Bo's overview")).toBeVisible()
   await expect(panel(page).getByRole('radio', { name: 'Rename' })).toBeChecked()
-  await expect(panel(page).getByLabel('Name')).toHaveValue('Bo')
-  await expect(panel(page).getByLabel('Name')).toBeFocused()
+  await expect(panel(page).getByLabel('Name', { exact: true })).toHaveValue('Bo')
+  await expect(panel(page).getByLabel('Name', { exact: true })).toBeFocused()
   // Her initials are the ones filled from her name, so the box starts empty and follows the name.
   await expect(panel(page).getByLabel('Initials')).toHaveValue('')
 
-  await panel(page).getByLabel('Name').fill('Zed Yu')
+  await panel(page).getByLabel('Name', { exact: true }).fill('Zed Yu')
   calls.length = 0
   await panel(page).getByRole('button', { name: 'Save' }).click()
   await expect(panel(page).getByRole('status')).toHaveText('Saved. Zed Yu is up to date.')
@@ -441,14 +441,14 @@ test('Rename on a row opens Overview in Rename mode for that child; the initials
   expect(calls).toContain('PATCH /api/parent/children/2')
   await page.locator('.portal-switcher > button').click()
   await expect(switcherList(page).getByRole('button', { name: 'Rename Zed Yu' })).toBeVisible()
-  await expect(page.locator('.portal-avatar').nth(1)).toHaveText('ZY')
+  await expect(switcherList(page).locator('.portal-avatar').nth(1)).toHaveText('ZY')
 })
 
 test('typed initials stay, and Rename can be chosen from the panel', async ({ page }) => {
   await portalApi(page)
   await page.goto('/parent/overview')
   await panel(page).getByRole('radio', { name: 'Rename' }).click()
-  await expect(panel(page).getByLabel('Name')).toHaveValue('Ada')
+  await expect(panel(page).getByLabel('Name', { exact: true })).toHaveValue('Ada')
   await expect(panel(page).getByLabel('Grade (optional)')).toHaveValue('4th grade')
   await panel(page).getByLabel('Initials').fill('ax')
   await panel(page).getByRole('button', { name: 'Save' }).click()
