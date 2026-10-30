@@ -444,6 +444,21 @@ test('Rename on a row opens Overview in Rename mode for that child; the initials
   await expect(switcherList(page).locator('.portal-avatar').nth(1)).toHaveText('ZY')
 })
 
+test('Add keeps what is typed when another child is chosen, and clears it after a save', async ({ page }) => {
+  await portalApi(page)
+  await page.goto('/parent/overview')
+  const name = panel(page).getByLabel('Name', { exact: true })
+  await name.fill('Mary Jane')
+  await page.locator('.portal-switcher > button').click()
+  await switcherList(page).getByRole('button', { name: /^Bo/ }).first().click()
+  await expect(page.getByText("Bo's overview")).toBeVisible()
+  await expect(name).toHaveValue('Mary Jane')
+
+  await panel(page).getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText("Mary Jane's overview")).toBeVisible()
+  await expect(name).toHaveValue('')
+})
+
 test('a name over 40 characters can be saved and says why it is not', async ({ page }) => {
   const calls = await portalApi(page)
   await page.goto('/parent/overview')

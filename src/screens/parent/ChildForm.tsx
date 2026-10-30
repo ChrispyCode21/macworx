@@ -64,11 +64,12 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
   const [notice, setNotice] = useState<string | null>(null)
   const nameBox = useRef<HTMLInputElement>(null)
 
-  // Another mode or another child: the boxes start over.
+  // Another mode, or in Rename another child: the boxes start over. Add's boxes don't follow the selection.
+  const renaming = mode === 'rename' ? child : null
   useEffect(() => {
     setFields(startingFields(mode, child))
     setProblem(null)
-  }, [mode, child.id, child.name, child.grade, child.initials])
+  }, [mode, renaming?.id, renaming?.name, renaming?.grade, renaming?.initials])
 
   useEffect(() => {
     if (!focusName) return
@@ -95,8 +96,11 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
     setNotice(
       mode === 'add' ? COPY.parentChildAdded(result.body.name) : COPY.parentChildRenamed(result.body.name),
     )
-    if (mode === 'add') onAdded(result.body)
-    else onRenamed(result.body)
+    if (mode === 'add') {
+      // The boxes no longer follow the selection in Add, so they are cleared here.
+      setFields(startingFields('add', child))
+      onAdded(result.body)
+    } else onRenamed(result.body)
   }
 
   return (
