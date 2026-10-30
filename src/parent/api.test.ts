@@ -7,6 +7,7 @@ import {
   listDevices,
   listLog,
   listResults,
+  localDay,
   makeCode,
   setStreak,
   unpair,
@@ -23,6 +24,22 @@ afterEach(() => vi.unstubAllGlobals())
 
 const called = () => fetchMock.mock.calls.map(([path, init]) => `${init?.method ?? 'GET'} ${path}`)
 
+describe('the parent calendar day', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('zero-pads the month and day of the local date', () => {
+    expect(localDay(new Date(2026, 0, 5, 9, 0))).toBe('2026-01-05')
+  })
+
+  it('getSummary sends the local day late in the evening', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 30, 23, 30))
+    chooseChild(2)
+    await getSummary()
+    expect(called()).toEqual(['GET /api/parent/summary?child=2&today=2026-10-30'])
+  })
+})
+
 describe('parent calls name the selected child', () => {
   it('adds ?child=<id> to every child-scoped call', async () => {
     chooseChild(2)
@@ -35,7 +52,7 @@ describe('parent calls name the selected child', () => {
     await adjustBalance(5, 'x')
     await makeCode('iPad')
     expect(called()).toEqual([
-      'GET /api/parent/summary?child=2',
+      `GET /api/parent/summary?child=2&today=${localDay()}`,
       'GET /api/parent/results?child=2',
       'GET /api/parent/log?child=2',
       'GET /api/parent/devices?child=2',
@@ -60,7 +77,7 @@ describe('parent calls name the selected child', () => {
     await listLog()
     expect(called()).toEqual([
       'GET /api/parent/children',
-      'GET /api/parent/summary?child=5',
+      `GET /api/parent/summary?child=5&today=${localDay()}`,
       'GET /api/parent/log?child=5',
     ])
   })

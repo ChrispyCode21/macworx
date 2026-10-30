@@ -63,7 +63,15 @@ async function portalApi(page: Page) {
 
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Parent sections' })
 const current = (page: Page) => nav(page).locator('[aria-current="page"]')
-const reads = (calls: string[], name: string) => calls.filter((c) => c.startsWith(`/api/parent/${name}`))
+/** The reads named `name`. A summary read also carries the parent's day (`&today=YYYY-MM-DD`), checked and left off. */
+const reads = (calls: string[], name: string) =>
+  calls
+    .filter((c) => c.startsWith(`/api/parent/${name}`))
+    .map((c) => {
+      if (name !== 'summary') return c
+      expect(c).toMatch(/&today=\d{4}-\d{2}-\d{2}$/)
+      return c.replace(/&today=[\d-]+$/, '')
+    })
 
 test('every tab opens directly, with its title and one current link', async ({ page }) => {
   await portalApi(page)
