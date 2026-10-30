@@ -227,7 +227,7 @@ The builder must re-run the ratios (a ten-line script) if any token value change
 
 ### 6.3 Child switcher
 
-- Container: fill `--p-warm`, radius 12, padding-inline 12, flex row centered, gap 10. It is a button (opens a list of the parent's children plus "Add a child"; list design is not in Figma, see section 16).
+- Container: fill `--p-warm`, radius 12, padding-inline 12, flex row centered, gap 10. It is a button (opens a list of the parent's children plus "Add a child"; list design is not in Figma, see section 16). In the list each row has a "Rename" button beside the choose button, and the list ends with an "Add a child" row; both open Overview's Children panel.
 - Avatar: circle 36 (wide 32), fill `--p-avatar`, `{initials}` (13 px, wide 12, `--p-text`).
 - Identity (flex 1, min-width 0, gap 1; wide gap 3): `{name}` (switcher-name), `{grade} · Child profile` (switcher-sub).
 - Chevrons-up-down icon 17 (wide 14), color `--p-accent-ink`.
@@ -275,7 +275,7 @@ States: **disabled** = `opacity: 0.4; cursor: default` (same as the child app). 
 Column, gap 7: field-label, then input. Input: min-height 48, padding 12, radius 12, border 1 px `--p-divider`, fill `--p-bg`, field-input text; optional right unit (field-unit, gap 8). Multiline: min-height 70. Focus-visible: border `--p-accent-ink`. Disabled: opacity 0.4. A native `<input>`/`<textarea>`, not a styled div. Number fields use `inputmode="numeric"`.
 
 ### Segmented control
-Track: fill `--p-bg`, radius 12, padding 4, gap 4, flex row. Options flex 1, height 42 (wide 44), radius 9, 13 px / 600, centered. Active: fill `--p-chip`, text `--p-accent-ink`. Inactive: fill `--p-bg`, text `--p-muted`. Radio-group semantics (`role="radiogroup"` with two radios).
+Track: fill `--p-bg`, radius 12, padding 4, gap 4, flex row. Options flex 1, height 42 (wide 44), radius 9, 13 px / 600, centered. Active: fill `--p-chip`, text `--p-accent-ink`. Inactive: fill `--p-bg`, text `--p-muted`. Radio-group semantics (`role="radiogroup"` with two radios). Built as `src/ui/Segmented.tsx` (options, value, onChange, label), first used for Add / Rename on Overview.
 
 ### Safeguard (notice)
 Row, align start, gap 10, padding 12, radius 12, icon 17 (wide 18) + text (safeguard, flex 1). Variants: `info` (fill `--p-chip`, text and icon `--p-accent-ink`, icon shield-check), `warn` (fill `--p-warn-soft`, text and icon `--p-warn-ink`, icon info).
@@ -515,7 +515,7 @@ Legend: **Real** = already returned by an existing route. **Derived** = computed
 
 1. **Narrow-iPad columns.** Figma's wide frames are 1194 px landscape only; the 768 to 1023 px range is undefined. Rule above: sidebar stays, one column. Confirm with the owner.
 2. **Wide frames above 1194 px.** Unspecified; this file caps the shell at 1440 px and centers it.
-3. **Child switcher list** (open, "Add a child", rename) has no Figma frame. Build the minimal popover: rows in the switcher style (avatar, name, grade), plus an "Add a child" row. Needs an owner design.
+3. **Child switcher list** (open, "Add a child", rename) has no Figma frame. Interim design (owner, #83): the popover has rows in the switcher style (avatar, name, grade), a "Rename" button beside each row and an "Add a child" row at the end. Add and rename happen on Overview, in a Children Panel with the Add / Rename Segmented control (the Macaronis Add / Remove chrome) and Form fields Name, Grade (optional) and Initials, then a primary Save. Errors use the `warn` Safeguard. Needs an owner design in Figma.
 4. **Pairing code display and device name field** have no frame (Figma shows only the Generate button).
 5. **Disabled/read-only styles** and focus rings are not in Figma; defined in section 7.
 6. **Streak not-counted day** and the Streak hero when the streak is 0 are not in Figma.

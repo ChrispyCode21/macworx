@@ -1,6 +1,7 @@
 // The parent API (SPEC §5.3, §6.9, §8). Every route here runs only after parentEmail() accepted the request.
 import { addDays, dayNumber, generateAssignment } from '../src/engine'
 import { error, json, readJson, utcDay } from './http'
+import { patchChild, postChild } from './children'
 import { postPairingCode } from './pair'
 
 export interface ParentRequest {
@@ -364,6 +365,8 @@ export const PARENT_ROUTES: {
   run: (req: ParentRequest) => Promise<Response>
 }[] = [
   { method: 'GET', pattern: /^\/api\/parent\/children$/, run: listChildren },
+  { method: 'POST', pattern: /^\/api\/parent\/children$/, run: postChild },
+  { method: 'PATCH', pattern: /^\/api\/parent\/children\/(?<id>\d+)$/, run: patchChild },
   { method: 'GET', pattern: /^\/api\/parent\/summary$/, run: getSummary },
   { method: 'GET', pattern: /^\/api\/parent\/results$/, run: listResults },
   { method: 'GET', pattern: /^\/api\/parent\/results\/(?<id>\d+)$/, run: getResult },

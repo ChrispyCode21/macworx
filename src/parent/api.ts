@@ -3,6 +3,7 @@
 // Access can ask the parent to sign in again. A JSON answer is the Worker's own and never reloads (it's
 // what a preview, which has no Access, always gets), so a refusal there can't loop.
 
+import type { ChildFields } from './childFields'
 import { pickChild, readSelectedChild } from './selection'
 
 const RELOADED = 'macworx.parentReloaded'
@@ -102,6 +103,14 @@ export const chooseChild = (id: number | null) => {
 }
 
 export const getChildren = () => parentCall<{ children: Child[] }>('/api/parent/children')
+
+/** Adds a child (SPEC §8). Not for a chosen child, so it takes no `child`; empty initials fill from the name. */
+export const addChild = (fields: ChildFields) =>
+  parentCall<Child>('/api/parent/children', { method: 'POST', body: JSON.stringify(fields) })
+
+/** Renames a child; the child is named in the path (SPEC §8). */
+export const renameChild = (id: number, fields: ChildFields) =>
+  parentCall<Child>(`/api/parent/children/${id}`, { method: 'PATCH', body: JSON.stringify(fields) })
 
 /**
  * A call for the selected child. With none chosen yet, the first child is chosen (SPEC §5.3); a failure to
