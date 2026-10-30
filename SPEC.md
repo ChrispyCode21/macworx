@@ -95,6 +95,7 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 **Points** has, for the selected child:
 
 - Her balance, and **Adjust balance** to add or remove Macaronis (below).
+- **Earned today:** the Macaronis she earned today (the parent's calendar day): the total paid on her results of that day, finished or left early. A parent's adjustment is not counted. It shows beside her balance and is left out when it is 0.
 - **Recent activity:** every change a parent has made to her, newest first (the latest 50): when, which parent and what changed, in plain words.
 
 **Streak** has, for the selected child, her streak, her last counted day and a form to correct them (below).
@@ -398,8 +399,8 @@ The parent API (every route needs a valid Access token, §6.9). A parent can lis
 - `DELETE /api/parent/devices/:id`: unpairs a device of the chosen child (logged).
 - `POST /api/parent/pairing-code { name }`: a new pairing code for a device with that name; the device that uses it belongs to the chosen child (logged).
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
-- `GET /api/parent/summary`: balance, streak, last counted day and completed assignments.
-- `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade and total paid.
+- `GET /api/parent/summary`: balance, streak, last counted day, completed assignments and `earnedToday`: the sum of the total paid on the chosen child's results whose day is the parent's calendar day (finished and left-early results count; parent adjustments do not), 0 with none. It takes an optional `today` query parameter, the parent's calendar day as `YYYY-MM-DD`. A value that is not a real date, or is more than 1 day from the Worker's UTC date, is 400 `bad_day`. Without it, the Worker's UTC date is used. The `child` check comes first.
+- `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade, total paid and `createdAt` (when the Worker recorded the result, an ISO timestamp).
 - `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
 - `GET /api/parent/results/:id`: one recorded result with its problems: day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
 - `GET /api/parent/log`: the latest 50 admin log entries for the chosen child, newest first: when, which parent, the action and its details.
