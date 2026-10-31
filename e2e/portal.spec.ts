@@ -290,15 +290,16 @@ test('a save that finishes after a child switch sends no more reads', async ({ p
   const calls = await portalApi(page)
   let release: () => void = () => {}
   const held = new Promise<void>((resolve) => (release = resolve))
-  await page.route('/api/parent/adjust*', async (route) => {
+  await page.route('/api/parent/balance', async (route) => {
     await held
     return route.fulfill({ json: { balance: 42 } })
   })
   await page.goto('/parent/points')
-  await expect(page.getByLabel('How many Macaronis')).toBeVisible()
-  await page.getByLabel('How many Macaronis').fill('1')
-  await page.getByLabel('Note').fill('A note')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await expect(page.getByLabel('Macaronis to add')).toBeVisible()
+  await page.getByLabel('Macaronis to add').fill('1')
+  await page.getByLabel('Reason · required').fill('A note')
+  await page.getByRole('button', { name: /^Review/ }).click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
 
   await page.locator('.portal-switcher > button').click()
   await page.getByRole('list', { name: 'Choose a child' }).getByRole('button', { name: /^Bo/ }).click()
@@ -307,7 +308,7 @@ test('a save that finishes after a child switch sends no more reads', async ({ p
   calls.length = 0
   release()
   await page.waitForTimeout(300)
-  expect(calls.filter((c) => !c.startsWith('/api/parent/adjust'))).toEqual([])
+  expect(calls.filter((c) => !c.startsWith('/api/parent/balance'))).toEqual([])
 })
 
 test('Escape closes the child list', async ({ page }) => {

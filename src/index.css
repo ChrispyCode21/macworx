@@ -1580,6 +1580,303 @@ p {
     grid-area: redeemed;
   }
 }
+/* Macaronis screen (docs/DESIGN.md §10). Phone order is the DOM order: hero, adjust, activity. */
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.points-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--p-primary);
+  border-radius: 20px;
+  background: var(--p-primary);
+  color: var(--p-primary-ink);
+}
+
+.points-hero-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--p-hero-muted);
+}
+
+.points-hero-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.points-hero-number {
+  font-size: 44px;
+  font-weight: 600;
+  line-height: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-primary-ink);
+}
+
+.points-hero-unit {
+  font-size: 15px;
+  color: var(--p-hero-muted);
+}
+
+.points-hero-line {
+  font-size: 12px;
+  color: var(--p-hero-muted);
+}
+
+.points-adjust,
+.points-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.points-heading {
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--p-text);
+}
+
+.points .parent-choice {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--p-bg);
+}
+
+.points .parent-choice .button {
+  height: 42px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.points .parent-choice .button-secondary {
+  background: var(--p-bg);
+  color: var(--p-muted);
+}
+
+.points .parent-choice .button-primary {
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+}
+
+.parent textarea.text-field-input {
+  min-height: 70px;
+  resize: none;
+}
+
+.points-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.points-preview-label {
+  font-size: 12px;
+  color: var(--p-muted);
+}
+
+.points-preview-value {
+  font-size: 19px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-accent-ink);
+}
+
+.points-preview-below {
+  font-size: 14px;
+  color: var(--p-warn-ink);
+}
+
+.safeguard-warn {
+  background: var(--p-warn-soft);
+  color: var(--p-warn-ink);
+}
+
+.points .button-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.points-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--p-divider);
+  border-radius: 12px;
+  background: var(--p-surface);
+  font-size: 13px;
+}
+
+.points-footnote {
+  font-size: 11px;
+  color: var(--p-muted);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.activity-row + .activity-row {
+  padding-top: 14px;
+  border-top: 1px solid var(--p-divider);
+}
+
+.activity-icon {
+  display: flex;
+  flex: none;
+  color: var(--p-accent-ink);
+}
+
+.activity-event {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.activity-title {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.activity-meta {
+  font-size: 11px;
+  color: var(--p-muted);
+}
+
+.activity-amount {
+  flex: none;
+  width: 76px;
+  text-align: right;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-accent-ink);
+}
+
+@media (min-width: 768px) {
+  .points-hero {
+    gap: 16px;
+    padding: 22px;
+  }
+
+  .points-hero-number {
+    font-size: 48px;
+  }
+
+  .points-hero-row {
+    gap: 9px;
+  }
+
+  .points-heading {
+    font-size: 18px;
+    line-height: normal;
+    min-height: 28px;
+  }
+
+  .points-adjust .parent-section,
+  .points-activity .parent-section {
+    padding: 22px;
+  }
+
+  .points-adjust .parent-section {
+    gap: 16px;
+  }
+
+  .points-activity .parent-section {
+    gap: 20px;
+  }
+
+  .points .parent-choice .button {
+    height: 44px;
+  }
+
+  .points-preview {
+    gap: 12px;
+  }
+
+  .points-preview-value {
+    font-size: 18px;
+  }
+
+  .activity-list {
+    gap: 20px;
+  }
+
+  .activity-row + .activity-row {
+    padding-top: 20px;
+  }
+
+  .activity-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .activity-event {
+    gap: 4px;
+  }
+
+  .activity-amount {
+    font-size: 18px;
+  }
+
+  .safeguard-warn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .points {
+    display: grid;
+    grid-template-columns: minmax(0, 414fr) minmax(0, 476fr);
+    grid-template-areas:
+      'hero adjust'
+      'activity adjust';
+    grid-template-rows: auto 1fr;
+    column-gap: 24px;
+    row-gap: 22px;
+    align-items: start;
+  }
+
+  .points-hero {
+    grid-area: hero;
+  }
+
+  .points-adjust {
+    grid-area: adjust;
+  }
+
+  .points-activity {
+    grid-area: activity;
+  }
+}
 /* parent portal: end */
 
 .text-field {

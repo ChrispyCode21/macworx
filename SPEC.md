@@ -94,9 +94,9 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 
 **Points** has, for the selected child:
 
-- Her balance, and **Adjust balance** to add or remove Macaronis (below).
+- Her balance, and **Adjust balance** to add or remove Macaronis (below). Review stays disabled until the amount and note are valid, and the form shows her balance after the change.
 - **Earned today:** the Macaronis she earned today (the parent's calendar day): the total paid on her results of that day, finished or left early. A parent's adjustment is not counted. It shows beside her balance and is left out when it is 0.
-- **Recent activity:** every change a parent has made to her, newest first (the latest 50): when, which parent and what changed, in plain words.
+- **Recent activity:** every change a parent has made to her, newest first (the latest 50): when, which parent and what changed, in plain words. A balance change also shows its signed amount (for example +20 or −15), and not her balance before or after.
 
 **Streak** has, for the selected child, her streak, her last counted day and a form to correct them (below).
 
@@ -129,6 +129,7 @@ A recorded result and her answers never change; Add or Remove on the Points scre
 - Her balance can never end below 0. A removal larger than her balance is refused, with a line saying her balance and that it can't go lower. Nothing is changed.
 - It changes her balance only: not her streak, completed assignments or results. Nothing on her screens mentions it; her Home shows the new balance after her next sync (§6.8).
 - The log entry records the amount, her balance before and after, and the note. In Recent activity it reads, for example, "Added 20 Macaronis: Homework grades" or "Removed 5 Macaronis: Counted twice by mistake".
+- After Review the form shows what will change and can't be edited. Back returns to the form with what was typed. After Confirm the form clears, a notice says her new balance, and her balance, Earned today and Recent activity update.
 - If a result is being recorded at the same moment, neither change is lost: the adjustment is worked out again from the new balance (§6.8; ARCHITECTURE "Data"). If it can't be saved after a few tries, the page says to try again in a minute.
 
 ### 5.4 Pair her device

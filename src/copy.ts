@@ -3,6 +3,8 @@ import { ASSIGNMENT_SIZE, type Grade } from './engine'
 import { formatCalendarDay, formatNumber } from './ui/format'
 
 const macaronis = (n: number) => `${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}`
+/** A signed whole number with the real minus sign: +20, −15, +1,000. */
+const signed = (n: number) => `${n < 0 ? '−' : '+'}${formatNumber(Math.abs(n))}`
 
 export const COPY = {
   title: 'macworx',
@@ -127,13 +129,9 @@ export const COPY = {
   parentColRight: 'Right',
   parentColGrade: 'Grade',
   parentColEarned: 'Macaronis earned',
-  parentColWhen: 'When',
-  parentColWho: 'Who',
-  parentColWhat: 'What',
   parentRightOf: (correct: number, answered: number) =>
     `${formatNumber(correct)} of ${formatNumber(answered)}`,
   parentLeftEarly: 'Left early',
-  parentLogHeading: 'Activity log',
   parentNoLog: 'Nothing here yet. Changes made on this page show up here.',
   parentLatest: (n: number) => `Showing the latest ${formatNumber(n)}.`,
   parentLogPairingCode: (name: string) => `Made a pairing code for ${name}`,
@@ -174,17 +172,33 @@ export const COPY = {
   parentSwitcherRename: 'Rename',
   parentSwitcherRenameLabel: (name: string) => `Rename ${name}`,
   parentLogUnknownDevice: 'a device',
-  parentMacaroniFormHeading: 'Her Macaronis',
-  parentAdjustIntro:
-    'Add or remove Macaronis, for example to put her balance right or to reward her homework grades.',
-  parentAdd: 'Add',
-  parentRemove: 'Remove',
-  parentAmountLabel: 'How many Macaronis',
+  parentHeroLabel: 'Available balance',
+  parentHeroUnit: 'Macaronis',
+  parentEarnedToday: (n: number) => `+${formatNumber(n)} earned today`,
+  parentAdjustHeading: 'Adjust balance',
+  parentAdjustModeLabel: 'Add or remove',
+  parentAddOption: 'Add Macaronis',
+  parentRemoveOption: 'Remove Macaronis',
+  parentAmountAddLabel: 'Macaronis to add',
+  parentAmountRemoveLabel: 'Macaronis to remove',
+  parentReasonLabel: 'Reason · required',
+  parentPreviewLabel: 'Balance after adjustment',
+  parentPreviewValue: (n: number) => macaronis(n),
+  parentBelowZero: "Can't go below zero.",
+  parentAdjustNotice: 'Nothing changes yet. Review the amount, then confirm on the next step.',
+  parentReviewPlain: 'Review',
+  parentReview: (amount: number) =>
+    `Review ${signed(amount)} ${amount === 1 || amount === -1 ? 'Macaroni' : 'Macaronis'}`,
+  parentReviewLine: (removing: boolean, amount: number, before: number, after: number, note: string) =>
+    `${removing ? 'Remove' : 'Add'} ${macaronis(amount)}: balance ${formatNumber(before)} → ${formatNumber(after)}. Reason: ${note}.`,
+  parentConfirm: 'Confirm',
+  parentBack: 'Back',
+  parentAdjustFootnote: "Saved with your name and reason in the activity log. Macaronis can't go below zero.",
+  parentActivityHeading: 'Recent activity',
+  parentActivityAmount: (n: number) => signed(n),
+  parentActivityMeta: (when: string, email: string) => `${when} · ${email}`,
   parentAmountProblem: 'Enter a whole number of Macaronis, from 1 to 100,000.',
-  parentNoteLabel: 'Note',
-  parentNoteHint: 'Why? Up to 200 characters. It goes in the activity log.',
   parentNoteProblem: 'Add a short note, up to 200 characters, so you remember why.',
-  parentSave: 'Save Macaronis',
   parentSaved: (balance: number) => `Saved. Her balance is now ${formatNumber(balance)}.`,
   parentOverdraw: (balance: number) =>
     `She has ${formatNumber(balance)} Macaronis, so you can't remove more than that. Her balance can't go below 0.`,

@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Macaronis screen (parents):** her balance with "+N earned today" (left out at 0), Add or Remove with a reason, a "Balance after adjustment" preview, and Review then Confirm (Back returns to the form without saving). Recent activity lists each change with when, which parent and what changed, and the signed amount of a balance change (for example +20 or −15). A removal bigger than her balance is refused in plain words before anything is sent.
 - **Pair panel on the Devices screen (parents):** a "Connect another device" panel for the chosen child with a device name box (up to 40 characters), a Generate pairing code button, the code as one string with "Expires in N minutes." counting down, and a footnote that codes expire after 10 minutes. Beside it are a "Before you disconnect" note (using her name, Macaronis and streak) and a "Child access only" note. The Devices screen has two columns from 1024px wide. Her app now says "Pair this device" instead of "Pair this iPad".
 - **Device cards with last synced (parents):** the Devices tab shows a "{n} connected" count and a card for each connected device with its name, when it was added and when it last synced ("Synced today, 4:05 pm", "Synced Oct 12" or "No results yet"), and an Unpair button that keeps its warning. An unpaired device leaves the list (the Activity log still names it). The Online or Offline status and the browser line are sample data, labelled "Sample"; renaming a device and "View details" are shown disabled. The parent pages say "device" instead of "iPad". `GET /api/parent/devices` also returns `lastResultAt`.
 - **Add and rename a child (parents):** Overview has a Children panel with Add a child and Rename, for a name (1 to 40 characters), an optional grade and initials (filled from the name until you type your own). The child switcher list has a Rename button on each child and an "Add a child" row; a new child is selected right away. Children can't be deleted, and both changes show in the Activity log.
@@ -18,6 +19,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Changed
 
+- **Macaronis tab replaces the old form (parents):** the Add or Remove form and the Activity log table on the Macaronis tab are replaced by the Macaronis screen.
 - **Behind the scenes: each child's numbers are kept separate:** the parent and child sides now keep each child's numbers, results, devices and activity apart, and a pairing code is made for a chosen child (no visible change yet).
 - **Parent page is now a dashboard:** at `/parent`, a summary strip with her Macaroni balance, streak, last counted day and assignments done, then her Results (date, how many right, grade, Macaronis earned), the iPads, and an Activity log of changes made on the page. Its sections now live in the portal's tabs. Pairing and unpairing work as before.
 
