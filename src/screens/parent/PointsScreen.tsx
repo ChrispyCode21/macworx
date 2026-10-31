@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { COPY } from '../../copy'
 import { describe } from '../../parent/activity'
@@ -49,6 +50,16 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
   const a = adjust
   const reviewing = a.step === 'review'
   const check = a.check
+  const confirmRef = useRef<HTMLButtonElement>(null)
+  const reviewRef = useRef<HTMLButtonElement>(null)
+  const was = useRef(reviewing)
+  // Review, Confirm and Back replace one another, so focus follows to the button now shown. Only on a
+  // change of step, never on first mount.
+  useEffect(() => {
+    if (was.current === reviewing) return
+    was.current = reviewing
+    ;(reviewing ? confirmRef : reviewRef).current?.focus()
+  }, [reviewing])
   return (
     <div className="points">
       <section className="points-hero">
@@ -102,7 +113,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
                   : COPY.parentNoValue}
             </span>
           </div>
-          {a.below && summary && (
+          {a.below && summary && !a.problem && (
             <p className="safeguard safeguard-warn">
               <InfoIcon size={17} />
               <span>{COPY.parentOverdraw(summary.balance)}</span>
@@ -123,7 +134,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
                   check.note,
                 )}
               </p>
-              <Button onClick={a.confirm} disabled={a.saving}>
+              <Button ref={confirmRef} onClick={a.confirm} disabled={a.saving}>
                 {COPY.parentConfirm}
               </Button>
               <Button variant="soft" onClick={a.back} disabled={a.saving}>
@@ -131,7 +142,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
               </Button>
             </div>
           ) : (
-            <Button onClick={a.review} disabled={!check?.ok}>
+            <Button ref={reviewRef} onClick={a.review} disabled={!check?.ok}>
               {a.amount !== null ? COPY.parentReview(a.amount) : COPY.parentReviewPlain}
               <ArrowRightIcon size={18} />
             </Button>

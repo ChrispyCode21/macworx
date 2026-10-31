@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { checkAdjust, parseAmount, balanceAfter } from '../../parent/adjust'
 import type { LogEntry, Summary } from '../../parent/api'
 import { PointsScreen } from './PointsScreen'
+import { visibleStep } from './useAdjust'
 import type { AdjustState } from './useAdjust'
 
 const noop = () => {}
@@ -24,13 +25,15 @@ function adjustState(
   const count = parseAmount(s.amountText)
   const amount = count === null ? null : s.removing ? -count : count
   const after = amount === null || balance === null ? null : balanceAfter(balance, amount)
+  const check = balance === null ? null : checkAdjust({ ...s, balance })
   return {
     ...s,
+    step: visibleStep(s.step, check),
     saving: false,
     amount,
     after,
     below: after !== null && after < 0,
-    check: balance === null ? null : checkAdjust({ ...s, balance }),
+    check,
     setRemoving: noop,
     setAmountText: noop,
     setNote: noop,
@@ -129,6 +132,23 @@ describe('PointsScreen Review step', () => {
   it('restates a removal', () => {
     const html = render(reviewing({ removing: true, amountText: '15' }))
     expect(html).toContain('Remove 15 Macaronis: balance 40 → 25.')
+  })
+
+  it('unlocks the form when the balance moved so the change would overdraw', () => {
+    const html = render(reviewing({ removing: true, amountText: '41' }))
+    expect(html).not.toContain('>Confirm<')
+    expect(html).toMatch(/<button[^>]*disabled[^>]*>Review −41 Macaronis/)
+    for (const tag of html.match(/<(input|textarea)\b[^>]*>/g) ?? []) expect(tag).not.toContain('disabled')
+    expect(html).not.toMatch(/role="radio"[^>]*disabled/)
+    expect(html).toContain('She has 40 Macaronis')
+  })
+
+  it('says the overdraw line once when a refusal is showing', () => {
+    const line = 'She has 40 Macaronis, so you can&#x27;t remove more than that.'
+    const problem = "She has 40 Macaronis, so you can't remove more than that. Her balance can't go below 0."
+    const html = render(adjustState({ removing: true, amountText: '41', note: 'x', problem }))
+    expect(html.split(line).length - 1).toBe(1)
+    expect(html).toContain('role="alert"')
   })
 
   it('shows the saved notice and the refusal as separate lines', () => {

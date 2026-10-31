@@ -37,6 +37,14 @@ export async function submitAdjust(
     : { kind: 'overdraw_unread', result: latest }
 }
 
+/**
+ * The step to show. Review holds only while the change can still be made: if her balance moves under a
+ * removal (a sync landed), the form unlocks with the values kept, so there is always a way forward.
+ */
+export function visibleStep(step: 'form' | 'review', check: AdjustCheck | null): 'form' | 'review' {
+  return step === 'review' && check?.ok === true ? 'review' : 'form'
+}
+
 export interface AdjustState {
   removing: boolean
   amountText: string
@@ -91,14 +99,18 @@ export function useAdjust({
   const after = amount === null || balance === null ? null : balanceAfter(balance, amount)
   const check = balance === null ? null : checkAdjust({ amountText, note, removing, balance })
 
+  const shownStep = visibleStep(step, check)
+
   const edited = () => {
+    // An edit only happens on the form, so a Review that was unlocked by a changed balance ends here.
+    setStep('form')
     setNotice(null)
     setProblem(null)
   }
 
   const confirm = async () => {
     // One request at a time, so a quick double click can't save the same change twice.
-    if (busy.current || step !== 'review' || !check?.ok) return
+    if (busy.current || shownStep !== 'review' || !check?.ok) return
     busy.current = true
     setSaving(true)
     const outcome = await submitAdjust(check.amount, check.note, live)
@@ -124,7 +136,7 @@ export function useAdjust({
     removing,
     amountText,
     note,
-    step,
+    step: shownStep,
     saving,
     notice,
     problem,

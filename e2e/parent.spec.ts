@@ -656,6 +656,42 @@ test('a refusal at Confirm shows her balance and keeps the numbers', async ({ pa
   await expect(page.getByLabel('Macaronis to remove')).toHaveValue('5')
 })
 
+test('Confirm waits for its answer, so a double click saves once', async ({ page }) => {
+  let answer: () => void = () => {}
+  const posts: number[] = []
+  await page.route('/api/parent/**', (route) => {
+    if (route.request().method() === 'GET')
+      return route.fulfill({ json: readViews(new URL(route.request().url()).pathname, []) })
+    posts.push(1)
+    answer = () => void route.fulfill({ json: { balance: 46 } })
+  })
+  await page.goto('/parent/points')
+  await page.getByLabel('Macaronis to add').fill('5')
+  await page.getByLabel('Reason · required').fill('Extra reading')
+  await page.getByRole('button', { name: /^Review/ }).click()
+  await page.getByRole('button', { name: 'Confirm' }).dblclick()
+  await expect(page.getByRole('button', { name: 'Confirm' })).toBeDisabled()
+  answer()
+  await expect(page.getByText('Saved. Her balance is now 46.')).toBeVisible()
+  expect(posts).toHaveLength(1)
+})
+
+test('a busy answer at Confirm says to try again and keeps the numbers', async ({ page }) => {
+  await page.route('/api/parent/**', (route) => {
+    if (route.request().method() === 'POST') return route.fulfill({ status: 503, json: { error: 'busy' } })
+    return route.fulfill({ json: readViews(new URL(route.request().url()).pathname, []) })
+  })
+  await page.goto('/parent/points')
+  await page.getByLabel('Macaronis to add').fill('5')
+  await page.getByLabel('Reason · required').fill('Extra reading')
+  await page.getByRole('button', { name: /^Review/ }).click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
+  await expect(page.getByRole('alert')).toBeVisible()
+  await expect(page.getByLabel('Macaronis to add')).toHaveValue('5')
+  await expect(page.getByLabel('Macaronis to add')).toBeEnabled()
+  await expect(page.getByLabel('Reason · required')).toHaveValue('Extra reading')
+})
+
 test('shows what she earned today beside her balance, and nothing at 0', async ({ page }) => {
   await page.route('/api/parent/**', (route) =>
     route.fulfill({

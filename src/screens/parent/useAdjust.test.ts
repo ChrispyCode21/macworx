@@ -1,6 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ParentResult } from '../../parent/api'
-import { submitAdjust } from './useAdjust'
+import { checkAdjust } from '../../parent/adjust'
+import type { AdjustCheck } from '../../parent/adjust'
+import { submitAdjust, visibleStep } from './useAdjust'
+
+describe('visibleStep', () => {
+  const removal = (balance: number): AdjustCheck =>
+    checkAdjust({ amountText: '30', note: 'x', removing: true, balance })
+
+  it('holds Review only while the change can still be made', () => {
+    expect(visibleStep('review', removal(40))).toBe('review')
+    // A sync lowered her balance under the removal.
+    expect(visibleStep('review', removal(20))).toBe('form')
+    expect(visibleStep('review', null)).toBe('form')
+    expect(visibleStep('form', removal(40))).toBe('form')
+  })
+})
 
 const fail = (error: string, status = 400): ParentResult<never> => ({ ok: false, status, error })
 
