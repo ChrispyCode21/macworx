@@ -23,7 +23,7 @@ macworx gives her:
 
 ## 3. Non-goals (MVP)
 
-- Subjects other than math.
+- Recorded or paid subjects other than math. Spelling and Reading are sample practice only (§5.5).
 - The spinner and the loot box.
 - Push notifications to the parent.
 - Time limits or timers of any kind.
@@ -40,10 +40,10 @@ macworx gives her:
 
 ### 5.1 Do an assignment (child)
 
-1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these.
+1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home also has a Spelling button and a Reading button (§5.5).
 2. She starts an assignment: 20 math problems (§6.2).
 3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
-4. She enters her answer on an on-screen number pad (digits 0–9, a delete key and Check) and submits it with Check. The iPad keyboard never opens. She answers each problem once.
+4. She enters her answer on an on-screen number pad (digits 0–9 and a delete key) and submits it with the Check button at the bottom right of the screen. The iPad keyboard never opens. She answers each problem once.
    - Addition and subtraction fill from the ones place leftward, the way she works the columns: for 100 + 200 she types 0, 0, 3.
    - Multiplication fills left to right, the way she writes a number: for 7 × 8 she types 5, 6. The answer stays lined up under the ones column, so a one-digit product sits in the ones box.
    - The box where her next digit goes is highlighted. Delete removes the digit she typed last. A box past the last one takes nothing.
@@ -139,6 +139,17 @@ A recorded result and her answers never change; Add or Remove on the Points scre
 3. Paired: the screen says so and the button disappears from Home. The device keeps its device key and belongs to the child the code was made for.
 4. Not paired: a friendly line says what to do (ask for a new code, wait a minute, connect to Wi-Fi, or try again soon), and the boxes clear.
 5. Whenever Home opens with a stored key, the device checks it with the Worker. If a parent has unpaired the device, the device forgets the key and the button comes back.
+
+### 5.5 Spelling and Reading practice (child, samples)
+
+Spelling and Reading are sample practice: they work on any iPad, paired or not, and online or offline. Their content is a fixed set of samples built into the app. The iPad checks her answers itself. Nothing is recorded or sent to the Worker, and they pay no Macaronis and don't count toward her streak, completed assignments or grade.
+
+1. **Spelling:** 8 words, one at a time. For each word she plays it (the iPad says it aloud), can hear it in a sentence, and picks its spelling from four choices. She can play it as often as she likes. She picks one choice and taps Check. Then the choice she picked turns a soft green when it's right, or a soft coral when it's not, and a friendly line shows the right spelling. She taps Next when she's ready. After the 8th word she sees that she's done, with a button back to Home.
+2. **Reading:** one passage, then its questions. She reads the passage and taps Next. Each question has three choices, and she picks one per question. **Read again** shows the passage again and keeps her choices. When every question has a choice she taps Check answers. Each question then shows the same green or coral as Spelling, with a friendly line naming the right answer. Then she taps Done and sees that she's done, with a button back to Home.
+3. She can leave either one at any time with the back control. Nothing is kept: the next time she starts, it begins again from the first word or the passage.
+4. If the iPad can't speak, the Play buttons are disabled and a line says the word can't be played on this iPad. She can still pick a choice.
+
+The screens' layout, the shared top bar and the Math screen's layout are in `docs/DESIGN-PRACTICE.md`.
 
 ## 6. Domain rules
 
@@ -414,7 +425,7 @@ Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
 
 Ideas outside the MVP. Each needs a spec section before it is built.
 
-- **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), spelling (pick the correct spelling, seeded from school lists), reading comprehension (parent-reviewed passages with multiple-choice questions).
+- **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), recorded and paid spelling (words seeded from school lists, replacing the samples in §5.5), recorded and paid reading comprehension (parent-reviewed passages, replacing the sample in §5.5), and fractions (the fraction layout in `docs/DESIGN-PRACTICE.md`).
 - **Spinner:** earned spins that pick the subject or a reward, never "no work".
 - **Loot box:** earned-only surprise rewards.
 - **Carrying and borrowing:** work space on the stacked problem to mark a carried 1 or regroup from the next place.
