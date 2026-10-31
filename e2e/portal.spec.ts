@@ -290,7 +290,7 @@ test('a save that finishes after a child switch sends no more reads', async ({ p
   const calls = await portalApi(page)
   let release: () => void = () => {}
   const held = new Promise<void>((resolve) => (release = resolve))
-  await page.route('/api/parent/adjust*', async (route) => {
+  await page.route('/api/parent/balance', async (route) => {
     await held
     return route.fulfill({ json: { balance: 42 } })
   })
@@ -308,7 +308,7 @@ test('a save that finishes after a child switch sends no more reads', async ({ p
   calls.length = 0
   release()
   await page.waitForTimeout(300)
-  expect(calls.filter((c) => !c.startsWith('/api/parent/adjust'))).toEqual([])
+  expect(calls.filter((c) => !c.startsWith('/api/parent/balance'))).toEqual([])
 })
 
 test('Escape closes the child list', async ({ page }) => {
