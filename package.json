@@ -27,7 +27,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261021.1",
+    "@cloudflare/workers-types": "^5.20261028.1",
     "@playwright/test": "1.64.1",
     "@types/node": "^26.6.4",
     "@types/react": "^19.2.18",
@@ -35,12 +35,12 @@
     "@vite-pwa/assets-generator": "^2.0.0",
     "@vitejs/plugin-react": "^6.1.2",
     "miniflare": "5.20261012.1-beta",
-    "oxlint": "^1.89.0",
+    "oxlint": "^1.90.0",
     "prettier": "^3.9.9",
     "typescript": "~7.0.2",
     "vite": "^8.3.5",
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.3",
-    "wrangler": "^4.151.3"
+    "wrangler": "^4.154.0"
   }
 }
