@@ -16,4 +16,12 @@ describe('TextField', () => {
     expect(html).toContain('<span class="text-field-unit">Macaronis</span>')
     expect(html.indexOf('<input')).toBeLessThan(html.indexOf('text-field-unit'))
   })
+
+  it('renders a textarea tied to its label when multiline', () => {
+    const html = renderToStaticMarkup(<TextField label="Reason" multiline maxLength={200} />)
+    expect(html).toMatch(/<textarea[^>]*class="text-field-input"/)
+    expect(html).toContain('maxLength="200"')
+    expect(html).not.toContain('<input')
+    expect(html).toMatch(/<label[^>]*for="([^"]+)"[\s\S]*<textarea[^>]*id="\1"/)
+  })
 })

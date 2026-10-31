@@ -7,13 +7,15 @@ interface Props<T extends string> {
   options: { value: T; label: string }[]
   value: T
   onChange: (value: T) => void
+  /** Shows the choice but does not let it change (the Review step). */
+  disabled?: boolean
 }
 
 /**
  * A choice of one from a few, in the portal's Add / Remove look (docs/DESIGN.md §7): a radio group whose
  * selected option is the primary button. Arrow keys move the choice.
  */
-export function Segmented<T extends string>({ label, options, value, onChange }: Props<T>) {
+export function Segmented<T extends string>({ label, options, value, onChange, disabled }: Props<T>) {
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     const step =
       e.key === 'ArrowRight' || e.key === 'ArrowDown'
@@ -38,6 +40,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
           aria-checked={o.value === value}
           tabIndex={o.value === value ? 0 : -1}
           data-value={o.value}
+          disabled={disabled}
           onClick={() => onChange(o.value)}
         >
           {o.label}
