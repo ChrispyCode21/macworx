@@ -11,7 +11,7 @@ interface Device {
   lastResultAt: string | null
 }
 
-const summary = { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 }
+const summary = { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5, earnedToday: 0 }
 
 /** The Worker's answer to each read view (SPEC §8); `views` replaces any of them. */
 function readViews(path: string, devices: Device[], views: Record<string, unknown> = {}) {
@@ -34,6 +34,8 @@ async function parentApi(
 ) {
   const calls: string[] = []
   let balance = summary.balance
+  // Newest first, like the Worker's log.
+  const entries: unknown[] = []
   await page.route('/api/parent/**', async (route: Route) => {
     const req = route.request()
     calls.push(`${req.method()} ${new URL(req.url()).pathname}`)
@@ -41,6 +43,7 @@ async function parentApi(
       return route.fulfill({
         json: readViews(new URL(req.url()).pathname, devices, {
           '/api/parent/summary': { ...summary, balance },
+          '/api/parent/log': { entries },
           ...views,
         }),
       })
@@ -50,8 +53,15 @@ async function parentApi(
       return route.fulfill({ json: { ok: true } })
     }
     if (new URL(req.url()).pathname === '/api/parent/balance') {
-      const { amount } = req.postDataJSON()
+      const { amount, note } = req.postDataJSON()
       if (balance + amount < 0) return route.fulfill({ status: 409, json: { error: 'overdraw', balance } })
+      entries.unshift({
+        id: entries.length + 1,
+        at: '2026-10-20T15:05:00',
+        email: 'mum@example.com',
+        action: 'balance',
+        detail: { amount, before: balance, after: balance + amount, note },
+      })
       balance += amount
       return route.fulfill({ json: { balance } })
     }
@@ -305,7 +315,7 @@ test('shows her numbers, results and the activity log in plain words', async ({ 
   await expect(page.getByRole('button', { name: /Review the result/ })).toHaveCount(0)
 
   await page.getByRole('link', { name: 'Macaronis' }).click()
-  const log = page.getByRole('table')
+  const log = page.locator('.activity-list')
   await expect(log.getByText('Unpaired Her iPad')).toBeVisible()
   await expect(log.getByText('Made a pairing code for Her iPad')).toBeVisible()
   await expect(log.getByText('mum@example.com')).toBeVisible()
@@ -356,10 +366,11 @@ test('a bad_day on the re-read after a refused removal says something went wrong
     return route.fulfill({ json: readViews(path, []) })
   })
   await page.goto('/parent/points')
-  await page.getByRole('button', { name: 'Remove' }).click()
-  await page.getByLabel('How many Macaronis').fill('50')
-  await page.getByLabel('Note').fill('Too many')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await page.getByRole('radio', { name: 'Remove Macaronis' }).click()
+  await page.getByLabel('Macaronis to remove').fill('5')
+  await page.getByLabel('Reason · required').fill('Too many')
+  await page.getByRole('button', { name: /^Review/ }).click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
   await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
 })
 
@@ -542,62 +553,148 @@ test('Save streak waits for its answer before taking another click', async ({ pa
   expect(posts).toHaveLength(1)
 })
 
-test('adds Macaronis with a note, then removes some', async ({ page }) => {
+test('adds Macaronis through Review then Confirm, then removes some', async ({ page }) => {
   const calls = await parentApi(page, [])
   await page.goto('/parent/points')
-  await expect(page.getByLabel('How many Macaronis')).toBeVisible()
+  await expect(page.getByLabel('Macaronis to add')).toBeVisible()
 
-  await page.getByLabel('How many Macaronis').fill('20')
-  await page.getByLabel('Note').fill('Homework grades')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await page.getByLabel('Macaronis to add').fill('20')
+  await page.getByLabel('Reason · required').fill('Homework grades')
+  await expect(page.getByText('61 Macaronis')).toBeVisible()
+  await page.getByRole('button', { name: 'Review +20 Macaronis' }).click()
+  // Nothing is saved at Review, and the form is locked.
+  expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+  await expect(page.getByText('Add 20 Macaronis: balance 41 → 61. Reason: Homework grades.')).toBeVisible()
+  await expect(page.getByLabel('Macaronis to add')).toBeDisabled()
+  await page.getByRole('button', { name: 'Confirm' }).click()
   await expect(page.getByText('Saved. Her balance is now 61.')).toBeVisible()
-  await expect(page.getByLabel('How many Macaronis')).toHaveValue('')
+  await expect(page.getByLabel('Macaronis to add')).toHaveValue('')
+  await expect(page.locator('.points-hero-number')).toHaveText('61')
+  await expect(page.locator('.activity-row').first().locator('.activity-amount')).toHaveText('+20')
+  await expect(page.getByText('Added 20 Macaronis: Homework grades')).toBeVisible()
   // Overview shows the new balance.
   await page.getByRole('link', { name: 'Overview' }).click()
   await expect(page.getByLabel('Her numbers so far').getByText('61')).toBeVisible()
   await page.getByRole('link', { name: 'Macaronis' }).click()
 
-  await page.getByRole('button', { name: 'Remove' }).click()
-  await page.getByLabel('How many Macaronis').fill('1')
-  await page.getByLabel('Note').fill('Counted twice')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await page.getByRole('radio', { name: 'Remove Macaronis' }).click()
+  await page.getByLabel('Macaronis to remove').fill('1')
+  await page.getByLabel('Reason · required').fill('Counted twice')
+  await page.getByRole('button', { name: 'Review −1 Macaroni' }).click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
   await expect(page.getByText('Saved. Her balance is now 60.')).toBeVisible()
+  await expect(page.locator('.activity-row').first().locator('.activity-amount')).toHaveText('−1')
   expect(calls.filter((c) => c.startsWith('POST'))).toEqual([
     'POST /api/parent/balance',
     'POST /api/parent/balance',
   ])
 })
 
-test('asks for a whole number and a note before saving', async ({ page }) => {
+test('Back from Review returns to the form with what was typed, and saves nothing', async ({ page }) => {
   const calls = await parentApi(page, [])
   await page.goto('/parent/points')
-  await page.getByLabel('Note').fill('A note')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
-  await expect(page.getByRole('alert')).toHaveText('Enter a whole number of Macaronis, from 1 to 100,000.')
-  await page.getByLabel('How many Macaronis').fill('2.5')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
-  await expect(page.getByRole('alert')).toHaveText('Enter a whole number of Macaronis, from 1 to 100,000.')
-  await page.getByLabel('How many Macaronis').fill('5')
-  await page.getByLabel('Note').fill('   ')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
-  await expect(page.getByRole('alert')).toHaveText(
-    'Add a short note, up to 200 characters, so you remember why.',
-  )
+  await page.getByLabel('Macaronis to add').fill('20')
+  await page.getByLabel('Reason · required').fill('Homework grades')
+  await page.getByRole('button', { name: 'Review +20 Macaronis' }).click()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await expect(page.getByLabel('Macaronis to add')).toHaveValue('20')
+  await expect(page.getByLabel('Reason · required')).toHaveValue('Homework grades')
+  await expect(page.getByLabel('Macaronis to add')).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Review +20 Macaronis' })).toBeEnabled()
+  expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+})
+
+test('keeps Review disabled until the amount and reason are valid, and sends nothing', async ({ page }) => {
+  const calls = await parentApi(page, [])
+  await page.goto('/parent/points')
+  const review = page.getByRole('button', { name: /^Review/ })
+  await expect(review).toBeDisabled()
+  await page.getByLabel('Reason · required').fill('A note')
+  await expect(review).toBeDisabled()
+  await page.getByLabel('Macaronis to add').fill('2.5')
+  await expect(review).toBeDisabled()
+  await page.getByLabel('Macaronis to add').fill('100001')
+  await expect(review).toBeDisabled()
+  await page.getByLabel('Macaronis to add').fill('5')
+  await expect(review).toBeEnabled()
+  await page.getByLabel('Reason · required').fill('   ')
+  await expect(review).toBeDisabled()
   expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
 })
 
 test('refuses taking away more than she has, in friendly words', async ({ page }) => {
-  await parentApi(page, [])
+  const calls = await parentApi(page, [])
   await page.goto('/parent/points')
-  await page.getByRole('button', { name: 'Remove' }).click()
-  await page.getByLabel('How many Macaronis').fill('50')
-  await page.getByLabel('Note').fill('Too many')
-  await page.getByRole('button', { name: 'Save Macaronis' }).click()
+  await page.getByRole('radio', { name: 'Remove Macaronis' }).click()
+  await page.getByLabel('Macaronis to remove').fill('42')
+  await page.getByLabel('Reason · required').fill('Too many')
+  await expect(page.getByText("Can't go below zero.", { exact: true })).toBeVisible()
+  await expect(
+    page.getByText("She has 41 Macaronis, so you can't remove more than that. Her balance can't go below 0."),
+  ).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Review/ })).toBeDisabled()
+  expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+})
+
+test('a refusal at Confirm shows her balance and keeps the numbers', async ({ page }) => {
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (route.request().method() === 'POST')
+      return route.fulfill({ status: 409, json: { error: 'overdraw', balance: 3 } })
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/points')
+  await page.getByRole('radio', { name: 'Remove Macaronis' }).click()
+  await page.getByLabel('Macaronis to remove').fill('5')
+  await page.getByLabel('Reason · required').fill('Fixing the count')
+  await page.getByRole('button', { name: /^Review/ }).click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
+  // Her balance is read again for the line (the 409 carries none): 41 here.
   await expect(page.getByRole('alert')).toHaveText(
     "She has 41 Macaronis, so you can't remove more than that. Her balance can't go below 0.",
   )
-  await page.getByRole('link', { name: 'Overview' }).click()
-  await expect(page.getByLabel('Her numbers so far').getByText('41')).toBeVisible()
+  await expect(page.getByLabel('Macaronis to remove')).toHaveValue('5')
+})
+
+test('shows what she earned today beside her balance, and nothing at 0', async ({ page }) => {
+  await page.route('/api/parent/**', (route) =>
+    route.fulfill({
+      json: readViews(new URL(route.request().url()).pathname, [], {
+        '/api/parent/summary': { ...summary, earnedToday: 12 },
+      }),
+    }),
+  )
+  await page.goto('/parent/points')
+  await expect(page.getByText('+12 earned today')).toBeVisible()
+})
+
+test('leaves the earned-today line out at 0', async ({ page }) => {
+  await parentApi(page, [])
+  await page.goto('/parent/points')
+  await expect(page.locator('.points-hero-number')).toHaveText('41')
+  await expect(page.getByText('earned today')).toHaveCount(0)
+})
+
+test('puts the adjust panel to the right of Recent activity when wide, and in order on a phone', async ({
+  page,
+}) => {
+  await parentApi(page, [])
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto('/parent/points')
+  const adjust = await page.locator('.points-adjust').boundingBox()
+  const activity = await page.locator('.points-activity').boundingBox()
+  const hero = await page.locator('.points-hero').boundingBox()
+  expect(adjust!.x).toBeGreaterThan(activity!.x + activity!.width - 1)
+  expect(adjust!.x).toBeGreaterThan(hero!.x + hero!.width - 1)
+  expect(activity!.y).toBeGreaterThan(hero!.y)
+  await page.setViewportSize({ width: 390, height: 900 })
+  const phone = await Promise.all(
+    ['.points-hero', '.points-adjust', '.points-activity'].map(
+      async (sel) => (await page.locator(sel).boundingBox())!.y,
+    ),
+  )
+  expect(phone[0]).toBeLessThan(phone[1])
+  expect(phone[1]).toBeLessThan(phone[2])
 })
 
 test('a streak change reads in plain words in the activity log', async ({ page }) => {
@@ -626,7 +723,7 @@ test('a streak change reads in plain words in the activity log', async ({ page }
     }),
   )
   await page.goto('/parent/points')
-  const log = page.getByRole('table')
+  const log = page.locator('.activity-list')
   await expect(log.getByText('Set the streak to 7 days, last counted day Oct 16')).toBeVisible()
   await expect(log.getByText('Set the streak to 0 days, no last counted day')).toBeVisible()
 })
@@ -659,6 +756,11 @@ test('shows adjustments in the activity log in plain words', async ({ page }) =>
   await page.goto('/parent/points')
   await expect(page.getByText('Removed 5 Macaronis: Counted twice')).toBeVisible()
   await expect(page.getByText('Added 20 Macaronis: Homework grades')).toBeVisible()
+  const rows = page.locator('.activity-row')
+  await expect(rows.nth(0).locator('.activity-amount')).toHaveText('−5')
+  await expect(rows.nth(1).locator('.activity-amount')).toHaveText('+20')
+  await expect(page.getByText(/Balance \d/)).toHaveCount(0)
+  await expect(page.getByText('Full history')).toHaveCount(0)
 })
 
 test('old correction entries still read in plain words in the activity log', async ({ page }) => {

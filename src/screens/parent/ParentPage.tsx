@@ -1,26 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import {
-  adjustBalance,
   getSummary,
   LIST_LIMIT,
   listDevices,
   listLog,
   listResults,
   makeCode,
-  MAX_NOTE,
   setStreak,
   unpair,
 } from '../../parent/api'
 import type { Device, LogEntry, ParentResult, ResultRow, Summary } from '../../parent/api'
-import { describe } from '../../parent/activity'
-import { parseAmount } from '../../parent/adjust'
 import type { Tab } from '../../parent/route'
 import { Button } from '../../ui/Button'
-import { formatCalendarDay, formatMoment, formatNumber, minutesLeft } from '../../ui/format'
+import { formatCalendarDay, formatNumber, minutesLeft } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 import { DevicesScreen } from './DevicesScreen'
+import { PointsScreen } from './PointsScreen'
 import { Shop } from './Shop'
+import { useAdjust } from './useAdjust'
 
 const MAX_NAME = 40
 const MAX_STREAK = 3650
@@ -86,13 +84,6 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     setStreakText(String(s.streak))
     setDayText(s.lastDay ?? '')
   }
-  const [removing, setRemoving] = useState(false)
-  const [amount, setAmount] = useState('')
-  const [note, setNote] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState<number | null>(null)
-  const [adjustProblem, setAdjustProblem] = useState<string | null>(null)
-
   // False once the portal has replaced this page (another child was chosen): the reads in flight stop.
   const live = useRef(false)
 
@@ -119,6 +110,13 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     setLog(logResult.body.entries)
     setProblem(null)
   }
+  const adjust = useAdjust({
+    balance: summary?.balance ?? null,
+    live,
+    onSaved: refresh,
+    fail: failure,
+    summaryFail: summaryFailure,
+  })
   useEffect(() => {
     live.current = true
     void refresh()
@@ -171,32 +169,6 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     fillStreakForm(result.body)
     setStreakSaved(true)
     await refresh()
-  }
-
-  const onSave = async () => {
-    setSaved(null)
-    setAdjustProblem(null)
-    const trimmed = note.trim()
-    const count = parseAmount(amount)
-    if (count === null) return setAdjustProblem(COPY.parentAmountProblem)
-    if (trimmed.length < 1 || trimmed.length > MAX_NOTE) return setAdjustProblem(COPY.parentNoteProblem)
-    // One request at a time, so a quick double click can't save the same change twice.
-    setSaving(true)
-    const result = await adjustBalance(removing ? -count : count, trimmed)
-    if (!live.current) return
-    setSaving(false)
-    if (result.ok) {
-      setAmount('')
-      setNote('')
-      setSaved(result.body.balance)
-      return refresh()
-    }
-    if (result.error === 'overdraw') {
-      const latest = await getSummary()
-      if (!live.current) return
-      return setAdjustProblem(latest.ok ? COPY.parentOverdraw(latest.body.balance) : summaryFailure(latest))
-    }
-    setAdjustProblem(failure(result))
   }
 
   // Before a list or the numbers arrive: "Loading…", or a dash and a note once a call has failed.
@@ -326,80 +298,14 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
       )}
 
       {tab === 'points' && (
-        <>
-          <section className="parent-section">
-            <h2>{COPY.parentMacaroniFormHeading}</h2>
-            <p>{COPY.parentAdjustIntro}</p>
-            <div className="parent-choice">
-              <Button
-                variant={removing ? 'secondary' : 'primary'}
-                aria-pressed={!removing}
-                onClick={() => setRemoving(false)}
-              >
-                {COPY.parentAdd}
-              </Button>
-              <Button
-                variant={removing ? 'primary' : 'secondary'}
-                aria-pressed={removing}
-                onClick={() => setRemoving(true)}
-              >
-                {COPY.parentRemove}
-              </Button>
-            </div>
-            <TextField
-              label={COPY.parentAmountLabel}
-              inputMode="numeric"
-              value={amount}
-              maxLength={6}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-            <TextField
-              label={COPY.parentNoteLabel}
-              hint={COPY.parentNoteHint}
-              value={note}
-              maxLength={MAX_NOTE}
-              onChange={(e) => setNote(e.target.value)}
-            />
-            <Button onClick={onSave} disabled={saving}>
-              {COPY.parentSave}
-            </Button>
-            {adjustProblem && (
-              <p className="parent-problem" role="alert">
-                {adjustProblem}
-              </p>
-            )}
-            {saved !== null && <p role="status">{COPY.parentSaved(saved)}</p>}
-          </section>
-
-          <section className="parent-section">
-            <h2>{COPY.parentLogHeading}</h2>
-            {log === null && unavailable}
-            {log?.length === 0 && <p>{COPY.parentNoLog}</p>}
-            {log && log.length > 0 && (
-              <div className="parent-table-wrap">
-                <table className="parent-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">{COPY.parentColWhen}</th>
-                      <th scope="col">{COPY.parentColWho}</th>
-                      <th scope="col">{COPY.parentColWhat}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {log.map((entry) => (
-                      <tr key={entry.id}>
-                        <td>{formatMoment(entry.at)}</td>
-                        <td>{entry.email}</td>
-                        <td>{describe(entry, devices ?? []).title}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {log?.length === LIST_LIMIT && <p>{COPY.parentLatest(LIST_LIMIT)}</p>}
-          </section>
-        </>
+        <PointsScreen
+          summary={summary}
+          log={log}
+          devices={devices}
+          adjust={adjust}
+          unavailable={unavailable}
+          pending={pending}
+        />
       )}
 
       {tab === 'devices' && confirming && (
