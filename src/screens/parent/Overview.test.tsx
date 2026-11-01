@@ -143,6 +143,8 @@ describe('Overview', () => {
     expect(html).toMatch(/href="\/parent\/streak"[^>]*>Manage streak →</)
     expect(html).toMatch(/href="\/parent\/devices"/)
     expect(html).toMatch(/href="\/parent\/shop"/)
+    expect(html).toMatch(/href="#overview-results"[^>]*>View all</)
+    expect(render({ results: null })).toMatch(/href="#overview-results"[^>]*>View all</)
   })
 
   it('follows the today and now it is given, not the system clock', () => {

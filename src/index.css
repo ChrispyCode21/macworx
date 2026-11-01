@@ -2237,13 +2237,11 @@ p {
   color: var(--p-text);
 }
 
-.overview-heading .button-bare {
-  padding: 0;
-  border: 0;
-  background: none;
+.overview-view-all {
   font-size: 12px;
   font-weight: 600;
   color: var(--p-accent-ink);
+  text-decoration: none;
 }
 
 .overview-divider {

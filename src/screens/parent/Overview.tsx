@@ -17,7 +17,6 @@ import { connectedDevices, lastSyncedLine, OVERVIEW_LINKS, todaysAssignments } f
 import { tabPath } from '../../parent/route'
 import type { Tab } from '../../parent/route'
 import { reachOf } from '../../parent/shop'
-import { Button } from '../../ui/Button'
 import { formatCalendarDay, formatClock, formatNumber } from '../../ui/format'
 
 interface Props {
@@ -75,7 +74,9 @@ export function Overview({ summary, results, devices, childName, today, now, onG
   const connected = devices ? connectedDevices(devices) : null
   const { withinCount } = reachOf(summary?.balance ?? null)
 
-  const viewAll = () => {
+  const viewAll = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+    e.preventDefault()
     resultsHeading.current?.scrollIntoView?.({ block: 'start' })
     resultsHeading.current?.focus()
   }
@@ -133,11 +134,9 @@ export function Overview({ summary, results, devices, childName, today, now, onG
       <div className="overview-block overview-assignments">
         <div className="overview-heading">
           <h2>{COPY.parentAssignmentsHeading}</h2>
-          {results && results.length > 0 && (
-            <Button variant="bare" onClick={viewAll}>
-              {COPY.parentViewAll}
-            </Button>
-          )}
+          <a className="overview-view-all" href="#overview-results" onClick={viewAll}>
+            {COPY.parentViewAll}
+          </a>
         </div>
         <section className="parent-section overview-list" aria-label={COPY.parentAssignmentsHeading}>
           {results === null && pending}

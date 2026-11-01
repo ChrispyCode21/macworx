@@ -629,7 +629,7 @@ test('Overview: today’s finished assignments are listed and View all goes to R
   await expect(page.getByText('1 connected device', { exact: true })).toBeVisible()
   await expect(page.getByText('Last synced today, 4:05 pm')).toBeVisible()
 
-  await page.getByRole('button', { name: 'View all' }).click()
+  await page.getByRole('link', { name: 'View all' }).click()
   await expect(page.getByRole('heading', { name: 'Results' })).toBeFocused()
 })
 
