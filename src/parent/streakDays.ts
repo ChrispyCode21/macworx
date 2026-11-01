@@ -66,5 +66,9 @@ export function previewText(oldStreak: number, streakText: string, dayText: stri
   const fields = streakFields(streakText, dayText)
   if (!fields) return null
   const range = streakRange(fields.streak, fields.lastDay)
-  return COPY.parentStreakPreview(range ? formatRange(range.start, range.end) : null, oldStreak, fields.streak)
+  return COPY.parentStreakPreview(
+    range ? formatRange(range.start, range.end) : null,
+    oldStreak,
+    fields.streak,
+  )
 }

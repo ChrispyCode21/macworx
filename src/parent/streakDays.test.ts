@@ -20,15 +20,7 @@ describe('last 7 days helpers (SPEC §7.T)', () => {
     ])
     expect(tiles.map((t) => t.weekday).join('')).toBe('SMTWTFS')
     expect(tiles.map((t) => t.date)).toEqual([11, 12, 13, 14, 15, 16, 17])
-    expect(tiles.map((t) => t.state)).toEqual([
-      'idle',
-      'idle',
-      'idle',
-      'idle',
-      'counted',
-      'counted',
-      'today',
-    ])
+    expect(tiles.map((t) => t.state)).toEqual(['idle', 'idle', 'idle', 'idle', 'counted', 'counted', 'today'])
     expect(tiles.map((t) => t.check)).toEqual([false, false, false, false, true, true, false])
     const counted = weekStrip('2026-10-17', ['2026-10-17'])
     expect(counted[6]).toMatchObject({ state: 'today', check: true })

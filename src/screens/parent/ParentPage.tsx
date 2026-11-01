@@ -1,27 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import {
+  getDays,
   getSummary,
   LIST_LIMIT,
   listDevices,
   listLog,
   listResults,
+  localDay,
   makeCode,
-  setStreak,
   unpair,
 } from '../../parent/api'
 import type { Device, LogEntry, ParentResult, ResultRow, Summary } from '../../parent/api'
 import type { Tab } from '../../parent/route'
 import { Button } from '../../ui/Button'
 import { formatCalendarDay, formatNumber, minutesLeft } from '../../ui/format'
-import { TextField } from '../../ui/TextField'
 import { DevicesScreen } from './DevicesScreen'
 import { PointsScreen } from './PointsScreen'
 import { Shop } from './Shop'
+import { StreakScreen } from './StreakScreen'
 import { useAdjust } from './useAdjust'
+import { useStreakForm } from './useStreakForm'
 
 const MAX_NAME = 40
-const MAX_STREAK = 3650
 
 /** What a failed parent call shows. While the page reloads for a sign-in, nothing. */
 function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
@@ -41,21 +42,6 @@ function summaryFailure(result: Extract<ParentResult<unknown>, { ok: false }>): 
   return result.error === 'bad_day' ? COPY.parentServerTrouble : failure(result)
 }
 
-const WHOLE_NUMBER = /^\d{1,4}$/
-
-/** The streak form's two boxes as the Worker wants them, or null when they can't be sent (SPEC §5.3). */
-function streakFields(
-  streakText: string,
-  dayText: string,
-): { streak: number; lastDay: string | null } | null {
-  const text = streakText.trim()
-  if (!WHOLE_NUMBER.test(text) || Number(text) > MAX_STREAK) return null
-  const streak = Number(text)
-  // The date box only ever holds a real date or nothing; empty goes with a streak of 0 only.
-  if (dayText === '') return streak === 0 ? { streak, lastDay: null } : null
-  return { streak, lastDay: dayText }
-}
-
 /**
  * The parent portal's screen contents (SPEC §5.3): her numbers, results, devices, adjustments and activity log,
  * split across the tabs. All state lives here, so switching tabs never refetches or clears a half-typed form;
@@ -72,18 +58,9 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
   const [confirming, setConfirming] = useState<Device | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
   const [making, setMaking] = useState(false)
-  const [streakText, setStreakText] = useState('')
-  const [dayText, setDayText] = useState('')
-  const [savingStreak, setSavingStreak] = useState(false)
-  const [streakSaved, setStreakSaved] = useState(false)
-  // The boxes fill from her numbers once, so a later refresh never overwrites what a parent is typing.
-  const prefilled = useRef(false)
-
-  const fillStreakForm = (s: Summary) => {
-    prefilled.current = true
-    setStreakText(String(s.streak))
-    setDayText(s.lastDay ?? '')
-  }
+  const [days, setDays] = useState<string[] | null>(null)
+  // The days read happens once per page, the first time the Streak tab shows.
+  const daysAsked = useRef(false)
   // False once the portal has replaced this page (another child was chosen): the reads in flight stop.
   const live = useRef(false)
 
@@ -104,7 +81,6 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     if (!live.current) return
     if (!logResult.ok) return setProblem(failure(logResult))
     setSummary(summaryResult.body)
-    if (!prefilled.current) fillStreakForm(summaryResult.body)
     setResults(resultsResult.body.results)
     setDevices(devicesResult.body.devices)
     setLog(logResult.body.entries)
@@ -117,6 +93,7 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     fail: failure,
     summaryFail: summaryFailure,
   })
+  const streakForm = useStreakForm({ summary, live, onSaved: refresh, fail: failure })
   useEffect(() => {
     live.current = true
     void refresh()
@@ -124,6 +101,18 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
       live.current = false
     }
   }, [])
+
+  // The last 7 days load when the Streak tab first shows, so no other tab makes the call.
+  useEffect(() => {
+    if (tab !== 'streak' || daysAsked.current) return
+    daysAsked.current = true
+    void (async () => {
+      const result = await getDays()
+      if (!live.current) return
+      if (!result.ok) return setProblem(summaryFailure(result))
+      setDays(result.body.days)
+    })()
+  }, [tab])
 
   // The code card counts down; check every 15 seconds.
   useEffect(() => {
@@ -152,22 +141,6 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     const result = await unpair(device.id)
     if (!live.current) return
     if (!result.ok) return setProblem(failure(result))
-    await refresh()
-  }
-
-  const onSaveStreak = async () => {
-    setProblem(null)
-    setStreakSaved(false)
-    const fields = streakFields(streakText, dayText)
-    if (!fields) return setProblem(COPY.parentStreakProblem)
-    // One request at a time, so a quick double click saves once.
-    setSavingStreak(true)
-    const result = await setStreak(fields.streak, fields.lastDay)
-    if (!live.current) return
-    setSavingStreak(false)
-    if (!result.ok) return setProblem(failure(result))
-    fillStreakForm(result.body)
-    setStreakSaved(true)
     await refresh()
   }
 
@@ -268,33 +241,14 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
       )}
 
       {tab === 'streak' && (
-        <section className="parent-section">
-          <h2>{COPY.parentStreakFormHeading}</h2>
-          <TextField
-            label={COPY.parentStreakLabel}
-            hint={COPY.parentStreakHint}
-            inputMode="numeric"
-            value={streakText}
-            onChange={(e) => {
-              setStreakText(e.target.value)
-              setStreakSaved(false)
-            }}
-          />
-          <TextField
-            label={COPY.parentLastDayLabel}
-            hint={COPY.parentLastDayHint}
-            type="date"
-            value={dayText}
-            onChange={(e) => {
-              setDayText(e.target.value)
-              setStreakSaved(false)
-            }}
-          />
-          <Button onClick={onSaveStreak} disabled={savingStreak}>
-            {COPY.parentStreakSave}
-          </Button>
-          <p role="status">{streakSaved ? COPY.parentStreakSaved : ''}</p>
-        </section>
+        <StreakScreen
+          summary={summary}
+          days={days}
+          problem={problem !== null}
+          today={localDay()}
+          form={streakForm}
+          pending={pending}
+        />
       )}
 
       {tab === 'points' && (
