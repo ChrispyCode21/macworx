@@ -283,7 +283,12 @@ export function Portal() {
         </div>
         <main className="portal-main">
           {load.status === 'ready' && (
-            <ParentPage key={`${load.selected.id}-${renames}`} tab={tab} childName={load.selected.name} />
+            <ParentPage
+              key={`${load.selected.id}-${renames}`}
+              tab={tab}
+              childName={load.selected.name}
+              onGo={go}
+            />
           )}
           {load.status === 'ready' && tab === 'overview' && (
             <ChildForm
@@ -296,7 +301,7 @@ export function Portal() {
               onRenamed={onRenamed}
             />
           )}
-          {load.status === 'unavailable' && <ParentPage key="none" tab={tab} childName={null} />}
+          {load.status === 'unavailable' && <ParentPage key="none" tab={tab} childName={null} onGo={go} />}
         </main>
         {tab === 'overview' && (
           <p className="portal-note">

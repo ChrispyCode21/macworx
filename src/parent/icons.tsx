@@ -205,3 +205,20 @@ export const HistoryIcon = ({ size = 20 }: { size?: number }) => (
     <path d={HistoryPath} />
   </Icon>
 )
+
+const SunPath =
+  'M10.5 1.7493V3.49944M10.5 17.5006V19.2507M4.31298 4.31298L5.54683 5.54683M15.453 15.453L16.6869 16.6869M1.7493 10.5H3.49944M17.5006 10.5H19.2507M5.54683 15.453L4.31298 16.6869M16.6869 4.31298L15.453 5.54683M14.0003 10.5C14.0003 12.4332 12.4332 14.0003 10.5 14.0003C8.56685 14.0003 6.99972 12.4332 6.99972 10.5C6.99972 8.56685 8.56685 6.99972 10.5 6.99972C12.4332 6.99972 14.0003 8.56685 14.0003 10.5Z'
+
+export const SunIcon = ({ size = 21 }: { size?: number }) => (
+  <Icon box={21} size={size}>
+    <path d={SunPath} />
+  </Icon>
+)
+
+const ChevronRightPath = 'M6.75 13.5L11.25 9L6.75 4.5'
+
+export const ChevronRightIcon = ({ size = 18 }: { size?: number }) => (
+  <Icon box={18} size={size}>
+    <path d={ChevronRightPath} />
+  </Icon>
+)

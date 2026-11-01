@@ -154,6 +154,8 @@ test('Home shows a Parents link that opens the portal with a full page load', as
       streak: 0,
       lastDay: null,
       completed: 0,
+      completedToday: 0,
+      earnedToday: 0,
       results: [],
       entries: [],
       devices: [],

@@ -20,7 +20,7 @@ const TABS = [
 const READS = ['summary', 'results', 'devices', 'log']
 
 /** Answers every read; `calls` holds each one as `/api/parent/summary?child=1`. */
-async function portalApi(page: Page) {
+async function portalApi(page: Page, replies: Record<string, unknown> = {}) {
   const calls: string[] = []
   const list = children.map((c) => ({ ...c }))
   const filled = (name: string) =>
@@ -51,11 +51,19 @@ async function portalApi(page: Page) {
     }
     const answers: Record<string, unknown> = {
       '/api/parent/children': { children: list },
-      '/api/parent/summary': { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 },
+      '/api/parent/summary': {
+        balance: 41,
+        streak: 3,
+        lastDay: '2026-10-16',
+        completed: 5,
+        earnedToday: 0,
+        completedToday: 0,
+      },
       '/api/parent/days': { days: [] },
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
       '/api/parent/devices': { devices: [] },
+      ...replies,
     }
     return route.fulfill({ json: answers[url.pathname] })
   })
@@ -536,4 +544,132 @@ test('Escape closes the list and returns focus to the switcher after the Rename 
   await page.keyboard.press('Escape')
   await expect(switcher).toHaveAttribute('aria-expanded', 'false')
   await expect(switcher).toBeFocused()
+})
+
+// Overview (SPEC §5.3, §7.O).
+
+/** A finished result of today, 2026-10-17, recorded at 4:05 pm local time. */
+const todayResult = {
+  id: 7,
+  day: '2026-10-17',
+  answered: 20,
+  correct: 20,
+  finished: true,
+  grade: 'Excellent',
+  total: 24,
+  createdAt: new Date(2026, 9, 17, 16, 5).toISOString(),
+}
+
+test('Overview: the hero count and tiles are the child’s, with an empty assignments list', async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 17, 18, 0))
+  await portalApi(page, {
+    '/api/parent/summary': {
+      balance: 41,
+      streak: 3,
+      lastDay: '2026-10-16',
+      completed: 5,
+      earnedToday: 0,
+      completedToday: 2,
+    },
+  })
+  await page.goto('/parent/overview')
+  const hero = page.locator('.overview-hero')
+  await expect(hero.locator('.overview-hero-number')).toHaveText('2')
+  await expect(hero).toContainText('assignments done')
+  await expect(hero).not.toContainText(' of ')
+  await expect(hero.locator('.overview-hero-line')).toHaveCount(0)
+  const tiles = page.locator('.overview-stats')
+  await expect(tiles.getByText('41', { exact: true })).toBeVisible()
+  await expect(tiles.getByText('3 days')).toBeVisible()
+  await expect(page.getByText('No assignments yet today.')).toBeVisible()
+  await expect(page.getByText('0 connected devices')).toBeVisible()
+  await expect(page.getByText('4 rewards · 1 within reach')).toBeVisible()
+  await expect(page.getByText("Ada's rewards shop")).toBeVisible()
+})
+
+test('Overview: today’s finished assignments are listed and View all goes to Results', async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 17, 18, 0))
+  await portalApi(page, {
+    '/api/parent/summary': {
+      balance: 41,
+      streak: 3,
+      lastDay: '2026-10-16',
+      completed: 5,
+      earnedToday: 24,
+      completedToday: 1,
+    },
+    '/api/parent/results': {
+      results: [
+        todayResult,
+        { ...todayResult, id: 6, finished: false, grade: null, total: 3 },
+        { ...todayResult, id: 5, day: '2026-10-16', total: 11 },
+      ],
+    },
+    '/api/parent/devices': {
+      devices: [
+        {
+          id: 1,
+          label: 'Her iPad',
+          createdAt: new Date(2026, 9, 1).toISOString(),
+          revokedAt: null,
+          lastResultAt: todayResult.createdAt,
+        },
+      ],
+    },
+  })
+  await page.goto('/parent/overview')
+  await expect(page.locator('.overview-hero-line')).toHaveText('24 Macaronis earned today.')
+  const list = page.locator('.overview-list').first()
+  await expect(list.locator('.overview-row')).toHaveCount(1)
+  await expect(list).toContainText('Assignment · Excellent')
+  await expect(list).toContainText('Completed today, 4:05 pm')
+  await expect(list.locator('.overview-amount')).toHaveText('+24')
+  await expect(page.getByText('1 connected device', { exact: true })).toBeVisible()
+  await expect(page.getByText('Last synced today, 4:05 pm')).toBeVisible()
+
+  await page.getByRole('link', { name: 'View all' }).click()
+  await expect(page.getByRole('heading', { name: 'Results' })).toBeFocused()
+})
+
+test('Overview: every shortcut lands on its tab, keeps the child and does not reload', async ({ page }) => {
+  await portalApi(page)
+  await page.goto('/parent/overview')
+  await page.locator('.portal-switcher > button').click()
+  await switcherList(page).getByRole('button', { name: /^Bo/ }).first().click()
+  await expect(page.getByText("Bo's overview")).toBeVisible()
+
+  const cases = [
+    { link: 'Manage Macaronis →', path: '/parent/points', title: 'Macaronis, kept fair.' },
+    { link: 'Manage streak →', path: '/parent/streak', title: 'Make every day count.' },
+    { link: /connected device/, path: '/parent/devices', title: "Bo's devices, connected." },
+    { link: /rewards shop/, path: '/parent/shop', title: 'Motivation, made personal.' },
+  ]
+  for (const c of cases) {
+    // The chosen child is remembered in the browser, so Bo is still chosen after the load.
+    await page.goto('/parent/overview')
+    await expect(page.getByText("Bo's overview")).toBeVisible()
+    await page.evaluate(() => {
+      ;(window as unknown as { stayed: boolean }).stayed = true
+    })
+    const link = page.locator('.overview').getByRole('link', { name: c.link })
+    await expect(link).toHaveAttribute('href', c.path)
+    await link.click()
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(c.title)
+    expect(new URL(page.url()).pathname).toBe(c.path)
+    expect(await page.evaluate(() => (window as unknown as { stayed?: boolean }).stayed)).toBe(true)
+    await expect(page.locator('.portal-switcher > button')).toContainText('Bo')
+  }
+})
+
+test('Overview: the right column sits beside the left one when wide, and below on a tablet', async ({
+  page,
+}) => {
+  await portalApi(page)
+  await page.goto('/parent/overview')
+  const hero = (await page.locator('.overview-hero').boundingBox())!
+  const stats = (await page.locator('.overview-stats').boundingBox())!
+  if (page.viewportSize()!.width >= 1024) expect(stats.x).toBeGreaterThan(hero.x + hero.width - 1)
+  else expect(stats.y).toBeGreaterThan(hero.y + hero.height - 1)
 })

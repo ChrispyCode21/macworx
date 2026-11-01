@@ -66,6 +66,8 @@ export interface Summary {
   completed: number
   /** The Macaronis she earned on the parent's calendar day (results only, not adjustments). */
   earnedToday: number
+  /** The assignments she finished on the parent's calendar day (left-early results do not count). */
+  completedToday: number
 }
 
 export interface ResultRow {
@@ -151,7 +153,8 @@ async function scoped<T>(
   return parentCall<T>(`${path}?child=${selected}${more}`, init)
 }
 
-export const getSummary = () => scoped<Summary>('/api/parent/summary', undefined, { today: localDay() })
+export const getSummary = (today: string = localDay()) =>
+  scoped<Summary>('/api/parent/summary', undefined, { today })
 
 /** The days among the seven ending today on which she finished an assignment (SPEC §8). */
 export const getDays = () => scoped<{ days: string[] }>('/api/parent/days', undefined, { today: localDay() })

@@ -4,7 +4,14 @@ import type { Summary } from '../../parent/api'
 import { StreakScreen } from './StreakScreen'
 import type { StreakFormState } from './useStreakForm'
 
-const summary: Summary = { balance: 40, streak: 3, lastDay: '2026-10-16', completed: 5, earnedToday: 0 }
+const summary: Summary = {
+  balance: 40,
+  streak: 3,
+  lastDay: '2026-10-16',
+  completed: 5,
+  earnedToday: 0,
+  completedToday: 0,
+}
 const noop = () => {}
 
 const form = (over: Partial<StreakFormState> = {}): StreakFormState => ({
