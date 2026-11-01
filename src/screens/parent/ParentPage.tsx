@@ -59,6 +59,8 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
   const [problem, setProblem] = useState<string | null>(null)
   const [making, setMaking] = useState(false)
   const [days, setDays] = useState<string[] | null>(null)
+  // Kept apart from the page banner, which a later successful refresh clears.
+  const [daysFailed, setDaysFailed] = useState(false)
   // The days read happens once per page, the first time the Streak tab shows.
   const daysAsked = useRef(false)
   // False once the portal has replaced this page (another child was chosen): the reads in flight stop.
@@ -109,7 +111,13 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
     void (async () => {
       const result = await getDays()
       if (!live.current) return
-      if (!result.ok) return setProblem(summaryFailure(result))
+      if (!result.ok) {
+        // The next visit to the Streak tab reads again.
+        daysAsked.current = false
+        setDaysFailed(true)
+        return setProblem(summaryFailure(result))
+      }
+      setDaysFailed(false)
       setDays(result.body.days)
     })()
   }, [tab])
@@ -244,7 +252,7 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
         <StreakScreen
           summary={summary}
           days={days}
-          problem={problem !== null}
+          problem={problem !== null || daysFailed}
           today={localDay()}
           form={streakForm}
           pending={pending}

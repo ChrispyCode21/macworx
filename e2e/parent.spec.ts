@@ -583,6 +583,39 @@ test('a Worker 400 or 503 shows its plain message', async ({ page }) => {
   await expect(page.getByText('Streak saved.')).toHaveCount(0)
 })
 
+test('a failed Confirm returns to the form with the typed values and no saved line', async ({ page }) => {
+  await streakApi(page, () => ({ status: 503, json: { error: 'busy' } }))
+  await page.goto('/parent/streak')
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('3')
+  await page.getByLabel('Corrected streak length').fill('9')
+  await review(page).click()
+  await confirm(page).click()
+  await expect(page.getByRole('alert')).toHaveText('Her numbers changed while saving. Try again.')
+  await expect(review(page)).toBeVisible()
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('9')
+  await expect(page.getByLabel('Last counted day')).toHaveValue('2026-10-16')
+  await expect(page.getByLabel('Corrected streak length')).toBeEnabled()
+  await expect(page.getByText('Streak saved.')).toHaveCount(0)
+})
+
+test('a failed days read shows unavailable, and the next visit to the Streak tab reads again', async ({
+  page,
+}) => {
+  let daysUp = false
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/parent/days' && !daysUp) return route.fulfill({ status: 503, json: { error: 'busy' } })
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/streak')
+  await expect(page.locator('.streak-days')).toHaveCount(0)
+  await expect(page.locator('.streak-week').getByText('Not available right now.')).toBeVisible()
+  daysUp = true
+  await page.getByRole('link', { name: 'Overview' }).click()
+  await page.getByRole('link', { name: 'Streak' }).click()
+  await expect(page.locator('.streak-tile')).toHaveCount(7)
+})
+
 test('Confirm waits for its answer before taking another click', async ({ page }) => {
   let answer: () => void = () => {}
   const posts: number[] = []
