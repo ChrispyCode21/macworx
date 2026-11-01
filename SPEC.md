@@ -98,7 +98,11 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 - **Earned today:** the Macaronis she earned today (the parent's calendar day): the total paid on her results of that day, finished or left early. A parent's adjustment is not counted. It shows beside her balance and is left out when it is 0.
 - **Recent activity:** every change a parent has made to her, newest first (the latest 50): when, which parent and what changed, in plain words. A balance change also shows its signed amount (for example +20 or −15), and not her balance before or after.
 
-**Streak** has, for the selected child, her streak, her last counted day and a form to correct them (below).
+**Streak** has, for the selected child:
+
+- A hero with her streak in days and, when she has a last counted day, the days it covers ("Oct 14–16"). "Today ✓" shows when her last counted day is today (the parent's calendar day). A "Personal best" line is sample data and carries the visible "Sample" label (see "Sample data").
+- **The last 7 days:** the seven calendar days ending today (the parent's calendar day), oldest first, each with its weekday letter and date. A day is marked counted when she finished at least one assignment that day (a recorded finished result on it). Today has its own look and shows a check only when it is counted. Other days carry no mark and no text. The month of today names the strip.
+- The form to correct her streak and last counted day (below).
 
 **Devices** has, for the selected child:
 
@@ -117,7 +121,7 @@ A parent can:
 
 **Review, then Confirm:** every change to Macaronis or to a streak takes two steps. The parent fills in the form and chooses Review, which shows exactly what will change (for example, balance 40 to 60). Confirm saves it; Back returns to the form with nothing saved. There is no PIN; Cloudflare Access is the sign-in. Unpairing keeps its own warning (§6.9).
 
-**Setting her streak:** the Streak screen has a form with two boxes, Streak and Last counted day, filled with her current values, and a Review button. Under the boxes it shows the range the streak implies: the days from (last counted day minus streak plus 1) to the last counted day. Streak is a whole number from 0 to 3650. Last counted day is a date or empty; it may be empty only when the streak is 0, and may not be more than 1 day after the Worker's date (UTC), so a typo can't stall her streak (§6.8). Confirming changes only the streak and last counted day: not her balance, completed assignments or results, and it pays no streak bonus. Her next finished assignment continues from the saved values (§6.5). Each save is logged with the old and new streak and last counted day. If a result is being recorded at the same moment, the Worker works from the newest numbers, and after three lost races it answers 503 and nothing changes.
+**Setting her streak:** the Streak screen has a form with two boxes, Streak (labelled "Corrected streak length", with the unit "days") and Last counted day, filled with her current values, and a **Review streak correction** button. Under the boxes it shows the range the streak implies: the days from (last counted day minus streak plus 1) to the last counted day. A range reads without a year ("Oct 29–Nov 2") unless its ends fall in different calendar years, when both ends carry it ("Sep 12, 2025–Oct 16, 2026"). The hero's range is the last counted day and up to 6 days before it (at most 7 days), while the preview range is never capped. The preview reads "Preview: Oct 10–16 · 3 → 7 days" and, with no counted days (streak 0), "Preview: no counted days · 3 → 0 days". Review shows the old and new streak and last counted day, and while it shows the two boxes can't be edited. Confirm saves; Back returns to the form with nothing saved and the typed values kept. After Confirm a "Streak saved." notice shows. There is no note box (the API takes only the streak and the day). Streak is a whole number from 0 to 3650. Last counted day is a date or empty; it may be empty only when the streak is 0, and may not be more than 1 day after the Worker's date (UTC), so a typo can't stall her streak (§6.8). Confirming changes only the streak and last counted day: not her balance, completed assignments or results, and it pays no streak bonus. Her next finished assignment continues from the saved values (§6.5). Each save is logged with the old and new streak and last counted day. If a result is being recorded at the same moment, the Worker works from the newest numbers, and after three lost races it answers 503 and nothing changes.
 
 Every change is logged: what changed, when, which parent made it and which child it was for. The app's own rules never take anything away (§4); a parent's adjustments are the exception.
 
@@ -373,6 +377,28 @@ The Worker's date is 2026-10-17 UTC. Her state: balance 40, streak 3, last count
 | C9 | No Access token | Refused (401) |
 | C10 | After a parent sets streak 7 and day 2026-10-16, a finished 20-correct result dated 2026-10-17 arrives | Streak **8**, last counted day **2026-10-17**, payout 20 + 4 + 8 streak = **32** (the edit paid nothing) |
 
+### 7.T Last 7 days (§5.3)
+
+The Worker's date is 2026-10-17 UTC; child 1; `today` = 2026-10-17 unless stated.
+
+| ID | Given | Expected |
+|---|---|---|
+| T1 | Finished results on 2026-10-17, 2026-10-15, 2026-10-11 and 2026-10-10 | `days` is **["2026-10-11", "2026-10-15", "2026-10-17"]**: the seven days are 10-11 to 10-17, 10-10 is outside, oldest first. With `today` absent, the same (the Worker's date is used) |
+| T2 | Three finished results on 2026-10-16 | 2026-10-16 is listed **once** |
+| T3 | A result she left early (not finished) on 2026-10-16 | Not listed |
+| T4 | A finished result on 2026-10-16 that belongs to another child | Not listed for this child |
+| T5 | `today` "2026-02-30", "10/17/2026", 20261017, or 2026-10-19 (2 days after the Worker's date) | 400 `bad_day`; nothing read. 2026-10-18 and 2026-10-16 are accepted |
+| T6 | No Access token | Refused (401) |
+
+The page's day helpers:
+
+| ID | Given | Expected |
+|---|---|---|
+| T7 | Today 2026-10-17; counted days 2026-10-15 and 2026-10-16 | Seven tiles, Oct 11 to Oct 17, weekday letters S M T W T F S; 15 and 16 counted, 17 today **without** a check, the rest plain. With 2026-10-17 also counted: 17 is today **with** a check |
+| T8 | The range of a streak and last counted day (preview: whole streak; hero: at most the last 7 days) | Streak 3 ending 2026-10-16 → **Oct 14–16**; streak 7 → **Oct 10–16**; streak 20: preview **Sep 27–Oct 16**, hero **Oct 10–16**; streak 400: preview **Sep 12, 2025–Oct 16, 2026**; streak 3 ending 2026-01-02 → **Dec 31, 2025–Jan 2, 2026**; streak 5 ending 2026-11-02 → **Oct 29–Nov 2**; streak 1 → **Oct 16**; streak 0, or no last counted day → no range |
+| T9 | The preview for old streak 3, boxes 7 and 2026-10-16 | "Preview: Oct 10–16 · 3 → 7 days". Boxes 0 and empty → "Preview: no counted days · 3 → 0 days". Boxes 1 and 2026-10-16 → "Preview: Oct 16 · 3 → 1 day". Boxes that can't be sent → no preview |
+| T10 | The boxes as the Worker wants them (mirrors C2-C6) | "7" and 2026-10-16 → {7, 2026-10-16}; "0" and empty → {0, null}; "3" and empty → can't be sent; "3651", "2.5", "-1", "" or "abc" → can't be sent; "3650" accepted |
+
 ### 7.D Recorded results (§8)
 
 A parent opens a result the Worker recorded.
@@ -412,6 +438,7 @@ The parent API (every route needs a valid Access token, §6.9). A parent can lis
 - `POST /api/parent/pairing-code { name }`: a new pairing code for a device with that name; the device that uses it belongs to the chosen child (logged).
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
 - `GET /api/parent/summary`: balance, streak, last counted day, completed assignments and `earnedToday`: the sum of the total paid on the chosen child's results whose day is the parent's calendar day (finished and left-early results count; parent adjustments do not), 0 with none. It takes an optional `today` query parameter, the parent's calendar day as `YYYY-MM-DD`. A value that is not a real date, or is more than 1 day from the Worker's UTC date, is 400 `bad_day`. Without it, the Worker's UTC date is used. The `child` check comes first.
+- `GET /api/parent/days`: for the chosen child, the days among the seven ending on the parent's calendar day on which she has at least one finished result, oldest first, each once: `{ days: ["2026-10-11", ...] }`. It takes the same optional `today` query parameter as `GET /api/parent/summary`, with the same rule (absent: the Worker's date; not a real date, or more than 1 day from the Worker's date: 400 `bad_day`, nothing read).
 - `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade, total paid and `createdAt` (when the Worker recorded the result, an ISO timestamp).
 - `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
 - `GET /api/parent/results/:id`: one recorded result with its problems: day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
