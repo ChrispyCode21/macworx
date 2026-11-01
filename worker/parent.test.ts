@@ -471,6 +471,58 @@ describe('parent API', () => {
       })
     })
 
+    describe('last 7 days (SPEC §7.T)', () => {
+      const days = async (query = '') => (await get(`/api/parent/days${query}`)).body.days
+
+      it('T1: lists the finished days of the seven ending today, oldest first', async () => {
+        await addResult(1, '2026-10-17', 1, 'Good', 10)
+        await addResult(2, '2026-10-15', 1, 'Good', 10)
+        await addResult(3, '2026-10-11', 1, 'Good', 10)
+        await addResult(4, '2026-10-10', 1, 'Good', 10)
+        const expected = ['2026-10-11', '2026-10-15', '2026-10-17']
+        expect(await days('?today=2026-10-17')).toEqual(expected)
+        expect(await days()).toEqual(expected)
+      })
+
+      it('T2: lists a day once', async () => {
+        for (const seed of [1, 2, 3]) await addResult(seed, '2026-10-16', 1, 'Good', 10)
+        expect(await days()).toEqual(['2026-10-16'])
+      })
+
+      it('T3: leaves out a result she left early', async () => {
+        await addResult(1, '2026-10-16', 0, null, 7)
+        expect(await days()).toEqual([])
+      })
+
+      it('T4: leaves out another child’s result', async () => {
+        await addResult(1, '2026-10-16', 1, 'Good', 10)
+        await t.db.prepare('UPDATE results SET child_id = 2 WHERE id = 1').run()
+        expect(await days()).toEqual([])
+      })
+
+      it('T5: refuses a bad today and accepts a day either side of the Worker date', async () => {
+        await addResult(1, '2026-10-16', 1, 'Good', 10)
+        for (const today of ['2026-02-30', '10%2F17%2F2026', '20261017', '2026-10-19'])
+          expect(await get(`/api/parent/days?today=${today}`), today).toEqual({
+            status: 400,
+            body: { error: 'bad_day' },
+          })
+        expect(await days('?today=2026-10-18')).toEqual(['2026-10-16'])
+        expect(await days('?today=2026-10-16')).toEqual(['2026-10-16'])
+      })
+
+      it('T6: needs an Access token', async () => {
+        expect((await t.call('GET', '/api/parent/days', { key: null })).status).toBe(401)
+      })
+
+      it('checks the child first', async () => {
+        const token = await accessToken()
+        expect(
+          await t.call('GET', '/api/parent/days?today=abc', { key: null, accessToken: token, child: 99 }),
+        ).toEqual({ status: 404, body: { error: 'unknown_child' } })
+      })
+    })
+
     it('lists results newest first, with a left-early one having no grade', async () => {
       await addResult(1, '2026-10-15', 1, 'Great', 22)
       await addResult(2, '2026-10-17', 0, null, 7)
