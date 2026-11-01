@@ -213,21 +213,21 @@ describe('preview pairing (SPEC §6.9)', () => {
       expect((await t.call('GET', '/api/state', { key: body.key })).status).toBe(200)
   })
 
-  it('A9: refused when the Worker has Access settings, lacks the preview mark, or has no valid preview code', async () => {
-    for (const [env, extra] of [
-      [{ access: true }, previewEnv],
-      [{ access: false }, { PREVIEW_PAIR_CODE: PREVIEW_CODE }],
-      [{ access: false }, { PREVIEW: '1' }],
-      [{ access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '12345' }],
-      [{ access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '' }],
-    ] as const) {
+  // One test per Worker setup, so each rebuilds its D1 inside its own time limit.
+  for (const [label, env, extra] of [
+    ['has Access settings', { access: true }, previewEnv],
+    ['lacks the preview mark', { access: false }, { PREVIEW_PAIR_CODE: PREVIEW_CODE }],
+    ['has no preview code', { access: false }, { PREVIEW: '1' }],
+    ['has a different preview code', { access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '12345' }],
+    ['has an empty preview code', { access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '' }],
+  ] as const)
+    it(`A9: the preview code is refused when the Worker ${label}`, async () => {
       await t.dispose()
       t = await createTestDb(env)
       Object.assign(t.env, extra)
       expect(await pair(PREVIEW_CODE)).toEqual({ status: 400, body: { error: 'bad_code' } })
       expect(await devices()).toBe(0)
-    }
-  })
+    })
 
   it('A10: a wrong code on a preview → refused like any wrong code', async () => {
     await asPreview()

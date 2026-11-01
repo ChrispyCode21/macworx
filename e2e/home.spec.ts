@@ -99,7 +99,9 @@ test('Home shows none of the numbers on an iPad that is not paired', async ({ pa
   await expect(page.getByText(/Macaroni/)).toHaveCount(0)
 })
 
-test('a paired iPad that has never synced shows no numbers and no streak bonus', async ({ page }) => {
+const FULL = { tag: '@full-assignment' }
+
+test('a paired iPad that has never synced shows no numbers and no streak bonus', FULL, async ({ page }) => {
   test.setTimeout(90_000)
   await openApp(page, true, { 'macworx.seeds': [21] })
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
@@ -111,16 +113,28 @@ test('a paired iPad that has never synced shows no numbers and no streak bonus',
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
 })
 
-test('the streak bonus shows on the first assignment of the day, not the second', async ({ page }) => {
-  test.setTimeout(180_000)
-  await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31, 32] })
+// Runs in both orientations: its result line is the widest one the result screen shows.
+test('the streak bonus shows on the first assignment of the day', async ({ page }) => {
+  test.setTimeout(90_000)
+  await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
   await page.getByRole('button', { name: 'Start' }).click()
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus + 4 streak bonus = 28 Macaronis')
   await expect(page.getByText('Macaronis start saving soon!')).toHaveCount(0)
   await noSidewaysScroll(page)
+})
 
-  await page.getByRole('button', { name: 'Do another one' }).click()
+test('the second assignment of the day gets no streak bonus', FULL, async ({ page }) => {
+  test.setTimeout(90_000)
+  // The first of the day is done and not yet sent: 28 Macaronis, as in the test above.
+  const answers = generateAssignment(31).map((p) => p.answer)
+  await openApp(page, true, {
+    'macworx.state': state(),
+    'macworx.queue': [{ seed: 31, day: today(), answers }],
+    'macworx.seeds': [32],
+  })
+  await expect(page.locator('.home-numbers')).toContainText('128 Macaronis')
+  await page.getByRole('button', { name: 'Start' }).click()
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
 
