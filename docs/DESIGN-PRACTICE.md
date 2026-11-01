@@ -189,7 +189,11 @@ Rules that follow from the ratios:
   - **Macaronis:** status chip (7.2), coins icon 20 + `COPY.macaronis(balance)`.
   - **Streak:** status chip, flame icon 20 + "{n} days" ("1 day").
   - **Avatar:** circle 44, fill `--l-avatar`, `{initials}` (avatar).
-- **Shop:** Figma's "Shop" control (white, shopping-bag 20 + "Shop") is **not built**. Her app has no Shop screen yet, and leaving practice mid-assignment needs its own rule. Add it when the Shop screen exists: fill `--l-surface`, same size as a status chip.
+- **Shop** (#123): a `Button` with the status chip's size (height 48, padding-inline 16, gap 10, radius 12), fill `--l-surface`, shopping-bag 20 + "Shop", status text style.
+  - **Math assignment:** tapping it doesn't leave. The actions-row note becomes "Finish this assignment first, then visit the Shop." until her next tap on the pad or the action button, and the live region reads it.
+  - **Spelling and Reading samples:** it opens the shop, since there is nothing to keep (SPEC §5.5).
+  - Her app has no child Shop screen yet (SPEC §5.2), so the button is left out until that screen exists.
+  - A read-only rewards dialog is a later idea.
 - **The numbers are the ones Home showed** when the screen opened. They don't change mid-assignment.
 
 ### 6.2 Heading block
@@ -309,7 +313,11 @@ Frame `practice-math.png`. Crumb "Practice  /  Math". Title "A little practice, 
 
 ## 9. Home buttons
 
-Not in Figma. Home keeps its current look. Under the button that starts an assignment, add a row (gap 16, centered) of two `secondary` buttons in the existing child style: "Spelling" and "Reading". They open the samples (sections 10 to 12) and are shown on every iPad, paired or not.
+Not in Figma (interim design, #122). Home keeps its current look, except that its "Start" button becomes a row of three `primary` buttons in the existing child style: "Math", "Spelling" and "Reading". The row wraps and is centered, with gap 16, and `startHint` stays below it.
+
+- "Math" starts an assignment, exactly as "Start" does today.
+- "Spelling" and "Reading" open the samples (sections 10 to 12).
+- All three show on every iPad, paired or not.
 
 ## 10. Screen: Spelling
 
@@ -428,7 +436,8 @@ Final decisions on every Figma string:
   - the "answers chosen" lines
   - "Done"
   - "You finished the passage and its questions!"
-- **Home:** "Spelling" and "Reading".
+- **Home:** "Math", "Spelling" and "Reading".
+- **Top bar:** "Shop" and "Finish this assignment first, then visit the Shop."
 
 ## 14. Data mapping
 
@@ -436,11 +445,11 @@ Final decisions on every Figma string:
 |---|---|---|
 | Top bar Macaroni balance, streak | Real | `numbers` from `homeNumbers()` (ARCHITECTURE "Home numbers"), hidden exactly when Home hides them (SPEC §5.1 step 1) |
 | Avatar `{initials}`, "{name} · {grade}" | Real, new field | `children.name`, `grade` and `initials` exist, but `GET /api/state` doesn't return them. Add them to it and keep them with the Worker's state on the iPad. Until then the avatar and the meta line are left out. |
-| Shop control | Not built | no child Shop screen (section 6.1) |
+| Shop control | Not built | no child Shop screen yet; behavior settled (section 6.1, #123) |
 | Problem, progress, Check, response | Real | engine `generateAssignment`, `checkAnswer`; unchanged flow (SPEC §5.1) |
 | Spelling words, sentences, choices; passage, hint, questions, choices, skills | Sample | one module, `src/practice/samples.ts`, content in section 15 |
 | Spelling and Reading answer checking | Engine | a pure `checkChoice(chosen, answer)` in `src/engine/` with its test, so a later recorded subject scores the same way on the Worker |
-| Passage art | Not built | the sample has none. The Figma illustration is not added to the repo. |
+| Passage art | Not built | the placeholder passage has none. The Figma illustration is not added to the repo. Real passages and pictures come from the database later (SPEC §9). |
 
 ## 15. Sample content
 
@@ -461,20 +470,22 @@ Final decisions on every Figma string:
 
 **Reading** (one passage):
 
-- Kind "Informational text", 2 min read. Title "The garden that saved the rain".
+Placeholder text (owner decision). Real passages, with a picture each, come later from the database (SPEC §9). There is no art, so the companion shows only its guidance block.
+
+- Kind "Informational text", 2 min read. Title "Lorem ipsum dolor".
 - Paragraphs:
-  1. "The children at Willow School grew carrots and beans in a garden. When it did not rain, the garden needed water every day."
-  2. "Maya had an idea. "Let's catch the rain!" The class put a big barrel under the pipe from the roof. A net on top kept leaves and bugs out."
-  3. "After the next storm, the barrel was almost full. All week, the children used the rainwater on their garden. The carrots and beans grew big and green."
-- Hint: "Notice the problem, Maya's idea, and what changed."
-- Question 1, skill "Find a detail": "Why did the class put a barrel under the pipe?"
-  - A "To keep the roof clean."
-  - B "To catch rain for the garden." (answer)
-  - C "To give the bugs a home."
-- Question 2, skill "Think it through": "What did the class learn?"
-  - A "A simple idea can save water." (answer)
-  - B "Plants grow best with no water."
-  - C "Storms make carrots grow."
+  1. "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  2. "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+  3. "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+- Hint: "Lorem ipsum dolor sit amet."
+- Question 1, skill "Find a detail": "Lorem ipsum dolor sit amet?"
+  - A "Consectetur adipiscing elit."
+  - B "Sed do eiusmod tempor." (answer)
+  - C "Ut labore et dolore."
+- Question 2, skill "Think it through": "Ut enim ad minim veniam?"
+  - A "Quis nostrud exercitation." (answer)
+  - B "Ullamco laboris nisi."
+  - C "Ut aliquip ex ea commodo."
 
 ## 16. Icons
 

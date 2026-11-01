@@ -40,7 +40,7 @@ macworx gives her:
 
 ### 5.1 Do an assignment (child)
 
-1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home also has a Spelling button and a Reading button (§5.5).
+1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home has three buttons: Math starts an assignment, and Spelling and Reading open their samples (§5.5).
 2. She starts an assignment: 20 math problems (§6.2).
 3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
 4. She enters her answer on an on-screen number pad (digits 0–9 and a delete key) and submits it with the Check button at the bottom right of the screen. The iPad keyboard never opens. She answers each problem once.
@@ -58,7 +58,7 @@ macworx gives her:
 
 ### 5.2 Buy a reward (child)
 
-1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7).
+1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7). The practice screens' top bar also has a Shop button. During a math assignment it doesn't leave: it shows "Finish this assignment first, then visit the Shop." On the Spelling and Reading samples it opens the shop.
 2. She can buy any reward whose price is at most her balance, but only while the iPad can reach the Worker. The Worker checks the price against its own balance, deducts it and records the purchase, so the Worker's balance is always the one spent.
 3. A parent sees the purchase on the portal's Shop screen (§5.3) and grants the reward in real life.
 
@@ -395,7 +395,7 @@ The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock an
 
 The Worker's child API (every route needs the iPad's device key):
 
-- `GET /api/state?pending=…`: balance, streak, last counted day, completed assignments, the latest finished assignment's grade, and which of the listed seeds (up to 100) are already recorded.
+- `GET /api/state?pending=…`: the device's child (name, grade and initials, for the practice screens' top bar), balance, streak, last counted day, completed assignments, the latest finished assignment's grade, and which of the listed seeds (up to 100) are already recorded.
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
 - `POST /api/results`: records a result (§6.8) and returns it with the new state.
 
@@ -425,13 +425,14 @@ Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
 
 Ideas outside the MVP. Each needs a spec section before it is built.
 
-- **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), recorded and paid spelling (words seeded from school lists, replacing the samples in §5.5), recorded and paid reading comprehension (parent-reviewed passages, replacing the sample in §5.5), and fractions (the fraction layout in `docs/DESIGN-PRACTICE.md`).
+- **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), recorded and paid spelling (words seeded from school lists, replacing the samples in §5.5), recorded and paid reading comprehension (short passages stored in the database, each with a relevant picture, parent-reviewed, replacing the placeholder passage in §5.5), and fractions (the fraction layout in `docs/DESIGN-PRACTICE.md`).
 - **Spinner:** earned spins that pick the subject or a reward, never "no work".
 - **Loot box:** earned-only surprise rewards.
 - **Carrying and borrowing:** work space on the stacked problem to mark a carried 1 or regroup from the next place.
 - **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
 - **Difficulty levels:** stretch problems that pay more than warm-ups.
 - **Parent tools:** push notification on a purchase, adding spelling words and assignments.
+- **Rewards peek:** a read-only list of rewards, opened from the practice top bar during an assignment.
 - **Portal detail:** purchase history beyond Last redeemed (with the reward shop, §5.2).
 - **Editable rewards:** a parent changes the rewards and prices from the portal.
 - **Child sign-ins:** a child who uses more than one device, or moves a device to another child.
