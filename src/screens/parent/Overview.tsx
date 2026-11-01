@@ -68,7 +68,17 @@ function TabLink({
  * The Overview tab (SPEC §5.3): Today's homework, her two numbers, today's assignments, links to Devices and
  * Shop, and her results. The DOM is the phone order; the wide layout places it with grid areas.
  */
-export function Overview({ summary, results, devices, childName, today, now, onGo, pending, unavailable }: Props) {
+export function Overview({
+  summary,
+  results,
+  devices,
+  childName,
+  today,
+  now,
+  onGo,
+  pending,
+  unavailable,
+}: Props) {
   const resultsHeading = useRef<HTMLHeadingElement>(null)
   const todays = results ? todaysAssignments(results, today) : null
   const connected = devices ? connectedDevices(devices) : null
@@ -85,7 +95,9 @@ export function Overview({ summary, results, devices, childName, today, now, onG
     <div className="overview">
       <section className="overview-hero" aria-labelledby="overview-hero-heading">
         <div className="overview-hero-top">
-          <h2 id="overview-hero-heading" className="overview-hero-label">{COPY.parentHomeworkLabel}</h2>
+          <h2 id="overview-hero-heading" className="overview-hero-label">
+            {COPY.parentHomeworkLabel}
+          </h2>
           <SunIcon size={21} />
         </div>
         {summary ? (

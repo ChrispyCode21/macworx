@@ -137,7 +137,9 @@ export const COPY = {
   parentLastSyncedToday: (time: string) => `Last synced today, ${time}`,
   parentLastSyncedOn: (day: string) => `Last synced ${day}`,
   parentRewardsRowMeta: (n: number, within: number | null) =>
-    within ? `${formatNumber(n)} rewards · ${formatNumber(within)} within reach` : `${formatNumber(n)} rewards`,
+    within
+      ? `${formatNumber(n)} rewards · ${formatNumber(within)} within reach`
+      : `${formatNumber(n)} rewards`,
   parentResultsHeading: 'Results',
   parentNoResults: 'No results yet. They show up here after she finishes an assignment.',
   parentColDate: 'Date',
