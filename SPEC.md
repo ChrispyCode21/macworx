@@ -397,7 +397,7 @@ The page's day helpers:
 | T7 | Today 2026-10-17; counted days 2026-10-15 and 2026-10-16 | Seven tiles, Oct 11 to Oct 17, weekday letters S M T W T F S; 15 and 16 counted, 17 today **without** a check, the rest plain. With 2026-10-17 also counted: 17 is today **with** a check |
 | T8 | The range of a streak and last counted day (preview: whole streak; hero: at most the last 7 days) | Streak 3 ending 2026-10-16 → **Oct 14–16**; streak 7 → **Oct 10–16**; streak 20: preview **Sep 27–Oct 16**, hero **Oct 10–16**; streak 400: preview **Sep 12, 2025–Oct 16, 2026**; streak 3 ending 2026-01-02 → **Dec 31, 2025–Jan 2, 2026**; streak 5 ending 2026-11-02 → **Oct 29–Nov 2**; streak 1 → **Oct 16**; streak 0, or no last counted day → no range |
 | T9 | The preview for old streak 3, boxes 7 and 2026-10-16 | "Preview: Oct 10–16 · 3 → 7 days". Boxes 0 and empty → "Preview: no counted days · 3 → 0 days". Boxes 1 and 2026-10-16 → "Preview: Oct 16 · 3 → 1 day". Boxes that can't be sent → no preview |
-| T10 | The boxes as the Worker wants them (mirrors C2-C6) | "7" and 2026-10-16 → {7, 2026-10-16}; "0" and empty → {0, null}; "3" and empty → can't be sent; "3651", "2.5", "-1", "" or "abc" → can't be sent; "3650" accepted |
+| T10 | The boxes as the Worker wants them (mirrors C2-C6) | "7" and 2026-10-16 → {7, 2026-10-16}; "0" and empty → {0, null}; "3" and empty → can't be sent; "3651", "2.5", "-1", "" or "abc" → can't be sent; "3650" accepted; a date that is not a real calendar day (20261-01-01, 2026-02-30) → can't be sent |
 
 ### 7.D Recorded results (§8)
 
