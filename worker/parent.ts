@@ -114,6 +114,23 @@ async function summaryOf(db: ParentRequest['db'], childId: number, today: string
   })
 }
 
+/** GET /api/parent/days: the days of the seven ending on the parent's day on which she finished an assignment. */
+export async function listDays(req: ParentRequest): Promise<Response> {
+  const { db } = req
+  const childId = await childOf(req)
+  if (childId instanceof Response) return childId
+  const today = parseToday(req.url, req.now)
+  if (today === null) return error(400, 'bad_day')
+  const { results } = await db
+    .prepare(
+      `SELECT DISTINCT day FROM results
+       WHERE child_id = ? AND finished = 1 AND day >= ? AND day <= ? ORDER BY day`,
+    )
+    .bind(childId, addDays(today, -6), today)
+    .all<{ day: string }>()
+  return json(200, { days: results.map((r) => r.day) })
+}
+
 /** GET /api/parent/results: the latest recorded results, newest first. */
 export async function listResults(req: ParentRequest): Promise<Response> {
   const { db } = req
@@ -411,6 +428,7 @@ export const PARENT_ROUTES: {
   { method: 'POST', pattern: /^\/api\/parent\/children$/, run: postChild },
   { method: 'PATCH', pattern: /^\/api\/parent\/children\/(?<id>\d+)$/, run: patchChild },
   { method: 'GET', pattern: /^\/api\/parent\/summary$/, run: getSummary },
+  { method: 'GET', pattern: /^\/api\/parent\/days$/, run: listDays },
   { method: 'GET', pattern: /^\/api\/parent\/results$/, run: listResults },
   { method: 'GET', pattern: /^\/api\/parent\/results\/(?<id>\d+)$/, run: getResult },
   { method: 'GET', pattern: /^\/api\/parent\/log$/, run: listLog },

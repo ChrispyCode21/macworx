@@ -18,6 +18,7 @@ function readViews(path: string, devices: Device[], views: Record<string, unknow
   const answers: Record<string, unknown> = {
     '/api/parent/children': { children: [{ id: 1, name: 'Child', grade: '', initials: 'C' }] },
     '/api/parent/summary': summary,
+    '/api/parent/days': { days: ['2026-10-15', '2026-10-16'] },
     '/api/parent/results': { results: [] },
     '/api/parent/log': { entries: [] },
     '/api/parent/devices': { devices },
@@ -480,16 +481,44 @@ async function streakApi(page: Page, answer: (body: unknown) => { status: number
   return posts
 }
 
-test('sets her streak: boxes start with her numbers, and the strip and message update', async ({ page }) => {
+const review = (page: Page) => page.getByRole('button', { name: 'Review streak correction' })
+const confirm = (page: Page) => page.getByRole('button', { name: 'Confirm', exact: true })
+
+test('the streak screen shows her streak, a strip of the last 7 days and a sample personal best', async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date(2026, 9, 17, 10, 0) })
+  await streakApi(page, () => ({ status: 200, json: summary }))
+  await page.goto('/parent/streak')
+  await expect(page.getByText('Current streak · Oct 14–16')).toBeVisible()
+  await expect(page.getByText('Personal best: 14 days')).toBeVisible()
+  await expect(page.getByText('Sample', { exact: true })).toBeVisible()
+  const tiles = page.locator('.streak-tile')
+  await expect(tiles).toHaveCount(7)
+  await expect(tiles.first()).toHaveText('11')
+  await expect(page.locator('.streak-tile-counted')).toHaveText(['15', '16'])
+  await expect(page.locator('.streak-tile-today')).toHaveText('17')
+  await expect(page.getByText('counted', { exact: true })).toHaveCount(2)
+  await expect(page.getByText('Today ✓')).toHaveCount(0)
+})
+
+test('sets her streak: boxes start with her numbers, Review then Confirm saves once', async ({ page }) => {
   const posts = await streakApi(page, (body) => ({
     status: 200,
     json: { ...summary, ...(body as object) },
   }))
   await page.goto('/parent/streak')
-  await expect(page.getByLabel('Streak (days)')).toHaveValue('3')
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('3')
   await expect(page.getByLabel('Last counted day')).toHaveValue('2026-10-16')
-  await page.getByLabel('Streak (days)').fill('7')
-  await page.getByRole('button', { name: 'Save streak' }).click()
+  await page.getByLabel('Corrected streak length').fill('7')
+  await expect(page.getByText('Preview: Oct 10–16 · 3 → 7 days')).toBeVisible()
+  await review(page).click()
+  await expect(page.getByText('Streak 3 → 7 days')).toBeVisible()
+  await expect(page.getByText('Last counted day Oct 16 → Oct 16')).toBeVisible()
+  await expect(page.getByLabel('Corrected streak length')).toBeDisabled()
+  await expect(page.getByLabel('Last counted day')).toBeDisabled()
+  expect(posts).toEqual([])
+  await confirm(page).click()
   await expect(page.getByRole('status')).toHaveText('Streak saved.')
   expect(posts).toEqual([{ streak: 7, lastDay: '2026-10-16' }])
   // The tabs share one set of numbers: Overview shows the new streak without another read.
@@ -497,30 +526,46 @@ test('sets her streak: boxes start with her numbers, and the strip and message u
   await expect(page.getByLabel('Her numbers so far').getByText('7 days')).toBeVisible()
 })
 
+test('Back returns to the form with the typed values and sends nothing', async ({ page }) => {
+  const posts = await streakApi(page, () => ({ status: 200, json: summary }))
+  await page.goto('/parent/streak')
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('3')
+  await page.getByLabel('Corrected streak length').fill('9')
+  await review(page).click()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await expect(review(page)).toBeVisible()
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('9')
+  await expect(page.getByLabel('Corrected streak length')).toBeEnabled()
+  expect(posts).toEqual([])
+})
+
 test('an empty day with streak 0 is sent as null', async ({ page }) => {
   const posts = await streakApi(page, (body) => ({ status: 200, json: { ...summary, ...(body as object) } }))
   await page.goto('/parent/streak')
-  await expect(page.getByLabel('Streak (days)')).toHaveValue('3')
-  await page.getByLabel('Streak (days)').fill('0')
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('3')
+  await page.getByLabel('Corrected streak length').fill('0')
   await page.getByLabel('Last counted day').fill('')
-  await page.getByRole('button', { name: 'Save streak' }).click()
+  await expect(page.getByText('Preview: no counted days · 3 → 0 days')).toBeVisible()
+  await review(page).click()
+  await confirm(page).click()
   await expect(page.getByRole('status')).toHaveText('Streak saved.')
   expect(posts).toEqual([{ streak: 0, lastDay: null }])
 })
 
-test('refuses an obviously bad streak before sending anything', async ({ page }) => {
+test('refuses an obviously bad streak at Review, before sending anything', async ({ page }) => {
   const posts = await streakApi(page, () => ({ status: 200, json: summary }))
   await page.goto('/parent/streak')
   const problem =
     'Type a streak from 0 to 3,650 and a last counted day that is not after tomorrow. The day can be empty only when the streak is 0.'
-  await expect(page.getByLabel('Streak (days)')).toHaveValue('3')
-  await page.getByLabel('Streak (days)').fill('3651')
-  await page.getByRole('button', { name: 'Save streak' }).click()
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('3')
+  await page.getByLabel('Corrected streak length').fill('3651')
+  await review(page).click()
   await expect(page.getByRole('alert')).toHaveText(problem)
-  await page.getByLabel('Streak (days)').fill('3')
+  await page.getByLabel('Corrected streak length').fill('3')
   await page.getByLabel('Last counted day').fill('')
-  await page.getByRole('button', { name: 'Save streak' }).click()
+  await review(page).click()
   await expect(page.getByRole('alert')).toHaveText(problem)
+  await expect(confirm(page)).toHaveCount(0)
   expect(posts).toEqual([])
 })
 
@@ -528,15 +573,50 @@ test('a Worker 400 or 503 shows its plain message', async ({ page }) => {
   let reply = { status: 400, json: { error: 'bad_day' } }
   await streakApi(page, () => reply)
   await page.goto('/parent/streak')
-  await page.getByRole('button', { name: 'Save streak' }).click()
+  await review(page).click()
+  await confirm(page).click()
   await expect(page.getByRole('alert')).toContainText('Type a streak from 0 to 3,650')
   reply = { status: 503, json: { error: 'busy' } }
-  await page.getByRole('button', { name: 'Save streak' }).click()
+  await review(page).click()
+  await confirm(page).click()
   await expect(page.getByRole('alert')).toHaveText('Her numbers changed while saving. Try again.')
   await expect(page.getByText('Streak saved.')).toHaveCount(0)
 })
 
-test('Save streak waits for its answer before taking another click', async ({ page }) => {
+test('a failed Confirm returns to the form with the typed values and no saved line', async ({ page }) => {
+  await streakApi(page, () => ({ status: 503, json: { error: 'busy' } }))
+  await page.goto('/parent/streak')
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('3')
+  await page.getByLabel('Corrected streak length').fill('9')
+  await review(page).click()
+  await confirm(page).click()
+  await expect(page.getByRole('alert')).toHaveText('Her numbers changed while saving. Try again.')
+  await expect(review(page)).toBeVisible()
+  await expect(page.getByLabel('Corrected streak length')).toHaveValue('9')
+  await expect(page.getByLabel('Last counted day')).toHaveValue('2026-10-16')
+  await expect(page.getByLabel('Corrected streak length')).toBeEnabled()
+  await expect(page.getByText('Streak saved.')).toHaveCount(0)
+})
+
+test('a failed days read shows unavailable, and the next visit to the Streak tab reads again', async ({
+  page,
+}) => {
+  let daysUp = false
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/parent/days' && !daysUp) return route.fulfill({ status: 503, json: { error: 'busy' } })
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/streak')
+  await expect(page.locator('.streak-days')).toHaveCount(0)
+  await expect(page.locator('.streak-week').getByText('Not available right now.')).toBeVisible()
+  daysUp = true
+  await page.getByRole('link', { name: 'Overview' }).click()
+  await page.getByRole('link', { name: 'Streak' }).click()
+  await expect(page.locator('.streak-tile')).toHaveCount(7)
+})
+
+test('Confirm waits for its answer before taking another click', async ({ page }) => {
   let answer: () => void = () => {}
   const posts: number[] = []
   await page.route('/api/parent/**', (route) => {
@@ -546,8 +626,10 @@ test('Save streak waits for its answer before taking another click', async ({ pa
     answer = () => void route.fulfill({ json: summary })
   })
   await page.goto('/parent/streak')
-  await page.getByRole('button', { name: 'Save streak' }).click()
-  await expect(page.getByRole('button', { name: 'Save streak' })).toBeDisabled()
+  await review(page).click()
+  await confirm(page).click()
+  await expect(confirm(page)).toBeDisabled()
+  await confirm(page).click({ force: true })
   answer()
   await expect(page.getByText('Streak saved.')).toBeVisible()
   expect(posts).toHaveLength(1)

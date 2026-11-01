@@ -153,6 +153,9 @@ async function scoped<T>(
 
 export const getSummary = () => scoped<Summary>('/api/parent/summary', undefined, { today: localDay() })
 
+/** The days among the seven ending today on which she finished an assignment (SPEC §8). */
+export const getDays = () => scoped<{ days: string[] }>('/api/parent/days', undefined, { today: localDay() })
+
 export const listResults = () => scoped<{ results: ResultRow[] }>('/api/parent/results')
 
 export const listLog = () => scoped<{ entries: LogEntry[] }>('/api/parent/log')

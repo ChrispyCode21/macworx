@@ -52,6 +52,7 @@ async function portalApi(page: Page) {
     const answers: Record<string, unknown> = {
       '/api/parent/children': { children: list },
       '/api/parent/summary': { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5 },
+      '/api/parent/days': { days: [] },
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
       '/api/parent/devices': { devices: [] },
@@ -374,7 +375,7 @@ test('a refused Worker shows the message on every tab, never a blank page or Loa
     route.fulfill({ status: 401, json: { error: 'unauthorized' } }),
   )
   // How many lists say "Not available right now." on each tab.
-  const lists: Record<string, number> = { overview: 1, points: 1, streak: 0, devices: 1, shop: 0 }
+  const lists: Record<string, number> = { overview: 1, points: 1, streak: 1, devices: 1, shop: 0 }
   for (const tab of TABS) {
     await page.goto(`/parent/${tab.path}`)
     await expect(page.getByRole('alert')).toHaveText(

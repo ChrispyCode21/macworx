@@ -14,3 +14,6 @@ export function deviceStatus(_device: Device): DeviceStatus {
 export function deviceBrowserLine(_device: Device): string {
   return 'Tablet · Safari'
 }
+
+/** Sample: the personal best streak in days, until the app records one. The Streak screen shows it as is. */
+export const personalBestStreak = 14
