@@ -392,6 +392,7 @@ describe('parent API', () => {
         lastDay: '2026-10-16',
         completed: 5,
         earnedToday: 0,
+        completedToday: 0,
       })
     })
 
@@ -402,6 +403,48 @@ describe('parent API', () => {
         lastDay: null,
         completed: 0,
         earnedToday: 0,
+        completedToday: 0,
+      })
+    })
+
+    describe('Overview, completed today (SPEC §7.O)', () => {
+      const summary = async (query = '') => (await get(`/api/parent/summary${query}`)).body
+
+      it('O1: counts her finished results of the day, not a left-early one', async () => {
+        await addResult(1, '2026-10-17', 1, 'Excellent', 24)
+        await addResult(2, '2026-10-17', 1, 'Excellent', 28)
+        await addResult(3, '2026-10-17', 0, null, 2)
+        await addResult(4, '2026-10-16', 1, 'Good', 10)
+        const body = await summary()
+        expect(body.completedToday).toBe(2)
+        expect(body.earnedToday).toBe(54)
+      })
+
+      it('O2: is 0 with no results', async () => {
+        expect((await summary()).completedToday).toBe(0)
+      })
+
+      it('O3: leaves out another child’s result', async () => {
+        await addResult(1, '2026-10-17', 1, 'Good', 10)
+        await t.db.prepare('UPDATE results SET child_id = 2 WHERE id = 1').run()
+        expect((await summary()).completedToday).toBe(0)
+      })
+
+      it('O4: counts the day asked for and refuses a bad day', async () => {
+        await addResult(1, '2026-10-17', 1, 'Good', 10)
+        await addResult(2, '2026-10-18', 1, 'Good', 10)
+        await addResult(3, '2026-10-18', 1, 'Good', 10)
+        expect((await summary('?today=2026-10-18')).completedToday).toBe(2)
+        expect((await summary()).completedToday).toBe(1)
+        for (const today of ['2026-02-30', '2026-10-19'])
+          expect(await get(`/api/parent/summary?today=${today}`), today).toEqual({
+            status: 400,
+            body: { error: 'bad_day' },
+          })
+      })
+
+      it('O6: needs an Access token', async () => {
+        expect((await t.call('GET', '/api/parent/summary', { key: null })).status).toBe(401)
       })
     })
 
@@ -641,6 +684,22 @@ describe('parent API', () => {
       expect(await child()).toEqual({ ...START, streak: 7 })
     })
 
+    it('O5: the answer carries completedToday', async () => {
+      await t.db
+        .prepare(`INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (1, 1, '2026-10-17', 1)`)
+        .run()
+      await t.db
+        .prepare(
+          `INSERT INTO results (seed, device_id, day, answers, answered, correct, finished, grade, base,
+             accuracy_bonus, streak_bonus, total, created_at) VALUES (1, 1, '2026-10-17', '[]', 20, 20, 1,
+             'Excellent', 20, 4, 3, 27, '2026-10-17T12:00:00Z')`,
+        )
+        .run()
+      const { status, body } = await set({ streak: 7, lastDay: '2026-10-16' })
+      expect(status).toBe(200)
+      expect(body.completedToday).toBe(1)
+    })
+
     it('C1: sets streak 7 and day 2026-10-16 → saved, balance and completed untouched, logged', async () => {
       await t.db
         .prepare(`INSERT INTO seeds (seed, device_id, issued_day, used) VALUES (1, 1, '2026-10-16', 1)`)
@@ -654,7 +713,14 @@ describe('parent API', () => {
         .run()
       const { status, body } = await set({ streak: 7, lastDay: '2026-10-16' })
       expect(status).toBe(200)
-      expect(body).toEqual({ balance: 40, streak: 7, lastDay: '2026-10-16', completed: 5, earnedToday: 0 })
+      expect(body).toEqual({
+        balance: 40,
+        streak: 7,
+        lastDay: '2026-10-16',
+        completed: 5,
+        earnedToday: 0,
+        completedToday: 0,
+      })
       expect(await child()).toEqual({ ...START, streak: 7 })
       const results = await t.db.prepare('SELECT COUNT(*) AS n, SUM(total) AS sum FROM results').first()
       expect(results).toEqual({ n: 1, sum: 27 })

@@ -94,12 +94,14 @@ export async function getSummary(req: ParentRequest): Promise<Response> {
   return summaryOf(db, childId, today)
 }
 
-/** Her totals and what she earned on `today`; the reads behind GET /api/parent/summary and POST /streak. */
+/** Her totals, what she earned and how many assignments she finished on `today`; the reads behind GET /api/parent/summary and POST /streak. */
 async function summaryOf(db: ParentRequest['db'], childId: number, today: string): Promise<Response> {
   const earned = await db
-    .prepare('SELECT COALESCE(SUM(total), 0) AS n FROM results WHERE child_id = ? AND day = ?')
+    .prepare(
+      'SELECT COALESCE(SUM(total), 0) AS n, COALESCE(SUM(CASE WHEN finished = 1 THEN 1 ELSE 0 END), 0) AS done FROM results WHERE child_id = ? AND day = ?',
+    )
     .bind(childId, today)
-    .first<{ n: number }>()
+    .first<{ n: number; done: number }>()
   const row = await db
     .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = ?')
     .bind(childId)
@@ -111,6 +113,7 @@ async function summaryOf(db: ParentRequest['db'], childId: number, today: string
     lastDay: row.last_day,
     completed: row.completed,
     earnedToday: earned?.n ?? 0,
+    completedToday: earned?.done ?? 0,
   })
 }
 
