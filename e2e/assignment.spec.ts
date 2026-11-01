@@ -36,7 +36,9 @@ async function answer(page: Page, value: number) {
   await page.getByRole('button', { name: 'Check' }).click()
 }
 
-test('finishes an assignment and sees the grade and Macaronis', async ({ page }) => {
+const FULL = { tag: '@full-assignment' }
+
+test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ page }) => {
   // About 100 taps; WebKit needs over 20 s for them, past the 30 s default once tests run in parallel.
   test.setTimeout(90_000)
   await page.goto('/')
@@ -80,12 +82,15 @@ test('leaves partway and keeps the Macaronis earned so far', async ({ page }) =>
   await page.getByRole('button', { name: 'Start' }).click()
   for (let n = 1; n <= 2; n++) {
     await answer(page, await currentAnswer(page))
+    // The problem screen with its response, in both orientations (the full assignment runs in landscape only).
+    if (n === 1) await noSidewaysScroll(page)
     await page.getByRole('button', { name: 'Next' }).click()
   }
   await page.getByRole('button', { name: 'Done for now' }).click()
 
   await expect(page.getByRole('heading', { name: 'You did 2 problems.' })).toBeVisible()
   await expect(page.locator('.result-macaronis')).toHaveText('2 Macaronis')
+  await noSidewaysScroll(page)
   await page.getByRole('button', { name: 'Home' }).click()
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
 })
@@ -126,13 +131,15 @@ test('leaving with none right hides the Macaroni line instead of showing 0', asy
   await page.goto('/')
   await page.getByRole('button', { name: 'Start' }).click()
   await answer(page, (await currentAnswer(page)) + 1)
+  await expect(page.getByText("Here's how that one works:", { exact: true })).toBeVisible()
+  await noSidewaysScroll(page)
   await page.getByRole('button', { name: 'Done for now' }).click()
 
   await expect(page.getByRole('heading', { name: 'You did 1 problem.' })).toBeVisible()
   await expect(page.locator('.result-macaronis')).toHaveCount(0)
 })
 
-test('leaving after answering all 20 counts as finishing', async ({ page }) => {
+test('leaving after answering all 20 counts as finishing', FULL, async ({ page }) => {
   // About 100 taps, like the full assignment above.
   test.setTimeout(90_000)
   await page.goto('/')

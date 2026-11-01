@@ -179,11 +179,16 @@ test('on a phone the tabs are a bar at the bottom and the header shows', async (
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBeLessThanOrEqual(0)
 
-  // The footer note ends Overview and is clear of the bar.
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-  const note = await page.locator('.portal-note').boundingBox()
-  const barNow = await nav(page).boundingBox()
-  expect(note!.y + note!.height).toBeLessThanOrEqual(barNow!.y)
+  // The footer note ends Overview and is clear of the bar. Overview can still grow as its reads land, so
+  // scroll to the bottom again until it settles (WebKit measured before it had, now and then).
+  await expect
+    .poll(async () => {
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+      const note = (await page.locator('.portal-note').boundingBox())!
+      const barNow = (await nav(page).boundingBox())!
+      return note.y + note.height - barNow.y
+    })
+    .toBeLessThanOrEqual(0)
 })
 
 test('the wide layout starts at 768px wide', async ({ page }) => {
@@ -253,6 +258,8 @@ test('a remembered child who is gone falls back to the first', async ({ page }) 
   await page.addInitScript(() => localStorage.setItem('macworx.parentChild', '99'))
   await page.goto('/parent/overview')
   await expect(page.getByText("Ada's overview")).toBeVisible()
+  // The heading can show before the summary read goes out, so wait for it as the tests around this do.
+  await expect.poll(() => reads(calls, 'summary').length).toBe(1)
   expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=1'])
 })
 
