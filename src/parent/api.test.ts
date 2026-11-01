@@ -40,6 +40,14 @@ describe('the parent calendar day', () => {
     expect(called()).toEqual(['GET /api/parent/summary?child=2&today=2026-10-30'])
   })
 
+  it('getSummary sends the day it is given instead of reading the clock', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 30, 23, 30))
+    chooseChild(2)
+    await getSummary('2026-10-31')
+    expect(called()).toEqual(['GET /api/parent/summary?child=2&today=2026-10-31'])
+  })
+
   it('getDays sends the child and the local day', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 9, 30, 23, 30))

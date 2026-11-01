@@ -58,6 +58,8 @@ export function ParentPage({
   onGo: (tab: Tab) => void
 }) {
   const [summary, setSummary] = useState<Summary | null>(null)
+  // The day and moment the numbers were read at; the Overview shows everything as of this one reading.
+  const [summaryAt, setSummaryAt] = useState(() => ({ day: localDay(), at: new Date() }))
   const [results, setResults] = useState<ResultRow[] | null>(null)
   const [log, setLog] = useState<LogEntry[] | null>(null)
   const [devices, setDevices] = useState<Device[] | null>(null)
@@ -79,7 +81,10 @@ export function ParentPage({
   const refresh = async () => {
     // A replaced page sends no more reads, even when a save it started finishes after the switch.
     if (!live.current) return
-    const summaryResult = await getSummary()
+    // One clock reading per refresh: the numbers and the Overview's list and sync line all use this day.
+    const readAt = new Date()
+    const day = localDay(readAt)
+    const summaryResult = await getSummary(day)
     if (!live.current) return
     if (!summaryResult.ok) return setProblem(summaryFailure(summaryResult))
     const resultsResult = await listResults()
@@ -92,6 +97,7 @@ export function ParentPage({
     if (!live.current) return
     if (!logResult.ok) return setProblem(failure(logResult))
     setSummary(summaryResult.body)
+    setSummaryAt({ day, at: readAt })
     setResults(resultsResult.body.results)
     setDevices(devicesResult.body.devices)
     setLog(logResult.body.entries)
@@ -185,7 +191,8 @@ export function ParentPage({
           results={results}
           devices={devices}
           childName={childName}
-          today={localDay()}
+          today={summaryAt.day}
+          now={summaryAt.at}
           onGo={onGo}
           pending={pending}
           unavailable={unavailable}

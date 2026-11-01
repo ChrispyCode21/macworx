@@ -44,6 +44,8 @@ const render = (
     results?: ResultRow[] | null
     devices?: Device[] | null
     childName?: string | null
+    today?: string
+    now?: Date
   } = {},
 ) =>
   renderToStaticMarkup(
@@ -52,7 +54,8 @@ const render = (
       results={'results' in over ? over.results! : []}
       devices={'devices' in over ? over.devices! : [device()]}
       childName={'childName' in over ? over.childName! : 'Ada'}
-      today={TODAY}
+      today={over.today ?? TODAY}
+      now={over.now ?? new Date()}
       onGo={noop}
       pending="…"
       unavailable={null}
@@ -140,6 +143,17 @@ describe('Overview', () => {
     expect(html).toMatch(/href="\/parent\/streak"[^>]*>Manage streak →</)
     expect(html).toMatch(/href="\/parent\/devices"/)
     expect(html).toMatch(/href="\/parent\/shop"/)
+  })
+
+  it('follows the today and now it is given, not the system clock', () => {
+    // The system clock says Oct 17, 6 pm; the numbers were read on Oct 18.
+    const results = [row({ id: 1, day: TODAY }), row({ id: 2, day: '2026-10-18', total: 33 })]
+    const devices = [device({ lastResultAt: at(9, 17, 16, 5) })]
+    const html = render({ results, devices, today: '2026-10-18', now: new Date(2026, 9, 18, 0, 5) })
+    expect(html).toContain('+33')
+    expect(html).not.toContain('+24')
+    expect(html).toContain('Last synced Oct 17')
+    expect(html).not.toContain('Last synced today')
   })
 
   it('shows the selected child’s numbers and totals', () => {

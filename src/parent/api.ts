@@ -153,7 +153,8 @@ async function scoped<T>(
   return parentCall<T>(`${path}?child=${selected}${more}`, init)
 }
 
-export const getSummary = () => scoped<Summary>('/api/parent/summary', undefined, { today: localDay() })
+export const getSummary = (today: string = localDay()) =>
+  scoped<Summary>('/api/parent/summary', undefined, { today })
 
 /** The days among the seven ending today on which she finished an assignment (SPEC §8). */
 export const getDays = () => scoped<{ days: string[] }>('/api/parent/days', undefined, { today: localDay() })

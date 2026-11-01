@@ -31,6 +31,8 @@ interface Props {
   childName: string | null
   /** The parent's calendar day, YYYY-MM-DD. */
   today: string
+  /** The moment the numbers were read, for "Last synced"; read once with `today`, so both name the same day. */
+  now: Date
   /** Opens another tab, keeping the selected child. */
   onGo: (tab: Tab) => void
   /** What shows in place of a value that has not arrived. */
@@ -67,7 +69,7 @@ function TabLink({
  * The Overview tab (SPEC §5.3): Today's homework, her two numbers, today's assignments, links to Devices and
  * Shop, and her results. The DOM is the phone order; the wide layout places it with grid areas.
  */
-export function Overview({ summary, results, devices, childName, today, onGo, pending, unavailable }: Props) {
+export function Overview({ summary, results, devices, childName, today, now, onGo, pending, unavailable }: Props) {
   const resultsHeading = useRef<HTMLHeadingElement>(null)
   const todays = results ? todaysAssignments(results, today) : null
   const connected = devices ? connectedDevices(devices) : null
@@ -170,7 +172,7 @@ export function Overview({ summary, results, devices, childName, today, onGo, pe
                 {connected ? COPY.parentDevicesRowTitle(connected.count) : pending}
               </span>
               {connected && (
-                <span className="overview-meta">{lastSyncedLine(connected.lastSyncedAt, new Date())}</span>
+                <span className="overview-meta">{lastSyncedLine(connected.lastSyncedAt, now)}</span>
               )}
             </span>
             <ChevronRightIcon size={18} />
