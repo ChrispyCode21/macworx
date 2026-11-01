@@ -3,6 +3,7 @@ import {
   adjustBalance,
   chooseChild,
   getChildren,
+  getDays,
   getSummary,
   listDevices,
   listLog,
@@ -37,6 +38,14 @@ describe('the parent calendar day', () => {
     chooseChild(2)
     await getSummary()
     expect(called()).toEqual(['GET /api/parent/summary?child=2&today=2026-10-30'])
+  })
+
+  it('getDays sends the child and the local day', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 30, 23, 30))
+    chooseChild(2)
+    await getDays()
+    expect(called()).toEqual(['GET /api/parent/days?child=2&today=2026-10-30'])
   })
 })
 
