@@ -11,7 +11,14 @@ interface Device {
   lastResultAt: string | null
 }
 
-const summary = { balance: 41, streak: 3, lastDay: '2026-10-16', completed: 5, earnedToday: 0 }
+const summary = {
+  balance: 41,
+  streak: 3,
+  lastDay: '2026-10-16',
+  completed: 5,
+  earnedToday: 0,
+  completedToday: 0,
+}
 
 /** The Worker's answer to each read view (SPEC §8); `views` replaces any of them. */
 function readViews(path: string, devices: Device[], views: Record<string, unknown> = {}) {
@@ -241,7 +248,8 @@ test('the Worker refusing (as on a preview) shows a message and never reloads', 
   page.on('load', () => loads++)
   await page.goto('/parent')
   await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
-  await expect(page.getByLabel('Her numbers so far').getByText('—')).toHaveCount(4)
+  // The hero, the two tiles, the assignments list and the devices row each show a dash.
+  await expect(page.locator('.overview').getByText('—')).toHaveCount(5)
   await expect(page.getByText('Loading…')).toHaveCount(0)
   // Overview holds one list, Results.
   await expect(page.getByText('Not available right now.')).toHaveCount(1)
@@ -303,11 +311,10 @@ test('shows her numbers, results and the activity log in plain words', async ({ 
     }),
   )
   await page.goto('/parent/overview')
-  const strip = page.getByLabel('Her numbers so far')
-  await expect(strip.getByText('41')).toBeVisible()
-  await expect(strip.getByText('3 days')).toBeVisible()
-  await expect(strip.getByText('Oct 16')).toBeVisible()
-  await expect(strip.getByText('5', { exact: true })).toBeVisible()
+  const tiles = page.locator('.overview-stats')
+  await expect(tiles.getByText('41')).toBeVisible()
+  await expect(tiles.getByText('3 days')).toBeVisible()
+  await expect(page.getByText('5 assignments done in all · Last counted day Oct 16')).toBeVisible()
 
   const results = page.getByRole('table')
   await expect(results.getByRole('row')).toHaveCount(3)
@@ -315,7 +322,7 @@ test('shows her numbers, results and the activity log in plain words', async ({ 
   await expect(results.getByRole('row').nth(2)).toHaveText(/Oct 1518 of 20Great22/)
   await expect(page.getByRole('button', { name: /Review the result/ })).toHaveCount(0)
 
-  await page.getByRole('link', { name: 'Macaronis' }).click()
+  await page.getByRole('link', { name: 'Macaronis', exact: true }).click()
   const log = page.locator('.activity-list')
   await expect(log.getByText('Unpaired Her iPad')).toBeVisible()
   await expect(log.getByText('Made a pairing code for Her iPad')).toBeVisible()
@@ -327,7 +334,7 @@ test('says so when there are no results or log entries yet', async ({ page }) =>
   await page.goto('/parent/overview')
   await expect(page.getByText('No results yet.')).toBeVisible()
   await expect(page.getByRole('table')).toHaveCount(0)
-  await page.getByRole('link', { name: 'Macaronis' }).click()
+  await page.getByRole('link', { name: 'Macaronis', exact: true }).click()
   await expect(page.getByText('Nothing here yet.')).toBeVisible()
   await expect(page.getByRole('table')).toHaveCount(0)
 })
@@ -336,7 +343,14 @@ test('a new child shows no last counted day', async ({ page }) => {
   await page.route('/api/parent/**', (route) =>
     route.fulfill({
       json: readViews(new URL(route.request().url()).pathname, [], {
-        '/api/parent/summary': { balance: 0, streak: 0, lastDay: null, completed: 0 },
+        '/api/parent/summary': {
+          balance: 0,
+          streak: 0,
+          lastDay: null,
+          completed: 0,
+          earnedToday: 0,
+          completedToday: 0,
+        },
       }),
     }),
   )
@@ -523,7 +537,7 @@ test('sets her streak: boxes start with her numbers, Review then Confirm saves o
   expect(posts).toEqual([{ streak: 7, lastDay: '2026-10-16' }])
   // The tabs share one set of numbers: Overview shows the new streak without another read.
   await page.getByRole('link', { name: 'Overview' }).click()
-  await expect(page.getByLabel('Her numbers so far').getByText('7 days')).toBeVisible()
+  await expect(page.locator('.overview-stats').getByText('7 days')).toBeVisible()
 })
 
 test('Back returns to the form with the typed values and sends nothing', async ({ page }) => {
@@ -612,7 +626,7 @@ test('a failed days read shows unavailable, and the next visit to the Streak tab
   await expect(page.locator('.streak-week').getByText('Not available right now.')).toBeVisible()
   daysUp = true
   await page.getByRole('link', { name: 'Overview' }).click()
-  await page.getByRole('link', { name: 'Streak' }).click()
+  await page.getByRole('link', { name: 'Streak', exact: true }).click()
   await expect(page.locator('.streak-tile')).toHaveCount(7)
 })
 
@@ -656,8 +670,8 @@ test('adds Macaronis through Review then Confirm, then removes some', async ({ p
   await expect(page.getByText('Added 20 Macaronis: Homework grades')).toBeVisible()
   // Overview shows the new balance.
   await page.getByRole('link', { name: 'Overview' }).click()
-  await expect(page.getByLabel('Her numbers so far').getByText('61')).toBeVisible()
-  await page.getByRole('link', { name: 'Macaronis' }).click()
+  await expect(page.locator('.overview-stats').getByText('61')).toBeVisible()
+  await page.getByRole('link', { name: 'Macaronis', exact: true }).click()
 
   await page.getByRole('radio', { name: 'Remove Macaronis' }).click()
   await page.getByLabel('Macaronis to remove').fill('1')

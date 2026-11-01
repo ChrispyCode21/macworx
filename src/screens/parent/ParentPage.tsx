@@ -3,7 +3,6 @@ import { COPY } from '../../copy'
 import {
   getDays,
   getSummary,
-  LIST_LIMIT,
   listDevices,
   listLog,
   listResults,
@@ -14,8 +13,9 @@ import {
 import type { Device, LogEntry, ParentResult, ResultRow, Summary } from '../../parent/api'
 import type { Tab } from '../../parent/route'
 import { Button } from '../../ui/Button'
-import { formatCalendarDay, formatNumber, minutesLeft } from '../../ui/format'
+import { minutesLeft } from '../../ui/format'
 import { DevicesScreen } from './DevicesScreen'
+import { Overview } from './Overview'
 import { PointsScreen } from './PointsScreen'
 import { Shop } from './Shop'
 import { StreakScreen } from './StreakScreen'
@@ -47,7 +47,16 @@ function summaryFailure(result: Extract<ParentResult<unknown>, { ok: false }>): 
  * split across the tabs. All state lives here, so switching tabs never refetches or clears a half-typed form;
  * the Portal remounts it when another child is chosen.
  */
-export function ParentPage({ tab, childName }: { tab: Tab; childName: string | null }) {
+export function ParentPage({
+  tab,
+  childName,
+  onGo,
+}: {
+  tab: Tab
+  childName: string | null
+  /** Opens another tab (the Overview links), keeping the selected child. */
+  onGo: (tab: Tab) => void
+}) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [results, setResults] = useState<ResultRow[] | null>(null)
   const [log, setLog] = useState<LogEntry[] | null>(null)
@@ -171,63 +180,16 @@ export function ParentPage({ tab, childName }: { tab: Tab; childName: string | n
       )}
 
       {tab === 'overview' && (
-        <>
-          <dl className="parent-summary" aria-label={COPY.parentSummaryLabel}>
-            <div>
-              <dt>{COPY.parentBalance}</dt>
-              <dd>{summary ? formatNumber(summary.balance) : pending}</dd>
-            </div>
-            <div>
-              <dt>{COPY.parentStreak}</dt>
-              <dd>{summary ? COPY.parentStreakValue(summary.streak) : pending}</dd>
-            </div>
-            <div>
-              <dt>{COPY.parentLastDay}</dt>
-              <dd>
-                {summary
-                  ? summary.lastDay
-                    ? formatCalendarDay(summary.lastDay)
-                    : COPY.parentNoLastDay
-                  : pending}
-              </dd>
-            </div>
-            <div>
-              <dt>{COPY.parentCompleted}</dt>
-              <dd>{summary ? formatNumber(summary.completed) : pending}</dd>
-            </div>
-          </dl>
-
-          <section className="parent-section">
-            <h2>{COPY.parentResultsHeading}</h2>
-            {results === null && unavailable}
-            {results?.length === 0 && <p>{COPY.parentNoResults}</p>}
-            {results && results.length > 0 && (
-              <div className="parent-table-wrap">
-                <table className="parent-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">{COPY.parentColDate}</th>
-                      <th scope="col">{COPY.parentColRight}</th>
-                      <th scope="col">{COPY.parentColGrade}</th>
-                      <th scope="col">{COPY.parentColEarned}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {results.map((r) => (
-                      <tr key={r.id}>
-                        <td>{formatCalendarDay(r.day)}</td>
-                        <td>{COPY.parentRightOf(r.correct, r.answered)}</td>
-                        <td>{r.finished && r.grade ? r.grade : COPY.parentLeftEarly}</td>
-                        <td>{formatNumber(r.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {results?.length === LIST_LIMIT && <p>{COPY.parentLatest(LIST_LIMIT)}</p>}
-          </section>
-        </>
+        <Overview
+          summary={summary}
+          results={results}
+          devices={devices}
+          childName={childName}
+          today={localDay()}
+          onGo={onGo}
+          pending={pending}
+          unavailable={unavailable}
+        />
       )}
 
       {tab === 'devices' && (

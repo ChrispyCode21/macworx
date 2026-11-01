@@ -569,35 +569,6 @@ p {
   font-size: 12px;
 }
 
-.parent-summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0;
-}
-
-.parent-summary > div {
-  padding: 14px;
-  border-radius: 12px;
-  background: var(--p-chip);
-}
-
-.parent-summary dt {
-  font-size: 11px;
-  color: var(--p-muted);
-}
-
-.parent-summary dd {
-  margin: 6px 0 0;
-  font-size: 26px;
-  line-height: normal;
-  font-variant-numeric: tabular-nums;
-}
-
-.parent-summary .parent-pending {
-  font-size: 14px;
-}
-
 .parent-section {
   display: flex;
   flex-direction: column;
@@ -1036,16 +1007,6 @@ p {
 
   .device-actions {
     gap: 10px;
-  }
-
-  .parent-summary dd {
-    font-size: 30px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .parent-summary {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -2150,6 +2111,354 @@ p {
 
   .streak-correct {
     grid-area: correct;
+  }
+}
+/* Overview screen (docs/DESIGN.md §9). Phone order is the DOM order: hero, tiles, totals, assignments, sync, results. */
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.overview-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--p-primary);
+  border-radius: 20px;
+  background: var(--p-primary);
+  color: var(--p-primary-ink);
+}
+
+.overview-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--p-hero-muted);
+}
+
+.overview-hero-label {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-transform: uppercase;
+  color: var(--p-hero-muted);
+}
+
+.overview-hero-row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.overview-hero-number {
+  font-size: 42px;
+  font-weight: 600;
+  line-height: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-hero-unit {
+  font-size: 14px;
+  color: var(--p-hero-muted);
+}
+
+.overview-hero-line {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--p-hero-muted);
+}
+
+.overview-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.overview-stat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--p-divider);
+  border-radius: 20px;
+  background: var(--p-surface);
+  color: var(--p-accent-ink);
+}
+
+.overview-stat-value {
+  font-size: 26px;
+  line-height: 1.45;
+  color: var(--p-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-stat-label {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--p-muted);
+}
+
+.overview-stat-link {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--p-accent-ink);
+  text-decoration: none;
+}
+
+.overview-totals {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--p-muted);
+}
+
+.overview-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overview-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.overview-heading h2 {
+  flex: 1;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--p-text);
+}
+
+.overview-heading .button-bare {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--p-accent-ink);
+}
+
+.overview-divider {
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--p-divider);
+}
+
+.overview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.overview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.overview-tile {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--p-divider);
+  border-radius: 11px;
+  background: var(--p-chip);
+  color: var(--p-accent-ink);
+}
+
+.overview-detail {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.overview-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--p-text);
+}
+
+.overview-meta,
+.overview-empty {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--p-muted);
+}
+
+.overview-amount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--p-accent-ink);
+}
+
+.overview-link-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--p-accent-ink);
+  text-decoration: none;
+}
+
+.overview-link-row svg {
+  flex-shrink: 0;
+}
+
+.overview-link-row .overview-detail {
+  gap: 3px;
+}
+
+@media (min-width: 768px) {
+  .overview-hero {
+    gap: 16px;
+    padding: 22px;
+  }
+
+  .overview-hero-row {
+    gap: 10px;
+  }
+
+  .overview-hero-top svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .overview-hero-number {
+    font-size: 44px;
+  }
+
+  .overview-stat {
+    gap: 8px;
+    padding: 20px;
+  }
+
+  .overview-stat svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .overview-stat-value {
+    font-size: 30px;
+    line-height: normal;
+  }
+
+  .overview-stat-label {
+    font-size: 12px;
+  }
+
+  .overview-stat-link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .overview-heading {
+    gap: 12px;
+  }
+
+  .overview-heading h2 {
+    font-size: 18px;
+    line-height: normal;
+  }
+
+  .overview-list {
+    gap: 17px;
+  }
+
+  .overview-item {
+    gap: 17px;
+  }
+
+  .overview-tile {
+    width: 40px;
+    height: 40px;
+  }
+
+  .overview-tile svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .overview-detail {
+    gap: 3px;
+  }
+
+  .overview-amount {
+    font-size: 13px;
+  }
+
+  .overview-links {
+    gap: 18px;
+  }
+
+  .overview-link-row {
+    min-height: 62px;
+  }
+
+  .overview-link-row svg:first-child {
+    width: 22px;
+    height: 22px;
+  }
+
+  .overview-link-row .overview-detail {
+    gap: 4px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .overview {
+    display: grid;
+    grid-template-columns: minmax(0, 508fr) minmax(0, 382fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas:
+      'hero stats'
+      'assignments totals'
+      'assignments sync'
+      'results sync'
+      'results .';
+    column-gap: 24px;
+    row-gap: 22px;
+    align-items: start;
+  }
+
+  .overview-hero {
+    grid-area: hero;
+  }
+
+  .overview-stats {
+    grid-area: stats;
+  }
+
+  .overview-totals {
+    grid-area: totals;
+  }
+
+  .overview-assignments {
+    grid-area: assignments;
+  }
+
+  .overview-sync {
+    grid-area: sync;
+  }
+
+  .overview-results {
+    grid-area: results;
   }
 }
 /* parent portal: end */

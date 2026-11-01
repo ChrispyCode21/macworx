@@ -66,6 +66,8 @@ export interface Summary {
   completed: number
   /** The Macaronis she earned on the parent's calendar day (results only, not adjustments). */
   earnedToday: number
+  /** The assignments she finished on the parent's calendar day (left-early results do not count). */
+  completedToday: number
 }
 
 export interface ResultRow {

@@ -49,6 +49,7 @@ const summary = (over: Partial<Summary> = {}): Summary => ({
   lastDay: null,
   completed: 2,
   earnedToday: 0,
+  completedToday: 0,
   ...over,
 })
 
