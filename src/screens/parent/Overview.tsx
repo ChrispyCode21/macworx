@@ -83,9 +83,9 @@ export function Overview({ summary, results, devices, childName, today, now, onG
 
   return (
     <div className="overview">
-      <section className="overview-hero" aria-label={COPY.parentHomeworkLabel}>
+      <section className="overview-hero" aria-labelledby="overview-hero-heading">
         <div className="overview-hero-top">
-          <h2 className="overview-hero-label">{COPY.parentHomeworkLabel}</h2>
+          <h2 id="overview-hero-heading" className="overview-hero-label">{COPY.parentHomeworkLabel}</h2>
           <SunIcon size={21} />
         </div>
         {summary ? (
@@ -133,12 +133,12 @@ export function Overview({ summary, results, devices, childName, today, now, onG
 
       <div className="overview-block overview-assignments">
         <div className="overview-heading">
-          <h2>{COPY.parentAssignmentsHeading}</h2>
+          <h2 id="overview-assignments-heading">{COPY.parentAssignmentsHeading}</h2>
           <a className="overview-view-all" href="#overview-results" onClick={viewAll}>
             {COPY.parentViewAll}
           </a>
         </div>
-        <section className="parent-section overview-list" aria-label={COPY.parentAssignmentsHeading}>
+        <section className="parent-section overview-list" aria-labelledby="overview-assignments-heading">
           {results === null && pending}
           {todays?.length === 0 && <p className="overview-empty">{COPY.parentNoAssignmentsToday}</p>}
           {todays?.map((r, i) => (
@@ -161,9 +161,9 @@ export function Overview({ summary, results, devices, childName, today, now, onG
 
       <div className="overview-block overview-sync">
         <div className="overview-heading">
-          <h2>{COPY.parentSyncHeading}</h2>
+          <h2 id="overview-sync-heading">{COPY.parentSyncHeading}</h2>
         </div>
-        <section className="parent-section overview-links" aria-label={COPY.parentSyncHeading}>
+        <section className="parent-section overview-links" aria-labelledby="overview-sync-heading">
           <TabLink tab={OVERVIEW_LINKS.devices} onGo={onGo} className="overview-link-row">
             <TabletIcon size={20} />
             <span className="overview-detail">
