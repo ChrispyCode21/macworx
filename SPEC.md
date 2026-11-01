@@ -88,9 +88,13 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 
 **Overview** has, for the selected child:
 
-- **Summary:** her balance, streak, last counted day and completed assignments.
-- **Today's homework:** one number, the assignments she completed today (the parent's calendar day, not the last 24 hours). It has no "of" total. Any subject it names comes from data, never from fixed text.
+- **Today's homework:** one number, the assignments she completed today (her finished results whose day is the parent's calendar day, not the last 24 hours), with the unit "assignments done" ("assignment done" for 1). It has no "of" total and no progress bar. Any subject it names comes from data, never from fixed text. Under it, "N Macaronis earned today." shows when she earned any today (the `earnedToday` of the Points screen).
+- **Summary:** two tiles, her Macaronis (balance) and her streak in days, each with a Manage link to the Macaronis and Streak screens. Under them is one line with all her completed assignments and her last counted day.
+- **Today's assignments:** each assignment she finished today, newest first, with its grade, the time it was recorded and the Macaronis it earned. With none it says "No assignments yet today." A "View all" link goes to Results.
+- **Keep things in sync:** a row for her devices ("N connected devices", and when the latest of them last synced), linking to Devices, and a row for her rewards shop ("N rewards", and how many are within reach of her balance, left out at 0), linking to Shop. No "of".
 - **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
+
+Choosing a link keeps the selected child and does not reload the page.
 
 **Points** has, for the selected child:
 
@@ -399,6 +403,29 @@ The page's day helpers:
 | T9 | The preview for old streak 3, boxes 7 and 2026-10-16 | "Preview: Oct 10–16 · 3 → 7 days". Boxes 0 and empty → "Preview: no counted days · 3 → 0 days". Boxes 1 and 2026-10-16 → "Preview: Oct 16 · 3 → 1 day". Boxes that can't be sent → no preview |
 | T10 | The boxes as the Worker wants them (mirrors C2-C6) | "7" and 2026-10-16 → {7, 2026-10-16}; "0" and empty → {0, null}; "3" and empty → can't be sent; "3651", "2.5", "-1", "" or "abc" → can't be sent; "3650" accepted; a date that is not a real calendar day (20261-01-01, 2026-02-30) → can't be sent |
 
+### 7.O Overview (§5.3)
+
+The Worker's date is 2026-10-17 UTC; child 1; `today` = 2026-10-17 unless stated.
+
+| ID | Given | Expected |
+|---|---|---|
+| O1 | Finished results on 2026-10-17 (two, paying 24 and 28), a result she left early on 2026-10-17 (paying 2), a finished result on 2026-10-16 | `completedToday` **2**; `earnedToday` 54 (the left-early result earns but does not complete) |
+| O2 | No results at all | `completedToday` **0** |
+| O3 | A finished result on 2026-10-17 that belongs to another child | `completedToday` 0 for this child |
+| O4 | Finished results on 2026-10-17 (one) and 2026-10-18 (two); `today` = 2026-10-18 | `completedToday` **2**; with `today` absent, **1**. A `today` of 2026-02-30 or 2026-10-19 is 400 `bad_day` (as T5) |
+| O5 | A parent sets a streak (POST /api/parent/streak) when she has one finished result on 2026-10-17 | The answer includes `completedToday` **1** |
+| O6 | No Access token | Refused (401) on `GET /api/parent/summary` |
+
+The page's helpers (today is the browser's local 2026-10-17; timestamps are local times):
+
+| ID | Given | Expected |
+|---|---|---|
+| O7 | Hero count 0, 1, 2 and 1234 | "0 assignments done", "1 assignment done", "2 assignments done", "1,234 assignments done" |
+| O8 | Results: a finished one today (grade Excellent, 24 Macaronis, recorded 4:05 pm), a left-early one today, a finished one yesterday | One row: "Assignment · Excellent", "Completed today, 4:05 pm", "+24". The left-early and yesterday results are not listed. With none: "No assignments yet today." |
+| O9 | Devices: two connected (latest results Oct 12 and today 4:05 pm) and one unpaired (latest result today 5:30 pm) | "2 connected devices", "Last synced today, 4:05 pm" (the unpaired device's later result is ignored). With the connected device's latest result on Oct 12 only (and the unpaired one still at today 5:30 pm): "Last synced Oct 12". One connected, no results: "1 connected device", "No results yet". None connected: "0 connected devices", "No results yet" |
+| O10 | Balance 41, 29, 30, 10,000 and unknown | "4 rewards · 1 within reach", "4 rewards", "4 rewards · 1 within reach", "4 rewards · 4 within reach", "4 rewards" (never "of") |
+| O11 | The four shortcut links | "Manage Macaronis →" goes to /parent/points, "Manage streak →" to /parent/streak, the devices row to /parent/devices and the shop row to /parent/shop. Each has a real `href`, opens without a page load and keeps the selected child |
+
 ### 7.D Recorded results (§8)
 
 A parent opens a result the Worker recorded.
@@ -437,7 +464,7 @@ The parent API (every route needs a valid Access token, §6.9). A parent can lis
 - `DELETE /api/parent/devices/:id`: unpairs a device of the chosen child (logged).
 - `POST /api/parent/pairing-code { name }`: a new pairing code for a device with that name; the device that uses it belongs to the chosen child (logged).
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
-- `GET /api/parent/summary`: balance, streak, last counted day, completed assignments and `earnedToday`: the sum of the total paid on the chosen child's results whose day is the parent's calendar day (finished and left-early results count; parent adjustments do not), 0 with none. It takes an optional `today` query parameter, the parent's calendar day as `YYYY-MM-DD`. A value that is not a real date, or is more than 1 day from the Worker's UTC date, is 400 `bad_day`. Without it, the Worker's UTC date is used. The `child` check comes first.
+- `GET /api/parent/summary`: balance, streak, last counted day, completed assignments and `earnedToday`: the sum of the total paid on the chosen child's results whose day is the parent's calendar day (finished and left-early results count; parent adjustments do not), 0 with none, and `completedToday`: the number of the chosen child's finished results whose day is the parent's calendar day (results she left early do not count), 0 with none. `POST /api/parent/streak` answers with the same fields, for the Worker's UTC date. It takes an optional `today` query parameter, the parent's calendar day as `YYYY-MM-DD`. A value that is not a real date, or is more than 1 day from the Worker's UTC date, is 400 `bad_day`. Without it, the Worker's UTC date is used. The `child` check comes first.
 - `GET /api/parent/days`: for the chosen child, the days among the seven ending on the parent's calendar day on which she has at least one finished result, oldest first, each once: `{ days: ["2026-10-11", ...] }`. It takes the same optional `today` query parameter as `GET /api/parent/summary`, with the same rule (absent: the Worker's date; not a real date, or more than 1 day from the Worker's date: 400 `bad_day`, nothing read).
 - `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade, total paid and `createdAt` (when the Worker recorded the result, an ISO timestamp).
 - `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
