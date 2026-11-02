@@ -16,6 +16,38 @@ describe('name', () => {
     expect(cleanName(5)).toBeNull()
     expect(cleanName(undefined)).toBeNull()
   })
+  it('refuses a name with no visible character', () => {
+    for (const name of [
+      '\u200B',
+      '\u200B\u200B',
+      ' \u200B ',
+      '\u2060',
+      '\u00AD',
+      '\uFEFF',
+      '\u3164',
+      '\uFE0F',
+      '\u200D',
+    ]) {
+      expect(cleanName(name), JSON.stringify(name)).toBeNull()
+    }
+  })
+  it('refuses bidi override and isolate characters', () => {
+    for (const name of ['Sam\u202E', 'a\u2066b', 'a\u202A', 'a\u202E', 'a\u2066', 'a\u2069']) {
+      expect(cleanName(name), JSON.stringify(name)).toBeNull()
+    }
+  })
+  it('accepts joiners, marks and invisible characters inside a visible name', () => {
+    for (const name of [
+      'A\u200CB',
+      '\u{1F468}\u200D\u{1F469}\u200D\u{1F467}',
+      'Sa\u200Bm',
+      'Sam\u200E',
+      'Sam\u200F',
+      'سارة',
+    ]) {
+      expect(cleanName(name), JSON.stringify(name)).toBe(name)
+    }
+  })
   it('counts an emoji as one character', () => {
     expect(cleanName('😀'.repeat(40))).not.toBeNull()
     expect(cleanName('😀'.repeat(41))).toBeNull()
@@ -92,6 +124,7 @@ describe('checkChildFields', () => {
   })
   it('names the first field that is wrong', () => {
     expect(checkChildFields({ name: '' })).toEqual({ ok: false, error: 'bad_name' })
+    expect(checkChildFields({ name: '\u200B' })).toEqual({ ok: false, error: 'bad_name' })
     expect(checkChildFields({ name: 'Sam', grade: 'g'.repeat(21) })).toEqual({
       ok: false,
       error: 'bad_grade',
