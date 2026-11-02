@@ -14,6 +14,10 @@ export interface ChildFields {
 export type FieldError = 'bad_name' | 'bad_grade' | 'bad_initials'
 
 const CONTROL = /\p{Cc}/u
+/** Bidi embedding, override and isolate characters: U+202A to U+202E and U+2066 to U+2069. */
+const BIDI = /[\u202A-\u202E\u2066-\u2069]/u
+/** Only spaces, separators, control and default-ignorable characters: nothing a person can see. */
+const INVISIBLE_ONLY = /^[\p{Z}\p{Cc}\p{Default_Ignorable_Code_Point}\s]*$/u
 const LETTER = /^\p{L}$/u
 const INITIALS = /^\p{L}+$/u
 
@@ -37,11 +41,20 @@ export function fillInitials(name: string): string {
   return letters.slice(0, MAX_INITIALS).join('')
 }
 
-/** The trimmed name, or null when it isn't 1 to 40 characters without control characters. */
+/**
+ * The trimmed name, or null when it isn't 1 to 40 characters, has control characters or bidi
+ * override/isolate characters, or has no visible character (SPEC §5.3).
+ */
 export function cleanName(raw: unknown): string | null {
   if (typeof raw !== 'string') return null
   const name = raw.trim()
-  return length(name) >= 1 && length(name) <= MAX_NAME && !CONTROL.test(name) ? name : null
+  const ok =
+    length(name) >= 1 &&
+    length(name) <= MAX_NAME &&
+    !CONTROL.test(name) &&
+    !BIDI.test(name) &&
+    !INVISIBLE_ONLY.test(name)
+  return ok ? name : null
 }
 
 /** The trimmed grade (empty is fine), or null when it is over 20 characters or has control characters. */
