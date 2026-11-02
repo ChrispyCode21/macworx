@@ -182,7 +182,6 @@ export function Portal() {
     )
     // The page reads again, so the activity log shows the rename.
     setRenames((n) => n + 1)
-    trigger.current?.focus()
   }
 
   const onSwitcherKey = (e: KeyboardEvent) => {
