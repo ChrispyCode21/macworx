@@ -476,7 +476,11 @@ test('Rename on a row opens Overview in Rename mode for that child; the initials
 test('a rename that fails leaves focus on Save', async ({ page }) => {
   await portalApi(page)
   await page.route('/api/parent/children/1', (route) =>
-    route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'bad_name' }) }),
+    route.fulfill({
+      status: 400,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'bad_name' }),
+    }),
   )
   await page.goto('/parent/overview')
   await panel(page).getByRole('radio', { name: 'Rename' }).click()
