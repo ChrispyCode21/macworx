@@ -27,12 +27,32 @@ describe('name', () => {
       '\u3164',
       '\uFE0F',
       '\u200D',
+      '\u115F',
+      '\u1160',
+      '\uFFA0',
+      '\uFE00',
+      '\u{E0100}',
+      '\u2061',
+      '\u200B\u3164\uFE0F',
     ]) {
       expect(cleanName(name), JSON.stringify(name)).toBeNull()
     }
   })
   it('refuses bidi override and isolate characters', () => {
-    for (const name of ['Sam\u202E', 'a\u2066b', 'a\u202A', 'a\u202E', 'a\u2066', 'a\u2069']) {
+    for (const name of [
+      'Sam\u202E',
+      'a\u2066b',
+      'a\u202A',
+      'a\u202E',
+      'a\u2066',
+      'a\u2069',
+      '\u202ESam',
+      'S\u202Eam',
+      'a\u202B',
+      'a\u202C',
+      'a\u2067',
+      'a\u2068',
+    ]) {
       expect(cleanName(name), JSON.stringify(name)).toBeNull()
     }
   })
