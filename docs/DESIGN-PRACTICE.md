@@ -416,7 +416,7 @@ Final decisions on every Figma string:
 - Figma's sample name, grade, word, passage and questions are replaced by her data and section 15.
 - Dot separators are U+00B7 with a space each side; arrows are icons, not glyphs.
 
-**New strings (not in Figma; the owner approves them in the PR):**
+**New strings (not in Figma; approved by the owner):**
 
 - **Math:**
   - "{Operation} practice"
