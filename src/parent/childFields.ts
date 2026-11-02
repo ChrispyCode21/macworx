@@ -14,7 +14,7 @@ export interface ChildFields {
 export type FieldError = 'bad_name' | 'bad_grade' | 'bad_initials'
 
 const CONTROL = /\p{Cc}/u
-/** Bidi override and isolate characters: U+202A to U+202E and U+2066 to U+2069. */
+/** Bidi embedding, override and isolate characters: U+202A to U+202E and U+2066 to U+2069. */
 const BIDI = /[\u202A-\u202E\u2066-\u2069]/u
 /** Only spaces, separators, control and default-ignorable characters: nothing a person can see. */
 const INVISIBLE_ONLY = /^[\p{Z}\p{Cc}\p{Default_Ignorable_Code_Point}\s]*$/u

@@ -21,7 +21,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Changed
 
-- **Child names need a visible character (parents):** adding or renaming a child is refused when the name has nothing you can see (for example only zero-width spaces) or contains bidirectional override characters. Emoji sequences and names with joiners still work.
+- **Child names need a visible character (parents):** adding or renaming a child is refused when the name has nothing you can see (for example only zero-width spaces) or contains bidirectional control characters. Emoji sequences and names with joiners still work.
 - **Macaronis tab replaces the old form (parents):** the Add or Remove form and the Activity log table on the Macaronis tab are replaced by the Macaronis screen.
 - **Behind the scenes: each child's numbers are kept separate:** the parent and child sides now keep each child's numbers, results, devices and activity apart, and a pairing code is made for a chosen child (no visible change yet).
 - **Parent page is now a dashboard:** at `/parent`, a summary strip with her Macaroni balance, streak, last counted day and assignments done, then her Results (date, how many right, grade, Macaronis earned), the iPads, and an Activity log of changes made on the page. Its sections now live in the portal's tabs. Pairing and unpairing work as before.
