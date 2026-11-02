@@ -173,4 +173,6 @@ test('Home shows a Parents link that opens the portal with a full page load', as
   await documentLoad
   await expect(page).toHaveURL(/\/parent\/overview$/)
   await expect(page.getByRole('heading', { name: 'A little progress, daily.' })).toBeVisible()
+  // The heading shows before the reads answer; her summary showing proves the Overview drew it without throwing.
+  await expect(page.locator('.overview-hero-number')).toHaveText('0')
 })
