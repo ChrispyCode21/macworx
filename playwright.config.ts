@@ -1,13 +1,15 @@
 import { defineConfig, devices } from '@playwright/test'
 
 // Browser checks of the built app (SPEC §2): the app runs on an iPad, installed from Safari.
-// WebKit stands in for iPad Safari; Chromium catches engine-specific layout bugs.
+// WebKit stands in for iPad Safari; Chromium catches engine-specific layout bugs. A phone width (402, the native
+// phone frame in docs/DESIGN.md) runs only e2e/phone.spec.ts.
 const PORT = 4173
 
 const ipads = [
   { name: 'portrait', viewport: { width: 820, height: 1180 } },
   { name: 'landscape', viewport: { width: 1180, height: 820 } },
 ]
+const phone = { name: 'phone', viewport: { width: 402, height: 874 } }
 const browsers = [
   { name: 'webkit', use: devices['Desktop Safari'] },
   { name: 'chromium', use: devices['Desktop Chrome'] },
@@ -16,8 +18,10 @@ const browsers = [
 // The parent portal isn't iPad-specific (a parent's phone, tablet or computer), so its specs run on two
 // projects, not four: WebKit at 820 wide (the tablet side-bar range, 768px to 1023px) and Chromium at 1180
 // (the wide layout, 1024px and up). Both engines and both breakpoints stay covered; phone widths come from
-// the tests that call setViewportSize themselves.
+// the phone projects below (and from tests that call setViewportSize themselves).
 const PORTAL_SPECS = /(parent|portal)\.spec\.ts$/
+// The phone projects run this spec alone: her app and the wide portal tests assert iPad and tablet layouts.
+const PHONE_SPECS = /phone.spec.ts$/
 const runsPortal = (project: string) => project === 'webkit-portrait' || project === 'chromium-landscape'
 // Tapping through a whole assignment checks flow and payout, not orientation, so those tests run once per
 // engine (landscape). Each screen they reach keeps a layout check in portrait from a quicker test.
@@ -36,17 +40,22 @@ export default defineConfig({
     serviceWorkers: 'block',
     trace: 'retain-on-failure',
   },
-  projects: browsers.flatMap((browser) =>
-    ipads.map((ipad) => {
+  projects: browsers.flatMap((browser) => [
+    ...ipads.map((ipad) => {
       const name = `${browser.name}-${ipad.name}`
       return {
         name,
         use: { ...browser.use, viewport: ipad.viewport, hasTouch: true },
-        ...(runsPortal(name) ? {} : { testIgnore: PORTAL_SPECS }),
+        testIgnore: runsPortal(name) ? PHONE_SPECS : [PORTAL_SPECS, PHONE_SPECS],
         ...(ipad.name === 'portrait' ? { grepInvert: FULL_ASSIGNMENT } : {}),
       }
     }),
-  ),
+    {
+      name: `${browser.name}-${phone.name}`,
+      use: { ...browser.use, viewport: phone.viewport, hasTouch: true },
+      testMatch: PHONE_SPECS,
+    },
+  ]),
   // The production build under the production headers (vite.config.ts applies public/_headers).
   webServer: {
     command: `npm run build && npx vite preview --port ${PORT} --strictPort`,
