@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 
 // The parent portal's shell (SPEC §5.3): five tabs at their own addresses, the phone and wide layouts, and the
-// child switcher. /api/parent is answered by the test. The Playwright projects are both wide (820 and 1180);
-// phone widths set their own viewport.
+// child switcher. /api/parent is answered by the test. The 820 and 1180 projects are wide; the phone projects
+// (402) run phone.spec.ts, and other phone widths set their own viewport.
 
 const children = [
   { id: 1, name: 'Ada', grade: '4th grade', initials: 'A' },
