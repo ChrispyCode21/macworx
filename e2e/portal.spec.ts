@@ -459,14 +459,38 @@ test('Rename on a row opens Overview in Rename mode for that child; the initials
 
   await panel(page).getByLabel('Name', { exact: true }).fill('Zed Yu')
   calls.length = 0
-  await panel(page).getByRole('button', { name: 'Save' }).click()
+  // Driven from the keyboard: a mouse click does not focus a button in Safari.
+  const save = panel(page).getByRole('button', { name: 'Save' })
+  await save.focus()
+  await page.keyboard.press('Enter')
   await expect(panel(page).getByRole('status')).toHaveText('Saved. Zed Yu is up to date.')
   await expect(page.locator('.portal-switcher > button')).toContainText('Zed Yu')
-  await expect(page.locator('.portal-switcher > button')).toBeFocused()
+  await expect(save).toBeFocused()
+  await expect(page.locator('.portal-switcher > button')).not.toBeFocused()
   expect(calls).toContain('PATCH /api/parent/children/2')
   await page.locator('.portal-switcher > button').click()
   await expect(switcherList(page).getByRole('button', { name: 'Rename Zed Yu' })).toBeVisible()
   await expect(switcherList(page).locator('.portal-avatar').nth(1)).toHaveText('ZY')
+})
+
+test('a rename that fails leaves focus on Save', async ({ page }) => {
+  await portalApi(page)
+  await page.route('/api/parent/children/1', (route) =>
+    route.fulfill({
+      status: 400,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'bad_name' }),
+    }),
+  )
+  await page.goto('/parent/overview')
+  await panel(page).getByRole('radio', { name: 'Rename' }).click()
+  await panel(page).getByLabel('Name', { exact: true }).fill('Ada Q')
+  const save = panel(page).getByRole('button', { name: 'Save' })
+  await save.focus()
+  await page.keyboard.press('Enter')
+  await expect(panel(page).getByRole('alert')).toBeVisible()
+  await expect(save).toBeFocused()
+  await expect(page.locator('.portal-switcher > button')).not.toBeFocused()
 })
 
 test('Add keeps what is typed when another child is chosen, and clears it after a save', async ({ page }) => {

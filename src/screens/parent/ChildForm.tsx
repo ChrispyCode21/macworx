@@ -63,6 +63,15 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
   const [problem, setProblem] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const nameBox = useRef<HTMLInputElement>(null)
+  const saveBox = useRef<HTMLButtonElement>(null)
+  const refocusSave = useRef(false)
+
+  // Save is disabled while the request runs, which can drop its focus: in Rename it goes back once enabled.
+  useEffect(() => {
+    if (saving || !refocusSave.current) return
+    refocusSave.current = false
+    saveBox.current?.focus()
+  }, [saving])
 
   // Another mode, or in Rename another child: the boxes start over. Add's boxes don't follow the selection.
   const renaming = mode === 'rename' ? child : null
@@ -88,6 +97,7 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
     const checked = checkChildFields(fields)
     if (!checked.ok) return setProblem(fieldProblem(checked.error))
     // One request at a time, so a quick double click saves once.
+    refocusSave.current = mode === 'rename' && document.activeElement === saveBox.current
     setSaving(true)
     const result =
       mode === 'add' ? await addChild(checked.fields) : await renameChild(child.id, checked.fields)
@@ -142,7 +152,7 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
         autoCapitalize="characters"
         onChange={(e) => edit({ initials: e.target.value })}
       />
-      <Button onClick={onSave} disabled={saving || fields.name.trim() === ''}>
+      <Button ref={saveBox} onClick={onSave} disabled={saving || fields.name.trim() === ''}>
         {COPY.parentChildSave}
       </Button>
       {problem && (
