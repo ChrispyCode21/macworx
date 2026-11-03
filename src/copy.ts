@@ -37,8 +37,12 @@ export const COPY = {
   // The practice screens' frame (docs/DESIGN-PRACTICE.md §6, §13)
   /** Two spaces each side of the slash. */
   practiceCrumb: (subject: string) => `Practice  /  ${subject}`,
-  /** "{name} · {grade}"; just the name without a grade (docs/DESIGN-PRACTICE.md §6.2). */
-  practiceMeta: (name: string, grade: string) => (grade ? `${name} · ${grade}` : name),
+  /**
+   * "{name} · {grade}"; just the name without a grade (docs/DESIGN-PRACTICE.md §6.2). Each part is isolated
+   * (U+2068 ... U+2069) so a right-to-left name can't pull the grade's digit across the dot.
+   */
+  practiceMeta: (name: string, grade: string) =>
+    grade ? `\u2068${name}\u2069 · \u2068${grade}\u2069` : `\u2068${name}\u2069`,
   subjectMath: 'Math',
   mathTitle: 'A little practice, a little progress.',
   mathNote: "Take your time. There's no timer.",

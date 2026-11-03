@@ -28,7 +28,7 @@ describe('Assignment frame', () => {
       <Assignment seed={1} numbers={NUMBERS} child={child} onFinish={() => {}} onLeave={() => {}} />,
     )
     expect(html).toContain('>AL<')
-    expect(html).toContain('Ada · 4th grade')
+    expect(html).toContain('\u2068Ada\u2069 · \u20684th grade\u2069')
   })
 
   it('has no Check key on the pad and no Done for now button beside the progress', () => {

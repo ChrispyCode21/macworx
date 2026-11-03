@@ -204,7 +204,7 @@ Column, gap 12, height 90.
    - **Left: the back control**, a `crumb` button (7.4): arrow-left 18 + "Practice  /  {Subject}" (two spaces each side of the slash).
      - Math: it does what "Done for now" does today (SPEC §5.1 step 7). Its accessible name is the visible text, then `COPY.leave` ("Practice / Math, Done for now"), so the visible label is in the name (WCAG 2.5.3).
      - Spelling and Reading: it goes to Home.
-   - **Right:** crumb-meta "{name} · {grade}". Without a grade it shows "{name}"; without a name, nothing.
+   - **Right:** crumb-meta "{name} · {grade}". Without a grade it shows "{name}"; without a name, nothing. It stays on one line and a long name is cut with an ellipsis; the back control keeps its whole label, and a 12 gap keeps the two apart. The name and the grade are each bidi-isolated, so a right-to-left name doesn't reorder the grade.
 2. **Task row:** height 54, space-between, centered.
    - Left: task-title.
    - Right: the progress block, width 182, column, gap 10:

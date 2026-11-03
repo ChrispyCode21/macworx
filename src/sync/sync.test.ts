@@ -92,19 +92,20 @@ describe('sync', () => {
     queueResult(result(1))
     worker([], {
       'POST /api/results': () => json(201, { result: {}, state: { ...state, ...other } }),
+      'GET /api/state': () => 'offline',
+    })
+    await sync.sync()
+    // Only the state in the result reached her, so that is where the fields came from.
+    expect(getWorkerState()).toEqual({ ...state, ...other })
+
+    queueResult(result(2))
+    worker([], {
+      'POST /api/results': () => json(201, { result: {}, state: { ...state, ...other } }),
       'GET /api/state': () => json(200, { ...state, name: 7, grade: null, initials: ['x'], applied: [] }),
     })
     await sync.sync()
     // The state read last replaces the one before: a field that isn't a string is not kept.
     expect(getWorkerState()).toEqual(state)
-
-    queueResult(result(2))
-    worker([], {
-      'POST /api/results': () => json(201, { result: {}, state: { ...state, ...other } }),
-      'GET /api/state': () => json(200, { ...state, ...other, applied: [] }),
-    })
-    await sync.sync()
-    expect(getWorkerState()).toEqual({ ...state, ...other })
   })
 
   it('stops at the first result it cannot send, keeping it and the rest', async () => {
