@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { generateAssignment } from '../src/engine'
 import { postResult } from './child'
-import { createTestDb, migrationStatements, OTHER_KEY } from './test/db'
+import { CHILD2_KEY, createTestDb, migrationStatements, OTHER_KEY } from './test/db'
 
 let t: Awaited<ReturnType<typeof createTestDb>>
 beforeEach(async () => {
@@ -249,6 +249,34 @@ describe('state', () => {
     await t.call('POST', '/api/results', { body: { seed: s, day: '2026-10-17', answers: answers(s) } })
     const { body } = await t.call('GET', `/api/state?pending=${s},42`)
     expect(body.applied).toEqual([s])
+  })
+
+  it("returns the device's child: name, grade and initials", async () => {
+    await t.db
+      .prepare("UPDATE children SET name = 'Ada', grade = '4th grade', initials = 'AL' WHERE id = 1")
+      .run()
+    const own = { name: 'Ada', grade: '4th grade', initials: 'AL' }
+    expect((await t.call('GET', '/api/state')).body).toMatchObject(own)
+    // Another device of the same child sees the same; a device of another child sees its own.
+    expect((await t.call('GET', '/api/state', { key: OTHER_KEY })).body).toMatchObject(own)
+    expect((await t.call('GET', '/api/state', { key: CHILD2_KEY })).body).toMatchObject({
+      name: 'Second',
+      grade: '',
+      initials: 'S',
+    })
+  })
+
+  it('carries the same fields in a result, recorded now or already', async () => {
+    await t.db
+      .prepare("UPDATE children SET name = 'Ada', grade = '4th grade', initials = 'AL' WHERE id = 1")
+      .run()
+    const s = await seed()
+    const request = { body: { seed: s, day: '2026-10-17', answers: answers(s) } }
+    const first = await t.call('POST', '/api/results', request)
+    const again = await t.call('POST', '/api/results', request)
+    expect([first.status, again.status]).toEqual([201, 200])
+    for (const r of [first, again])
+      expect(r.body.state).toMatchObject({ name: 'Ada', grade: '4th grade', initials: 'AL' })
   })
 
   it('refuses a pending list that is too long or not seeds', async () => {

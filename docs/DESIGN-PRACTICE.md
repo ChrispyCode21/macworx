@@ -204,7 +204,7 @@ Column, gap 12, height 90.
    - **Left: the back control**, a `crumb` button (7.4): arrow-left 18 + "Practice  /  {Subject}" (two spaces each side of the slash).
      - Math: it does what "Done for now" does today (SPEC §5.1 step 7). Its accessible name is the visible text, then `COPY.leave` ("Practice / Math, Done for now"), so the visible label is in the name (WCAG 2.5.3).
      - Spelling and Reading: it goes to Home.
-   - **Right:** crumb-meta "{name} · {grade}". Without a grade it shows "{name}"; without a name, nothing.
+   - **Right:** crumb-meta "{name} · {grade}". Without a grade it shows "{name}"; without a name, nothing. It stays on one line and a long name is cut with an ellipsis; the back control keeps its whole label, and a 12 gap keeps the two apart. The name and the grade are each bidi-isolated, so a right-to-left name doesn't reorder the grade.
 2. **Task row:** height 54, space-between, centered.
    - Left: task-title.
    - Right: the progress block, width 182, column, gap 10:
@@ -444,7 +444,7 @@ Final decisions on every Figma string:
 | Element | Kind | Source |
 |---|---|---|
 | Top bar Macaroni balance, streak | Real | `numbers` from `homeNumbers()` (ARCHITECTURE "Home numbers"), hidden exactly when Home hides them (SPEC §5.1 step 1) |
-| Avatar `{initials}`, "{name} · {grade}" | Real, new field | `children.name`, `grade` and `initials` exist, but `GET /api/state` doesn't return them. Add them to it and keep them with the Worker's state on the iPad. Until then the avatar and the meta line are left out. |
+| Avatar `{initials}`, "{name} · {grade}" | Real | `GET /api/state` returns `children.name`, `grade` and `initials`, and the iPad keeps them with the Worker's state. Until the iPad has them, the avatar and the meta line are left out. |
 | Shop control | Not built | no child Shop screen yet; behavior settled (section 6.1, #123) |
 | Problem, progress, Check, response | Real | engine `generateAssignment`, `checkAnswer`; unchanged flow (SPEC §5.1) |
 | Spelling words, sentences, choices; passage, hint, questions, choices, skills | Sample | one module, `src/practice/samples.ts`, content in section 15 |

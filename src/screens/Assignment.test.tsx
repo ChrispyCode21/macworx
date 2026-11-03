@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import type { HomeNumbers } from '../sync/projection'
+import type { HomeNumbers, PracticeChild } from '../sync/projection'
 import { Assignment } from './Assignment'
 
 const NUMBERS: HomeNumbers = { balance: 40, completed: 2, streak: 3, latestGrade: null }
@@ -20,6 +20,15 @@ describe('Assignment frame', () => {
       /<button[^>]*disabled=""[^>]*class="button button-action"|class="button button-action"[^>]*disabled=""/,
     )
     expect(html).toContain('Take your time. There&#x27;s no timer.')
+  })
+
+  it('shows her avatar and "{name} · {grade}" from the child it opens with', () => {
+    const child: PracticeChild = { name: 'Ada', grade: '4th grade', initials: 'AL' }
+    const html = renderToStaticMarkup(
+      <Assignment seed={1} numbers={NUMBERS} child={child} onFinish={() => {}} onLeave={() => {}} />,
+    )
+    expect(html).toContain('>AL<')
+    expect(html).toContain('\u2068Ada\u2069 · \u20684th grade\u2069')
   })
 
   it('has no Check key on the pad and no Done for now button beside the progress', () => {

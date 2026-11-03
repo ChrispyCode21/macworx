@@ -2537,6 +2537,30 @@ p {
   font-weight: 600;
 }
 
+.practice-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--l-avatar);
+  color: var(--l-text);
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.practice-meta {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--l-muted);
+  font-size: 14px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .practice-work {
   flex: 1;
   display: flex;
@@ -2557,7 +2581,13 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   height: 24px;
+}
+
+/* Only the meta line gives way to a long name; the back control keeps its whole label. */
+.practice-context .button-crumb {
+  flex-shrink: 0;
 }
 
 .practice-task {

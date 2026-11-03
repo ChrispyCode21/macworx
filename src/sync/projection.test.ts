@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { generateAssignment } from '../engine'
 import type { QueuedResult, WorkerState } from '../storage/device'
-import { homeNumbers, nextResult, project } from './projection'
+import { homeNumbers, nextResult, practiceChild, project } from './projection'
 
 const TODAY = '2026-10-17'
 const answersFor = (seed: number) => generateAssignment(seed).map((p) => p.answer)
@@ -13,6 +13,25 @@ const state = (over: Partial<WorkerState> = {}): WorkerState => ({
   completed: 10,
   latestGrade: 'Good',
   ...over,
+})
+
+describe('her name, grade and initials', () => {
+  const child = { name: 'Ada', grade: '4th grade', initials: 'AL' }
+
+  it('survive a finished and a left-early result', () => {
+    const early: QueuedResult = { seed: 2, day: TODAY, answers: answersFor(2).slice(0, 5) }
+    expect(project(state(child), [finished(1)])).toMatchObject(child)
+    expect(project(state(child), [early])).toMatchObject(child)
+  })
+
+  it('practiceChild gives them for the practice top bar, or null without a name or initials', () => {
+    expect(practiceChild(null)).toBeNull()
+    expect(practiceChild(state())).toBeNull() // stored before the Worker sent them
+    expect(practiceChild(state({ name: '', grade: '4th grade', initials: '' }))).toBeNull()
+    expect(practiceChild(state(child))).toEqual(child)
+    expect(practiceChild(state({ name: 'Ada' }))).toEqual({ name: 'Ada', grade: '', initials: '' })
+    expect(practiceChild(state({ initials: 'AL' }))).toEqual({ name: '', grade: '', initials: 'AL' })
+  })
 })
 
 describe('project', () => {

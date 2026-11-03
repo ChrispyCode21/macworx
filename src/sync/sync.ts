@@ -100,8 +100,18 @@ async function syncOnce(): Promise<SyncOutcome> {
     (await response.json().catch(() => null)) as Record<string, unknown> | null
   const saveState = (state: unknown) => {
     if (typeof state !== 'object' || state === null) return
-    const { balance, streak, lastDay, completed, latestGrade } = state as WorkerState
-    if (typeof balance === 'number') setWorkerState({ balance, streak, lastDay, completed, latestGrade })
+    const { balance, streak, lastDay, completed, latestGrade, name, grade, initials } = state as WorkerState
+    if (typeof balance !== 'number') return
+    setWorkerState({
+      balance,
+      streak,
+      lastDay,
+      completed,
+      latestGrade,
+      ...(typeof name === 'string' && { name }),
+      ...(typeof grade === 'string' && { grade }),
+      ...(typeof initials === 'string' && { initials }),
+    })
   }
 
   // Oldest first. One the Worker can't take right now holds the rest back, but seeds still top up.
