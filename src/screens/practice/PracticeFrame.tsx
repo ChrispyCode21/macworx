@@ -85,7 +85,7 @@ export function PracticeFrame({
         </div>
         <div className="practice-activity">{children}</div>
         <div className="practice-actions">
-          <p className="practice-note">{note}</p>
+          {note && <p className="practice-note">{note}</p>}
           <div className="practice-buttons">{actions}</div>
         </div>
       </main>

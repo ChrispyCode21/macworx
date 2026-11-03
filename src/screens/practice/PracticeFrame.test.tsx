@@ -1,11 +1,13 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { HomeNumbers } from '../../sync/projection'
+import { COPY } from '../../copy'
+import { Home } from '../Home'
 import { PracticeFrame } from './PracticeFrame'
 
 const NUMBERS: HomeNumbers = { balance: 1204, completed: 3, streak: 7, latestGrade: null }
 
-const render = (numbers?: HomeNumbers) =>
+const render = (numbers?: HomeNumbers, note: string | undefined = 'A note') =>
   renderToStaticMarkup(
     <PracticeFrame
       numbers={numbers}
@@ -14,7 +16,7 @@ const render = (numbers?: HomeNumbers) =>
       progress={{ label: 'Problem 4 of 20', done: 4, total: 20 }}
       onBack={() => {}}
       backLabel="Done for now"
-      note="A note"
+      note={note}
       actions={<span>actions</span>}
     >
       <span>activity</span>
@@ -61,5 +63,32 @@ describe('PracticeFrame', () => {
     const html = render(NUMBERS)
     expect(html).not.toContain('Shop')
     expect(html).not.toContain('avatar')
+  })
+
+  it('leaves out the note paragraph when there is none', () => {
+    expect(render(NUMBERS, 'A note')).toContain('practice-note')
+    const html = render(NUMBERS, '')
+    expect(html).not.toContain('practice-note')
+    expect(html).toContain('practice-buttons')
+  })
+
+  it('hides the chips on the same inputs as Home hides the numbers', () => {
+    const home = (numbers?: HomeNumbers) =>
+      renderToStaticMarkup(<Home onStart={() => {}} numbers={numbers} />)
+    const cases: [string, HomeNumbers | undefined][] = [
+      ['no numbers', undefined],
+      ['streak null', { ...NUMBERS, streak: null }],
+      ['streak 0', { ...NUMBERS, streak: 0 }],
+      ['balance 0', { ...NUMBERS, balance: 0 }],
+    ]
+    for (const [name, numbers] of cases) {
+      const frame = render(numbers)
+      const page = home(numbers)
+      const balance = numbers ? COPY.macaronis(numbers.balance) : 'no numbers'
+      expect(frame.includes(balance), name + ': balance').toBe(page.includes(balance))
+      const streak = numbers?.streak == null ? 'no streak' : COPY.streakChip(numbers.streak)
+      const homeStreak = numbers?.streak == null ? 'no streak' : COPY.streakDays(numbers.streak)
+      expect(frame.includes(streak), name + ': streak').toBe(page.includes(homeStreak))
+    }
   })
 })
