@@ -2611,7 +2611,7 @@ p {
   gap: 24px;
 }
 
-/* Landscape: the problem beside the pad. Below this a portrait iPad stacks them, problem first. */
+/* 1024px wide and up (landscape iPads, and a portrait 12.9-inch iPad Pro): the problem beside the pad. Narrower, they stack, problem first (docs/DESIGN-PRACTICE.md §3). */
 @media (min-width: 1024px) {
   .practice-activity {
     grid-template-columns: minmax(0, 650fr) minmax(0, 440fr);

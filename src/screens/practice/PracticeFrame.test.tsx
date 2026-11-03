@@ -43,10 +43,10 @@ describe('PracticeFrame', () => {
     expect(none).not.toContain('day')
   })
 
-  it('the crumb has two spaces round the slash and is named Done for now', () => {
+  it('the crumb has two spaces round the slash and is named by its visible text, then Done for now', () => {
     const html = render()
     expect(html).toContain('Practice  /  Math')
-    expect(html).toContain('aria-label="Done for now"')
+    expect(html).toContain('aria-label="Practice  /  Math, Done for now"')
     expect(html).toContain('button-crumb')
   })
 

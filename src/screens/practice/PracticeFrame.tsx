@@ -11,7 +11,7 @@ interface Props {
   title: string
   progress: { label: string; done: number; total: number }
   onBack: () => void
-  /** The back control's accessible name. */
+  /** What the back control does; its accessible name is the visible crumb text, then this (WCAG 2.5.3). */
   backLabel: string
   note?: string
   /** The activity row: the problem and the pad. */
@@ -61,7 +61,11 @@ export function PracticeFrame({
       <main className="practice-work">
         <div className="practice-heading">
           <div className="practice-context">
-            <Button variant="crumb" aria-label={backLabel} onClick={onBack}>
+            <Button
+              variant="crumb"
+              aria-label={`${COPY.practiceCrumb(subject)}, ${backLabel}`}
+              onClick={onBack}
+            >
               <ArrowLeftIcon />
               {COPY.practiceCrumb(subject)}
             </Button>
