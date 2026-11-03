@@ -47,6 +47,8 @@ async function finishRight(page: Page) {
     for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
     await expect(problem).toHaveAttribute('data-shown', String(value))
     await page.getByRole('button', { name: 'Check' }).click()
+    // Next ignores taps for a moment after Check.
+    await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
     await page.getByRole('button', { name: n === 20 ? 'See how I did' : 'Next' }).click()
   }
 }

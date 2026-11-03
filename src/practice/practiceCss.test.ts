@@ -41,6 +41,17 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(practice).not.toMatch(/\d(rem|em)\b/)
   })
 
+  it('keeps full opacity on a disabled choice, and styles right and not right after Check', () => {
+    expect(practice).toMatch(/\.button-choice:disabled\s*\{\s*opacity:\s*1;/)
+    expect(practice).toContain(".button-choice[data-result='right']")
+    expect(practice).toContain(".button-choice[data-result='not-right']")
+  })
+
+  it('does not reset the font size or cap the pad width', () => {
+    expect(practice).not.toMatch(/\.practice\s*\{[^}]*font-size/)
+    expect(practice).not.toContain('max-width: 360px')
+  })
+
   it('uses font weights 400, 500 and 600 only', () => {
     const weights = [...practice.matchAll(/font-weight:\s*(\d+)/g)].map((m) => m[1])
     expect(weights.length).toBeGreaterThan(0)

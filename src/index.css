@@ -2483,7 +2483,6 @@ p {
   flex-direction: column;
   background: var(--l-bg);
   color: var(--l-text);
-  font-size: 16px;
 }
 
 .practice *,
@@ -2634,7 +2633,6 @@ p {
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   width: 100%;
-  max-width: 360px;
 }
 
 .practice .response {
@@ -2766,5 +2764,45 @@ p {
   border: 2px solid var(--l-link);
   background: var(--l-chip);
   font-weight: 600;
+}
+
+/* The letter marker: a 32px circle, filled once the choice is chosen. */
+.choice-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--l-bg);
+  color: var(--l-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.button-choice[aria-checked='true'] .choice-marker,
+.button-choice[data-result] .choice-marker {
+  background: var(--l-primary);
+  color: var(--l-primary-ink);
+}
+
+/* After Check (docs/DESIGN-PRACTICE.md §7.3): soft green when right, soft coral when not. */
+.button-choice[data-result='right'] {
+  border: 2px solid var(--right-edge);
+  background: var(--right-soft);
+  font-weight: 600;
+}
+
+.button-choice[data-result='not-right'] {
+  border: 2px solid var(--not-right-edge);
+  background: var(--not-right-soft);
+  font-weight: 600;
+}
+
+/* Choices are disabled after Check, with no opacity change. */
+.button-choice:disabled {
+  opacity: 1;
 }
 /* practice: end */

@@ -16,6 +16,7 @@ import { ArrowRightIcon, CheckIcon } from '../practice/icons'
 import type { HomeNumbers } from '../sync/projection'
 import { Button } from '../ui/Button'
 import { formatEquation } from '../ui/format'
+import { READY_AFTER_MS, useReadyAfter, whenReady } from '../ui/useReadyAfter'
 import { PracticeFrame } from './practice/PracticeFrame'
 
 interface Props {
@@ -25,6 +26,20 @@ interface Props {
   /** Her answers in order, one per problem she checked. */
   onFinish: (answers: number[], correct: number) => void
   onLeave: (answers: number[], correct: number) => void
+}
+
+/**
+ * Next sits where Check just was. For a moment after it appears it ignores taps, so a double tap on Check
+ * can't also skip her result (SPEC §5.1 step 4). Mounted fresh after Check, so it takes focus.
+ */
+function NextButton({ label, onClick }: { label: string; onClick: () => void }) {
+  const ready = useReadyAfter(READY_AFTER_MS)
+  return (
+    <Button autoFocus variant="action" data-ready={ready || undefined} onClick={whenReady(ready, onClick)}>
+      {label}
+      <ArrowRightIcon />
+    </Button>
+  )
 }
 
 /** One assignment, a problem at a time (SPEC §5.1). */
@@ -51,6 +66,7 @@ export function Assignment({ seed, numbers, onFinish, onLeave }: Props) {
     setResponse(right ? 'correct' : 'shown')
   }
   const next = () => {
+    if (response === null) return
     if (last) return onFinish(answers, correct)
     setIndex((i) => i + 1)
     setTyped('')
@@ -78,16 +94,14 @@ export function Assignment({ seed, numbers, onFinish, onLeave }: Props) {
       note={COPY.mathNote}
       actions={
         // A new button for each step, so focus moves to Next after Check (it is one tap or swipe away).
-        <Button
-          key={response ? 'next' : 'check'}
-          variant="action"
-          autoFocus={response !== null}
-          disabled={response === null && typed === ''}
-          onClick={response ? next : check}
-        >
-          {response ? (last ? COPY.seeResult : COPY.next) : COPY.check}
-          {response ? <ArrowRightIcon /> : <CheckIcon />}
-        </Button>
+        response ? (
+          <NextButton key="next" label={last ? COPY.seeResult : COPY.next} onClick={next} />
+        ) : (
+          <Button key="check" variant="action" disabled={typed === ''} onClick={check}>
+            {COPY.check}
+            <CheckIcon />
+          </Button>
+        )
       }
     >
       <div className="practice-problem">
