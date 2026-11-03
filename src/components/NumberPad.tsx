@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
 import { COPY } from '../copy'
 import { DeleteIcon } from '../practice/icons'
 import { Button } from '../ui/Button'
+import { useReadyAfter, whenReady } from '../ui/useReadyAfter'
 
 /**
- * The pad appears where the Next button just was. Ignoring taps this long after it appears keeps a
- * double tap on Next from typing a digit into the next problem.
+ * The pad mounts fresh with each problem. Ignoring taps this long after it appears keeps a late tap from the
+ * problem before from typing a digit into the new one.
  */
 const READY_AFTER_MS = 350
 
@@ -30,42 +30,36 @@ export function NumberPad({
   checkLabel = COPY.check,
   practice = false,
 }: Props) {
-  const [ready, setReady] = useState(false)
-  useEffect(() => {
-    const timer = setTimeout(() => setReady(true), READY_AFTER_MS)
-    return () => clearTimeout(timer)
-  }, [])
-  const whenReady = (action: () => void) => () => {
-    if (ready) action()
-  }
+  const ready = useReadyAfter(READY_AFTER_MS)
+  const guard = (action: () => void) => whenReady(ready, action)
 
   return (
     <div className="pad" data-ready={ready || undefined}>
       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
         // The first key takes focus, so VoiceOver lands on the pad for each new problem.
-        <Button key={d} variant="key" autoFocus={d === 1} onClick={whenReady(() => onDigit(d))}>
+        <Button key={d} variant="key" autoFocus={d === 1} onClick={guard(() => onDigit(d))}>
           {d}
         </Button>
       ))}
       {practice ? (
         <>
           <span />
-          <Button variant="key" onClick={whenReady(() => onDigit(0))}>
+          <Button variant="key" onClick={guard(() => onDigit(0))}>
             0
           </Button>
-          <Button variant="key" aria-label={COPY.delete} onClick={whenReady(onDelete)}>
+          <Button variant="key" aria-label={COPY.delete} onClick={guard(onDelete)}>
             <DeleteIcon />
           </Button>
         </>
       ) : (
         <>
-          <Button variant="key" aria-label={COPY.delete} onClick={whenReady(onDelete)}>
+          <Button variant="key" aria-label={COPY.delete} onClick={guard(onDelete)}>
             {COPY.deleteKey}
           </Button>
-          <Button variant="key" onClick={whenReady(() => onDigit(0))}>
+          <Button variant="key" onClick={guard(() => onDigit(0))}>
             0
           </Button>
-          <Button variant="check" disabled={!canCheck} onClick={whenReady(() => onCheck?.())}>
+          <Button variant="check" disabled={!canCheck} onClick={guard(() => onCheck?.())}>
             {checkLabel}
           </Button>
         </>

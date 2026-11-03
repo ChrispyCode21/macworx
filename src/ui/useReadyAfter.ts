@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-/** How long the action button ignores taps once it reads Next (the number pad uses the same 350 ms). */
+/** How long the action button and the number pad ignore taps after they appear. */
 export const READY_AFTER_MS = 350
 
 /** Calls `callback` after `ms`; the returned function cancels it. */
@@ -15,11 +15,12 @@ export const whenReady = (ready: boolean, action: () => void) => () => {
 }
 
 /**
- * False for `ms` after the component mounts, then true. With 0 it is true at once. The action button uses
- * it so a quick double tap on Check can't also tap Next (SPEC §5.1 step 4: nothing moves on by itself).
+ * False for `ms` after the component mounts, then true. The action button uses it so a quick double tap on
+ * Check can't also tap Next, and the number pad uses it so a stray tap can't type into a problem that just
+ * appeared (SPEC §5.1 step 4: nothing moves on by itself).
  */
 export function useReadyAfter(ms: number): boolean {
-  const [ready, setReady] = useState(ms === 0)
-  useEffect(() => (ms === 0 ? undefined : afterDelay(() => setReady(true), ms)), [ms])
+  const [ready, setReady] = useState(false)
+  useEffect(() => afterDelay(() => setReady(true), ms), [ms])
   return ready
 }

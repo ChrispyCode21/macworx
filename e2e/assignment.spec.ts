@@ -101,16 +101,15 @@ test('leaves partway and keeps the Macaronis earned so far', async ({ page }) =>
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
 })
 
-test('a quick second tap on Next does not type into the next problem', async ({ page }) => {
+test('a tap on the pad right after Next does not type into the next problem', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Start' }).click()
   await answer(page, await currentAnswer(page))
-  const next = page.getByRole('button', { name: 'Next' })
-  const box = (await next.boundingBox())!
-  // Two taps at the same spot: the second lands wherever the pad now is.
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+  const key = (await page.getByRole('button', { name: '5', exact: true }).boundingBox())!
+  await page.getByRole('button', { name: 'Next' }).click()
   await expect(page.getByText('Problem 2 of 20')).toBeVisible()
+  // The new pad ignores taps for a moment; this one lands on its 5 key straight away.
+  await page.mouse.click(key.x + key.width / 2, key.y + key.height / 2)
   await expect(page.locator('.stacked')).toHaveAttribute('data-shown', '')
 })
 
