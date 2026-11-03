@@ -214,3 +214,17 @@ test('Check sits at the bottom right of the screen', async ({ page }) => {
   // Portrait scrolls, so only the horizontal side is fixed there; in landscape it is also the lower half.
   if (view.width > view.height) expect(box.y + box.height / 2).toBeGreaterThan(view.height / 2)
 })
+
+test('in landscape the whole practice screen fits the viewport height', async ({ page }) => {
+  const view = page.viewportSize()!
+  test.skip(view.width <= view.height, 'Portrait scrolls.')
+  await openApp(page, false, { 'macworx.seeds': [31] })
+  await page.getByRole('button', { name: 'Start' }).click()
+  const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
+  expect(box.y + box.height).toBeLessThanOrEqual(view.height)
+  const scroll = await page.evaluate(() => ({
+    scrollHeight: document.documentElement.scrollHeight,
+    clientHeight: document.documentElement.clientHeight,
+  }))
+  expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
+})

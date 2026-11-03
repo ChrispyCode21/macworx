@@ -104,8 +104,9 @@ test('leaves partway and keeps the Macaronis earned so far', async ({ page }) =>
 test('a tap on the pad right after Next does not type into the next problem', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Start' }).click()
-  await answer(page, await currentAnswer(page))
+  await padReady(page)
   const key = (await page.getByRole('button', { name: '5', exact: true }).boundingBox())!
+  await answer(page, await currentAnswer(page))
   await page.getByRole('button', { name: 'Next' }).click()
   await expect(page.getByText('Problem 2 of 20')).toBeVisible()
   // The new pad ignores taps for a moment; this one lands on its 5 key straight away.
