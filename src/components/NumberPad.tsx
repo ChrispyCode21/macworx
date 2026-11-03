@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { COPY } from '../copy'
+import { DeleteIcon } from '../practice/icons'
 import { Button } from '../ui/Button'
 
 /**
@@ -11,14 +12,24 @@ const READY_AFTER_MS = 350
 interface Props {
   onDigit: (digit: number) => void
   onDelete: () => void
-  onCheck: () => void
-  canCheck: boolean
+  /** The Check key (the pairing screen's); the practice pad has none, its Check is in the actions row. */
+  onCheck?: () => void
+  canCheck?: boolean
   /** The Check key's label; the pairing screen calls it Pair. */
   checkLabel?: string
+  /** The practice layout (docs/DESIGN-PRACTICE.md §8): no Check key, a delete icon, 0 at the bottom centre. */
+  practice?: boolean
 }
 
 /** The on-screen number pad (SPEC §5.1): the iPad keyboard never opens. */
-export function NumberPad({ onDigit, onDelete, onCheck, canCheck, checkLabel = COPY.check }: Props) {
+export function NumberPad({
+  onDigit,
+  onDelete,
+  onCheck,
+  canCheck = false,
+  checkLabel = COPY.check,
+  practice = false,
+}: Props) {
   const [ready, setReady] = useState(false)
   useEffect(() => {
     const timer = setTimeout(() => setReady(true), READY_AFTER_MS)
@@ -36,15 +47,29 @@ export function NumberPad({ onDigit, onDelete, onCheck, canCheck, checkLabel = C
           {d}
         </Button>
       ))}
-      <Button variant="key" aria-label={COPY.delete} onClick={whenReady(onDelete)}>
-        {COPY.deleteKey}
-      </Button>
-      <Button variant="key" onClick={whenReady(() => onDigit(0))}>
-        0
-      </Button>
-      <Button variant="check" disabled={!canCheck} onClick={whenReady(onCheck)}>
-        {checkLabel}
-      </Button>
+      {practice ? (
+        <>
+          <span />
+          <Button variant="key" onClick={whenReady(() => onDigit(0))}>
+            0
+          </Button>
+          <Button variant="key" aria-label={COPY.delete} onClick={whenReady(onDelete)}>
+            <DeleteIcon />
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button variant="key" aria-label={COPY.delete} onClick={whenReady(onDelete)}>
+            {COPY.deleteKey}
+          </Button>
+          <Button variant="key" onClick={whenReady(() => onDigit(0))}>
+            0
+          </Button>
+          <Button variant="check" disabled={!canCheck} onClick={whenReady(() => onCheck?.())}>
+            {checkLabel}
+          </Button>
+        </>
+      )}
     </div>
   )
 }

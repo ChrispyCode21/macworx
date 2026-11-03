@@ -34,6 +34,14 @@ export const COPY = {
     } = `,
   completedCount: (n: number) => `${formatNumber(n)} ${n === 1 ? 'assignment' : 'assignments'} done`,
   streakDays: (n: number) => `${formatNumber(n)} day streak`,
+  // The practice screens' frame (docs/DESIGN-PRACTICE.md §6, §13)
+  /** Two spaces each side of the slash. */
+  practiceCrumb: (subject: string) => `Practice  /  ${subject}`,
+  subjectMath: 'Math',
+  mathTitle: 'A little practice, a little progress.',
+  mathNote: "Take your time. There's no timer.",
+  /** The top bar's streak chip. */
+  streakChip: (n: number) => `${formatNumber(n)} ${n === 1 ? 'day' : 'days'}`,
   latestGrade: (grade: Grade) => `Latest: ${grade}`,
   anotherOne: 'Do another one',
   // Pairing her device (SPEC §5.4)

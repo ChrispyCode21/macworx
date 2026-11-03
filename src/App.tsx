@@ -110,6 +110,7 @@ function ChildApp() {
         <Assignment
           key={screen.seed}
           seed={screen.seed}
+          numbers={numbers}
           onFinish={(answers, correct) => {
             // One clock reading, so the streak bonus is priced on the day the result is dated.
             const now = new Date()

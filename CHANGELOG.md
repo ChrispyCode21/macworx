@@ -21,6 +21,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Changed
 
+- **Her assignment screen has a new frame:** a top bar with her Macaronis and streak (left out when Home leaves them out), the title with "Problem n of 20" and a progress bar, a "Practice / Math" back link that does what "Done for now" did, and a Check or Next button at the bottom right. The number pad no longer has a Check key.
 - **Focus after renaming a child (parents):** after a rename saves, keyboard focus stays on Save, so the "Saved" message is read where you are working. Adding a child still moves focus to the page heading.
 - **Child names need a visible character (parents):** adding or renaming a child is refused when the name has nothing you can see (for example only zero-width spaces) or contains bidirectional control characters. Emoji sequences and names with joiners still work.
 - **Macaronis tab replaces the old form (parents):** the Add or Remove form and the Activity log table on the Macaronis tab are replaced by the Macaronis screen.
