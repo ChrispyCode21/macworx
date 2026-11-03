@@ -85,6 +85,15 @@ describe('seeds, queue and state', () => {
     expect([getDeviceKey(), getSeeds(), getQueue(), getWorkerState()]).toEqual([null, [], [], null])
   })
 
+  it('keeps her name, grade and initials, and still reads a state stored without them', () => {
+    globalThis.localStorage = fakeStorage()
+    const withChild = { ...state, name: 'Ada', grade: '4th grade', initials: 'AL' }
+    setWorkerState(withChild)
+    expect(getWorkerState()).toEqual(withChild)
+    localStorage.setItem('macworx.state', JSON.stringify(state))
+    expect(getWorkerState()).toEqual(state)
+  })
+
   it('reads anything it cannot make sense of as empty', () => {
     globalThis.localStorage = fakeStorage()
     localStorage.setItem('macworx.seeds', '{not json')

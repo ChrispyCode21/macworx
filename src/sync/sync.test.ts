@@ -82,6 +82,31 @@ describe('sync', () => {
     expect(getWorkerState()).toEqual(state)
   })
 
+  it('keeps her name, grade and initials from /api/state and from a result, and only strings', async () => {
+    const child = { name: 'Ada', grade: '4th grade', initials: 'AL' }
+    worker([], { 'GET /api/state': () => json(200, { ...state, ...child, applied: [] }) })
+    await sync.sync()
+    expect(getWorkerState()).toEqual({ ...state, ...child })
+
+    const other = { name: 'Bo', grade: '', initials: 'B' }
+    queueResult(result(1))
+    worker([], {
+      'POST /api/results': () => json(201, { result: {}, state: { ...state, ...other } }),
+      'GET /api/state': () => json(200, { ...state, name: 7, grade: null, initials: ['x'], applied: [] }),
+    })
+    await sync.sync()
+    // The state read last replaces the one before: a field that isn't a string is not kept.
+    expect(getWorkerState()).toEqual(state)
+
+    queueResult(result(2))
+    worker([], {
+      'POST /api/results': () => json(201, { result: {}, state: { ...state, ...other } }),
+      'GET /api/state': () => json(200, { ...state, ...other, applied: [] }),
+    })
+    await sync.sync()
+    expect(getWorkerState()).toEqual({ ...state, ...other })
+  })
+
   it('stops at the first result it cannot send, keeping it and the rest', async () => {
     queueResult(result(1))
     queueResult(result(2))

@@ -13,7 +13,7 @@ import { StackedProblem } from '../components/StackedProblem'
 import { COPY } from '../copy'
 import { checkAnswer, generateAssignment } from '../engine'
 import { ArrowRightIcon, CheckIcon } from '../practice/icons'
-import type { HomeNumbers } from '../sync/projection'
+import type { HomeNumbers, PracticeChild } from '../sync/projection'
 import { Button } from '../ui/Button'
 import { formatEquation } from '../ui/format'
 import { READY_AFTER_MS, useReadyAfter, whenReady } from '../ui/useReadyAfter'
@@ -23,6 +23,8 @@ interface Props {
   seed: number
   /** The numbers Home showed; the top bar keeps them for the whole assignment. */
   numbers?: HomeNumbers
+  /** Her name, grade and initials; the top bar keeps them for the whole assignment too. */
+  child?: PracticeChild | null
   /** Her answers in order, one per problem she checked. */
   onFinish: (answers: number[], correct: number) => void
   onLeave: (answers: number[], correct: number) => void
@@ -43,10 +45,11 @@ function NextButton({ label, onClick }: { label: string; onClick: () => void }) 
 }
 
 /** One assignment, a problem at a time (SPEC §5.1). */
-export function Assignment({ seed, numbers, onFinish, onLeave }: Props) {
+export function Assignment({ seed, numbers, child, onFinish, onLeave }: Props) {
   const problems = useMemo(() => generateAssignment(seed), [seed])
   // Frozen when the assignment opens, so a background sync can't change the top bar mid-assignment.
   const [shownNumbers] = useState(() => numbers)
+  const [shownChild] = useState(() => child)
   const [index, setIndex] = useState(0)
   const [typed, setTyped] = useState('')
   const [correct, setCorrect] = useState(0)
@@ -79,6 +82,7 @@ export function Assignment({ seed, numbers, onFinish, onLeave }: Props) {
   return (
     <PracticeFrame
       numbers={shownNumbers}
+      child={shownChild}
       subject={COPY.subjectMath}
       title={COPY.mathTitle}
       progress={{

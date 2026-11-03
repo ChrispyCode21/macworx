@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react'
 import { COPY } from '../../copy'
 import { ArrowLeftIcon, CoinsIcon, FlameIcon, SproutIcon } from '../../practice/icons'
-import type { HomeNumbers } from '../../sync/projection'
+import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { Button } from '../../ui/Button'
 
 interface Props {
   /** The numbers Home showed when the screen opened; none, none shown (docs/DESIGN-PRACTICE.md §6.1). */
   numbers?: HomeNumbers
+  /** Her name, grade and initials for the avatar and the meta line; none, neither is shown (§6.1, §6.2). */
+  child?: PracticeChild | null
   subject: string
   title: string
   progress: { label: string; done: number; total: number }
@@ -22,10 +24,11 @@ interface Props {
 
 /**
  * The frame the practice screens share (docs/DESIGN-PRACTICE.md §3, §6): the top bar, the heading block, the
- * activity row and the actions row. The avatar, the meta line and the Shop button wait for their data and screens.
+ * activity row and the actions row. The Shop button waits for its screen.
  */
 export function PracticeFrame({
   numbers,
+  child,
   subject,
   title,
   progress,
@@ -56,6 +59,11 @@ export function PracticeFrame({
               {COPY.streakChip(numbers.streak)}
             </span>
           )}
+          {child && child.initials && (
+            <span className="practice-avatar" aria-hidden="true">
+              {child.initials}
+            </span>
+          )}
         </div>
       </header>
       <main className="practice-work">
@@ -69,6 +77,9 @@ export function PracticeFrame({
               <ArrowLeftIcon />
               {COPY.practiceCrumb(subject)}
             </Button>
+            {child && child.name && (
+              <span className="practice-meta">{COPY.practiceMeta(child.name, child.grade)}</span>
+            )}
           </div>
           <div className="practice-task">
             <h1 className="practice-title">{title}</h1>

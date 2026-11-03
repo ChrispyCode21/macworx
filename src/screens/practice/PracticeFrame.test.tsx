@@ -1,16 +1,17 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import type { HomeNumbers } from '../../sync/projection'
+import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { COPY } from '../../copy'
 import { Home } from '../Home'
 import { PracticeFrame } from './PracticeFrame'
 
 const NUMBERS: HomeNumbers = { balance: 1204, completed: 3, streak: 7, latestGrade: null }
 
-const render = (numbers?: HomeNumbers, note: string | undefined = 'A note') =>
+const render = (numbers?: HomeNumbers, note: string | undefined = 'A note', child?: PracticeChild) =>
   renderToStaticMarkup(
     <PracticeFrame
       numbers={numbers}
+      child={child}
       subject="Math"
       title="A title"
       progress={{ label: 'Problem 4 of 20', done: 4, total: 20 }}
@@ -59,10 +60,32 @@ describe('PracticeFrame', () => {
     expect(html).toContain('width:20%')
   })
 
-  it('leaves out the avatar and the Shop button', () => {
+  it('leaves out the Shop button, and the avatar and meta line without a child', () => {
     const html = render(NUMBERS)
     expect(html).not.toContain('Shop')
-    expect(html).not.toContain('avatar')
+    expect(html).not.toContain('practice-avatar')
+    expect(html).not.toContain('practice-meta')
+  })
+
+  it('shows her initials in the avatar and "{name} · {grade}" opposite the crumb', () => {
+    const html = render(NUMBERS, 'A note', { name: 'Ada', grade: '4th grade', initials: 'AL' })
+    expect(html).toContain('<span class="practice-avatar" aria-hidden="true">AL</span>')
+    expect(html).toContain('<span class="practice-meta">Ada · 4th grade</span>')
+    expect(html).toContain('aria-label="Practice  /  Math, Done for now"')
+  })
+
+  it('shows just the name without a grade, and nothing without a name', () => {
+    const noGrade = render(NUMBERS, 'A note', { name: 'Ada', grade: '', initials: 'AL' })
+    expect(noGrade).toContain('<span class="practice-meta">Ada</span>')
+    const noName = render(NUMBERS, 'A note', { name: '', grade: '4th grade', initials: 'AL' })
+    expect(noName).not.toContain('practice-meta')
+    expect(noName).toContain('practice-avatar')
+  })
+
+  it('hides the avatar without initials', () => {
+    const html = render(NUMBERS, 'A note', { name: 'Ada', grade: '', initials: '' })
+    expect(html).not.toContain('practice-avatar')
+    expect(html).toContain('practice-meta')
   })
 
   it('leaves out the note paragraph when there is none', () => {

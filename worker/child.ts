@@ -36,6 +36,13 @@ interface ChildRow {
   revision: string
 }
 
+/** What readState selects: the counters plus who she is. */
+interface StateRow extends Omit<ChildRow, 'revision'> {
+  name: string
+  grade: string
+  initials: string
+}
+
 interface ResultRow {
   seed: number
   device_id: number
@@ -69,9 +76,9 @@ function toResult(row: ResultRow) {
 
 async function readState(db: D1Database, device: number, childId: number, pending: number[] = []) {
   const child = await db
-    .prepare('SELECT balance, streak, last_day, completed FROM children WHERE id = ?')
+    .prepare('SELECT name, grade, initials, balance, streak, last_day, completed FROM children WHERE id = ?')
     .bind(childId)
-    .first<ChildRow>()
+    .first<StateRow>()
   const latest = await db
     .prepare('SELECT grade FROM results WHERE child_id = ? AND finished = 1 ORDER BY id DESC LIMIT 1')
     .bind(childId)
@@ -88,6 +95,10 @@ async function readState(db: D1Database, device: number, childId: number, pendin
       ).results.map((r) => r.seed)
     : []
   return {
+    // Her school grade (`grade`), not the latest assignment's grade (`latestGrade`).
+    name: child?.name ?? '',
+    grade: child?.grade ?? '',
+    initials: child?.initials ?? '',
     balance: child?.balance ?? 0,
     streak: child?.streak ?? 0,
     lastDay: child?.last_day ?? null,

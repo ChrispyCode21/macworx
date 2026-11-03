@@ -2537,6 +2537,26 @@ p {
   font-weight: 600;
 }
 
+.practice-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--l-avatar);
+  color: var(--l-text);
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.practice-meta {
+  color: var(--l-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
 .practice-work {
   flex: 1;
   display: flex;

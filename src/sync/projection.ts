@@ -56,6 +56,7 @@ function apply(state: WorkerState, { seed, day, answers }: QueuedResult): Worker
     }
     const { next, earned } = finishedPayout(state, day, correct)
     return {
+      ...state,
       balance: state.balance + earned.total,
       streak: next.streak,
       lastDay: next.lastDay,
@@ -80,6 +81,21 @@ export function nextResult(
   today: string,
 ): Payout {
   return finishedPayout(project(state, queue), today, correct).earned
+}
+
+export interface PracticeChild {
+  name: string
+  /** Her school grade ("4th grade"); empty when a parent hasn't set one. */
+  grade: string
+  initials: string
+}
+
+/** Who she is for the practice top bar, or null before the iPad has her name or initials. */
+export function practiceChild(state: WorkerState | null): PracticeChild | null {
+  if (!state) return null
+  const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+  const child = { name: text(state.name), grade: text(state.grade), initials: text(state.initials) }
+  return child.name || child.initials ? child : null
 }
 
 /** The four numbers on Home, or null before the iPad has the Worker's state. */

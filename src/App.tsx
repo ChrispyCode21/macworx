@@ -3,7 +3,8 @@ import { Pair } from './screens/Pair'
 import { Portal } from './screens/parent/Portal'
 import { payout } from './engine'
 import { canPair, getDeviceKey, getQueue, getWorkerState, requestPersistence } from './storage/device'
-import { homeNumbers, nextResult, type HomeNumbers } from './sync/projection'
+import { homeNumbers, nextResult, practiceChild } from './sync/projection'
+import type { HomeNumbers, PracticeChild } from './sync/projection'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
@@ -33,6 +34,12 @@ export function App() {
 function currentNumbers(): HomeNumbers | undefined {
   if (!getDeviceKey()) return undefined
   return homeNumbers(getWorkerState(), getQueue(), localDay(new Date())) ?? undefined
+}
+
+/** Her name, grade and initials for the practice top bar: none without a key or before the Worker sends them. */
+function currentChild(): PracticeChild | undefined {
+  if (!getDeviceKey()) return undefined
+  return practiceChild(getWorkerState()) ?? undefined
 }
 
 function ChildApp() {
@@ -111,6 +118,8 @@ function ChildApp() {
           key={screen.seed}
           seed={screen.seed}
           numbers={numbers}
+          // Read when the assignment opens; Assignment keeps it for the whole assignment.
+          child={currentChild()}
           onFinish={(answers, correct) => {
             // One clock reading, so the streak bonus is priced on the day the result is dated.
             const now = new Date()

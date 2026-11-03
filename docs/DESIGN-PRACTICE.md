@@ -444,7 +444,7 @@ Final decisions on every Figma string:
 | Element | Kind | Source |
 |---|---|---|
 | Top bar Macaroni balance, streak | Real | `numbers` from `homeNumbers()` (ARCHITECTURE "Home numbers"), hidden exactly when Home hides them (SPEC §5.1 step 1) |
-| Avatar `{initials}`, "{name} · {grade}" | Real, new field | `children.name`, `grade` and `initials` exist, but `GET /api/state` doesn't return them. Add them to it and keep them with the Worker's state on the iPad. Until then the avatar and the meta line are left out. |
+| Avatar `{initials}`, "{name} · {grade}" | Real | `GET /api/state` returns `children.name`, `grade` and `initials`, and the iPad keeps them with the Worker's state. Until the iPad has them, the avatar and the meta line are left out. |
 | Shop control | Not built | no child Shop screen yet; behavior settled (section 6.1, #123) |
 | Problem, progress, Check, response | Real | engine `generateAssignment`, `checkAnswer`; unchanged flow (SPEC §5.1) |
 | Spelling words, sentences, choices; passage, hint, questions, choices, skills | Sample | one module, `src/practice/samples.ts`, content in section 15 |

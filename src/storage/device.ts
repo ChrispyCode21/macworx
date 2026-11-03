@@ -21,6 +21,11 @@ export interface WorkerState {
   lastDay: string | null
   completed: number
   latestGrade: string | null
+  /** Who she is, for the practice top bar. Missing in a state stored before the Worker sent them. */
+  name?: string
+  /** Her school grade ("4th grade"), not the latest assignment's grade. */
+  grade?: string
+  initials?: string
 }
 
 function storage(): Storage | null {
