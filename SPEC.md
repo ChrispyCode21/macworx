@@ -41,9 +41,9 @@ macworx gives her:
 ### 5.1 Do an assignment (child)
 
 1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home has three buttons: Math starts an assignment, and Spelling and Reading open their samples (§5.5).
-2. She starts an assignment: 20 math problems (§6.2).
+2. She starts an assignment: 20 math problems (§6.2). The screen has a top bar with her Macaroni balance and her streak, shown and hidden by the same rules as on home, then a heading with the "Practice / Math" crumb and "Problem n of 20" with a progress bar, then the problem and the number pad, then a row of actions with a note on the left and the buttons on the right.
 3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
-4. She enters her answer on an on-screen number pad (digits 0–9 and a delete key) and submits it with the Check button at the bottom right of the screen. The iPad keyboard never opens. She answers each problem once.
+4. She enters her answer on an on-screen number pad (digits 0–9 and a delete key) and submits it with the Check button in the actions row at the bottom right of the screen. The iPad keyboard never opens. She answers each problem once.
    - Addition and subtraction fill from the ones place leftward, the way she works the columns: for 100 + 200 she types 0, 0, 3.
    - Multiplication fills left to right, the way she writes a number: for 7 × 8 she types 5, 6. The answer stays lined up under the ones column, so a one-digit product sits in the ones box.
    - The box where her next digit goes is highlighted. Delete removes the digit she typed last. A box past the last one takes nothing.
@@ -51,10 +51,10 @@ macworx gives her:
    - After Check, her answer stays in the boxes exactly as she typed it; the boxes never change to a different answer.
    - Correct: the app says so, and her boxes turn a soft green.
    - Not correct: her boxes turn a soft coral (never bright red, and no ✗), and the line above Next shows the right answer in a friendly way (for example "7 × 8 = 56"). The right answer appears only there, never in her boxes.
-   - Either way, she taps Next when she's ready. Nothing moves on by itself.
+   - Either way, she taps Next when she's ready. Next takes Check's place in the actions row and ignores taps for a moment after it appears, so a quick double tap on Check can't also move on. Nothing moves on by itself.
 5. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy bonus, and the streak bonus on her first finished assignment of the day, shown), and the grade. Before the iPad has the Worker's numbers the streak bonus is left out.
 6. She can start another assignment right away. Assignments are unlimited.
-7. She can leave an assignment at any time. It ends early: she sees how many problems she did and the Macaronis they earned (§6.4), then home. When they earned none, the Macaroni line is left out rather than showing 0. Leaving before answering any problem records nothing. Leaving after answering all 20 counts as finishing, with the full result. The next assignment she starts is a new one.
+7. She can leave an assignment at any time with the "Practice / Math" crumb. It ends early: she sees how many problems she did and the Macaronis they earned (§6.4), then home. When they earned none, the Macaroni line is left out rather than showing 0. Leaving before answering any problem records nothing. Leaving after answering all 20 counts as finishing, with the full result. The next assignment she starts is a new one.
 
 ### 5.2 Buy a reward (child)
 

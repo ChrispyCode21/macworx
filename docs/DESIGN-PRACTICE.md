@@ -202,7 +202,7 @@ Column, gap 12, height 90.
 
 1. **Context row:** height 24, space-between, centered.
    - **Left: the back control**, a `crumb` button (7.4): arrow-left 18 + "Practice  /  {Subject}" (two spaces each side of the slash).
-     - Math: it does what "Done for now" does today (SPEC §5.1 step 7). Its accessible name is `COPY.leave`.
+     - Math: it does what "Done for now" does today (SPEC §5.1 step 7). Its accessible name is the visible text, then `COPY.leave` ("Practice / Math, Done for now"), so the visible label is in the name (WCAG 2.5.3).
      - Spelling and Reading: it goes to Home.
    - **Right:** crumb-meta "{name} · {grade}". Without a grade it shows "{name}"; without a name, nothing.
 2. **Task row:** height 54, space-between, centered.

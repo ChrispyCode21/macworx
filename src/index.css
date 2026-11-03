@@ -103,25 +103,7 @@ p {
   font-size: 1.2rem;
 }
 
-/* Assignment: problem above the pad in portrait, beside it in landscape. */
-.assignment {
-  display: grid;
-  grid-template-areas: 'bar' 'problem' 'answer';
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto;
-  justify-items: center;
-}
-
-.assignment-bar {
-  grid-area: bar;
-  justify-self: stretch;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .stacked {
-  grid-area: problem;
   align-self: center;
   display: grid;
   /* The operator, then one column per place value (StackedProblem sets --columns). */
@@ -173,11 +155,6 @@ p {
   background: var(--not-right-soft);
 }
 
-.pad,
-.response {
-  grid-area: answer;
-}
-
 .pad {
   display: grid;
   grid-template-columns: repeat(3, var(--key));
@@ -202,15 +179,6 @@ p {
 .response-equation {
   font-size: 1.6rem;
   font-variant-numeric: tabular-nums;
-}
-
-@media (orientation: landscape) {
-  .assignment {
-    grid-template-areas: 'bar bar' 'problem answer';
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
-    align-items: center;
-  }
 }
 
 .result-count,
@@ -2493,3 +2461,349 @@ p {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* practice: start */
+/* The practice screens (docs/DESIGN-PRACTICE.md): px only, because :root's 24px makes rem and em scale. */
+.practice {
+  --l-bg: var(--paper);
+  --l-surface: #ffffff;
+  --l-inset: #fffbee;
+  --l-line: #efdba5;
+  --l-primary: var(--accent);
+  --l-primary-ink: var(--ink);
+  --l-link: var(--answer-ink);
+  --l-chip: var(--soft);
+  --l-warm: #f6dc9e;
+  --l-avatar: #f2c46b;
+  --l-text: var(--ink);
+  --l-muted: #6b5420;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--l-bg);
+  color: var(--l-text);
+}
+
+.practice *,
+.practice *::before,
+.practice *::after {
+  box-sizing: border-box;
+}
+
+.practice h1 {
+  font-size: 30px;
+}
+
+.practice-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(82px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) max(40px, env(safe-area-inset-right)) 0
+    max(40px, env(safe-area-inset-left));
+  background: var(--l-surface);
+  border-bottom: 1px solid var(--l-line);
+}
+
+.practice-brand,
+.practice-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.practice-brand {
+  color: var(--l-link);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.8px;
+}
+
+.practice-brand span {
+  color: var(--l-text);
+}
+
+.practice-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: var(--l-chip);
+  color: var(--l-link);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.practice-work {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px max(40px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
+    max(40px, env(safe-area-inset-left));
+}
+
+.practice-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 90px;
+}
+
+.practice-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+}
+
+.practice-task {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 54px;
+}
+
+.practice-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.6px;
+}
+
+.practice-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 182px;
+}
+
+.practice-progress-label {
+  color: var(--l-link);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.practice-progress-track {
+  display: block;
+  height: 6px;
+  border-radius: 100px;
+  background: var(--l-line);
+}
+
+.practice-progress-fill {
+  display: block;
+  height: 6px;
+  border-radius: 100px;
+  background: var(--l-link);
+}
+
+.practice-activity {
+  flex: 1;
+  min-height: 478px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+/* 1024px wide and up (landscape iPads, and a portrait 12.9-inch iPad Pro): the problem beside the pad. Narrower, they stack, problem first (docs/DESIGN-PRACTICE.md §3). */
+@media (min-width: 1024px) {
+  .practice-activity {
+    grid-template-columns: minmax(0, 650fr) minmax(0, 440fr);
+  }
+}
+
+.practice-problem,
+.practice .response {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.practice .pad {
+  align-self: center;
+  justify-self: center;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.practice .response {
+  gap: 16px;
+  min-height: 0;
+}
+
+.practice-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 64px;
+}
+
+.practice-note {
+  color: var(--l-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.practice-buttons {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.practice .button:focus-visible {
+  outline: 2px solid var(--l-link);
+  outline-offset: 2px;
+}
+
+.button-action,
+.button-action-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 56px;
+  min-width: 220px;
+  padding: 0 24px;
+  border: 1px solid var(--l-primary);
+  border-radius: 12px;
+  background: var(--l-primary);
+  color: var(--l-primary-ink);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.button-action-secondary {
+  min-width: 170px;
+  border-color: var(--l-line);
+  background: var(--l-surface);
+  color: var(--l-link);
+}
+
+.button-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--l-link);
+  font-size: 14px;
+  font-weight: 400;
+  white-space: pre;
+}
+
+.practice .button-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  border-radius: 12px;
+  background: var(--l-surface);
+  color: var(--l-text);
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.practice .button-key svg {
+  color: var(--l-link);
+}
+
+.button-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 112px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--l-primary);
+  color: var(--l-primary-ink);
+}
+
+.button-support {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--l-link);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.button-choice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 78px;
+  padding: 0 18px;
+  border: 1px solid var(--l-line);
+  border-radius: 12px;
+  background: var(--l-surface);
+  color: var(--l-text);
+  font-weight: 400;
+  text-align: left;
+}
+
+.button-choice[aria-checked='true'] {
+  border: 2px solid var(--l-link);
+  background: var(--l-chip);
+  font-weight: 600;
+}
+
+/* The letter marker: a 32px circle, filled once the choice is chosen. */
+.choice-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--l-bg);
+  color: var(--l-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.button-choice[aria-checked='true'] .choice-marker,
+.button-choice[data-result] .choice-marker {
+  background: var(--l-primary);
+  color: var(--l-primary-ink);
+}
+
+/* After Check (docs/DESIGN-PRACTICE.md §7.3): soft green when right, soft coral when not. */
+.button-choice[data-result='right'] {
+  border: 2px solid var(--right-edge);
+  background: var(--right-soft);
+  font-weight: 600;
+}
+
+.button-choice[data-result='not-right'] {
+  border: 2px solid var(--not-right-edge);
+  background: var(--not-right-soft);
+  font-weight: 600;
+}
+
+/* Choices are disabled after Check, with no opacity change. */
+.button-choice:disabled {
+  opacity: 1;
+}
+/* practice: end */

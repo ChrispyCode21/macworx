@@ -47,6 +47,8 @@ async function finishRight(page: Page) {
     for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
     await expect(problem).toHaveAttribute('data-shown', String(value))
     await page.getByRole('button', { name: 'Check' }).click()
+    // Next ignores taps for a moment after Check.
+    await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
     await page.getByRole('button', { name: n === 20 ? 'See how I did' : 'Next' }).click()
   }
 }
@@ -175,4 +177,54 @@ test('Home shows a Parents link that opens the portal with a full page load', as
   await expect(page.getByRole('heading', { name: 'A little progress, daily.' })).toBeVisible()
   // The heading shows before the reads answer; her summary showing proves the Overview drew it without throwing.
   await expect(page.locator('.overview-hero-number')).toHaveText('0')
+})
+
+// The practice frame on an assignment (SPEC §5.1, docs/DESIGN-PRACTICE.md §6).
+test('an assignment shows her balance and streak in the top bar, the title and the progress', async ({
+  page,
+}) => {
+  await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
+  await page.getByRole('button', { name: 'Start' }).click()
+  const bar = page.locator('.practice-bar')
+  await expect(bar).toContainText('macworx')
+  await expect(bar).toContainText('100 Macaronis')
+  await expect(bar).toContainText('3 days')
+  await expect(page.getByRole('heading', { name: 'A little practice, a little progress.' })).toBeVisible()
+  await expect(page.getByText('Problem 1 of 20')).toBeVisible()
+  const progress = page.getByRole('progressbar')
+  await expect(progress).toHaveAttribute('aria-valuenow', '1')
+  await expect(progress).toHaveAttribute('aria-valuemax', '20')
+  await expect(page.getByRole('button', { name: 'Done for now' })).toContainText('Practice / Math')
+  await noSidewaysScroll(page)
+})
+
+test('the top bar shows neither number on an iPad that is not paired', async ({ page }) => {
+  await openApp(page, false, { 'macworx.seeds': [31] })
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.locator('.practice-bar')).toContainText('macworx')
+  await expect(page.locator('.practice-chip')).toHaveCount(0)
+})
+
+test('Check sits at the bottom right of the screen', async ({ page }) => {
+  await openApp(page, false, { 'macworx.seeds': [31] })
+  await page.getByRole('button', { name: 'Start' }).click()
+  const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
+  const view = page.viewportSize()!
+  expect(box.x + box.width / 2).toBeGreaterThan(view.width / 2)
+  // Portrait scrolls, so only the horizontal side is fixed there; in landscape it is also the lower half.
+  if (view.width > view.height) expect(box.y + box.height / 2).toBeGreaterThan(view.height / 2)
+})
+
+test('in landscape the whole practice screen fits the viewport height', async ({ page }) => {
+  const view = page.viewportSize()!
+  test.skip(view.width <= view.height, 'Portrait scrolls.')
+  await openApp(page, false, { 'macworx.seeds': [31] })
+  await page.getByRole('button', { name: 'Start' }).click()
+  const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
+  expect(box.y + box.height).toBeLessThanOrEqual(view.height)
+  const scroll = await page.evaluate(() => ({
+    scrollHeight: document.documentElement.scrollHeight,
+    clientHeight: document.documentElement.clientHeight,
+  }))
+  expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
 })

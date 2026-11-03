@@ -34,6 +34,12 @@ async function answer(page: Page, value: number) {
   for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
   await expect(page.locator('.stacked')).toHaveAttribute('data-shown', String(value))
   await page.getByRole('button', { name: 'Check' }).click()
+  await nextReady(page)
+}
+
+/** Next ignores taps for a moment after Check (a double tap on Check); wait that out. */
+async function nextReady(page: Page) {
+  await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
 }
 
 const FULL = { tag: '@full-assignment' }
@@ -95,17 +101,44 @@ test('leaves partway and keeps the Macaronis earned so far', async ({ page }) =>
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
 })
 
-test('a quick second tap on Next does not type into the next problem', async ({ page }) => {
+test('a tap on the pad right after Next does not type into the next problem', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start' }).click()
+  await padReady(page)
+  const key = (await page.getByRole('button', { name: '5', exact: true }).boundingBox())!
+  await answer(page, await currentAnswer(page))
+  await page.getByRole('button', { name: 'Next' }).click()
+  await expect(page.getByText('Problem 2 of 20')).toBeVisible()
+  // The new pad ignores taps for a moment; this one lands on its 5 key straight away.
+  await page.mouse.click(key.x + key.width / 2, key.y + key.height / 2)
+  await expect(page.locator('.stacked')).toHaveAttribute('data-shown', '')
+})
+
+test('a quick double tap on Check leaves her response on screen', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start' }).click()
+  const right = await currentAnswer(page)
+  await padReady(page)
+  const onesFirst = (await page.locator('.stacked').getAttribute('data-operation')) !== 'multiplication'
+  const digits = onesFirst ? [...String(right)].reverse() : [...String(right)]
+  for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
+  const check = page.getByRole('button', { name: 'Check' })
+  const box = (await check.boundingBox())!
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+  await expect(page.locator('.response-lead')).toBeVisible()
+  await expect(page.getByText('Problem 1 of 20')).toBeVisible()
+  // Once Next is ready, a tap moves on.
+  await nextReady(page)
+  await page.getByRole('button', { name: 'Next' }).click()
+  await expect(page.getByText('Problem 2 of 20')).toBeVisible()
+})
+
+test('after Check, focus moves to Next', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Start' }).click()
   await answer(page, await currentAnswer(page))
-  const next = page.getByRole('button', { name: 'Next' })
-  const box = (await next.boundingBox())!
-  // Two taps at the same spot: the second lands wherever the pad now is.
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-  await expect(page.getByText('Problem 2 of 20')).toBeVisible()
-  await expect(page.locator('.stacked')).toHaveAttribute('data-shown', '')
+  await expect(page.getByRole('button', { name: 'Next' })).toBeFocused()
 })
 
 test('leaving before answering anything goes straight home', async ({ page }) => {
