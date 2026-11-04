@@ -2669,7 +2669,7 @@ p {
   justify-content: space-between;
 }
 
-/* The number pad. The response replaces its contents, so the size is fixed: 24 + 24 + 16 + 4 x 72 + 3 x 10 + 24. */
+/* The number pad. The response replaces its contents. The panel is at least as tall as the pad (24 + 24 + 16 + 4 x 72 + 3 x 10 + 24), so the response fits without a jump. */
 .practice-panel-warm {
   min-height: 406px;
   gap: 16px;
