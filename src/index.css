@@ -203,6 +203,13 @@ p {
   list-style: none;
 }
 
+.home-subjects {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
 .home-numbers li {
   padding: 12px 20px;
   border-radius: var(--radius);

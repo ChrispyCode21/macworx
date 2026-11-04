@@ -11,7 +11,8 @@ interface Props {
   child?: PracticeChild | null
   subject: string
   title: string
-  progress: { label: string; done: number; total: number }
+  /** Absent on a screen with nothing to count yet: the task row shows only the title. */
+  progress?: { label: string; done: number; total: number }
   onBack: () => void
   /** What the back control does; its accessible name is the visible crumb text, then this (WCAG 2.5.3). */
   backLabel: string
@@ -38,7 +39,7 @@ export function PracticeFrame({
   children,
   actions,
 }: Props) {
-  const percent = Math.round((progress.done / progress.total) * 100)
+  const percent = progress ? Math.round((progress.done / progress.total) * 100) : 0
   return (
     <div className="practice">
       <header className="practice-bar">
@@ -83,19 +84,21 @@ export function PracticeFrame({
           </div>
           <div className="practice-task">
             <h1 className="practice-title">{title}</h1>
-            <div
-              className="practice-progress"
-              role="progressbar"
-              aria-label={progress.label}
-              aria-valuemin={0}
-              aria-valuenow={progress.done}
-              aria-valuemax={progress.total}
-            >
-              <span className="practice-progress-label">{progress.label}</span>
-              <span className="practice-progress-track">
-                <span className="practice-progress-fill" style={{ width: `${percent}%` }} />
-              </span>
-            </div>
+            {progress && (
+              <div
+                className="practice-progress"
+                role="progressbar"
+                aria-label={progress.label}
+                aria-valuemin={0}
+                aria-valuenow={progress.done}
+                aria-valuemax={progress.total}
+              >
+                <span className="practice-progress-label">{progress.label}</span>
+                <span className="practice-progress-track">
+                  <span className="practice-progress-fill" style={{ width: `${percent}%` }} />
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className="practice-activity">{children}</div>

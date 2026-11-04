@@ -4,6 +4,7 @@ import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { COPY } from '../../copy'
 import { Home } from '../Home'
 import { PracticeFrame } from './PracticeFrame'
+import { PracticeStub } from './PracticeStub'
 
 const NUMBERS: HomeNumbers = { balance: 1204, completed: 3, streak: 7, latestGrade: null }
 
@@ -60,6 +61,32 @@ describe('PracticeFrame', () => {
     expect(html).toContain('width:20%')
   })
 
+  it('leaves out the progress bar when there is no progress, and keeps the crumb', () => {
+    const html = renderToStaticMarkup(
+      <PracticeFrame subject="Spelling" title="A title" onBack={() => {}} backLabel="Back" actions={null}>
+        {null}
+      </PracticeFrame>,
+    )
+    expect(html).not.toContain('progressbar')
+    expect(html).toContain('Practice  /  Spelling')
+  })
+
+  it('Home shows Math, Spelling and Reading, and no Start', () => {
+    const html = renderToStaticMarkup(<Home onStart={() => {}} onOpen={() => {}} />)
+    expect(html).toContain('>Math<')
+    expect(html).toContain('>Spelling<')
+    expect(html).toContain('>Reading<')
+    expect(html).not.toContain('>Start<')
+  })
+
+  it('the Spelling and Reading stubs show their crumb and title', () => {
+    for (const subject of ['spelling', 'reading'] as const) {
+      const html = renderToStaticMarkup(<PracticeStub subject={subject} onBack={() => {}} />)
+      expect(html).toContain(`Practice  /  ${subject === 'spelling' ? 'Spelling' : 'Reading'}`)
+      expect(html).not.toContain('progressbar')
+    }
+  })
+
   it('leaves out the Shop button, and the avatar and meta line without a child', () => {
     const html = render(NUMBERS)
     expect(html).not.toContain('Shop')
@@ -102,7 +129,7 @@ describe('PracticeFrame', () => {
 
   it('hides the chips on the same inputs as Home hides the numbers', () => {
     const home = (numbers?: HomeNumbers) =>
-      renderToStaticMarkup(<Home onStart={() => {}} numbers={numbers} />)
+      renderToStaticMarkup(<Home onStart={() => {}} onOpen={() => {}} numbers={numbers} />)
     const cases: [string, HomeNumbers | undefined][] = [
       ['no numbers', undefined],
       ['streak null', { ...NUMBERS, streak: null }],

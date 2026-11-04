@@ -8,7 +8,6 @@ const signed = (n: number) => `${n < 0 ? '−' : '+'}${formatNumber(Math.abs(n))
 
 export const COPY = {
   title: 'macworx',
-  start: 'Start',
   startHint: `${ASSIGNMENT_SIZE} problems. Take your time.`,
   connectForProblems: 'Connect to Wi-Fi to get more problems!',
   progress: (n: number, total: number) => `Problem ${n} of ${total}`,
@@ -44,6 +43,10 @@ export const COPY = {
   practiceMeta: (name: string, grade: string) =>
     grade ? `\u2068${name}\u2069 · \u2068${grade}\u2069` : `\u2068${name}\u2069`,
   subjectMath: 'Math',
+  subjectSpelling: 'Spelling',
+  subjectReading: 'Reading',
+  spellingTitle: 'Listen closely. Choose confidently.',
+  readingTitle: 'Every good answer starts with a story.',
   mathTitle: 'A little practice, a little progress.',
   mathNote: "Take your time. There's no timer.",
   /** The top bar's streak chip. */
