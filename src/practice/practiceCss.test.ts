@@ -54,7 +54,9 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
 
   it('lays out the Math panels and the practice stacked sizes (§7.1, §8)', () => {
     const rule = (selector: string) => {
-      const match = practice.match(new RegExp(`(?:^|\\n)${selector.replace(/[.]/g, '\\.')}\\s*\\{([^}]*)\\}`))
+      const match = practice.match(
+        new RegExp(`(?:^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`),
+      )
       expect(match, selector).not.toBeNull()
       return match?.[1] ?? ''
     }
