@@ -8,7 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
-- **Math screen in two panels (iPad):** the problem, with its "Addition practice" label and instruction, sits beside a number pad panel on a landscape iPad, and stacks above it in portrait. After Check, her response replaces the pad in the same panel.
+- **Math screen in two panels (iPad):** the problem, with its "Addition practice" label and instruction, sits beside a number pad panel on a wide iPad (landscape, or a portrait 12.9-inch iPad Pro), and stacks above it on narrower ones. After Check, her response replaces the pad in the same panel.
 - **Home subject buttons (iPad):** Home shows Math, Spelling and Reading buttons in place of Start. Math starts the assignment as before; Spelling and Reading open a placeholder practice screen with its crumb and title, and the crumb returns to Home. Nothing is recorded.
 - **Her name on the practice screen (iPad):** her initials in a circle at the top right of the top bar, and "{name} · {grade}" (just the name without a grade) opposite the back control. `GET /api/state` returns her `name`, `grade` and `initials`, and the iPad keeps them with the Worker's state. Until the iPad has them, neither shows.
 
