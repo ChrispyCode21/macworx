@@ -50,11 +50,18 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
   await page.goto('/')
   await page.getByRole('button', { name: 'Math', exact: true }).click()
 
+  let padHeight = 0
   for (let n = 1; n <= 20; n++) {
     await expect(page.getByText(`Problem ${n} of 20`)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Check' })).toBeDisabled()
     const right = await currentAnswer(page)
     const problem = page.locator('.stacked')
+    const padPanel = page.locator('.practice-panel-warm')
+    if (n === 1) {
+      await expect(page.getByText(/^(Addition|Subtraction|Multiplication) practice$/)).toBeVisible()
+      await expect(page.getByText('Tap to enter your answer')).toBeVisible()
+      padHeight = (await padPanel.boundingBox())?.height ?? 0
+    }
     if (n === 3) {
       // One not right: her answer stays in her boxes, tinted coral; the right one is only in the response.
       await answer(page, right + 1)
@@ -63,13 +70,20 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
       await expect(problem).toHaveAttribute('data-shown', String(right + 1))
       await expect(problem).toHaveAttribute('data-outcome', 'notRight')
       await expect(page.locator('.answer-box-not-right').first()).toBeVisible()
+      expect(Math.abs(((await padPanel.boundingBox())?.height ?? 0) - padHeight)).toBeLessThanOrEqual(1)
     } else {
       await answer(page, right)
       await expect(page.locator('.response-lead')).toHaveText(CHEERS)
       await expect(problem).toHaveAttribute('data-shown', String(right))
       await expect(problem).toHaveAttribute('data-outcome', 'right')
     }
-    if (n === 1) await noSidewaysScroll(page)
+    if (n === 1) {
+      await noSidewaysScroll(page)
+      // The response replaces the pad's contents in the same panel, at the same size.
+      await expect(page.getByText('Tap to enter your answer')).toHaveCount(0)
+      await expect(padPanel.locator('.response-lead')).toBeVisible()
+      expect(Math.abs(((await padPanel.boundingBox())?.height ?? 0) - padHeight)).toBeLessThanOrEqual(1)
+    }
     await page.getByRole('button', { name: n === 20 ? 'See how I did' : 'Next' }).click()
   }
 
@@ -87,9 +101,24 @@ test('leaves partway and keeps the Macaronis earned so far', async ({ page }) =>
   await page.goto('/')
   await page.getByRole('button', { name: 'Math', exact: true }).click()
   for (let n = 1; n <= 2; n++) {
+    const problemPanel = page.locator('.practice-panel-problem')
+    const padPanel = page.locator('.practice-panel-warm')
+    let before = { x: 0, y: 0, width: 0, height: 0 }
+    if (n === 1) {
+      // Side by side from 1024px wide, stacked below that.
+      const p = (await problemPanel.boundingBox())!
+      before = (await padPanel.boundingBox())!
+      const wide = (page.viewportSize()?.width ?? 0) >= 1024
+      if (wide) expect(before.x).toBeGreaterThanOrEqual(p.x + p.width - 1)
+      else expect(before.y).toBeGreaterThanOrEqual(p.y + p.height - 1)
+    }
     await answer(page, await currentAnswer(page))
     // The problem screen with its response, in both orientations (the full assignment runs in landscape only).
-    if (n === 1) await noSidewaysScroll(page)
+    if (n === 1) {
+      await noSidewaysScroll(page)
+      await expect(padPanel.locator('.response-lead')).toBeVisible()
+      expect(Math.abs(((await padPanel.boundingBox())?.height ?? 0) - before.height)).toBeLessThanOrEqual(1)
+    }
     await page.getByRole('button', { name: 'Next' }).click()
   }
   await page.getByRole('button', { name: 'Done for now' }).click()

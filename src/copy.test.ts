@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { COPY } from './copy'
 
+describe('Math screen copy', () => {
+  it('labels each operation and says what to do', () => {
+    expect(COPY.mathEyebrow('addition')).toBe('Addition practice')
+    expect(COPY.mathEyebrow('subtraction')).toBe('Subtraction practice')
+    expect(COPY.mathEyebrow('multiplication')).toBe('Multiplication practice')
+    expect(COPY.mathInstruction('addition')).toBe('Add the numbers.')
+    expect(COPY.mathInstruction('subtraction')).toBe('Subtract the bottom number from the top number.')
+    expect(COPY.mathInstruction('multiplication')).toBe('Multiply the numbers.')
+    expect(COPY.padHeading).toBe('Tap to enter your answer')
+  })
+})
+
 describe('device sync copy', () => {
   it('words the last-synced line', () => {
     expect(COPY.parentNoResultsYet).toBe('No results yet')

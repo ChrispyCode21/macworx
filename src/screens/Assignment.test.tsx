@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { COPY } from '../copy'
+import { generateAssignment } from '../engine'
 import type { HomeNumbers, PracticeChild } from '../sync/projection'
 import { Assignment } from './Assignment'
 
@@ -29,6 +31,19 @@ describe('Assignment frame', () => {
     )
     expect(html).toContain('>AL<')
     expect(html).toContain('\u2068Ada\u2069 · \u20684th grade\u2069')
+  })
+
+  it('has a problem panel with its eyebrow and instruction, and a warm pad panel with its heading', () => {
+    const html = render()
+    const operation = generateAssignment(1)[0].operation
+    expect(html).toContain(`>${COPY.mathEyebrow(operation)}<`)
+    expect(html).toContain(`>${COPY.mathInstruction(operation)}<`)
+    expect(html).toContain('practice-panel-problem')
+    const pad = html.slice(html.indexOf('practice-panel-warm'))
+    expect(pad).toContain('Tap to enter your answer')
+    expect(pad).toContain('class="pad"')
+    for (const key of '0123456789') expect(pad).toContain(`>${key}<`)
+    expect(pad).toContain('aria-label="Delete"')
   })
 
   it('has no Check key on the pad and no Done for now button beside the progress', () => {
