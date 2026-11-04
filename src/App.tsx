@@ -8,11 +8,13 @@ import type { HomeNumbers, PracticeChild } from './sync/projection'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
+import { PracticeStub } from './screens/practice/PracticeStub'
 import { Result, type Outcome } from './screens/Result'
 
 type Screen =
   | { name: 'home' }
   | { name: 'pair' }
+  | { name: 'practice'; subject: 'spelling' | 'reading'; child: PracticeChild | undefined }
   | { name: 'assignment'; seed: number }
   | { name: 'result'; outcome: Outcome }
 
@@ -105,11 +107,15 @@ function ChildApp() {
       return (
         <Home
           onStart={start}
+          // Nothing is stored or sent: the child is read once, as the Math screen does.
+          onOpen={(subject) => setScreen({ name: 'practice', subject, child: currentChild() })}
           noSeeds={noSeeds}
           numbers={numbers}
           onPair={!paired && canPair() ? () => setScreen({ name: 'pair' }) : undefined}
         />
       )
+    case 'practice':
+      return <PracticeStub subject={screen.subject} numbers={numbers} child={screen.child} onBack={home} />
     case 'pair':
       return <Pair onDone={home} />
     case 'assignment':

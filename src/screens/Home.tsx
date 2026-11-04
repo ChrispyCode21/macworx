@@ -4,6 +4,8 @@ import { Button } from '../ui/Button'
 
 interface Props {
   onStart: () => void
+  /** Spelling and Reading open their practice screens, on any iPad (SPEC §5.5). */
+  onOpen: (subject: 'spelling' | 'reading') => void
   /** Set only while this installed iPad isn't paired (SPEC §5.4). */
   onPair?: () => void
   /** Start found no seeds and no connection (SPEC §6.8). */
@@ -12,7 +14,7 @@ interface Props {
   numbers?: HomeNumbers
 }
 
-export function Home({ onStart, onPair, noSeeds, numbers }: Props) {
+export function Home({ onStart, onOpen, onPair, noSeeds, numbers }: Props) {
   return (
     <main className="screen home">
       <h1>{COPY.title}</h1>
@@ -24,7 +26,11 @@ export function Home({ onStart, onPair, noSeeds, numbers }: Props) {
           {numbers.latestGrade !== null && <li>{COPY.latestGrade(numbers.latestGrade)}</li>}
         </ul>
       )}
-      <Button onClick={onStart}>{COPY.start}</Button>
+      <div className="home-subjects">
+        <Button onClick={onStart}>{COPY.subjectMath}</Button>
+        <Button onClick={() => onOpen('spelling')}>{COPY.subjectSpelling}</Button>
+        <Button onClick={() => onOpen('reading')}>{COPY.subjectReading}</Button>
+      </div>
       <p>{noSeeds ? COPY.connectForProblems : COPY.startHint}</p>
       {onPair && (
         <Button variant="secondary" onClick={onPair}>

@@ -7,7 +7,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | Path | What it holds |
 |---|---|
 | `src/` | The React app (Vite). `main.tsx` mounts `App.tsx`, which switches between screens. See "UI". |
-| `src/screens/` | One component per screen: Home, Assignment, Result. |
+| `src/screens/` | One component per screen: Home, Assignment, Result. `practice/PracticeStub` is the Spelling and Reading placeholder, a `PracticeFrame` without progress. |
 | `src/components/` | Pieces of a screen: `NumberPad`, `StackedProblem`, `RewardIcon`. |
 | `src/ui/` | Shared building blocks: `Button` and `format.ts`. |
 | `src/storage/` | The iPad's own storage (`device.ts`): its device key, unused seeds, unsent results and the Worker's latest state. |

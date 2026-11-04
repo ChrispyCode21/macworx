@@ -96,7 +96,7 @@ test('Home takes the Worker numbers when the connection comes back', async ({ pa
 
 test('Home shows none of the numbers on an iPad that is not paired', async ({ page }) => {
   await openApp(page, false)
-  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
   await expect(page.locator('.home-numbers')).toHaveCount(0)
   await expect(page.getByText(/Macaroni/)).toHaveCount(0)
 })
@@ -106,11 +106,11 @@ const FULL = { tag: '@full-assignment' }
 test('a paired iPad that has never synced shows no numbers and no streak bonus', FULL, async ({ page }) => {
   test.setTimeout(90_000)
   await openApp(page, true, { 'macworx.seeds': [21] })
-  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
   await expect(page.locator('.home-numbers')).toHaveCount(0)
   await expect(page.getByText(/Macaroni/)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
 })
@@ -119,7 +119,7 @@ test('a paired iPad that has never synced shows no numbers and no streak bonus',
 test('the streak bonus shows on the first assignment of the day', async ({ page }) => {
   test.setTimeout(90_000)
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus + 4 streak bonus = 28 Macaronis')
   await expect(page.getByText('Macaronis start saving soon!')).toHaveCount(0)
@@ -136,7 +136,7 @@ test('the second assignment of the day gets no streak bonus', FULL, async ({ pag
     'macworx.seeds': [32],
   })
   await expect(page.locator('.home-numbers')).toContainText('128 Macaronis')
-  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
 
@@ -184,7 +184,7 @@ test('an assignment shows her balance and streak in the top bar, the title and t
   page,
 }) => {
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
   const bar = page.locator('.practice-bar')
   await expect(bar).toContainText('macworx')
   await expect(bar).toContainText('100 Macaronis')
@@ -200,14 +200,14 @@ test('an assignment shows her balance and streak in the top bar, the title and t
 
 test('the top bar shows neither number on an iPad that is not paired', async ({ page }) => {
   await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
   await expect(page.locator('.practice-bar')).toContainText('macworx')
   await expect(page.locator('.practice-chip')).toHaveCount(0)
 })
 
 test('Check sits at the bottom right of the screen', async ({ page }) => {
   await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
   const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
   const view = page.viewportSize()!
   expect(box.x + box.width / 2).toBeGreaterThan(view.width / 2)
@@ -219,7 +219,7 @@ test('in landscape the whole practice screen fits the viewport height', async ({
   const view = page.viewportSize()!
   test.skip(view.width <= view.height, 'Portrait scrolls.')
   await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
   const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
   expect(box.y + box.height).toBeLessThanOrEqual(view.height)
   const scroll = await page.evaluate(() => ({
@@ -227,4 +227,26 @@ test('in landscape the whole practice screen fits the viewport height', async ({
     clientHeight: document.documentElement.clientHeight,
   }))
   expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
+})
+
+test('Home shows Math, Spelling and Reading, and the stubs return to Home without any request', async ({
+  page,
+}) => {
+  const api: string[] = []
+  page.on('request', (r) => {
+    if (new URL(r.url()).pathname.startsWith('/api/')) api.push(r.url())
+  })
+  await openApp(page, false)
+  for (const name of ['Math', 'Spelling', 'Reading']) {
+    await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
+  }
+  for (const name of ['Spelling', 'Reading']) {
+    await page.getByRole('button', { name, exact: true }).click()
+    await expect(page.getByRole('button', { name: `Practice  /  ${name}, Back`, exact: true })).toBeVisible()
+    await expect(page.getByRole('progressbar')).toHaveCount(0)
+    const before = api.length
+    await page.getByRole('button', { name: `Practice  /  ${name}, Back`, exact: true }).click()
+    await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
+    expect(api.length).toBe(before)
+  }
 })

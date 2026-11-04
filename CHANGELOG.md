@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Home subject buttons (iPad):** Home shows Math, Spelling and Reading buttons in place of Start. Math starts the assignment as before; Spelling and Reading open a placeholder practice screen with its crumb and title, and the crumb returns to Home. Nothing is recorded.
 - **Her name on the practice screen (iPad):** her initials in a circle at the top right of the top bar, and "{name} · {grade}" (just the name without a grade) opposite the back control. `GET /api/state` returns her `name`, `grade` and `initials`, and the iPad keeps them with the Worker's state. Until the iPad has them, neither shows.
 
 - **Overview screen (parents):** Today's homework (one number: the assignments she finished today, with "N Macaronis earned today." under it when she earned any), Macaronis and streak tiles with Manage links, Today's assignments (or "No assignments yet today."), Keep things in sync links to Devices and Shop, and Results. The old four-box summary is replaced by the tiles and one line with her completed assignments and last counted day. `GET /api/parent/summary` adds `completedToday`.
