@@ -1,6 +1,17 @@
 // Every piece of text she sees, in one place (SPEC §4: never-negative wording).
-import { ASSIGNMENT_SIZE, type Grade } from './engine'
+import { ASSIGNMENT_SIZE, type Grade, type Operation } from './engine'
 import { formatCalendarDay, formatNumber } from './ui/format'
+
+const MATH_EYEBROW: Record<Operation, string> = {
+  addition: 'Addition practice',
+  subtraction: 'Subtraction practice',
+  multiplication: 'Multiplication practice',
+}
+const MATH_INSTRUCTION: Record<Operation, string> = {
+  addition: 'Add the numbers.',
+  subtraction: 'Subtract the bottom number from the top number.',
+  multiplication: 'Multiply the numbers.',
+}
 
 const macaronis = (n: number) => `${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}`
 /** A signed whole number with the real minus sign: +20, −15, +1,000. */
@@ -49,6 +60,10 @@ export const COPY = {
   readingTitle: 'Every good answer starts with a story.',
   mathTitle: 'A little practice, a little progress.',
   mathNote: "Take your time. There's no timer.",
+  /** The problem panel's label (docs/DESIGN-PRACTICE.md §8). */
+  mathEyebrow: (operation: Operation) => MATH_EYEBROW[operation],
+  mathInstruction: (operation: Operation) => MATH_INSTRUCTION[operation],
+  padHeading: 'Tap to enter your answer',
   /** The top bar's streak chip. */
   streakChip: (n: number) => `${formatNumber(n)} ${n === 1 ? 'day' : 'days'}`,
   latestGrade: (grade: Grade) => `Latest: ${grade}`,

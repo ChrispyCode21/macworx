@@ -55,6 +55,13 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
     await expect(page.getByRole('button', { name: 'Check' })).toBeDisabled()
     const right = await currentAnswer(page)
     const problem = page.locator('.stacked')
+    const padPanel = page.locator('.practice-panel-warm')
+    let padHeight = 0
+    if (n === 1) {
+      await expect(page.getByText(/^(Addition|Subtraction|Multiplication) practice$/)).toBeVisible()
+      await expect(page.getByText('Tap to enter your answer')).toBeVisible()
+      padHeight = (await padPanel.boundingBox())?.height ?? 0
+    }
     if (n === 3) {
       // One not right: her answer stays in her boxes, tinted coral; the right one is only in the response.
       await answer(page, right + 1)
@@ -69,7 +76,13 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
       await expect(problem).toHaveAttribute('data-shown', String(right))
       await expect(problem).toHaveAttribute('data-outcome', 'right')
     }
-    if (n === 1) await noSidewaysScroll(page)
+    if (n === 1) {
+      await noSidewaysScroll(page)
+      // The response replaces the pad's contents in the same panel, at the same size.
+      await expect(page.getByText('Tap to enter your answer')).toHaveCount(0)
+      await expect(padPanel.locator('.response-lead')).toBeVisible()
+      expect(Math.abs(((await padPanel.boundingBox())?.height ?? 0) - padHeight)).toBeLessThanOrEqual(1)
+    }
     await page.getByRole('button', { name: n === 20 ? 'See how I did' : 'Next' }).click()
   }
 

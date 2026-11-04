@@ -108,33 +108,44 @@ export function Assignment({ seed, numbers, child, onFinish, onLeave }: Props) {
         )
       }
     >
-      <div className="practice-problem">
-        <StackedProblem
-          problem={problem}
-          boxes={boxes}
-          // Her answer stays exactly as she typed it; the right answer is only in the line above Next.
-          shown={shownDigits(typed, entry)}
-          next={response ? null : nextBox(typed, entry, boxes)}
-          outcome={response === null ? null : response === 'correct' ? 'right' : 'notRight'}
-        />
+      <section className="practice-panel practice-panel-problem">
+        <div className="practice-instructions">
+          <p className="practice-eyebrow">{COPY.mathEyebrow(problem.operation)}</p>
+          <p className="practice-instruction">{COPY.mathInstruction(problem.operation)}</p>
+        </div>
+        <div className="practice-stage">
+          <StackedProblem
+            problem={problem}
+            boxes={boxes}
+            // Her answer stays exactly as she typed it; the right answer is only in the line above Next.
+            shown={shownDigits(typed, entry)}
+            next={response ? null : nextBox(typed, entry, boxes)}
+            outcome={response === null ? null : response === 'correct' ? 'right' : 'notRight'}
+          />
+        </div>
         {/* Always mounted, so VoiceOver announces each response as its text changes. */}
         <p className="visually-hidden" aria-live="polite">
           {response && [lead, formatEquation(problem), after].filter(Boolean).join(' ')}
         </p>
-      </div>
-      {response === null ? (
-        <NumberPad
-          practice
-          onDigit={(d) => setTyped((t) => typeDigit(t, d, boxes))}
-          onDelete={() => setTyped(deleteDigit)}
-        />
-      ) : (
-        <section className="response">
-          <p className="response-lead">{lead}</p>
-          <p className="response-equation">{formatEquation(problem)}</p>
-          {after && <p>{after}</p>}
-        </section>
-      )}
+      </section>
+      <section className="practice-panel practice-panel-warm">
+        {response === null ? (
+          <>
+            <p className="practice-pad-heading">{COPY.padHeading}</p>
+            <NumberPad
+              practice
+              onDigit={(d) => setTyped((t) => typeDigit(t, d, boxes))}
+              onDelete={() => setTyped(deleteDigit)}
+            />
+          </>
+        ) : (
+          <div className="response">
+            <p className="response-lead">{lead}</p>
+            <p className="response-equation">{formatEquation(problem)}</p>
+            {after && <p className="response-after">{after}</p>}
+          </div>
+        )}
+      </section>
     </PracticeFrame>
   )
 }
