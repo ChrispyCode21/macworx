@@ -8,7 +8,7 @@ import type { HomeNumbers, PracticeChild } from './sync/projection'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
-import { PracticeStub } from './screens/practice/PracticeStub'
+import { ReadingPractice } from './screens/practice/ReadingPractice'
 import { SpellingPractice } from './screens/practice/SpellingPractice'
 import { Result, type Outcome } from './screens/Result'
 
@@ -119,7 +119,7 @@ function ChildApp() {
       return screen.subject === 'spelling' ? (
         <SpellingPractice numbers={numbers} child={screen.child} onBack={home} />
       ) : (
-        <PracticeStub subject={screen.subject} numbers={numbers} child={screen.child} onBack={home} />
+        <ReadingPractice numbers={numbers} child={screen.child} onBack={home} />
       )
     case 'pair':
       return <Pair onDone={home} />

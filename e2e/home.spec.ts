@@ -229,7 +229,26 @@ test('in landscape the whole practice screen fits the viewport height', async ({
   expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
 })
 
-test('Home shows Math, Spelling and Reading; Spelling opens its practice and Reading its placeholder, and both return to Home without any request', async ({
+test('in landscape the Reading passage and questions fit the viewport height, the passage scrolling inside its panel', async ({
+  page,
+}) => {
+  const view = page.viewportSize()!
+  test.skip(view.width <= view.height, 'Portrait scrolls.')
+  await openApp(page, false)
+  await page.getByRole('button', { name: 'Reading', exact: true }).click()
+  const fits = () =>
+    page.evaluate(() => document.documentElement.scrollHeight <= document.documentElement.clientHeight)
+  expect(await fits()).toBe(true)
+  // Next ignores taps for a moment after the passage opens (SPEC §5.1 step 4).
+  await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
+  await page.getByRole('button', { name: 'Next' }).click()
+  await expect(page.getByRole('progressbar', { name: 'Step 2 of 2 · Questions' })).toBeVisible()
+  const read = (await page.getByRole('button', { name: 'Read again' }).boundingBox())!
+  expect(read.y + read.height).toBeLessThanOrEqual(view.height)
+  expect(await fits()).toBe(true)
+})
+
+test('Home shows Math, Spelling and Reading;Spelling and Reading open their practice, and both return to Home without any request', async ({
   page,
 }) => {
   const api: string[] = []
@@ -250,7 +269,8 @@ test('Home shows Math, Spelling and Reading; Spelling opens its practice and Rea
       await page.getByRole('button', { name: 'Check' }).click()
       await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
     } else {
-      await expect(page.getByRole('progressbar')).toHaveCount(0)
+      await expect(page.getByRole('progressbar', { name: 'Step 1 of 2 · Read' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
     }
     const before = api.length
     await page.getByRole('button', { name: `Practice  /  ${name}, Back`, exact: true }).click()

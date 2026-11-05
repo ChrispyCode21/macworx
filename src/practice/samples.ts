@@ -60,3 +60,41 @@ export const SPELLING_WORDS: readonly SpellingWord[] = [
 ]
 
 export const SPELLING_COUNT = SPELLING_WORDS.length
+
+/** One Reading question: three choices, one right (docs/DESIGN-PRACTICE.md §15). */
+export interface ReadingQuestion {
+  skill: string
+  question: string
+  choices: readonly [string, string, string]
+  /** The index of the right choice in `choices`. */
+  answer: number
+}
+
+/** Reading practice is this one passage and its questions, placeholder text (SPEC §5.5). Nothing about it is stored or sent. */
+export const READING_PASSAGE = {
+  kind: 'Informational text',
+  minutes: 2,
+  title: 'Lorem ipsum dolor',
+  paragraphs: [
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+  ],
+  hint: 'Lorem ipsum dolor sit amet.',
+  questions: [
+    {
+      skill: 'Find a detail',
+      question: 'Lorem ipsum dolor sit amet?',
+      choices: ['Consectetur adipiscing elit.', 'Sed do eiusmod tempor.', 'Ut labore et dolore.'],
+      answer: 1,
+    },
+    {
+      skill: 'Think it through',
+      question: 'Ut enim ad minim veniam?',
+      choices: ['Quis nostrud exercitation.', 'Ullamco laboris nisi.', 'Ut aliquip ex ea commodo.'],
+      answer: 0,
+    },
+  ] as readonly ReadingQuestion[],
+}
+
+export const READING_COUNT = READING_PASSAGE.questions.length

@@ -6,7 +6,7 @@ import { SPELLING_COUNT, SPELLING_WORDS } from '../../practice/samples'
 import { canSpeak, speak, stopSpeaking } from '../../practice/speech'
 import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { Button } from '../../ui/Button'
-import { READY_AFTER_MS, useReadyAfter, whenReady } from '../../ui/useReadyAfter'
+import { BackToHomeButton } from './BackToHomeButton'
 import { NextButton } from './NextButton'
 import { PracticeFrame } from './PracticeFrame'
 
@@ -18,19 +18,6 @@ interface Props {
 }
 
 const LETTERS = ['A', 'B', 'C', 'D']
-
-/**
- * Back to Home sits where Finish just was. Like Next, it ignores taps for a moment, so a double tap on Finish
- * can't also skip the finished panel (SPEC §5.1 step 4). Mounted fresh after Finish, so it takes focus.
- */
-function BackToHomeButton({ onClick }: { onClick: () => void }) {
-  const ready = useReadyAfter(READY_AFTER_MS)
-  return (
-    <Button autoFocus variant="action" data-ready={ready || undefined} onClick={whenReady(ready, onClick)}>
-      {COPY.backToHome}
-    </Button>
-  )
-}
 
 /** Spelling sample practice: 8 words, checked on the iPad. Nothing is recorded, sent or paid (SPEC §5.5). */
 export function SpellingPractice({ numbers, child, onBack }: Props) {

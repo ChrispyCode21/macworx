@@ -36,6 +36,32 @@ describe('Spelling screen copy', () => {
   })
 })
 
+describe('Reading screen copy', () => {
+  it('words the passage screen', () => {
+    expect(COPY.readingProgressRead).toBe('Step 1 of 2 · Read')
+    expect(COPY.readingEyebrow('Informational text', 2)).toBe('Informational text · 2 min read')
+    expect(COPY.readingGuideTitle).toBe('Read at your own pace.')
+    expect(COPY.readingNote(2)).toBe("When you're ready, there are 2 questions about this passage.")
+  })
+
+  it('words the questions screen', () => {
+    expect(COPY.readingProgressQuestions).toBe('Step 2 of 2 · Questions')
+    expect(COPY.questionEyebrow(1, 'Find a detail')).toBe('Question 1 · Find a detail')
+    expect(COPY.readingChooseOne).toBe('Choose one answer.')
+    expect(COPY.readAgain).toBe('Read again')
+    expect(COPY.checkAnswers).toBe('Check answers')
+    expect(COPY.done).toBe('Done')
+    expect(COPY.readingBestAnswer('A')).toBe('The best answer is A.')
+    expect(COPY.readingDone).toBe('You finished the passage and its questions!')
+  })
+
+  it('counts the answers chosen, none, one or more', () => {
+    expect(COPY.readingChosenNote(0)).toBe('You can read the passage again.')
+    expect(COPY.readingChosenNote(1)).toBe('1 answer chosen. You can read the passage again.')
+    expect(COPY.readingChosenNote(2)).toBe('2 answers chosen. You can read the passage again.')
+  })
+})
+
 describe('device sync copy', () => {
   it('words the last-synced line', () => {
     expect(COPY.parentNoResultsYet).toBe('No results yet')

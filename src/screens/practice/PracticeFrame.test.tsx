@@ -4,7 +4,6 @@ import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { COPY } from '../../copy'
 import { Home } from '../Home'
 import { PracticeFrame } from './PracticeFrame'
-import { PracticeStub } from './PracticeStub'
 
 const NUMBERS: HomeNumbers = { balance: 1204, completed: 3, streak: 7, latestGrade: null }
 
@@ -77,14 +76,6 @@ describe('PracticeFrame', () => {
     expect(html).toContain('>Spelling<')
     expect(html).toContain('>Reading<')
     expect(html).not.toContain('>Start<')
-  })
-
-  it('the Spelling and Reading stubs show their crumb and title', () => {
-    for (const subject of ['spelling', 'reading'] as const) {
-      const html = renderToStaticMarkup(<PracticeStub subject={subject} onBack={() => {}} />)
-      expect(html).toContain(`Practice  /  ${subject === 'spelling' ? 'Spelling' : 'Reading'}`)
-      expect(html).not.toContain('progressbar')
-    }
   })
 
   it('leaves out the Shop button, and the avatar and meta line without a child', () => {
