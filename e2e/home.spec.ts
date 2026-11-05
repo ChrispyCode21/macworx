@@ -229,7 +229,7 @@ test('in landscape the whole practice screen fits the viewport height', async ({
   expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
 })
 
-test('Home shows Math, Spelling and Reading, and the stubs return to Home without any request', async ({
+test('Home shows Math, Spelling and Reading; Spelling opens its practice and Reading its placeholder, and both return to Home without any request', async ({
   page,
 }) => {
   const api: string[] = []
@@ -243,7 +243,15 @@ test('Home shows Math, Spelling and Reading, and the stubs return to Home withou
   for (const name of ['Spelling', 'Reading']) {
     await page.getByRole('button', { name, exact: true }).click()
     await expect(page.getByRole('button', { name: `Practice  /  ${name}, Back`, exact: true })).toBeVisible()
-    await expect(page.getByRole('progressbar')).toHaveCount(0)
+    if (name === 'Spelling') {
+      await expect(page.getByRole('progressbar', { name: 'Word 1 of 8' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Play word', exact: true })).toBeVisible()
+      await page.getByRole('radio').first().click()
+      await page.getByRole('button', { name: 'Check' }).click()
+      await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
+    } else {
+      await expect(page.getByRole('progressbar')).toHaveCount(0)
+    }
     const before = api.length
     await page.getByRole('button', { name: `Practice  /  ${name}, Back`, exact: true }).click()
     await expect(page.getByRole('button', { name, exact: true })).toBeVisible()

@@ -2,9 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { canSpeak, speak, stopSpeaking } from './speech'
 
 class FakeUtterance {
+  text: string
   lang = ''
   rate = 1
-  constructor(public text: string) {}
+  constructor(text: string) {
+    this.text = text
+  }
 }
 
 function fakeSpeech() {
