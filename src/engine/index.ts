@@ -10,6 +10,7 @@ export {
   type Grade,
   type RewardId,
 } from './config'
+export { checkChoice } from './choice'
 export { grade } from './grade'
 export { leftEarlyPayout, payout, type LeftEarlyInput, type Payout, type PayoutInput } from './payout'
 export { generateAssignment, makeProblem, type Operation, type Problem } from './problems'
