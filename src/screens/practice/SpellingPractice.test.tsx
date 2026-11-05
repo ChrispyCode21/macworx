@@ -47,7 +47,7 @@ describe('SpellingPractice', () => {
 
   it('disables both Play buttons and says why when the iPad cannot speak, with the choices still open', () => {
     const html = render()
-    expect(html).toContain(COPY.playUnavailable.replace("'", '&#x27;'))
+    expect(html).toContain(COPY.playUnavailable.replaceAll("'", '&#x27;'))
     expect(html).not.toContain(COPY.playWordSub)
     expect(html).toMatch(/aria-label="Play word"[^>]*disabled=""|disabled=""[^>]*aria-label="Play word"/)
     expect(html).toMatch(
