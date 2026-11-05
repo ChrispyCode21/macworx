@@ -22,6 +22,7 @@ describe('Spelling screen copy', () => {
     expect(COPY.hearSentence).toBe('Hear it in a sentence')
     expect(COPY.spellingChoiceHeading).toBe('Which spelling is right?')
     expect(COPY.spellingChooseOne).toBe('Choose one spelling.')
+    expect(COPY.chooseHint).toBe('Choose one')
     expect(COPY.readyToCheck).toBe('Ready to check.')
     expect(COPY.spellingNote).toBe('You can play the word as many times as you need.')
     expect(COPY.finish).toBe('Finish')

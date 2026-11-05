@@ -14,5 +14,6 @@ describe('checkChoice', () => {
   })
   it('is false for a non-integer index', () => {
     expect(checkChoice(1.5, 1.5)).toBe(false)
+    expect(checkChoice(NaN, NaN)).toBe(false)
   })
 })
