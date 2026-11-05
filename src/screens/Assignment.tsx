@@ -12,11 +12,11 @@ import { NumberPad } from '../components/NumberPad'
 import { StackedProblem } from '../components/StackedProblem'
 import { COPY } from '../copy'
 import { checkAnswer, generateAssignment } from '../engine'
-import { ArrowRightIcon, CheckIcon } from '../practice/icons'
+import { CheckIcon } from '../practice/icons'
 import type { HomeNumbers, PracticeChild } from '../sync/projection'
 import { Button } from '../ui/Button'
 import { formatEquation } from '../ui/format'
-import { READY_AFTER_MS, useReadyAfter, whenReady } from '../ui/useReadyAfter'
+import { NextButton } from './practice/NextButton'
 import { PracticeFrame } from './practice/PracticeFrame'
 
 interface Props {
@@ -28,20 +28,6 @@ interface Props {
   /** Her answers in order, one per problem she checked. */
   onFinish: (answers: number[], correct: number) => void
   onLeave: (answers: number[], correct: number) => void
-}
-
-/**
- * Next sits where Check just was. For a moment after it appears it ignores taps, so a double tap on Check
- * can't also skip her result (SPEC §5.1 step 4). Mounted fresh after Check, so it takes focus.
- */
-function NextButton({ label, onClick }: { label: string; onClick: () => void }) {
-  const ready = useReadyAfter(READY_AFTER_MS)
-  return (
-    <Button autoFocus variant="action" data-ready={ready || undefined} onClick={whenReady(ready, onClick)}>
-      {label}
-      <ArrowRightIcon />
-    </Button>
-  )
 }
 
 /** One assignment, a problem at a time (SPEC §5.1). */

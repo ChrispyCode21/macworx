@@ -13,6 +13,29 @@ describe('Math screen copy', () => {
   })
 })
 
+describe('Spelling screen copy', () => {
+  it('words the listen panel, the choices and the finish', () => {
+    expect(COPY.spellingEyebrow).toBe('Listen and spell')
+    expect(COPY.playWord).toBe('Play word')
+    expect(COPY.playWordSub).toBe('Listen to the word, then choose its spelling.')
+    expect(COPY.playUnavailable).toBe("This iPad can't play the word. You can still choose a spelling.")
+    expect(COPY.hearSentence).toBe('Hear it in a sentence')
+    expect(COPY.spellingChoiceHeading).toBe('Which spelling is right?')
+    expect(COPY.spellingChooseOne).toBe('Choose one spelling.')
+    expect(COPY.chooseHint).toBe('Choose one')
+    expect(COPY.readyToCheck).toBe('Ready to check.')
+    expect(COPY.spellingNote).toBe('You can play the word as many times as you need.')
+    expect(COPY.finish).toBe('Finish')
+    expect(COPY.backToHome).toBe('Back to Home')
+  })
+
+  it('names the right spelling, the progress and the finish by count', () => {
+    expect(COPY.spellingAnswer('said')).toBe('This word is spelled said.')
+    expect(COPY.spellingProgress(1, 8)).toBe('Word 1 of 8')
+    expect(COPY.spellingDone(8)).toBe('You finished all 8 words!')
+  })
+})
+
 describe('device sync copy', () => {
   it('words the last-synced line', () => {
     expect(COPY.parentNoResultsYet).toBe('No results yet')

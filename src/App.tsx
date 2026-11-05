@@ -9,6 +9,7 @@ import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
 import { PracticeStub } from './screens/practice/PracticeStub'
+import { SpellingPractice } from './screens/practice/SpellingPractice'
 import { Result, type Outcome } from './screens/Result'
 
 type Screen =
@@ -115,7 +116,11 @@ function ChildApp() {
         />
       )
     case 'practice':
-      return <PracticeStub subject={screen.subject} numbers={numbers} child={screen.child} onBack={home} />
+      return screen.subject === 'spelling' ? (
+        <SpellingPractice numbers={numbers} child={screen.child} onBack={home} />
+      ) : (
+        <PracticeStub subject={screen.subject} numbers={numbers} child={screen.child} onBack={home} />
+      )
     case 'pair':
       return <Pair onDone={home} />
     case 'assignment':

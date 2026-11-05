@@ -17,6 +17,8 @@ interface Props {
   /** What the back control does; its accessible name is the visible crumb text, then this (WCAG 2.5.3). */
   backLabel: string
   note?: string
+  /** An icon before the note (20, `--l-muted`). */
+  noteIcon?: ReactNode
   /** The activity row: the problem and the pad. */
   children: ReactNode
   /** The actions row's buttons. */
@@ -36,6 +38,7 @@ export function PracticeFrame({
   onBack,
   backLabel,
   note,
+  noteIcon,
   children,
   actions,
 }: Props) {
@@ -103,7 +106,12 @@ export function PracticeFrame({
         </div>
         <div className="practice-activity">{children}</div>
         <div className="practice-actions">
-          {note && <p className="practice-note">{note}</p>}
+          {note && (
+            <p className="practice-note">
+              {noteIcon}
+              {note}
+            </p>
+          )}
           <div className="practice-buttons">{actions}</div>
         </div>
       </main>
