@@ -33,6 +33,12 @@ describe('SpellingPractice', () => {
     expect(html).toContain(COPY.spellingChooseOne)
   })
 
+  it('gives the first choice the only tab stop while none is chosen', () => {
+    const html = render()
+    expect(html.match(/role="radio"[^>]*tabindex="0"|tabindex="0"[^>]*role="radio"/g)).toHaveLength(1)
+    expect(html.match(/tabindex="-1"/g)).toHaveLength(3)
+  })
+
   it('disables Check until a choice is made', () => {
     expect(render()).toMatch(
       /<button[^>]*disabled=""[^>]*class="button button-action"|class="button button-action"[^>]*disabled=""/,
