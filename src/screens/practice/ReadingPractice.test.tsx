@@ -20,7 +20,7 @@ describe('ReadingPractice', () => {
     expect(html).toContain('aria-valuenow="1"')
     expect(html).toContain('aria-valuemax="2"')
     // React escapes the apostrophe in the markup.
-    expect(html).toContain(COPY.readingNote(READING_COUNT).replace("'", '&#x27;'))
+    expect(html).toContain(COPY.readingNote(READING_COUNT).replaceAll("'", '&#x27;'))
   })
 
   it('shows the passage and the guidance, with no picture', () => {
