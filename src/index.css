@@ -3062,4 +3062,126 @@ p {
   letter-spacing: -0.6px;
   line-height: 1.3;
 }
+
+/* Reading: the passage beside its guidance, and one card per question (docs/DESIGN-PRACTICE.md §3, §11, §12). One column below 1024px, in reading order; the page scrolls. */
+.practice-reading {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .practice-reading-passage {
+    grid-template-columns: minmax(0, 746fr) minmax(0, 344fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .practice-reading-questions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* The passage scrolls inside its panel when it is taller than the panel. */
+.practice-passage {
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.practice-passage-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.practice-passage-title {
+  margin: 0;
+  color: var(--l-text);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
+
+.practice-passage-text {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--l-text);
+  font-family: ui-serif, Georgia, serif;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+/* The companion: the soft panel with the guidance only, as the sample has no picture. */
+.practice-panel-soft {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  border-radius: 20px;
+  background: var(--l-chip);
+  overflow: hidden;
+}
+
+.practice-companion {
+  gap: 12px;
+  padding: 24px;
+  color: var(--l-link);
+}
+
+.practice-guide-title {
+  color: var(--l-text);
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.practice-guide-text {
+  color: var(--l-link);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.practice-question-card {
+  gap: 16px;
+  padding: 28px;
+}
+
+.practice-eyebrow-question {
+  letter-spacing: 0.7px;
+}
+
+.practice-question {
+  min-height: 64px;
+  color: var(--l-text);
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.practice-reading-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.practice-reading-choices .button-choice {
+  padding-block: 12px;
+}
+
+.answer-choice {
+  flex: 1;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.practice .practice-reading-response {
+  flex: none;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
 /* practice: end */

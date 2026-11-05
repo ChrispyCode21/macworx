@@ -73,6 +73,22 @@ export const COPY = {
   finish: 'Finish',
   spellingDone: (total: number) => `You finished all ${total} words!`,
   backToHome: 'Back to Home',
+  readingProgressRead: 'Step 1 of 2 · Read',
+  readingProgressQuestions: 'Step 2 of 2 · Questions',
+  readingEyebrow: (kind: string, minutes: number) => `${kind} · ${formatNumber(minutes)} min read`,
+  readingGuideTitle: 'Read at your own pace.',
+  readingNote: (n: number) => `When you're ready, there are ${formatNumber(n)} questions about this passage.`,
+  questionEyebrow: (n: number, skill: string) => `Question ${formatNumber(n)} · ${skill}`,
+  readingChooseOne: 'Choose one answer.',
+  readingChosenNote: (k: number) =>
+    k === 0
+      ? 'You can read the passage again.'
+      : `${formatNumber(k)} ${k === 1 ? 'answer' : 'answers'} chosen. You can read the passage again.`,
+  readAgain: 'Read again',
+  checkAnswers: 'Check answers',
+  done: 'Done',
+  readingBestAnswer: (letter: string) => `The best answer is ${letter}.`,
+  readingDone: 'You finished the passage and its questions!',
   mathTitle: 'A little practice, a little progress.',
   mathNote: "Take your time. There's no timer.",
   /** The problem panel's label (docs/DESIGN-PRACTICE.md §8). */

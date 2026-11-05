@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  BookOpenIcon,
   CheckIcon,
   CoinsIcon,
   DeleteIcon,
@@ -25,6 +26,7 @@ const ICONS = [
   ['Delete', DeleteIcon, 27, 27],
   ['Play', PlayIcon, 40, 40],
   ['Volume2', Volume2Icon, 18, 18],
+  ['BookOpen', BookOpenIcon, 24, 24],
 ] as const
 
 describe('the practice icons', () => {
