@@ -6,6 +6,8 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-06
+
 ### Changed
 
 - **A failed read says so, block by block (parents):** when the numbers or a list can't load, the Overview tiles, Today's assignments, the devices row and the Macaronis and Streak numbers show "Not available right now." in place of a dash, matching Results. Blocks that did load keep their values.
