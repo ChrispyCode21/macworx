@@ -118,13 +118,22 @@ describe('size tokens', () => {
     let selector = ''
     for (const line of css.split('\n')) {
       if (line.trimEnd().endsWith('{')) selector = line.trim().replace(/\s*\{$/, '')
-      const m = line.match(/^\s*font-size:\s*(\d*\.?\d+)(px|rem|em)\s*;/)
+      const m = line.match(/font-size:\s*(\d*\.?\d+)(px|rem|em)/i)
       if (!m) continue
       if (m[2] === 'px') {
         // The 24px on :root is the rem base.
         if (selector !== ':root') literal.push(`${selector}: ${m[1]}px (use var(--text-${m[1]}))`)
       } else rem.push(`${selector} ${m[1]}${m[2]}`)
     }
+    const used = [...css.matchAll(/var\(--text-([a-z0-9-]+)\)/g)].map((m) => m[1])
+    expect(
+      used.filter((n) => !TEXT.includes(Number(n))),
+      'a var(--text-N) names a token that does not exist',
+    ).toEqual([])
+    expect(
+      [...new Set(used.map(Number))].sort((x, y) => x - y),
+      'a text token is never used',
+    ).toEqual(TEXT)
     expect(literal, 'src/index.css uses a literal font size').toEqual([])
     expect(rem, 'the rem sizes in the base styles changed; update REM_SIZES').toEqual(REM_SIZES)
   })
