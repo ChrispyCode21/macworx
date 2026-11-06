@@ -6,6 +6,8 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-06
+
 ### Added
 
 - **Reading sample (iPad):** Reading opens one passage (placeholder text, no picture) with a short guide beside it, and a Next button. Next opens its two questions, each with three choices. "Read again" shows the passage again and keeps her choices, before and after Check. Check answers turns on once every question has a choice. Each choice then turns soft green when it's right or soft coral when it's not, with a friendly line naming the best answer. Done shows that she's finished, with a button back to Home. It works paired or not, online or offline. Nothing is recorded or paid, and leaving starts again at the passage.
