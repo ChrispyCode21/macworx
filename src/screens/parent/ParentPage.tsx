@@ -71,6 +71,24 @@ export function ParentPage({
   const [problem, setProblem] = useState<string | null>(null)
   // True once one of the page's reads has failed: only then does a missing value say it is not available.
   const [readFailed, setReadFailed] = useState(false)
+  // The banner text a failed read put up, so a finished load clears that and not a message a click put up since.
+  const readProblem = useRef<string | null>(null)
+  // A message from a read, which a later successful read clears.
+  const readSays = (message: string | null) => {
+    readProblem.current = message
+    setProblem(message)
+  }
+  // A message from something the parent did, which no read clears.
+  const say = (message: string | null) => {
+    readProblem.current = null
+    setProblem(message)
+  }
+  // A successful read clears the message a failed read put up, and leaves one a parent's action put up.
+  const readClears = () => {
+    const old = readProblem.current
+    readProblem.current = null
+    setProblem((now) => (now === old ? null : now))
+  }
   const [making, setMaking] = useState(false)
   const [days, setDays] = useState<string[] | null>(null)
   // Kept apart from the page banner, which a later successful refresh clears.
@@ -89,8 +107,9 @@ export function ParentPage({
     const day = localDay(readAt)
     // No message means the page is reloading for a sign-in: nothing says "not available" in the meantime.
     const stop = (message: string | null) => {
-      if (message !== null) setReadFailed(true)
-      setProblem(message)
+      if (message === null) return
+      setReadFailed(true)
+      readSays(message)
     }
     // Each read is kept as it arrives, so the blocks that did load keep their values when a later read fails.
     const summaryResult = await getSummary(day)
@@ -111,7 +130,7 @@ export function ParentPage({
     if (!logResult.ok) return stop(failure(logResult))
     setLog(logResult.body.entries)
     setReadFailed(false)
-    setProblem(null)
+    readClears()
   }
   const adjust = useAdjust({
     balance: summary?.balance ?? null,
@@ -140,10 +159,11 @@ export function ParentPage({
         // The next visit to the Streak tab reads again.
         daysAsked.current = false
         setDaysFailed(true)
-        return setProblem(summaryFailure(result))
+        return readSays(summaryFailure(result))
       }
       setDaysFailed(false)
       setDays(result.body.days)
+      readClears()
     })()
   }, [tab])
 
@@ -155,25 +175,25 @@ export function ParentPage({
   }, [code])
 
   const onMakeCode = async () => {
-    setProblem(null)
+    say(null)
     const trimmed = name.trim()
-    if (trimmed.length < 1 || trimmed.length > MAX_NAME) return setProblem(COPY.parentNameProblem)
+    if (trimmed.length < 1 || trimmed.length > MAX_NAME) return say(COPY.parentNameProblem)
     // One request at a time: a second code voids the first, so a quick double click must not race.
     setMaking(true)
     const result = await makeCode(trimmed)
     if (!live.current) return
     setMaking(false)
-    if (!result.ok) return setProblem(failure(result))
+    if (!result.ok) return say(failure(result))
     setNow(new Date())
     setCode(result.body)
   }
 
   const onUnpair = async (device: Device) => {
     setConfirming(null)
-    setProblem(null)
+    say(null)
     const result = await unpair(device.id)
     if (!live.current) return
-    if (!result.ok) return setProblem(failure(result))
+    if (!result.ok) return say(failure(result))
     await refresh()
   }
 
