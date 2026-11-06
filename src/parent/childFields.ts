@@ -16,8 +16,11 @@ export type FieldError = 'bad_name' | 'bad_grade' | 'bad_initials'
 const CONTROL = /\p{Cc}/u
 /** Bidi embedding, override and isolate characters: U+202A to U+202E and U+2066 to U+2069. */
 const BIDI = /[\u202A-\u202E\u2066-\u2069]/u
-/** Only spaces, separators, control and default-ignorable characters: nothing a person can see. */
-const INVISIBLE_ONLY = /^[\p{Z}\p{Cc}\p{Default_Ignorable_Code_Point}\s]*$/u
+/**
+ * Only characters that draw nothing on their own: spaces and separators, control, format and default-ignorable
+ * characters, combining marks, private-use and unassigned code points, and the braille blank (U+2800).
+ */
+const INVISIBLE_ONLY = /^[\p{Z}\p{Cc}\p{Cf}\p{Co}\p{Cn}\p{M}\p{Default_Ignorable_Code_Point}\s\u2800]*$/u
 const LETTER = /^\p{L}$/u
 const INITIALS = /^\p{L}+$/u
 

@@ -34,6 +34,18 @@ describe('name', () => {
       '\u{E0100}',
       '\u2061',
       '\u200B\u3164\uFE0F',
+      // Marks, other format characters, private-use and unassigned code points, and the braille blank.
+      '\u2800',
+      '\u2800\u2800',
+      '\u0301',
+      '\u0301\u0308',
+      '\uFFF9',
+      '\uFFFA\uFFFB',
+      '\u0600',
+      '\u0605',
+      '\uE000',
+      '\u0378',
+      ' \u2800 \u0301 ',
     ]) {
       expect(cleanName(name), JSON.stringify(name)).toBeNull()
     }
@@ -63,6 +75,16 @@ describe('name', () => {
       'Sa\u200Bm',
       'Sam\u200E',
       'Sam\u200F',
+      'Sam\u0301',
+      'A\u2800B',
+      'Sam\uE000',
+      '\u0301S',
+      // Visible symbols and emoji that contain characters the "nothing visible" check looks at.
+      '\u2764\uFE0F',
+      '1\uFE0F\u20E3',
+      '\u{1F44B}\u{1F3FD}',
+      '\u2605',
+      '7',
       'سارة',
     ]) {
       expect(cleanName(name), JSON.stringify(name)).toBe(name)
