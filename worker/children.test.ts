@@ -60,6 +60,8 @@ describe('POST /api/parent/children', () => {
     ['bad_name', { name: '' }],
     ['bad_name', { name: 'a'.repeat(21) }],
     ['bad_name', { name: '\u200B' }],
+    ['bad_name', { name: '\u2800' }],
+    ['bad_name', { name: '\u0301' }],
     ['bad_name', { name: 'Sam\u202E' }],
     ['bad_name', { grade: '4th' }],
     ['bad_grade', { name: 'Sam', grade: 'g'.repeat(6) }],
@@ -132,6 +134,8 @@ describe('PATCH /api/parent/children/:id', () => {
   it.each([
     ['bad_name', { name: ' ' }],
     ['bad_name', { name: '\u200B' }],
+    ['bad_name', { name: '\u2800' }],
+    ['bad_name', { name: '\uE000' }],
     ['bad_name', { name: 'Sam\u202E' }],
     ['bad_name', { name: 'a'.repeat(21) }],
     ['bad_grade', { grade: 'g'.repeat(6) }],
