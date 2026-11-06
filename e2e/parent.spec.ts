@@ -445,6 +445,22 @@ test('when the numbers and lists fail to load, each block says so instead of sho
   await expect(page.getByText('Loading…')).toHaveCount(0)
 })
 
+test('when only the devices read fails, the numbers that loaded keep their values', async ({ page }) => {
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/parent/devices') return route.fulfill({ status: 500, json: { error: 'server' } })
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/overview')
+  await expect(page.getByRole('alert')).toBeVisible()
+  const stats = page.locator('.overview .overview-stat-value')
+  // The balance and streak arrived before the devices read failed, so they stay.
+  await expect(stats.first()).not.toHaveText('Not available right now.')
+  await expect(stats.first()).toContainText('41')
+  // The devices row is the block that did not load.
+  await expect(page.getByText('Not available right now.').first()).toBeVisible()
+})
+
 test('a later success clears an earlier message', async ({ page }) => {
   let fail = true
   await page.route('/api/parent/**', (route) => {
