@@ -138,7 +138,7 @@ p {
   display: grid;
   /* The operator, then one column per place value (StackedProblem sets --columns). */
   grid-template-columns: auto repeat(var(--columns), var(--digit));
-  column-gap: 6px;
+  column-gap: var(--space-6);
   font-size: 2.8rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -151,18 +151,18 @@ p {
 }
 
 .stacked-op {
-  padding-right: 10px;
+  padding-right: var(--space-10);
 }
 
 .stacked-rule {
   grid-column: 1 / -1;
   border-top: 6px solid var(--ink);
-  margin: 8px 0;
+  margin: var(--space-8) 0;
 }
 
 .answer-box {
   height: 1.3em;
-  margin-top: 6px;
+  margin-top: var(--space-6);
   border: 3px solid var(--soft);
   border-radius: 10px;
   color: var(--answer-ink);
@@ -217,7 +217,7 @@ p {
 }
 
 .note {
-  padding: 12px 20px;
+  padding: var(--space-12) var(--space-20);
   border-radius: var(--radius);
   background: var(--soft);
 }
@@ -227,7 +227,7 @@ p {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  gap: var(--space-12);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -237,11 +237,11 @@ p {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 16px;
+  gap: var(--space-16);
 }
 
 .home-numbers li {
-  padding: 12px 20px;
+  padding: var(--space-12) var(--space-20);
   border-radius: var(--radius);
   background: var(--soft);
   font-size: 1.4rem;
@@ -258,7 +258,7 @@ p {
 .code-boxes {
   display: grid;
   grid-template-columns: repeat(6, 1.1em);
-  gap: 6px;
+  gap: var(--space-6);
   font-size: 2.8rem;
   font-weight: 700;
 }
@@ -2476,13 +2476,13 @@ p {
 .text-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
   width: 100%;
 }
 
 .text-field-input {
   font: inherit;
-  padding: 12px;
+  padding: var(--space-12);
   border: 2px solid var(--accent);
   border-radius: 10px;
 }
@@ -2539,8 +2539,8 @@ p {
   align-items: center;
   justify-content: space-between;
   height: calc(82px + env(safe-area-inset-top));
-  padding: env(safe-area-inset-top) max(40px, env(safe-area-inset-right)) 0
-    max(40px, env(safe-area-inset-left));
+  padding: env(safe-area-inset-top) max(var(--space-40), env(safe-area-inset-right)) 0
+    max(var(--space-40), env(safe-area-inset-left));
   background: var(--l-surface);
   border-bottom: 1px solid var(--l-line);
 }
@@ -2549,7 +2549,7 @@ p {
 .practice-tools {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
 .practice-brand {
@@ -2566,9 +2566,9 @@ p {
 .practice-chip {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
   height: 48px;
-  padding: 0 16px;
+  padding: 0 var(--space-16);
   border-radius: var(--radius-control);
   background: var(--l-chip);
   color: var(--l-link);
@@ -2604,15 +2604,15 @@ p {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 24px max(40px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
-    max(40px, env(safe-area-inset-left));
+  gap: var(--space-20);
+  padding: var(--space-24) max(var(--space-40), env(safe-area-inset-right))
+    max(var(--space-16), env(safe-area-inset-bottom)) max(var(--space-40), env(safe-area-inset-left));
 }
 
 .practice-heading {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-12);
   min-height: 90px;
 }
 
@@ -2620,7 +2620,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-12);
   height: 24px;
 }
 
@@ -2634,7 +2634,7 @@ p {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-12);
   min-height: 54px;
 }
 
@@ -2648,7 +2648,7 @@ p {
 .practice-progress {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-10);
   width: 182px;
 }
 
@@ -2677,7 +2677,7 @@ p {
   min-height: 478px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  gap: var(--space-24);
 }
 
 /* 1024px wide and up (landscape iPads, and a portrait 12.9-inch iPad Pro): the problem beside the pad. Narrower, they stack, problem first (docs/DESIGN-PRACTICE.md §3). */
@@ -2691,7 +2691,7 @@ p {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 32px;
+  padding: var(--space-32);
   border: 1px solid var(--l-line);
   border-radius: var(--radius-panel);
   background: var(--l-surface);
@@ -2704,8 +2704,8 @@ p {
 /* The number pad. The response replaces its contents. The panel is at least as tall as the pad (24 + 24 + 16 + 4 x 72 + 3 x 10 + 24), so the response fits without a jump. */
 .practice-panel-warm {
   min-height: 406px;
-  gap: 16px;
-  padding: 24px;
+  gap: var(--space-16);
+  padding: var(--space-24);
   border: none;
   background: var(--l-warm);
 }
@@ -2713,7 +2713,7 @@ p {
 .practice-instructions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-10);
 }
 
 .practice-eyebrow {
@@ -2762,19 +2762,19 @@ p {
 
 .practice .stacked-rule {
   border-top: 2px solid var(--l-text);
-  margin: 8px 0;
+  margin: var(--space-8) 0;
 }
 
 .practice .answer-box {
   height: 68px;
-  margin-top: 6px;
+  margin-top: var(--space-6);
 }
 
 .practice .pad {
   align-self: center;
   justify-self: center;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: var(--space-10);
   width: 100%;
 }
 
@@ -2784,7 +2784,7 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-8);
   min-height: 0;
   text-align: center;
 }
@@ -2814,14 +2814,14 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-12);
   height: 64px;
 }
 
 .practice-note {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
   color: var(--l-muted);
   font-size: 14px;
   font-weight: 400;
@@ -2831,7 +2831,7 @@ p {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
 .practice .button:focus-visible {
@@ -2844,10 +2844,10 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--space-12);
   height: 56px;
   min-width: 220px;
-  padding: 0 24px;
+  padding: 0 var(--space-24);
   border: 1px solid var(--l-primary);
   border-radius: var(--radius-control);
   background: var(--l-primary);
@@ -2866,7 +2866,7 @@ p {
 .button-crumb {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-8);
   min-height: 44px;
   padding: 0;
   border: none;
@@ -2910,7 +2910,7 @@ p {
 .button-support {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-8);
   height: 44px;
   padding: 0;
   border: none;
@@ -2923,9 +2923,9 @@ p {
 .button-choice {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-16);
   min-height: 78px;
-  padding: 0 18px;
+  padding: 0 var(--space-18);
   border: 1px solid var(--l-line);
   border-radius: var(--radius-control);
   background: var(--l-surface);
@@ -2985,13 +2985,13 @@ p {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
+  gap: var(--space-32);
 }
 
 @media (min-width: 1024px) {
   .practice-spelling {
     grid-template-columns: minmax(0, 460fr) minmax(0, 540fr);
-    gap: 48px;
+    gap: var(--space-48);
   }
 }
 
@@ -3000,8 +3000,8 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  padding: 32px 24px;
+  gap: var(--space-20);
+  padding: var(--space-32) var(--space-24);
   border-radius: var(--radius-control);
   background: var(--l-inset);
 }
@@ -3010,7 +3010,7 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-8);
   width: 360px;
   max-width: 100%;
   text-align: center;
@@ -3032,7 +3032,7 @@ p {
 .practice-choices {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-10);
 }
 
 .practice-choices-head {
@@ -3057,7 +3057,7 @@ p {
 .practice-choice-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-10);
 }
 
 .word-choice {
@@ -3082,7 +3082,7 @@ p {
 .practice-done {
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: var(--space-16);
   grid-column: 1 / -1;
   text-align: center;
 }
@@ -3100,7 +3100,7 @@ p {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  gap: var(--space-24);
   min-height: 0;
 }
 
@@ -3117,7 +3117,7 @@ p {
 
 /* The passage scrolls inside its panel when it is taller than the panel. */
 .practice-passage {
-  gap: 20px;
+  gap: var(--space-20);
   min-height: 0;
   overflow-y: auto;
 }
@@ -3125,7 +3125,7 @@ p {
 .practice-passage-head {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-10);
 }
 
 .practice-passage-title {
@@ -3139,7 +3139,7 @@ p {
 .practice-passage-text {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-18);
   color: var(--l-text);
   font-family: ui-serif, Georgia, serif;
   font-size: 19px;
@@ -3159,8 +3159,8 @@ p {
 }
 
 .practice-companion {
-  gap: 12px;
-  padding: 24px;
+  gap: var(--space-12);
+  padding: var(--space-24);
   color: var(--l-link);
 }
 
@@ -3178,8 +3178,8 @@ p {
 }
 
 .practice-question-card {
-  gap: 16px;
-  padding: 28px;
+  gap: var(--space-16);
+  padding: var(--space-28);
 }
 
 .practice-eyebrow-question {
@@ -3197,11 +3197,11 @@ p {
 .practice-reading-choices {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
 .practice-reading-choices .button-choice {
-  padding-block: 12px;
+  padding-block: var(--space-12);
 }
 
 .answer-choice {
