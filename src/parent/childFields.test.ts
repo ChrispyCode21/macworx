@@ -79,6 +79,12 @@ describe('name', () => {
       'A\u2800B',
       'Sam\uE000',
       '\u0301S',
+      // Visible symbols and emoji that contain characters the "nothing visible" check looks at.
+      '\u2764\uFE0F',
+      '1\uFE0F\u20E3',
+      '\u{1F44B}\u{1F3FD}',
+      '\u2605',
+      '7',
       'سارة',
     ]) {
       expect(cleanName(name), JSON.stringify(name)).toBe(name)
