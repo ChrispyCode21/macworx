@@ -4,6 +4,7 @@
 // a failure, so every failure shows at once. Exits 1 if any failed.
 // With --fast (`npm run check:fast`), only the quick ones: no build or Playwright, but a type-check.
 import { spawnSync } from 'node:child_process'
+import { failureReport } from './check-all-report.mjs'
 
 const fast = process.argv.includes('--fast')
 const checks = [
@@ -27,7 +28,7 @@ for (const name of checks) {
     console.log(`ok   ${name}`)
   } else {
     failed.push(name)
-    console.log(`FAIL ${name}\n${run.stdout.trimEnd()}\n`)
+    console.log(failureReport(name, run))
   }
 }
 
