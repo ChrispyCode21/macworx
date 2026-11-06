@@ -38,8 +38,8 @@ function problemText(result: Extract<ParentResult<unknown>, { ok: false }>): str
 }
 
 /** The boxes' starting text: nothing to add; the child's own in Rename, with initials left to follow the name. */
-function startingFields(mode: ChildMode, child: Child) {
-  if (mode === 'add') return { name: '', grade: '', initials: '' }
+function startingFields(mode: ChildMode, child: Child | null) {
+  if (mode === 'add' || !child) return { name: '', grade: '', initials: '' }
   const filled = child.initials === fillInitials(child.name)
   return { name: child.name, grade: child.grade, initials: filled ? '' : child.initials }
 }
@@ -47,8 +47,8 @@ function startingFields(mode: ChildMode, child: Child) {
 interface Props {
   mode: ChildMode
   onMode: (mode: ChildMode) => void
-  /** The selected child: who Rename is for. */
-  child: Child
+  /** The selected child: who Rename is for. None in a household with no children, which can only Add. */
+  child: Child | null
   /** True when the portal wants the Name box focused; `onFocused` says it has been. */
   focusName: boolean
   onFocused: () => void
@@ -100,7 +100,7 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
     refocusSave.current = mode === 'rename' && document.activeElement === saveBox.current
     setSaving(true)
     const result =
-      mode === 'add' ? await addChild(checked.fields) : await renameChild(child.id, checked.fields)
+      mode === 'add' || !child ? await addChild(checked.fields) : await renameChild(child.id, checked.fields)
     setSaving(false)
     if (!result.ok) return setProblem(problemText(result))
     setNotice(
@@ -116,18 +116,20 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
   return (
     <section className="parent-section" aria-labelledby="children-heading">
       <h2 id="children-heading">{COPY.parentChildrenHeading}</h2>
-      <Segmented
-        label={COPY.parentChildModeLabel}
-        options={[
-          { value: 'add', label: COPY.parentChildAddMode },
-          { value: 'rename', label: COPY.parentChildRenameMode },
-        ]}
-        value={mode}
-        onChange={(next) => {
-          setNotice(null)
-          onMode(next)
-        }}
-      />
+      {child && (
+        <Segmented
+          label={COPY.parentChildModeLabel}
+          options={[
+            { value: 'add', label: COPY.parentChildAddMode },
+            { value: 'rename', label: COPY.parentChildRenameMode },
+          ]}
+          value={mode}
+          onChange={(next) => {
+            setNotice(null)
+            onMode(next)
+          }}
+        />
+      )}
       {/* maxLength counts UTF-16 units, so doubling the limit leaves room for emoji and other astral
           characters; the real limit, in characters, is checked on Save (childFields.ts). */}
       <TextField

@@ -16,10 +16,12 @@ import {
 } from '../../parent/icons'
 import { TABS, tabFromPath, tabPath } from '../../parent/route'
 import type { Tab } from '../../parent/route'
-import { pickChild, readSelectedChild, rememberChild } from '../../parent/selection'
+import { childrenLoad, readSelectedChild, rememberChild } from '../../parent/selection'
+import type { ChildrenLoad } from '../../parent/selection'
 import { Button } from '../../ui/Button'
 import { formatLongDay } from '../../ui/format'
 import { ChildForm } from './ChildForm'
+import { ChildrenGate } from './ChildrenGate'
 import type { ChildMode } from './ChildForm'
 import { ParentPage } from './ParentPage'
 
@@ -60,12 +62,6 @@ function heading(tab: Tab, child: Child | null): { title: string; sub: string | 
   }
 }
 
-type Load =
-  | { status: 'loading' }
-  // The children couldn't be listed: the screens show today's refusal themselves.
-  | { status: 'unavailable' }
-  | { status: 'ready'; children: Child[]; selected: Child }
-
 function Avatar({ child }: { child: Child }) {
   return (
     <span className="portal-avatar" aria-hidden="true">
@@ -88,7 +84,8 @@ function Who({ child }: { child: Child }) {
 /** The parent portal (SPEC §5.3): the shell, the five tabs, and the child every screen is for. */
 export function Portal() {
   const [tab, setTab] = useState<Tab>(() => tabFromPath(location.pathname))
-  const [load, setLoad] = useState<Load>({ status: 'loading' })
+  const [load, setLoad] = useState<ChildrenLoad>({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
   const [open, setOpen] = useState(false)
   const [childMode, setChildMode] = useState<ChildMode>('add')
   const [focusName, setFocusName] = useState(false)
@@ -107,17 +104,21 @@ export function Portal() {
     void getChildren().then((result) => {
       if (!live) return
       // The page is reloading for Access to sign in again: show nothing, not a refusal in the meantime.
-      if (!result.ok && result.error === 'reloading') return
-      const picked = result.ok ? pickChild(result.body.children, readSelectedChild()) : null
-      if (!result.ok || !picked) return setLoad({ status: 'unavailable' })
+      const next = childrenLoad(result, readSelectedChild())
+      if (!next) return
       // Before the screens mount, so their first reads are for this child.
-      chooseChild(picked.id)
-      setLoad({ status: 'ready', children: result.body.children, selected: picked })
+      if (next.status === 'ready') chooseChild(next.selected.id)
+      setLoad(next)
     })
     return () => {
       live = false
     }
-  }, [])
+  }, [attempt])
+
+  const retry = () => {
+    setLoad({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
 
   const go = (next: Tab) => {
     if (next === tab) return
@@ -165,7 +166,11 @@ export function Portal() {
     // Called after an await, so it updates from the latest state, not the render where Save was pressed.
     chooseChild(child.id)
     rememberChild(child.id)
-    setLoad((l) => (l.status !== 'ready' ? l : { ...l, children: [...l.children, child], selected: child }))
+    setLoad((l) => ({
+      status: 'ready',
+      children: l.status === 'ready' ? [...l.children, child] : [child],
+      selected: child,
+    }))
     setChildMode('add')
     title.current?.focus()
   }
@@ -300,7 +305,21 @@ export function Portal() {
               onRenamed={onRenamed}
             />
           )}
-          {load.status === 'unavailable' && <ParentPage key="none" tab={tab} childName={null} onGo={go} />}
+          {load.status === 'unavailable' && <ChildrenGate signedOut={load.signedOut} onRetry={retry} />}
+          {load.status === 'none' && (
+            <>
+              <p role="status">{COPY.parentNoChildren}</p>
+              <ChildForm
+                mode="add"
+                onMode={setChildMode}
+                child={null}
+                focusName={focusName}
+                onFocused={() => setFocusName(false)}
+                onAdded={onAdded}
+                onRenamed={onRenamed}
+              />
+            </>
+          )}
         </main>
         {tab === 'overview' && (
           <p className="portal-note">
