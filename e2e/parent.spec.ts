@@ -112,6 +112,48 @@ test('makes a code for a named device and counts it down', async ({ page }) => {
   await expect(page.getByText('This code has run out. Make a new one.')).toBeVisible()
 })
 
+test('a message from a click stays when the page finishes loading afterwards', async ({ page }) => {
+  // The activity log is the last read of a load: hold its answer until after the click.
+  let release: () => void = () => {}
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await page.route('/api/parent/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/parent/log') await held
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/devices')
+  await expect(page.getByText('No devices paired yet.')).toBeVisible()
+  const message = page.getByText('Give the device a name of up to 40 characters.')
+  await page.getByRole('button', { name: 'Generate pairing code' }).click()
+  await expect(message).toBeVisible()
+  const logAnswered = page.waitForResponse((r) => new URL(r.url()).pathname === '/api/parent/log')
+  release()
+  await logAnswered
+  // Give the last read time to land, then check the message is still there.
+  await page.waitForLoadState('networkidle')
+  await expect(message).toBeVisible()
+})
+
+test('the banner from a failed days read clears when the days read works again', async ({ page }) => {
+  let failDays = true
+  await page.route('/api/parent/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/parent/days' && failDays)
+      return route.fulfill({ status: 500, json: { error: 'server' } })
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  // Let the page finish loading first, so only the days read is in flight on the Streak tab.
+  await page.goto('/parent/overview')
+  await page.waitForLoadState('networkidle')
+  await page.getByRole('link', { name: 'Streak' }).first().click()
+  await expect(page.getByRole('alert')).toBeVisible()
+  failDays = false
+  // The next visit to the Streak tab reads the days again.
+  await page.getByRole('link', { name: 'Overview' }).first().click()
+  await page.getByRole('link', { name: 'Streak' }).first().click()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+})
+
 test('asks for a name before making a code', async ({ page }) => {
   const calls = await parentApi(page, [])
   await page.goto('/parent/devices')
