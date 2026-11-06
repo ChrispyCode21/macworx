@@ -221,13 +221,18 @@ describe('preview pairing (SPEC §6.9)', () => {
     ['has a different preview code', { access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '12345' }],
     ['has an empty preview code', { access: false }, { PREVIEW: '1', PREVIEW_PAIR_CODE: '' }],
   ] as const)
-    it(`A9: the preview code is refused when the Worker ${label}`, async () => {
-      await t.dispose()
-      t = await createTestDb(env)
-      Object.assign(t.env, extra)
-      expect(await pair(PREVIEW_CODE)).toEqual({ status: 400, body: { error: 'bad_code' } })
-      expect(await devices()).toBe(0)
-    })
+    it(
+      `A9: the preview code is refused when the Worker ${label}`,
+      // Rebuilds the D1 database, which can pass Vitest's default 5 seconds under a parallel run (#99, #117).
+      { timeout: 30_000 },
+      async () => {
+        await t.dispose()
+        t = await createTestDb(env)
+        Object.assign(t.env, extra)
+        expect(await pair(PREVIEW_CODE)).toEqual({ status: 400, body: { error: 'bad_code' } })
+        expect(await devices()).toBe(0)
+      },
+    )
 
   it('A10: a wrong code on a preview → refused like any wrong code', async () => {
     await asPreview()
