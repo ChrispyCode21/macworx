@@ -2,7 +2,7 @@
 import { checkChildFields, cleanGrade, cleanInitials, cleanName } from '../src/parent/childFields'
 import type { ChildFields } from '../src/parent/childFields'
 import { error, json, readJson } from './http'
-import type { ParentRequest } from './parent'
+import type { ParentRequest } from './parent-request'
 
 const WRITE_ATTEMPTS = 3
 
