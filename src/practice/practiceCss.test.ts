@@ -60,7 +60,7 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
       expect(match, selector).not.toBeNull()
       return match?.[1] ?? ''
     }
-    expect(rule('.practice .stacked')).toMatch(/font-size:\s*52px;/)
+    expect(rule('.practice .stacked')).toMatch(/font-size:\s*var\(--text-52\);/)
     expect(rule('.practice .stacked')).toMatch(/font-weight:\s*500;/)
     expect(rule('.practice .stacked-rule')).toContain('border-top: 2px solid var(--l-text);')
     expect(rule('.practice-panel')).toContain('padding: var(--space-32);')

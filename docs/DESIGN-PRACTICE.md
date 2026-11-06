@@ -91,6 +91,8 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
 
 ## 4. Type scale
 
+Sizes are the shared `--text-N` custom properties (docs/DESIGN.md §4); a literal px `font-size` fails `src/cssTokens.test.ts`.
+
 | Token | px | Weight | Line height | Letter-spacing | Case | Color | Used for |
 |---|---|---|---|---|---|---|---|
 | brand | 28 | 400 | normal | −0.8 | as is | `--l-text` | "macworx" |

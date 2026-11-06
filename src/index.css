@@ -44,6 +44,31 @@
   --space-32: 32px;
   --space-40: 40px;
   --space-48: 48px;
+  --text-10: 10px;
+  --text-11: 11px;
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-15: 15px;
+  --text-16: 16px;
+  --text-17: 17px;
+  --text-18: 18px;
+  --text-19: 19px;
+  --text-21: 21px;
+  --text-22: 22px;
+  --text-23: 23px;
+  --text-24: 24px;
+  --text-25: 25px;
+  --text-26: 26px;
+  --text-28: 28px;
+  --text-29: 29px;
+  --text-30: 30px;
+  --text-40: 40px;
+  --text-42: 42px;
+  --text-44: 44px;
+  --text-48: 48px;
+  --text-52: 52px;
+  --text-58: 58px;
   --tap: 56px;
   --tap-large: 88px;
   --key: 96px;
@@ -124,7 +149,7 @@ p {
 .button-key,
 .button-check {
   height: var(--key);
-  font-size: 2rem;
+  font-size: var(--text-48);
   background: var(--soft);
 }
 
@@ -274,7 +299,7 @@ p {
   min-height: 44px;
   padding: 0 var(--gap);
   color: var(--answer-ink);
-  font-size: 1rem;
+  font-size: var(--text-24);
   text-decoration: underline;
 }
 
@@ -305,7 +330,7 @@ p {
   flex-direction: column;
   background: var(--p-bg);
   color: var(--p-text);
-  font-size: 14px;
+  font-size: var(--text-14);
   line-height: 1.45;
   letter-spacing: 0;
 }
@@ -338,7 +363,7 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-7);
-  font-size: 23px;
+  font-size: var(--text-23);
   line-height: normal;
 }
 
@@ -347,7 +372,7 @@ p {
   border-radius: var(--radius-pill);
   background: var(--p-chip);
   color: var(--p-accent-ink);
-  font-size: 11px;
+  font-size: var(--text-11);
   font-weight: 600;
   line-height: normal;
   text-transform: uppercase;
@@ -423,14 +448,14 @@ p {
   justify-content: center;
   flex-shrink: 0;
   padding: 0 var(--space-12);
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   color: var(--p-accent-ink);
 }
 
 .portal-add-row .button-bare {
   justify-content: center;
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 600;
   color: var(--p-accent-ink);
 }
@@ -444,7 +469,7 @@ p {
   border-radius: var(--radius-pill);
   background: var(--p-avatar);
   color: var(--p-text);
-  font-size: 13px;
+  font-size: var(--text-13);
   line-height: normal;
   text-transform: uppercase;
 }
@@ -458,12 +483,12 @@ p {
 }
 
 .portal-who-name {
-  font-size: 14px;
+  font-size: var(--text-14);
   color: var(--p-text);
 }
 
 .portal-who-sub {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
@@ -492,7 +517,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--p-surface);
   color: var(--p-muted);
-  font-size: 10px;
+  font-size: var(--text-10);
   line-height: normal;
   text-decoration: none;
 }
@@ -538,14 +563,14 @@ p {
 }
 
 .portal-heading h1 {
-  font-size: 29px;
+  font-size: var(--text-29);
   line-height: 1.45;
   color: var(--p-text);
   outline: none;
 }
 
 .portal-sub {
-  font-size: 13px;
+  font-size: var(--text-13);
   color: var(--p-muted);
 }
 
@@ -561,7 +586,7 @@ p {
   align-items: center;
   justify-content: center;
   gap: var(--space-7);
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
@@ -571,7 +596,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--p-warn-soft);
   color: var(--p-warn-ink);
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .parent-section {
@@ -586,12 +611,12 @@ p {
 }
 
 .parent-section h2 {
-  font-size: 17px;
+  font-size: var(--text-17);
   line-height: 1.45;
 }
 
 .parent-section h3 {
-  font-size: 15px;
+  font-size: var(--text-15);
   font-weight: 600;
 }
 
@@ -603,7 +628,7 @@ p {
 .parent-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .parent-table th,
@@ -630,7 +655,7 @@ p {
 }
 
 .parent-code-digits {
-  font-size: 58px;
+  font-size: var(--text-58);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: normal;
@@ -655,7 +680,7 @@ p {
 
 .device-count .device-meta {
   flex: 1;
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .device-list {
@@ -671,7 +696,7 @@ p {
 .device-chip {
   padding: var(--space-4) 9px;
   border-radius: var(--radius-pill);
-  font-size: 11px;
+  font-size: var(--text-11);
   font-weight: 600;
   line-height: normal;
 }
@@ -719,19 +744,19 @@ p {
 }
 
 .device-name {
-  font-size: 15px;
+  font-size: var(--text-15);
   font-weight: 600;
   color: var(--p-text);
   overflow-wrap: anywhere;
 }
 
 .device-meta {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
 .device-sample {
-  font-size: 11px;
+  font-size: var(--text-11);
   font-weight: 600;
   font-style: italic;
   color: var(--p-muted);
@@ -775,7 +800,7 @@ p {
   padding: 0 var(--space-16);
   border: 0;
   border-radius: var(--radius-control);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 600;
   line-height: normal;
 }
@@ -802,7 +827,7 @@ p {
 }
 
 .parent .text-field-label {
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   color: var(--p-muted);
 }
@@ -814,7 +839,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--p-bg);
   color: var(--p-text);
-  font-size: 14px;
+  font-size: var(--text-14);
   line-height: 1.45;
 }
 
@@ -823,7 +848,7 @@ p {
 }
 
 .parent .text-field-hint {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
   opacity: 1;
 }
@@ -860,7 +885,7 @@ p {
   .portal-brand-side {
     display: flex;
     padding-left: var(--space-8);
-    font-size: 25px;
+    font-size: var(--text-25);
   }
 
   .portal-switcher {
@@ -883,7 +908,7 @@ p {
   .portal-avatar {
     width: 32px;
     height: 32px;
-    font-size: 12px;
+    font-size: var(--text-12);
   }
 
   .portal-who {
@@ -891,11 +916,11 @@ p {
   }
 
   .portal-who-name {
-    font-size: 13px;
+    font-size: var(--text-13);
   }
 
   .portal-who-sub {
-    font-size: 10px;
+    font-size: var(--text-10);
   }
 
   .portal-nav {
@@ -914,7 +939,7 @@ p {
     justify-content: flex-start;
     gap: var(--space-12);
     padding: 0 var(--space-16);
-    font-size: 14px;
+    font-size: var(--text-14);
   }
 
   .portal-nav a[aria-current='page'] {
@@ -943,7 +968,7 @@ p {
     display: flex;
     align-items: flex-start;
     gap: var(--space-7);
-    font-size: 11px;
+    font-size: var(--text-11);
     color: var(--p-muted);
   }
 
@@ -963,14 +988,14 @@ p {
 
   .portal-eyebrow {
     display: block;
-    font-size: 11px;
+    font-size: var(--text-11);
     font-weight: 600;
     text-transform: uppercase;
     color: var(--p-accent-ink);
   }
 
   .portal-heading h1 {
-    font-size: 30px;
+    font-size: var(--text-30);
     line-height: 1.25;
   }
 
@@ -979,7 +1004,7 @@ p {
   }
 
   .parent-section h2 {
-    font-size: 18px;
+    font-size: var(--text-18);
     line-height: normal;
     min-height: 28px;
   }
@@ -1007,7 +1032,7 @@ p {
   }
 
   .device-name {
-    font-size: 16px;
+    font-size: var(--text-16);
   }
 
   .device-actions {
@@ -1029,7 +1054,7 @@ p {
 }
 
 .devices-heading {
-  font-size: 17px;
+  font-size: var(--text-17);
   line-height: 1.45;
 }
 
@@ -1058,22 +1083,22 @@ p {
 }
 
 .pair-title {
-  font-size: 15px;
+  font-size: var(--text-15);
   font-weight: 600;
 }
 
 .pair-body {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-muted);
 }
 
 .pair-footnote {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
 .pair-note {
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .safeguard {
@@ -1082,7 +1107,7 @@ p {
   gap: var(--space-10);
   padding: var(--space-12);
   border-radius: var(--radius-control);
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 400;
   line-height: 1.45;
 }
@@ -1117,18 +1142,18 @@ p {
 }
 
 .access-title {
-  font-size: 13px;
+  font-size: var(--text-13);
   font-weight: 600;
 }
 
 .access-body {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-text);
 }
 
 @media (min-width: 768px) {
   .devices-heading {
-    font-size: 18px;
+    font-size: var(--text-18);
     line-height: normal;
     min-height: 28px;
   }
@@ -1203,7 +1228,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--p-danger-soft);
   color: var(--p-danger-ink);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 600;
   line-height: normal;
 }
@@ -1240,7 +1265,7 @@ p {
 }
 
 .parent .text-field-unit {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-muted);
 }
 
@@ -1284,13 +1309,13 @@ p {
 }
 
 .shop-summary-title {
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 600;
   color: var(--p-text);
 }
 
 .shop-summary-meta {
-  font-size: 11px;
+  font-size: var(--text-11);
 }
 
 .shop-block {
@@ -1307,13 +1332,13 @@ p {
 
 .shop-heading h2 {
   flex: 1;
-  font-size: 17px;
+  font-size: var(--text-17);
   line-height: 1.45;
   color: var(--p-text);
 }
 
 .shop-action {
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   color: var(--p-accent-ink);
 }
@@ -1323,7 +1348,7 @@ p {
   border-radius: var(--radius-pill);
   background: var(--p-warn-soft);
   color: var(--p-warn-ink);
-  font-size: 11px;
+  font-size: var(--text-11);
   font-weight: 600;
   line-height: normal;
 }
@@ -1367,12 +1392,12 @@ p {
 }
 
 .shop-name {
-  font-size: 15px;
+  font-size: var(--text-15);
   font-weight: 600;
 }
 
 .shop-price {
-  font-size: 11px;
+  font-size: var(--text-11);
   font-weight: 600;
   color: var(--p-muted);
 }
@@ -1407,7 +1432,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--p-chip);
   color: var(--p-accent-ink);
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .shop-notice svg {
@@ -1424,7 +1449,7 @@ p {
 }
 
 .shop-footnote {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
@@ -1436,7 +1461,7 @@ p {
 }
 
 .shop-redeemed-title {
-  font-size: 13px;
+  font-size: var(--text-13);
   font-weight: 600;
   color: var(--p-text);
 }
@@ -1457,7 +1482,7 @@ p {
   }
 
   .shop-summary-meta {
-    font-size: 12px;
+    font-size: var(--text-12);
   }
 
   .shop-heading {
@@ -1466,7 +1491,7 @@ p {
   }
 
   .shop-heading h2 {
-    font-size: 18px;
+    font-size: var(--text-18);
     line-height: normal;
   }
 
@@ -1566,7 +1591,7 @@ p {
 }
 
 .points-hero-label {
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--p-hero-muted);
@@ -1579,7 +1604,7 @@ p {
 }
 
 .points-hero-number {
-  font-size: 44px;
+  font-size: var(--text-44);
   font-weight: 600;
   line-height: normal;
   font-variant-numeric: tabular-nums;
@@ -1587,12 +1612,12 @@ p {
 }
 
 .points-hero-unit {
-  font-size: 15px;
+  font-size: var(--text-15);
   color: var(--p-hero-muted);
 }
 
 .points-hero-line {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-hero-muted);
 }
 
@@ -1605,7 +1630,7 @@ p {
 }
 
 .points-heading {
-  font-size: 17px;
+  font-size: var(--text-17);
   line-height: 1.45;
   color: var(--p-text);
 }
@@ -1620,7 +1645,7 @@ p {
 .points .parent-choice .button {
   height: 42px;
   border-radius: var(--radius-segment);
-  font-size: 13px;
+  font-size: var(--text-13);
 }
 
 .points .parent-choice .button-secondary {
@@ -1646,12 +1671,12 @@ p {
 }
 
 .points-preview-label {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-muted);
 }
 
 .points-preview-value {
-  font-size: 19px;
+  font-size: var(--text-19);
   font-weight: 600;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1659,7 +1684,7 @@ p {
 }
 
 .points-preview-below {
-  font-size: 14px;
+  font-size: var(--text-14);
   color: var(--p-warn-ink);
 }
 
@@ -1683,11 +1708,11 @@ p {
   border: 1px solid var(--p-divider);
   border-radius: var(--radius-control);
   background: var(--p-surface);
-  font-size: 13px;
+  font-size: var(--text-13);
 }
 
 .points-footnote {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
@@ -1726,13 +1751,13 @@ p {
 }
 
 .activity-title {
-  font-size: 13px;
+  font-size: var(--text-13);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
 .activity-meta {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
@@ -1740,7 +1765,7 @@ p {
   flex: none;
   width: 76px;
   text-align: right;
-  font-size: 16px;
+  font-size: var(--text-16);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--p-accent-ink);
@@ -1753,7 +1778,7 @@ p {
   }
 
   .points-hero-number {
-    font-size: 48px;
+    font-size: var(--text-48);
   }
 
   .points-hero-row {
@@ -1761,7 +1786,7 @@ p {
   }
 
   .points-heading {
-    font-size: 18px;
+    font-size: var(--text-18);
     line-height: normal;
     min-height: 28px;
   }
@@ -1788,7 +1813,7 @@ p {
   }
 
   .points-preview-value {
-    font-size: 18px;
+    font-size: var(--text-18);
   }
 
   .activity-list {
@@ -1809,7 +1834,7 @@ p {
   }
 
   .activity-amount {
-    font-size: 18px;
+    font-size: var(--text-18);
   }
 
   .safeguard-warn svg {
@@ -1876,7 +1901,7 @@ p {
 }
 
 .streak-hero-number {
-  font-size: 40px;
+  font-size: var(--text-40);
   font-weight: 600;
   line-height: normal;
   font-variant-numeric: tabular-nums;
@@ -1885,7 +1910,7 @@ p {
 
 .streak-hero-line,
 .streak-hero-details {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-hero-muted);
 }
 
@@ -1922,13 +1947,13 @@ p {
 
 .streak-heading {
   flex: 1;
-  font-size: 17px;
+  font-size: var(--text-17);
   line-height: 1.45;
   color: var(--p-text);
 }
 
 .streak-heading-action {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-muted);
 }
 
@@ -1950,7 +1975,7 @@ p {
 }
 
 .streak-weekday {
-  font-size: 10px;
+  font-size: var(--text-10);
   color: var(--p-muted);
 }
 
@@ -1964,7 +1989,7 @@ p {
   border: 1px solid var(--p-divider);
   border-radius: var(--radius-control);
   background: var(--p-bg);
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   color: var(--p-muted);
 }
@@ -1993,7 +2018,7 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--p-accent-ink);
 }
 
@@ -2013,11 +2038,11 @@ p {
   border: 1px solid var(--p-divider);
   border-radius: var(--radius-control);
   background: var(--p-surface);
-  font-size: 13px;
+  font-size: var(--text-13);
 }
 
 .streak-footnote {
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--p-muted);
 }
 
@@ -2041,7 +2066,7 @@ p {
   }
 
   .streak-hero-number {
-    font-size: 44px;
+    font-size: var(--text-44);
   }
 
   .streak-heading-row {
@@ -2049,7 +2074,7 @@ p {
   }
 
   .streak-heading {
-    font-size: 18px;
+    font-size: var(--text-18);
     line-height: normal;
     min-height: 28px;
   }
@@ -2063,13 +2088,13 @@ p {
   }
 
   .streak-weekday {
-    font-size: 11px;
+    font-size: var(--text-11);
   }
 
   .streak-tile {
     max-width: none;
     height: 48px;
-    font-size: 14px;
+    font-size: var(--text-14);
   }
 
   .streak-check {
@@ -2145,7 +2170,7 @@ p {
 }
 
 .overview-hero-label {
-  font-size: 13px;
+  font-size: var(--text-13);
   font-weight: 600;
   line-height: 1.45;
   text-transform: uppercase;
@@ -2162,23 +2187,23 @@ p {
 .overview-stat-value .parent-pending,
 .points-hero-number .parent-pending,
 .streak-hero-number .parent-pending {
-  font-size: 14px;
+  font-size: var(--text-14);
 }
 
 .overview-hero-number {
-  font-size: 42px;
+  font-size: var(--text-42);
   font-weight: 600;
   line-height: normal;
   font-variant-numeric: tabular-nums;
 }
 
 .overview-hero-unit {
-  font-size: 14px;
+  font-size: var(--text-14);
   color: var(--p-hero-muted);
 }
 
 .overview-hero-line {
-  font-size: 12px;
+  font-size: var(--text-12);
   line-height: 1.45;
   color: var(--p-hero-muted);
 }
@@ -2203,20 +2228,20 @@ p {
 }
 
 .overview-stat-value {
-  font-size: 26px;
+  font-size: var(--text-26);
   line-height: 1.45;
   color: var(--p-text);
   font-variant-numeric: tabular-nums;
 }
 
 .overview-stat-label {
-  font-size: 11px;
+  font-size: var(--text-11);
   line-height: 1.45;
   color: var(--p-muted);
 }
 
 .overview-stat-link {
-  font-size: 11px;
+  font-size: var(--text-11);
   font-weight: 600;
   line-height: 1.45;
   color: var(--p-accent-ink);
@@ -2224,7 +2249,7 @@ p {
 }
 
 .overview-totals {
-  font-size: 11px;
+  font-size: var(--text-11);
   line-height: 1.45;
   color: var(--p-muted);
 }
@@ -2244,13 +2269,13 @@ p {
 
 .overview-heading h2 {
   flex: 1;
-  font-size: 17px;
+  font-size: var(--text-17);
   line-height: 1.45;
   color: var(--p-text);
 }
 
 .overview-view-all {
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   color: var(--p-accent-ink);
   text-decoration: none;
@@ -2298,7 +2323,7 @@ p {
 }
 
 .overview-title {
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 600;
   line-height: 1.45;
   color: var(--p-text);
@@ -2306,13 +2331,13 @@ p {
 
 .overview-meta,
 .overview-empty {
-  font-size: 11px;
+  font-size: var(--text-11);
   line-height: 1.45;
   color: var(--p-muted);
 }
 
 .overview-amount {
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   color: var(--p-accent-ink);
 }
@@ -2349,7 +2374,7 @@ p {
   }
 
   .overview-hero-number {
-    font-size: 44px;
+    font-size: var(--text-44);
   }
 
   .overview-stat {
@@ -2363,19 +2388,19 @@ p {
   }
 
   .overview-stat-value {
-    font-size: 30px;
+    font-size: var(--text-30);
     line-height: normal;
   }
 
   .overview-stat-label {
-    font-size: 12px;
+    font-size: var(--text-12);
   }
 
   .overview-stat-link {
     display: flex;
     align-items: center;
     min-height: 44px;
-    font-size: 13px;
+    font-size: var(--text-13);
   }
 
   .overview-heading {
@@ -2383,7 +2408,7 @@ p {
   }
 
   .overview-heading h2 {
-    font-size: 18px;
+    font-size: var(--text-18);
     line-height: normal;
   }
 
@@ -2410,7 +2435,7 @@ p {
   }
 
   .overview-amount {
-    font-size: 13px;
+    font-size: var(--text-13);
   }
 
   .overview-links {
@@ -2531,7 +2556,7 @@ p {
 }
 
 .practice h1 {
-  font-size: 30px;
+  font-size: var(--text-30);
 }
 
 .practice-bar {
@@ -2554,7 +2579,7 @@ p {
 
 .practice-brand {
   color: var(--l-link);
-  font-size: 28px;
+  font-size: var(--text-28);
   font-weight: 400;
   letter-spacing: -0.8px;
 }
@@ -2572,7 +2597,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--l-chip);
   color: var(--l-link);
-  font-size: 16px;
+  font-size: var(--text-16);
   font-weight: 600;
 }
 
@@ -2585,7 +2610,7 @@ p {
   border-radius: 50%;
   background: var(--l-avatar);
   color: var(--l-text);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 400;
   text-transform: uppercase;
 }
@@ -2594,7 +2619,7 @@ p {
   min-width: 0;
   overflow: hidden;
   color: var(--l-muted);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2640,7 +2665,7 @@ p {
 
 .practice-title {
   margin: 0;
-  font-size: 30px;
+  font-size: var(--text-30);
   font-weight: 400;
   letter-spacing: -0.6px;
 }
@@ -2654,7 +2679,7 @@ p {
 
 .practice-progress-label {
   color: var(--l-link);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 500;
 }
 
@@ -2718,7 +2743,7 @@ p {
 
 .practice-eyebrow {
   color: var(--l-link);
-  font-size: 12px;
+  font-size: var(--text-12);
   font-weight: 600;
   letter-spacing: 1px;
   line-height: normal;
@@ -2727,7 +2752,7 @@ p {
 
 .practice-instruction {
   color: var(--l-text);
-  font-size: 24px;
+  font-size: var(--text-24);
   font-weight: 400;
   line-height: 1.3;
 }
@@ -2742,13 +2767,13 @@ p {
 .practice-pad-heading {
   height: 24px;
   color: var(--l-text);
-  font-size: 15px;
+  font-size: var(--text-15);
   font-weight: 600;
   line-height: normal;
 }
 
 .practice .stacked {
-  font-size: 52px;
+  font-size: var(--text-52);
   font-weight: 500;
   line-height: 1.2;
   --digit: 57px;
@@ -2756,7 +2781,7 @@ p {
 
 .practice .stacked-op {
   color: var(--l-muted);
-  font-size: 44px;
+  font-size: var(--text-44);
   font-weight: 400;
 }
 
@@ -2791,21 +2816,21 @@ p {
 
 .practice .response-lead {
   color: var(--l-text);
-  font-size: 26px;
+  font-size: var(--text-26);
   font-weight: 600;
   line-height: 1.3;
 }
 
 .practice .response-equation {
   color: var(--l-text);
-  font-size: 22px;
+  font-size: var(--text-22);
   font-weight: 400;
   line-height: 1.4;
 }
 
 .practice .response-after {
   color: var(--l-muted);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 400;
   line-height: normal;
 }
@@ -2823,7 +2848,7 @@ p {
   align-items: center;
   gap: var(--space-10);
   color: var(--l-muted);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 400;
 }
 
@@ -2852,7 +2877,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--l-primary);
   color: var(--l-primary-ink);
-  font-size: 17px;
+  font-size: var(--text-17);
   font-weight: 600;
 }
 
@@ -2873,7 +2898,7 @@ p {
   border-radius: 0;
   background: none;
   color: var(--l-link);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 400;
   white-space: pre;
 }
@@ -2886,7 +2911,7 @@ p {
   border-radius: var(--radius-control);
   background: var(--l-surface);
   color: var(--l-text);
-  font-size: 28px;
+  font-size: var(--text-28);
   font-weight: 500;
 }
 
@@ -2916,7 +2941,7 @@ p {
   border: none;
   background: none;
   color: var(--l-link);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 500;
 }
 
@@ -2951,7 +2976,7 @@ p {
   border-radius: 50%;
   background: var(--l-bg);
   color: var(--l-muted);
-  font-size: 14px;
+  font-size: var(--text-14);
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -3018,13 +3043,13 @@ p {
 
 .practice-listen-title {
   color: var(--l-text);
-  font-size: 26px;
+  font-size: var(--text-26);
   font-weight: 500;
 }
 
 .practice-listen-sub {
   color: var(--l-muted);
-  font-size: 16px;
+  font-size: var(--text-16);
   font-weight: 400;
   line-height: 1.5;
 }
@@ -3044,13 +3069,13 @@ p {
 
 .practice-choices-heading {
   color: var(--l-text);
-  font-size: 18px;
+  font-size: var(--text-18);
   font-weight: 600;
 }
 
 .practice-choices-hint {
   color: var(--l-muted);
-  font-size: 13px;
+  font-size: var(--text-13);
   font-weight: 400;
 }
 
@@ -3062,13 +3087,13 @@ p {
 
 .word-choice {
   flex: 1;
-  font-size: 24px;
+  font-size: var(--text-24);
   line-height: 1.4;
 }
 
 .practice-footnote {
   color: var(--l-muted);
-  font-size: 13px;
+  font-size: var(--text-13);
   font-weight: 400;
 }
 
@@ -3089,7 +3114,7 @@ p {
 
 .practice-done-title {
   color: var(--l-text);
-  font-size: 30px;
+  font-size: var(--text-30);
   font-weight: 400;
   letter-spacing: -0.6px;
   line-height: 1.3;
@@ -3131,7 +3156,7 @@ p {
 .practice-passage-title {
   margin: 0;
   color: var(--l-text);
-  font-size: 28px;
+  font-size: var(--text-28);
   font-weight: 400;
   letter-spacing: -0.5px;
 }
@@ -3142,7 +3167,7 @@ p {
   gap: var(--space-18);
   color: var(--l-text);
   font-family: ui-serif, Georgia, serif;
-  font-size: 19px;
+  font-size: var(--text-19);
   font-weight: 400;
   line-height: 1.55;
 }
@@ -3166,13 +3191,13 @@ p {
 
 .practice-guide-title {
   color: var(--l-text);
-  font-size: 21px;
+  font-size: var(--text-21);
   font-weight: 500;
 }
 
 .practice-guide-text {
   color: var(--l-link);
-  font-size: 16px;
+  font-size: var(--text-16);
   font-weight: 400;
   line-height: 1.5;
 }
@@ -3189,7 +3214,7 @@ p {
 .practice-question {
   min-height: 64px;
   color: var(--l-text);
-  font-size: 23px;
+  font-size: var(--text-23);
   font-weight: 400;
   line-height: 1.35;
 }
@@ -3206,7 +3231,7 @@ p {
 
 .answer-choice {
   flex: 1;
-  font-size: 17px;
+  font-size: var(--text-17);
   line-height: 1.4;
 }
 

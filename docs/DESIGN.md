@@ -75,6 +75,8 @@ These come from the repo's checks (`scripts/check-conventions.mjs`, CLAUDE.md). 
 
 Font: `system-ui`. Weights: 400 and 600 only. Case: as written unless "upper". "upper" = `text-transform: uppercase`, copy stored in sentence case.
 
+Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-14`, `--text-29`, …); use it for `font-size`, never a literal px. `src/cssTokens.test.ts` fails on a literal px `font-size` and on a size with no token. A new size needs a row here and a token.
+
 | Token | Phone px | Wide px | Weight | Line height | Case | Color role | Used for |
 |---|---|---|---|---|---|---|---|
 | wordmark | 23 | 25 | 400 | normal | as is | text-strong | "macworx" |
