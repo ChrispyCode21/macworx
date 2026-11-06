@@ -7,6 +7,7 @@ import {
   queueResult,
   setDeviceKey,
   setSeeds,
+  setWorkerState,
 } from '../storage/device'
 
 function fakeStorage(): Storage {
@@ -174,9 +175,11 @@ describe('sync', () => {
   it('forgets the key and everything stored for it on a 401', async () => {
     queueResult(result(1))
     setSeeds([9])
+    // Her numbers from an earlier sync: a re-paired iPad must not show them before its first sync (SPEC §6.8).
+    setWorkerState(state)
     worker([], { 'POST /api/results': () => json(401, {}) })
     expect(await sync.sync()).toBe('unpaired')
-    expect([getDeviceKey(), getQueue(), getSeeds()]).toEqual([null, [], []])
+    expect([getDeviceKey(), getQueue(), getSeeds(), getWorkerState()]).toEqual([null, [], [], null])
   })
 
   it('keeps stored seeds in order, adds new ones, and leaves out the in-progress seed', async () => {
