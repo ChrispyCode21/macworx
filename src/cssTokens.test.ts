@@ -19,17 +19,20 @@ const RADIUS: Record<string, number> = {
 }
 const SPACING = [2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 28, 32, 40, 48]
 
+// The first :root block: where the tokens are defined.
+const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
+
 describe('size tokens', () => {
-  it('has a radius token for each value on the scale, with exactly that value', () => {
-    for (const [name, px] of Object.entries(RADIUS)) expect(css).toContain(`--radius-${name}: ${px}px;`)
+  it('has a radius token in :root for each value on the scale, with exactly that value', () => {
+    for (const [name, px] of Object.entries(RADIUS)) expect(root).toContain(`--radius-${name}: ${px}px;`)
   })
 
-  it('has a spacing token for each value on the scale, with exactly that value', () => {
-    for (const px of SPACING) expect(css).toContain(`--space-${px}: ${px}px;`)
+  it('has a spacing token in :root for each value on the scale, with exactly that value', () => {
+    for (const px of SPACING) expect(root).toContain(`--space-${px}: ${px}px;`)
   })
 
   it('defines no other radius or spacing token, and every one is in px', () => {
-    const defined = [...css.matchAll(/^\s*(--(?:radius|space)-[a-z0-9]+):\s*([^;]+);/gm)]
+    const defined = [...css.matchAll(/^\s*(--(?:radius|space)-[a-z0-9-]+):\s*([^;]+);/gm)]
     const allowed = [
       ...Object.keys(RADIUS).map((name) => `--radius-${name}`),
       ...SPACING.map((px) => `--space-${px}`),
@@ -41,13 +44,24 @@ describe('size tokens', () => {
     expect(defined).toHaveLength(allowed.length)
   })
 
+  it('keeps the older tokens as aliases of the scale', () => {
+    for (const line of [
+      '--space: var(--space-24);',
+      '--gap: var(--space-16);',
+      '--gap-small: var(--space-8);',
+      '--radius: var(--radius-panel);',
+    ])
+      expect(root).toContain(line)
+  })
+
   it('uses a radius token, not a literal value, wherever the value is on the scale', () => {
     const byValue = Object.fromEntries(Object.entries(RADIUS).map(([name, px]) => [px, name]))
-    const literal = [...css.matchAll(/^\s*border-radius:\s*(\d+)px;/gm)]
-      .map((m) => Number(m[1]))
+    // Any radius property (also the corner ones), with one value or several.
+    const literal = [...css.matchAll(/^\s*border(?:-[a-z]+)*-radius:\s*([^;]+);/gm)]
+      .flatMap((m) => [...m[1].matchAll(/(?<![\w.-])(\d+)px/g)].map((n) => Number(n[1])))
       .filter((px) => px in byValue)
     expect(
-      literal.map((px) => `border-radius: ${px}px (use var(--radius-${byValue[px]}))`),
+      literal.map((px) => `${px}px (use var(--radius-${byValue[px]}))`),
       'src/index.css uses a literal radius from the scale',
     ).toEqual([])
   })
