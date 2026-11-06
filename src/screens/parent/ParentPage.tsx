@@ -87,8 +87,9 @@ export function ParentPage({
     // One clock reading per refresh: the numbers and the Overview's list and sync line all use this day.
     const readAt = new Date()
     const day = localDay(readAt)
+    // No message means the page is reloading for a sign-in: nothing says "not available" in the meantime.
     const stop = (message: string | null) => {
-      setReadFailed(true)
+      if (message !== null) setReadFailed(true)
       setProblem(message)
     }
     // Each read is kept as it arrives, so the blocks that did load keep their values when a later read fails.
