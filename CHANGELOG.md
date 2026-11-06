@@ -6,6 +6,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Changed
+
+- **When the children can't be listed (parents):** every portal screen shows "We can't show your children right now." with a Try again button, and no forms or switcher, in place of forms with no child. If the sign-in has run out, it shows that message instead, without the button. A household with no children shows "No children yet." and the Add form on every screen.
+
 ## [0.5.0] - 2026-11-06
 
 ### Added

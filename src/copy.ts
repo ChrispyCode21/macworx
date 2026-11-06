@@ -333,6 +333,9 @@ export const COPY = {
   parentLoading: 'Loading…',
   parentNoValue: '—',
   parentUnavailable: 'Not available right now.',
+  parentChildrenUnavailable: "We can't show your children right now.",
+  parentTryAgain: 'Try again',
+  parentNoChildren: 'No children yet.',
   home: 'Home',
 } as const
 

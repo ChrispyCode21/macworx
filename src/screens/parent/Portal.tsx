@@ -16,10 +16,12 @@ import {
 } from '../../parent/icons'
 import { TABS, tabFromPath, tabPath } from '../../parent/route'
 import type { Tab } from '../../parent/route'
-import { pickChild, readSelectedChild, rememberChild } from '../../parent/selection'
+import { childrenLoad, readSelectedChild, rememberChild } from '../../parent/selection'
+import type { ChildrenLoad } from '../../parent/selection'
 import { Button } from '../../ui/Button'
 import { formatLongDay } from '../../ui/format'
 import { ChildForm } from './ChildForm'
+import { ChildrenGate } from './ChildrenGate'
 import type { ChildMode } from './ChildForm'
 import { ParentPage } from './ParentPage'
 
@@ -60,12 +62,6 @@ function heading(tab: Tab, child: Child | null): { title: string; sub: string | 
   }
 }
 
-type Load =
-  | { status: 'loading' }
-  // The children couldn't be listed: the screens show today's refusal themselves.
-  | { status: 'unavailable' }
-  | { status: 'ready'; children: Child[]; selected: Child }
-
 function Avatar({ child }: { child: Child }) {
   return (
     <span className="portal-avatar" aria-hidden="true">
@@ -88,7 +84,9 @@ function Who({ child }: { child: Child }) {
 /** The parent portal (SPEC §5.3): the shell, the five tabs, and the child every screen is for. */
 export function Portal() {
   const [tab, setTab] = useState<Tab>(() => tabFromPath(location.pathname))
-  const [load, setLoad] = useState<Load>({ status: 'loading' })
+  const [load, setLoad] = useState<ChildrenLoad>({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+  const [retrying, setRetrying] = useState(false)
   const [open, setOpen] = useState(false)
   const [childMode, setChildMode] = useState<ChildMode>('add')
   const [focusName, setFocusName] = useState(false)
@@ -107,17 +105,26 @@ export function Portal() {
     void getChildren().then((result) => {
       if (!live) return
       // The page is reloading for Access to sign in again: show nothing, not a refusal in the meantime.
-      if (!result.ok && result.error === 'reloading') return
-      const picked = result.ok ? pickChild(result.body.children, readSelectedChild()) : null
-      if (!result.ok || !picked) return setLoad({ status: 'unavailable' })
+      const next = childrenLoad(result, readSelectedChild())
+      setRetrying(false)
+      if (!next) return
       // Before the screens mount, so their first reads are for this child.
-      chooseChild(picked.id)
-      setLoad({ status: 'ready', children: result.body.children, selected: picked })
+      if (next.status === 'ready') chooseChild(next.selected.id)
+      setLoad(next)
+      // The Try again button is gone once the screens (or the Add form) show: focus goes to the page heading.
+      if (attempt > 0 && next.status !== 'unavailable') title.current?.focus()
     })
     return () => {
       live = false
     }
-  }, [])
+  }, [attempt])
+
+  // The gate stays mounted while it reads again, so focus stays on its button.
+  const retry = () => {
+    if (retrying) return
+    setRetrying(true)
+    setAttempt((n) => n + 1)
+  }
 
   const go = (next: Tab) => {
     if (next === tab) return
@@ -165,7 +172,11 @@ export function Portal() {
     // Called after an await, so it updates from the latest state, not the render where Save was pressed.
     chooseChild(child.id)
     rememberChild(child.id)
-    setLoad((l) => (l.status !== 'ready' ? l : { ...l, children: [...l.children, child], selected: child }))
+    setLoad((l) => ({
+      status: 'ready',
+      children: l.status === 'ready' ? [...l.children, child] : [child],
+      selected: child,
+    }))
     setChildMode('add')
     title.current?.focus()
   }
@@ -289,18 +300,22 @@ export function Portal() {
               onGo={go}
             />
           )}
-          {load.status === 'ready' && tab === 'overview' && (
+          {load.status === 'none' && <p>{COPY.parentNoChildren}</p>}
+          {/* One place for both states, so the form (and its "Added" line) survives the first child being added. */}
+          {(load.status === 'none' || (load.status === 'ready' && tab === 'overview')) && (
             <ChildForm
               mode={childMode}
               onMode={setChildMode}
-              child={load.selected}
+              child={load.status === 'ready' ? load.selected : null}
               focusName={focusName}
               onFocused={() => setFocusName(false)}
               onAdded={onAdded}
               onRenamed={onRenamed}
             />
           )}
-          {load.status === 'unavailable' && <ParentPage key="none" tab={tab} childName={null} onGo={go} />}
+          {load.status === 'unavailable' && (
+            <ChildrenGate signedOut={load.signedOut} retrying={retrying} onRetry={retry} />
+          )}
         </main>
         {tab === 'overview' && (
           <p className="portal-note">

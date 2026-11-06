@@ -1,4 +1,4 @@
-import type { Child } from './api'
+import type { Child, ParentResult } from './api'
 
 const KEY = 'macworx.parentChild'
 
@@ -25,4 +25,26 @@ export function rememberChild(id: number): void {
   } catch {
     // Not remembered; the first child is selected next time.
   }
+}
+
+/** What the portal knows about the household's children (SPEC §5.3). */
+export type ChildrenLoad =
+  | { status: 'loading' }
+  // The children couldn't be listed; `signedOut` when the sign-in has run out, which Try again can't fix.
+  | { status: 'unavailable'; signedOut: boolean }
+  | { status: 'none' }
+  | { status: 'ready'; children: Child[]; selected: Child }
+
+/** The state a children read leads to; null while the page reloads for a sign-in (show nothing yet). */
+export function childrenLoad(
+  result: ParentResult<{ children: Child[] }>,
+  stored: number | null,
+): ChildrenLoad | null {
+  if (!result.ok) {
+    return result.error === 'reloading'
+      ? null
+      : { status: 'unavailable', signedOut: result.error === 'signed_out' }
+  }
+  const selected = pickChild(result.body.children, stored)
+  return selected ? { status: 'ready', children: result.body.children, selected } : { status: 'none' }
 }

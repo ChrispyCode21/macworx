@@ -247,12 +247,11 @@ test('the Worker refusing (as on a preview) shows a message and never reloads', 
   let loads = 0
   page.on('load', () => loads++)
   await page.goto('/parent')
-  await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
-  // The hero, the two tiles, the assignments list and the devices row each show a dash.
-  await expect(page.locator('.overview').getByText('—')).toHaveCount(5)
+  await expect(page.getByRole('alert')).toHaveText("We can't show your children right now.")
+  // No screen, no forms: Try again is the one way on.
+  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Children' })).toHaveCount(0)
   await expect(page.getByText('Loading…')).toHaveCount(0)
-  // Overview holds one list, Results.
-  await expect(page.getByText('Not available right now.')).toHaveCount(1)
   await page.waitForTimeout(500)
   expect(loads).toBe(1)
 })
@@ -420,20 +419,25 @@ test('a Cloudflare error page says try again, without reloading', async ({ page 
   let loads = 0
   page.on('load', () => loads++)
   await page.goto('/parent')
-  await expect(page.getByRole('alert')).toHaveText('Something went wrong on our side. Try again in a minute.')
+  await expect(page.getByRole('alert')).toHaveText("We can't show your children right now.")
   expect(loads).toBe(1)
 })
 
-test('with no connection, says to check the Wi-Fi', async ({ page }) => {
+test('with no connection, offers Try again', async ({ page }) => {
   await page.route('/api/parent/**', (route) => route.abort('internetdisconnected'))
   await page.goto('/parent')
-  await expect(page.getByRole('alert')).toHaveText('No connection. Check the Wi-Fi and try again.')
+  await expect(page.getByRole('alert')).toHaveText("We can't show your children right now.")
 })
 
 test('a later success clears an earlier message', async ({ page }) => {
   let fail = true
   await page.route('/api/parent/**', (route) => {
-    if (route.request().method() === 'GET' && fail)
+    // The children list loads, so the Devices screen shows; its own read is what fails.
+    if (
+      route.request().method() === 'GET' &&
+      fail &&
+      new URL(route.request().url()).pathname !== '/api/parent/children'
+    )
       return route.fulfill({ status: 500, json: { error: 'server' } })
     if (route.request().method() === 'GET')
       return route.fulfill({ json: readViews(new URL(route.request().url()).pathname, []) })

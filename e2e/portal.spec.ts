@@ -272,7 +272,9 @@ test('a remembered child who is gone falls back to the first', async ({ page }) 
   expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=1'])
 })
 
-test('when the first children call fails, the screens still use the remembered child', async ({ page }) => {
+test("when the children can't be listed, Try again lists them and the remembered child is used", async ({
+  page,
+}) => {
   const calls = await portalApi(page)
   await page.addInitScript(() => localStorage.setItem('macworx.parentChild', '2'))
   let first = true
@@ -282,8 +284,47 @@ test('when the first children call fails, the screens still use the remembered c
     return route.fulfill({ status: 503, json: { error: 'server' } })
   })
   await page.goto('/parent/overview')
+  await expect(page.getByRole('alert')).toHaveText("We can't show your children right now.")
+  // No forms, no switcher and no reads for a child.
+  await expect(panel(page)).toHaveCount(0)
+  await expect(page.locator('.portal-switcher')).toHaveCount(0)
+  expect(reads(calls, 'summary')).toEqual([])
+  await page.getByRole('button', { name: 'Try again' }).click()
+  await expect(page.getByText("Bo's overview")).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused()
   await expect.poll(() => reads(calls, 'summary').length).toBe(1)
   expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=2'])
+})
+
+test('a household with no children shows "No children yet." and only the Add form, on every tab', async ({
+  page,
+}) => {
+  await portalApi(page)
+  let added: (typeof children)[number] | null = null
+  await page.route('/api/parent/children', async (route) => {
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON() as { name: string }
+      added = { id: 1, name: body.name, grade: '', initials: body.name[0] }
+      return route.fulfill({ status: 201, json: added })
+    }
+    return route.fulfill({ json: { children: added ? [added] : [] } })
+  })
+  for (const tab of TABS) {
+    await page.goto(`/parent/${tab.path}`)
+    await expect(page.getByText('No children yet.')).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(tab.label)
+    await expect(page.locator('.portal-switcher')).toHaveCount(0)
+    // Add only: Rename has nothing to rename.
+    await expect(panel(page)).toBeVisible()
+    await expect(panel(page).getByRole('radio')).toHaveCount(0)
+  }
+  // Adding on Overview keeps the form, so its "Added" line shows as the screens appear.
+  await page.goto('/parent/overview')
+  await panel(page).getByLabel('Name', { exact: true }).fill('Ada')
+  await panel(page).getByRole('button', { name: 'Save' }).click()
+  await expect(panel(page).getByRole('status')).toHaveText('Added Ada.')
+  await expect(page.getByText('No children yet.')).toHaveCount(0)
+  await expect(page.locator('.portal-switcher > button')).toContainText('Ada')
 })
 
 test('with storage blocked, the portal still works', async ({ page }) => {
@@ -378,20 +419,22 @@ test('an Access reload on the first children call never flashes the sign-in aler
   expect(reads(calls, 'children')).toHaveLength(1)
 })
 
-test('a refused Worker shows the message on every tab, never a blank page or Loading', async ({ page }) => {
+test('a signed-out Worker shows the sign-in message on every tab, with no forms or Try again', async ({
+  page,
+}) => {
+  // Like an Access sign-in page: not JSON. The first answer reloads the page; the second is the message.
   await page.route('/api/parent/**', (route) =>
-    route.fulfill({ status: 401, json: { error: 'unauthorized' } }),
+    route.fulfill({ status: 200, contentType: 'text/html', body: '<html>Sign in</html>' }),
   )
-  // How many lists say "Not available right now." on each tab.
-  const lists: Record<string, number> = { overview: 1, points: 1, streak: 1, devices: 1, shop: 0 }
   for (const tab of TABS) {
     await page.goto(`/parent/${tab.path}`)
     await expect(page.getByRole('alert')).toHaveText(
-      'Something went wrong on our side. Try again in a minute.',
+      'Your sign-in has run out. Reload the page to sign in again.',
     )
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(tab.label)
     await expect(page.getByText('Loading…')).toHaveCount(0)
-    await expect(page.getByText('Not available right now.')).toHaveCount(lists[tab.path])
+    await expect(page.getByRole('button', { name: 'Try again' })).toHaveCount(0)
+    await expect(panel(page)).toHaveCount(0)
   }
 })
 
