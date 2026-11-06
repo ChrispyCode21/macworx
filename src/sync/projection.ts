@@ -85,7 +85,7 @@ export function nextResult(
 
 export interface PracticeChild {
   name: string
-  /** Her school grade ("4th grade"); empty when a parent hasn't set one. */
+  /** Her school grade ("4"); empty when a parent hasn't set one. */
   grade: string
   initials: string
 }

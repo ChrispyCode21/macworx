@@ -81,6 +81,10 @@ describe('grade', () => {
     expect(cleanGrade(' Pre-K ')).toBe('Pre-K')
     expect(cleanGrade('g'.repeat(5))).toHaveLength(5)
   })
+  it('counts an emoji as one character', () => {
+    expect(cleanGrade('😀'.repeat(5))).not.toBeNull()
+    expect(cleanGrade('😀'.repeat(6))).toBeNull()
+  })
   it('refuses 6 characters, control characters and non-text', () => {
     expect(cleanGrade('g'.repeat(6))).toBeNull()
     expect(cleanGrade('5\u0000')).toBeNull()

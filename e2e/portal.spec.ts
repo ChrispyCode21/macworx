@@ -562,6 +562,17 @@ test('a name over 20 characters can be saved and says why it is not', async ({ p
   expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
 })
 
+test('a grade over 5 characters says why it is not saved, and sends nothing', async ({ page }) => {
+  const calls = await portalApi(page)
+  await page.goto('/parent/overview')
+  await panel(page).getByLabel('Name', { exact: true }).fill('Ada')
+  await panel(page).getByLabel('Grade (optional)').fill('Sixth!')
+  calls.length = 0
+  await panel(page).getByRole('button', { name: 'Save' }).click()
+  await expect(panel(page).getByRole('alert')).toHaveText('Keep the grade to 5 characters or fewer.')
+  expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+})
+
 test('typed initials stay, and Rename can be chosen from the panel', async ({ page }) => {
   await portalApi(page)
   await page.goto('/parent/overview')
