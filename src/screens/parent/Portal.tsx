@@ -86,6 +86,7 @@ export function Portal() {
   const [tab, setTab] = useState<Tab>(() => tabFromPath(location.pathname))
   const [load, setLoad] = useState<ChildrenLoad>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
+  const [retrying, setRetrying] = useState(false)
   const [open, setOpen] = useState(false)
   const [childMode, setChildMode] = useState<ChildMode>('add')
   const [focusName, setFocusName] = useState(false)
@@ -105,18 +106,23 @@ export function Portal() {
       if (!live) return
       // The page is reloading for Access to sign in again: show nothing, not a refusal in the meantime.
       const next = childrenLoad(result, readSelectedChild())
+      setRetrying(false)
       if (!next) return
       // Before the screens mount, so their first reads are for this child.
       if (next.status === 'ready') chooseChild(next.selected.id)
       setLoad(next)
+      // The Try again button is gone once the screens show: focus goes to the page heading.
+      if (attempt > 0 && next.status === 'ready') title.current?.focus()
     })
     return () => {
       live = false
     }
   }, [attempt])
 
+  // The gate stays mounted while it reads again, so focus stays on its button.
   const retry = () => {
-    setLoad({ status: 'loading' })
+    if (retrying) return
+    setRetrying(true)
     setAttempt((n) => n + 1)
   }
 
@@ -294,31 +300,21 @@ export function Portal() {
               onGo={go}
             />
           )}
-          {load.status === 'ready' && tab === 'overview' && (
+          {load.status === 'none' && <p>{COPY.parentNoChildren}</p>}
+          {/* One place for both states, so the form (and its "Added" line) survives the first child being added. */}
+          {(load.status === 'none' || (load.status === 'ready' && tab === 'overview')) && (
             <ChildForm
               mode={childMode}
               onMode={setChildMode}
-              child={load.selected}
+              child={load.status === 'ready' ? load.selected : null}
               focusName={focusName}
               onFocused={() => setFocusName(false)}
               onAdded={onAdded}
               onRenamed={onRenamed}
             />
           )}
-          {load.status === 'unavailable' && <ChildrenGate signedOut={load.signedOut} onRetry={retry} />}
-          {load.status === 'none' && (
-            <>
-              <p role="status">{COPY.parentNoChildren}</p>
-              <ChildForm
-                mode="add"
-                onMode={setChildMode}
-                child={null}
-                focusName={focusName}
-                onFocused={() => setFocusName(false)}
-                onAdded={onAdded}
-                onRenamed={onRenamed}
-              />
-            </>
+          {load.status === 'unavailable' && (
+            <ChildrenGate signedOut={load.signedOut} retrying={retrying} onRetry={retry} />
           )}
         </main>
         {tab === 'overview' && (

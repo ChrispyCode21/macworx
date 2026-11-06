@@ -284,7 +284,7 @@ test("when the children can't be listed, Try again lists them and the remembered
     return route.fulfill({ status: 503, json: { error: 'server' } })
   })
   await page.goto('/parent/overview')
-  await expect(page.getByRole('alert')).toHaveText("We can't show your children right now.Try again")
+  await expect(page.getByRole('alert')).toHaveText("We can't show your children right now.")
   // No forms, no switcher and no reads for a child.
   await expect(panel(page)).toHaveCount(0)
   await expect(page.locator('.portal-switcher')).toHaveCount(0)
@@ -317,8 +317,11 @@ test('a household with no children shows "No children yet." and only the Add for
     await expect(panel(page)).toBeVisible()
     await expect(panel(page).getByRole('radio')).toHaveCount(0)
   }
+  // Adding on Overview keeps the form, so its "Added" line shows as the screens appear.
+  await page.goto('/parent/overview')
   await panel(page).getByLabel('Name', { exact: true }).fill('Ada')
   await panel(page).getByRole('button', { name: 'Save' }).click()
+  await expect(panel(page).getByRole('status')).toHaveText('Added Ada.')
   await expect(page.getByText('No children yet.')).toHaveCount(0)
   await expect(page.locator('.portal-switcher > button')).toContainText('Ada')
 })
