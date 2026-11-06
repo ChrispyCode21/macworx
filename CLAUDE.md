@@ -33,6 +33,7 @@ Standing instructions for every Claude session in this repo. Every run reads thi
 
 - Every worked example in SPEC.md (the payout table, the grade cutoffs) is a unit test named with its ID. CI fails if an ID has no test.
 - If a test and the spec disagree, the spec wins. If the spec looks wrong, stop and ask.
+- Run Playwright from the worktree's own `node_modules` (`npm ci` there first), not another checkout's, so the browser and `@playwright/test` versions match the lockfile.
 
 ## Pull requests
 
