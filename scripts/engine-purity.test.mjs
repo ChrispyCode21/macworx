@@ -14,7 +14,11 @@ const run = (cmd) => {
   return { status: r.status, out: r.stdout + r.stderr }
 }
 
-describe('engine purity checks', () => {
+// Each test starts oxlint or check-conventions in a child process, which can take well over Vitest's default
+// 5 seconds when the whole suite runs in parallel (#114).
+const SLOW = 30_000
+
+describe('engine purity checks', { timeout: SLOW }, () => {
   beforeAll(() => {
     mkdirSync(dir, { recursive: true })
     writeFileSync(
