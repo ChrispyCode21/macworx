@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { checkChildFields, cleanGrade, cleanInitials, cleanName, fillInitials } from './childFields'
 
 describe('name', () => {
-  it('accepts 1 to 40 characters and trims', () => {
+  it('accepts 1 to 20 characters and trims', () => {
     expect(cleanName('S')).toBe('S')
-    expect(cleanName('a'.repeat(40))).toHaveLength(40)
+    expect(cleanName('a'.repeat(20))).toHaveLength(20)
     expect(cleanName('  Mary Jane ')).toBe('Mary Jane')
   })
-  it('refuses 0, 41, whitespace-only, control characters and non-text', () => {
+  it('refuses 0, 21, whitespace-only, control characters and non-text', () => {
     expect(cleanName('')).toBeNull()
-    expect(cleanName('a'.repeat(41))).toBeNull()
+    expect(cleanName('a'.repeat(21))).toBeNull()
     expect(cleanName('   ')).toBeNull()
     expect(cleanName('Sam\u0007')).toBeNull()
     expect(cleanName('Sam\nJo')).toBeNull()
@@ -69,20 +69,24 @@ describe('name', () => {
     }
   })
   it('counts an emoji as one character', () => {
-    expect(cleanName('😀'.repeat(40))).not.toBeNull()
-    expect(cleanName('😀'.repeat(41))).toBeNull()
+    expect(cleanName('😀'.repeat(20))).not.toBeNull()
+    expect(cleanName('😀'.repeat(21))).toBeNull()
   })
 })
 
 describe('grade', () => {
-  it('is optional, and up to 20 characters', () => {
+  it('is optional, and up to 5 characters', () => {
     expect(cleanGrade(undefined)).toBe('')
     expect(cleanGrade('')).toBe('')
-    expect(cleanGrade(' 5th grade ')).toBe('5th grade')
-    expect(cleanGrade('g'.repeat(20))).toHaveLength(20)
+    expect(cleanGrade(' Pre-K ')).toBe('Pre-K')
+    expect(cleanGrade('g'.repeat(5))).toHaveLength(5)
   })
-  it('refuses 21 characters, control characters and non-text', () => {
-    expect(cleanGrade('g'.repeat(21))).toBeNull()
+  it('counts an emoji as one character', () => {
+    expect(cleanGrade('😀'.repeat(5))).not.toBeNull()
+    expect(cleanGrade('😀'.repeat(6))).toBeNull()
+  })
+  it('refuses 6 characters, control characters and non-text', () => {
+    expect(cleanGrade('g'.repeat(6))).toBeNull()
     expect(cleanGrade('5\u0000')).toBeNull()
     expect(cleanGrade(5)).toBeNull()
   })
@@ -145,7 +149,7 @@ describe('checkChildFields', () => {
   it('names the first field that is wrong', () => {
     expect(checkChildFields({ name: '' })).toEqual({ ok: false, error: 'bad_name' })
     expect(checkChildFields({ name: '\u200B' })).toEqual({ ok: false, error: 'bad_name' })
-    expect(checkChildFields({ name: 'Sam', grade: 'g'.repeat(21) })).toEqual({
+    expect(checkChildFields({ name: 'Sam', grade: 'g'.repeat(6) })).toEqual({
       ok: false,
       error: 'bad_grade',
     })

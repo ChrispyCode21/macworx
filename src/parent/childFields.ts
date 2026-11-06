@@ -1,8 +1,8 @@
 // The rules for a child's name, grade and initials (SPEC §5.3). Pure: the parent form and the Worker both
 // use it, so what the form accepts is what the Worker accepts.
 
-export const MAX_NAME = 40
-export const MAX_GRADE = 20
+export const MAX_NAME = 20
+export const MAX_GRADE = 5
 export const MAX_INITIALS = 3
 
 export interface ChildFields {
@@ -42,7 +42,7 @@ export function fillInitials(name: string): string {
 }
 
 /**
- * The trimmed name, or null when it isn't 1 to 40 characters, has control characters or bidi
+ * The trimmed name, or null when it isn't 1 to 20 characters, has control characters or bidi
  * override/isolate characters, or has no visible character (SPEC §5.3).
  */
 export function cleanName(raw: unknown): string | null {
@@ -57,7 +57,7 @@ export function cleanName(raw: unknown): string | null {
   return ok ? name : null
 }
 
-/** The trimmed grade (empty is fine), or null when it is over 20 characters or has control characters. */
+/** The trimmed grade (empty is fine), or null when it is over 5 characters or has control characters. */
 export function cleanGrade(raw: unknown): string | null {
   if (raw === undefined || raw === null) return ''
   if (typeof raw !== 'string') return null

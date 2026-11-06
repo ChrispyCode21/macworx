@@ -32,10 +32,15 @@ const logs = async (childId: number) =>
 const count = async (sql: string) => (await t.db.prepare(sql).first<{ n: number }>())!.n
 
 describe('POST /api/parent/children', () => {
+  it('accepts a 20-character name and a 5-character grade, the longest allowed', async () => {
+    const { status, body } = await add({ name: 'a'.repeat(20), grade: 'Pre-K' })
+    expect([status, body.name, body.grade]).toEqual([201, 'a'.repeat(20), 'Pre-K'])
+  })
+
   it('adds a child with a balance of 0 and answers 201', async () => {
-    const { status, body } = await add({ name: ' Mary Jane ', grade: '4th grade', initials: 'mj' })
+    const { status, body } = await add({ name: ' Mary Jane ', grade: '4', initials: 'mj' })
     expect(status).toBe(201)
-    expect(body).toEqual({ id: 3, name: 'Mary Jane', grade: '4th grade', initials: 'MJ' })
+    expect(body).toEqual({ id: 3, name: 'Mary Jane', grade: '4', initials: 'MJ' })
     expect(await row(3)).toMatchObject({
       name: 'Mary Jane',
       balance: 0,
@@ -53,11 +58,11 @@ describe('POST /api/parent/children', () => {
 
   it.each([
     ['bad_name', { name: '' }],
-    ['bad_name', { name: 'a'.repeat(41) }],
+    ['bad_name', { name: 'a'.repeat(21) }],
     ['bad_name', { name: '\u200B' }],
     ['bad_name', { name: 'Sam\u202E' }],
     ['bad_name', { grade: '4th' }],
-    ['bad_grade', { name: 'Sam', grade: 'g'.repeat(21) }],
+    ['bad_grade', { name: 'Sam', grade: 'g'.repeat(6) }],
     ['bad_initials', { name: 'Sam', initials: 'ABCD' }],
     ['bad_initials', { name: 'Sam', initials: '12' }],
     ['bad_initials', { name: '123' }],
@@ -101,6 +106,11 @@ describe('POST /api/parent/children', () => {
 })
 
 describe('PATCH /api/parent/children/:id', () => {
+  it('accepts a 20-character name and a 5-character grade, the longest allowed', async () => {
+    const { status, body } = await rename(1, { name: 'a'.repeat(20), grade: 'Pre-K' })
+    expect([status, body.name, body.grade]).toEqual([200, 'a'.repeat(20), 'Pre-K'])
+  })
+
   it('changes only the fields sent', async () => {
     await t.db.prepare("UPDATE children SET grade = '3rd' WHERE id = 2").run()
     const { status, body } = await rename(2, { name: 'Jo' })
@@ -123,7 +133,8 @@ describe('PATCH /api/parent/children/:id', () => {
     ['bad_name', { name: ' ' }],
     ['bad_name', { name: '\u200B' }],
     ['bad_name', { name: 'Sam\u202E' }],
-    ['bad_grade', { grade: 'g'.repeat(21) }],
+    ['bad_name', { name: 'a'.repeat(21) }],
+    ['bad_grade', { grade: 'g'.repeat(6) }],
     ['bad_initials', { initials: 'ABCD' }],
     ['bad_initials', { name: '123', initials: '' }],
     ['bad_body', {}],
