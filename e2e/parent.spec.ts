@@ -112,6 +112,26 @@ test('makes a code for a named device and counts it down', async ({ page }) => {
   await expect(page.getByText('This code has run out. Make a new one.')).toBeVisible()
 })
 
+test('a message from a click stays when the page finishes loading afterwards', async ({ page }) => {
+  // The activity log is the last read of a load: hold its answer until after the click.
+  let release: () => void = () => {}
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await page.route('/api/parent/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/parent/log') await held
+    return route.fulfill({ json: readViews(path, []) })
+  })
+  await page.goto('/parent/devices')
+  await expect(page.getByText('No devices paired yet.')).toBeVisible()
+  const message = page.getByText('Give the device a name of up to 40 characters.')
+  await page.getByRole('button', { name: 'Generate pairing code' }).click()
+  await expect(message).toBeVisible()
+  release()
+  // Give the last read time to land, then check the message is still there.
+  await page.waitForLoadState('networkidle')
+  await expect(message).toBeVisible()
+})
+
 test('asks for a name before making a code', async ({ page }) => {
   const calls = await parentApi(page, [])
   await page.goto('/parent/devices')

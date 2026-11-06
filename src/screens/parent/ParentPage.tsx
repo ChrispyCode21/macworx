@@ -71,6 +71,8 @@ export function ParentPage({
   const [problem, setProblem] = useState<string | null>(null)
   // True once one of the page's reads has failed: only then does a missing value say it is not available.
   const [readFailed, setReadFailed] = useState(false)
+  // The banner text a failed read put up, so a finished load clears that and not a message a click put up since.
+  const readProblem = useRef<string | null>(null)
   const [making, setMaking] = useState(false)
   const [days, setDays] = useState<string[] | null>(null)
   // Kept apart from the page banner, which a later successful refresh clears.
@@ -90,6 +92,7 @@ export function ParentPage({
     // No message means the page is reloading for a sign-in: nothing says "not available" in the meantime.
     const stop = (message: string | null) => {
       if (message !== null) setReadFailed(true)
+      readProblem.current = message
       setProblem(message)
     }
     // Each read is kept as it arrives, so the blocks that did load keep their values when a later read fails.
@@ -111,7 +114,9 @@ export function ParentPage({
     if (!logResult.ok) return stop(failure(logResult))
     setLog(logResult.body.entries)
     setReadFailed(false)
-    setProblem(null)
+    const old = readProblem.current
+    readProblem.current = null
+    setProblem((now) => (now === old ? null : now))
   }
   const adjust = useAdjust({
     balance: summary?.balance ?? null,
