@@ -17,7 +17,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `src/pairing/` | The iPad's pairing call: `/api/pair`. |
 | `src/assignment/` | Pure helpers for the assignment screen: answer boxes and number pad typing. |
 | `src/engine/` | The question engine, pure TypeScript (CLAUDE.md). See "Question engine". |
-| `worker/` | The Cloudflare Worker that answers `/api/*`: routing (`index.ts`), device keys (`auth.ts`), the child API (`child.ts`), Access checks (`access.ts`) and the parent API (`parent.ts`). `worker/test/` holds a local D1 for its tests. |
+| `worker/` | The Cloudflare Worker that answers `/api/*`: routing (`index.ts`), device keys (`auth.ts`), the child API (`child.ts`), Access checks (`access.ts`), the parent API (`parent.ts`, with `children.ts` and `pair.ts` for its child and pairing routes), what every parent route shares (`parent-request.ts`: the request type and `childOf`) and the admin log write (`admin-log.ts`). The Worker's modules don't import each other in a circle (`worker/imports.test.ts` fails on one). `worker/test/` holds a local D1 for its tests. |
 | `migrations/` | Numbered D1 SQL migrations, applied in order. See "Data". |
 | `public/` | Icons, `logo.svg` and `_headers`, copied into the build as is. |
 | `e2e/` | Playwright tests of the production build. |

@@ -11,7 +11,9 @@ const createdDir = !existsSync(dir)
 
 const run = (cmd) => {
   const r = spawnSync(cmd, { shell: true, encoding: 'utf8' })
-  return { status: r.status, out: r.stdout + r.stderr }
+  // A command that could not start, or was ended early, has no status or output: say why instead (#29).
+  const why = [r.error && `Could not run it: ${r.error.message}`, r.signal && `Ended by ${r.signal}.`]
+  return { status: r.status, out: [`${r.stdout ?? ''}${r.stderr ?? ''}`, ...why].filter(Boolean).join('\n') }
 }
 
 // Each test starts oxlint or check-conventions in a child process, which can take well over Vitest's default
@@ -42,7 +44,8 @@ describe('engine purity checks', { timeout: SLOW }, () => {
 
   it('oxlint rejects every import from outside src/engine', () => {
     const { status, out } = run(`npx oxlint ${probe}`)
-    expect(status).not.toBe(0)
+    // The output is the failure message: when oxlint once exited 0 here (#29), nothing showed why.
+    expect(status, `oxlint exited ${status} on ${probe}:\n${out}`).not.toBe(0)
     for (const line of [1, 2, 3, 4])
       expect(out).toMatch(new RegExp(`probe\\.ts:${line}:1: .*import is restricted`))
   })
@@ -55,7 +58,7 @@ describe('engine purity checks', { timeout: SLOW }, () => {
 
   it('check-conventions rejects Math.random and .tsx files', () => {
     const { status, out } = run('node scripts/check-conventions.mjs')
-    expect(status).not.toBe(0)
+    expect(status, `check-conventions exited ${status}:\n${out}`).not.toBe(0)
     expect(out).toContain('zz-purity-probe.ts:6  The engine takes randomness from the seed')
     expect(out).toContain('zz-purity-probe.tsx  The engine is pure TypeScript: no .tsx files')
   })

@@ -7,6 +7,7 @@ import {
   queueResult,
   setDeviceKey,
   setSeeds,
+  setWorkerState,
 } from '../storage/device'
 
 function fakeStorage(): Storage {
@@ -174,10 +175,24 @@ describe('sync', () => {
   it('forgets the key and everything stored for it on a 401', async () => {
     queueResult(result(1))
     setSeeds([9])
+    // Her numbers from an earlier sync: a re-paired iPad must not show them before its first sync (SPEC §6.8).
+    setWorkerState(state)
     worker([], { 'POST /api/results': () => json(401, {}) })
     expect(await sync.sync()).toBe('unpaired')
-    expect([getDeviceKey(), getQueue(), getSeeds()]).toEqual([null, [], []])
+    expect([getDeviceKey(), getQueue(), getSeeds(), getWorkerState()]).toEqual([null, [], [], null])
   })
+
+  it.each(['POST /api/seeds', 'GET /api/state'])(
+    'forgets her stored numbers too when %s answers 401',
+    async (route) => {
+      setSeeds([9])
+      setWorkerState(state)
+      // The Worker still lists seed 9, so the seeds step keeps it and only the 401 can clear it.
+      worker([9], { [route]: () => json(401, {}) })
+      expect(await sync.sync()).toBe('unpaired')
+      expect([getDeviceKey(), getQueue(), getSeeds(), getWorkerState()]).toEqual([null, [], [], null])
+    },
+  )
 
   it('keeps stored seeds in order, adds new ones, and leaves out the in-progress seed', async () => {
     setSeeds([4, 2, 3, 8])
