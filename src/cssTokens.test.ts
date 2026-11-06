@@ -19,6 +19,24 @@ const RADIUS: Record<string, number> = {
 }
 const SPACING = [2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 28, 32, 40, 48]
 
+// The type scale (docs/DESIGN.md §4 and docs/DESIGN-PRACTICE.md §4): every px size the two contracts use.
+const TEXT = [
+  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 28, 29, 30, 40, 42, 44, 48, 52, 58,
+]
+// The child app's base styles size some text in rem, which scales with the 24px root and is not on the scale.
+// Each is listed here (selector and value), so a new one fails until it is added.
+const REM_SIZES = [
+  'h1 2.4rem',
+  '.button-primary 1.6rem',
+  '.button-check 1.2rem',
+  '.stacked 2.8rem',
+  '.response-lead 1.8rem',
+  '.response-equation 1.6rem',
+  '.result-macaronis 1.6rem',
+  '.home-numbers li 1.4rem',
+  '.code-boxes 2.8rem',
+]
+
 // The first :root block: where the tokens are defined.
 const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
 
@@ -86,5 +104,37 @@ describe('size tokens', () => {
       literal.map((px) => `${px}px (use var(--radius-${byValue[px]}))`),
       'src/index.css uses a literal radius from the scale',
     ).toEqual([])
+  })
+
+  it('has a text token in :root for each size on the scale, with exactly that value, and no other', () => {
+    for (const px of TEXT) expect(root).toContain(`--text-${px}: ${px}px;`)
+    const defined = [...css.matchAll(/^\s*(--text-[a-z0-9-]+):\s*([^;]+);/gm)].map((m) => m[1])
+    expect(defined.sort()).toEqual(TEXT.map((px) => `--text-${px}`).sort())
+  })
+
+  it('uses a text token, not a literal size, for every font-size', () => {
+    const literal: string[] = []
+    const rem: string[] = []
+    let selector = ''
+    for (const line of css.split('\n')) {
+      if (line.trimEnd().endsWith('{')) selector = line.trim().replace(/\s*\{$/, '')
+      const m = line.match(/font-size:\s*(\d*\.?\d+)(px|rem|em)/i)
+      if (!m) continue
+      if (m[2] === 'px') {
+        // The 24px on :root is the rem base.
+        if (selector !== ':root') literal.push(`${selector}: ${m[1]}px (use var(--text-${m[1]}))`)
+      } else rem.push(`${selector} ${m[1]}${m[2]}`)
+    }
+    const used = [...css.matchAll(/var\(--text-([a-z0-9-]+)\)/g)].map((m) => m[1])
+    expect(
+      used.filter((n) => !TEXT.includes(Number(n))),
+      'a var(--text-N) names a token that does not exist',
+    ).toEqual([])
+    expect(
+      [...new Set(used.map(Number))].sort((x, y) => x - y),
+      'a text token is never used',
+    ).toEqual(TEXT)
+    expect(literal, 'src/index.css uses a literal font size').toEqual([])
+    expect(rem, 'the rem sizes in the base styles changed; update REM_SIZES').toEqual(REM_SIZES)
   })
 })
