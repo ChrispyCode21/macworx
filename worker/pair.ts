@@ -2,7 +2,9 @@
 // its device key. POST /api/pair is the one write route with no key or token (CLAUDE.md); the code is the gate.
 import { sha256Hex } from './auth'
 import { error, json, readJson } from './http'
-import { childOf, logChange, type ParentRequest } from './parent'
+import { logChange } from './admin-log'
+import { childOf } from './parent-request'
+import type { ParentRequest } from './parent-request'
 
 const CODE_LIFE_MS = 10 * 60 * 1000
 const MAX_TRIES = 5

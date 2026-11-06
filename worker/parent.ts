@@ -1,30 +1,11 @@
 // The parent API (SPEC §5.3, §6.9, §8). Every route here runs only after parentEmail() accepted the request.
 import { addDays, dayNumber, generateAssignment } from '../src/engine'
 import { error, json, readJson, utcDay } from './http'
+import { logChange } from './admin-log'
 import { patchChild, postChild } from './children'
 import { postPairingCode } from './pair'
-
-export interface ParentRequest {
-  request: Request
-  url: URL
-  db: D1Database
-  email: string
-  now: Date
-  /** Path parameters, e.g. { id } for /api/parent/devices/:id. */
-  params: Record<string, string>
-}
-
-/**
- * The chosen child's id from the `child` query parameter (SPEC §8), or the error response to answer with:
- * 400 bad_child for a missing or non-numeric id, 404 unknown_child for one that doesn't exist.
- */
-export async function childOf({ url, db }: ParentRequest): Promise<number | Response> {
-  const raw = url.searchParams.get('child') ?? ''
-  const id = /^\d{1,9}$/.test(raw) ? Number(raw) : 0
-  if (id < 1) return error(400, 'bad_child')
-  const row = await db.prepare('SELECT id FROM children WHERE id = ?').bind(id).first()
-  return row ? id : error(404, 'unknown_child')
-}
+import { childOf } from './parent-request'
+import type { ParentRequest } from './parent-request'
 
 /** GET /api/parent/children: the household's children in the order they were added. */
 export async function listChildren({ db }: ParentRequest): Promise<Response> {
@@ -201,19 +182,6 @@ function parseDetail(text: string): Record<string, unknown> {
   } catch {
     return {}
   }
-}
-
-/** A statement recording one admin change (SPEC §5.3), to run in the same batch as the change. */
-export function logChange(
-  db: D1Database,
-  { email, now }: ParentRequest,
-  childId: number,
-  action: string,
-  detail: object,
-) {
-  return db
-    .prepare('INSERT INTO admin_log (at, email, action, detail, child_id) VALUES (?, ?, ?, ?, ?)')
-    .bind(now.toISOString(), email, action, JSON.stringify(detail), childId)
 }
 
 /** DELETE /api/parent/devices/:id: unpairs an iPad. Its key is refused from then on (§6.9). */
