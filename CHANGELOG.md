@@ -6,6 +6,8 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-06
+
 ### Fixed
 
 - **A message stays until the page says otherwise (parents):** when a button gave a message (for example asking for a device name) while the page was still finishing its load, the load ending cleared that message. Only a message from a failed load is cleared now.
