@@ -65,6 +65,7 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
 
 ## 3. Units and layout frame
 
+- **Sizes come from the shared scale** in docs/DESIGN.md §3 (radius and spacing custom properties in `:root`, including `--space-40` and `--space-48` for this layout); use the tokens, not literal values.
 - **All values are CSS px.** `:root` sets `font-size: 24px`, so rem and em would scale. Practice CSS uses px only, like the parent portal.
 - Letter-spacing is 0 unless the type scale gives a value.
 - **Frame:** a column that fills the viewport (`min-height: 100dvh`), background `--l-bg`:

@@ -10,10 +10,40 @@
   --right-edge: #6cbf5a;
   --not-right-soft: #ffe0d6;
   --not-right-edge: #f0947a;
-  --space: 24px;
-  --gap: 16px;
-  --gap-small: 8px;
-  --radius: 20px;
+  /*
+   * Sizes (docs/DESIGN.md §3), in px: the exact values the design frames give. Use these, not literal values;
+   * src/cssTokens.test.ts fails on a literal that is on the scale. The older names are aliases.
+   */
+  --space: var(--space-24);
+  --gap: var(--space-16);
+  --gap-small: var(--space-8);
+  --radius: var(--radius-panel);
+  --radius-segment: 9px;
+  --radius-completion: 11px;
+  --radius-control: 12px;
+  --radius-reward: 14px;
+  --radius-panel: 20px;
+  --radius-pill: 100px;
+  --space-2: 2px;
+  --space-3: 3px;
+  --space-4: 4px;
+  --space-5: 5px;
+  --space-6: 6px;
+  --space-7: 7px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-15: 15px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-28: 28px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
   --tap: 56px;
   --tap-large: 88px;
   --key: 96px;
@@ -314,7 +344,7 @@ p {
 
 .portal-chip {
   padding: 4px 9px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   background: var(--p-chip);
   color: var(--p-accent-ink);
   font-size: 11px;
@@ -345,7 +375,7 @@ p {
   align-items: center;
   gap: 10px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-warm);
   color: var(--p-text);
   font: inherit;
@@ -411,7 +441,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   background: var(--p-avatar);
   color: var(--p-text);
   font-size: 13px;
@@ -459,7 +489,7 @@ p {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-surface);
   color: var(--p-muted);
   font-size: 10px;
@@ -538,7 +568,7 @@ p {
 /* The moved sections, as panels (docs/DESIGN.md §7). */
 .parent-problem {
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-warn-soft);
   color: var(--p-warn-ink);
   font-size: 12px;
@@ -551,7 +581,7 @@ p {
   gap: 14px;
   padding: 18px;
   border: 1px solid var(--p-divider);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--p-surface);
 }
 
@@ -595,7 +625,7 @@ p {
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-chip);
 }
 
@@ -640,7 +670,7 @@ p {
 
 .device-chip {
   padding: 4px 9px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 600;
   line-height: normal;
@@ -675,7 +705,7 @@ p {
   flex: none;
   width: 44px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-chip);
   color: var(--p-accent-ink);
 }
@@ -744,7 +774,7 @@ p {
   min-height: 0;
   padding: 0 16px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   font-size: 14px;
   font-weight: 600;
   line-height: normal;
@@ -781,7 +811,7 @@ p {
   min-height: 48px;
   padding: 12px;
   border: 1px solid var(--p-divider);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-bg);
   color: var(--p-text);
   font-size: 14px;
@@ -1051,7 +1081,7 @@ p {
   align-items: flex-start;
   gap: 10px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   font-size: 12px;
   font-weight: 400;
   line-height: 1.45;
@@ -1075,7 +1105,7 @@ p {
   align-items: center;
   gap: 10px;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-warm);
   color: var(--p-accent-ink);
 }
@@ -1170,7 +1200,7 @@ p {
   min-height: 0;
   padding: 0 16px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-danger-soft);
   color: var(--p-danger-ink);
   font-size: 14px;
@@ -1193,7 +1223,7 @@ p {
   gap: 8px;
   padding: 0 12px;
   border: 1px solid var(--p-divider);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-bg);
 }
 
@@ -1238,7 +1268,7 @@ p {
   align-items: center;
   gap: 10px;
   padding: 15px 18px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-chip);
   color: var(--p-accent-ink);
 }
@@ -1290,7 +1320,7 @@ p {
 
 .shop-chip-warn {
   padding: 4px 9px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   background: var(--p-warn-soft);
   color: var(--p-warn-ink);
   font-size: 11px;
@@ -1319,7 +1349,7 @@ p {
   justify-content: center;
   width: 46px;
   height: 50px;
-  border-radius: 14px;
+  border-radius: var(--radius-reward);
   background: var(--p-warm);
 }
 
@@ -1374,7 +1404,7 @@ p {
   align-items: flex-start;
   gap: 10px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-chip);
   color: var(--p-accent-ink);
   font-size: 12px;
@@ -1530,7 +1560,7 @@ p {
   gap: 14px;
   padding: 18px;
   border: 1px solid var(--p-primary);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--p-primary);
   color: var(--p-primary-ink);
 }
@@ -1583,13 +1613,13 @@ p {
 .points .parent-choice {
   gap: 4px;
   padding: 4px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-bg);
 }
 
 .points .parent-choice .button {
   height: 42px;
-  border-radius: 9px;
+  border-radius: var(--radius-segment);
   font-size: 13px;
 }
 
@@ -1651,7 +1681,7 @@ p {
   gap: 10px;
   padding: 14px;
   border: 1px solid var(--p-divider);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-surface);
   font-size: 13px;
 }
@@ -1827,7 +1857,7 @@ p {
   gap: 14px;
   padding: 18px;
   border: 1px solid var(--p-primary);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--p-primary);
   color: var(--p-primary-ink);
 }
@@ -1932,7 +1962,7 @@ p {
   max-width: 34px;
   height: 39px;
   border: 1px solid var(--p-divider);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-bg);
   font-size: 12px;
   font-weight: 600;
@@ -1981,7 +2011,7 @@ p {
   gap: 10px;
   padding: 14px;
   border: 1px solid var(--p-divider);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--p-surface);
   font-size: 13px;
 }
@@ -2102,7 +2132,7 @@ p {
   gap: 14px;
   padding: 18px;
   border: 1px solid var(--p-primary);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--p-primary);
   color: var(--p-primary-ink);
 }
@@ -2167,7 +2197,7 @@ p {
   min-width: 0;
   padding: 16px;
   border: 1px solid var(--p-divider);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--p-surface);
   color: var(--p-accent-ink);
 }
@@ -2254,7 +2284,7 @@ p {
   width: 34px;
   height: 34px;
   border: 1px solid var(--p-divider);
-  border-radius: 11px;
+  border-radius: var(--radius-completion);
   background: var(--p-chip);
   color: var(--p-accent-ink);
 }
@@ -2539,7 +2569,7 @@ p {
   gap: 10px;
   height: 48px;
   padding: 0 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--l-chip);
   color: var(--l-link);
   font-size: 16px;
@@ -2631,14 +2661,14 @@ p {
 .practice-progress-track {
   display: block;
   height: 6px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   background: var(--l-line);
 }
 
 .practice-progress-fill {
   display: block;
   height: 6px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   background: var(--l-link);
 }
 
@@ -2663,7 +2693,7 @@ p {
   min-width: 0;
   padding: 32px;
   border: 1px solid var(--l-line);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--l-surface);
 }
 
@@ -2819,7 +2849,7 @@ p {
   min-width: 220px;
   padding: 0 24px;
   border: 1px solid var(--l-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--l-primary);
   color: var(--l-primary-ink);
   font-size: 17px;
@@ -2853,7 +2883,7 @@ p {
   align-items: center;
   justify-content: center;
   height: 72px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--l-surface);
   color: var(--l-text);
   font-size: 28px;
@@ -2897,7 +2927,7 @@ p {
   min-height: 78px;
   padding: 0 18px;
   border: 1px solid var(--l-line);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--l-surface);
   color: var(--l-text);
   font-weight: 400;
@@ -2972,7 +3002,7 @@ p {
   justify-content: center;
   gap: 20px;
   padding: 32px 24px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--l-inset);
 }
 
@@ -3123,7 +3153,7 @@ p {
   flex-direction: column;
   min-width: 0;
   padding: 0;
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--l-chip);
   overflow: hidden;
 }

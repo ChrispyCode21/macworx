@@ -1,0 +1,54 @@
+import { describe, expect, it } from 'vitest'
+
+// The app's TypeScript has no Node types and Vitest hands CSS imports back empty, so the file is read by Node.
+const nodeFs = 'node:fs'
+const { readFileSync } = (await import(/* @vite-ignore */ nodeFs)) as {
+  readFileSync: (path: URL, encoding: 'utf8') => string
+}
+const css = readFileSync(new URL('./index.css', import.meta.url), 'utf8')
+
+// The size scales (docs/DESIGN.md §3): the exact values the design frames give, in px. The spacing scale also
+// has 40 and 48, which the practice layout uses (docs/DESIGN-PRACTICE.md §3). Tokens are named for these values.
+const RADIUS: Record<string, number> = {
+  segment: 9,
+  completion: 11,
+  control: 12,
+  reward: 14,
+  panel: 20,
+  pill: 100,
+}
+const SPACING = [2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 28, 32, 40, 48]
+
+describe('size tokens', () => {
+  it('has a radius token for each value on the scale, with exactly that value', () => {
+    for (const [name, px] of Object.entries(RADIUS)) expect(css).toContain(`--radius-${name}: ${px}px;`)
+  })
+
+  it('has a spacing token for each value on the scale, with exactly that value', () => {
+    for (const px of SPACING) expect(css).toContain(`--space-${px}: ${px}px;`)
+  })
+
+  it('defines no other radius or spacing token, and every one is in px', () => {
+    const defined = [...css.matchAll(/^\s*(--(?:radius|space)-[a-z0-9]+):\s*([^;]+);/gm)]
+    const allowed = [
+      ...Object.keys(RADIUS).map((name) => `--radius-${name}`),
+      ...SPACING.map((px) => `--space-${px}`),
+    ]
+    for (const [, name, value] of defined) {
+      expect(allowed, `${name} is not on the scale in docs/DESIGN.md §3`).toContain(name)
+      expect(value, `${name} must be a px value`).toMatch(/^\d+px$/)
+    }
+    expect(defined).toHaveLength(allowed.length)
+  })
+
+  it('uses a radius token, not a literal value, wherever the value is on the scale', () => {
+    const byValue = Object.fromEntries(Object.entries(RADIUS).map(([name, px]) => [px, name]))
+    const literal = [...css.matchAll(/^\s*border-radius:\s*(\d+)px;/gm)]
+      .map((m) => Number(m[1]))
+      .filter((px) => px in byValue)
+    expect(
+      literal.map((px) => `border-radius: ${px}px (use var(--radius-${byValue[px]}))`),
+      'src/index.css uses a literal radius from the scale',
+    ).toEqual([])
+  })
+})
