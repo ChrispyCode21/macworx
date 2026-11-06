@@ -33,9 +33,9 @@ const count = async (sql: string) => (await t.db.prepare(sql).first<{ n: number 
 
 describe('POST /api/parent/children', () => {
   it('adds a child with a balance of 0 and answers 201', async () => {
-    const { status, body } = await add({ name: ' Mary Jane ', grade: '4th grade', initials: 'mj' })
+    const { status, body } = await add({ name: ' Mary Jane ', grade: '4', initials: 'mj' })
     expect(status).toBe(201)
-    expect(body).toEqual({ id: 3, name: 'Mary Jane', grade: '4th grade', initials: 'MJ' })
+    expect(body).toEqual({ id: 3, name: 'Mary Jane', grade: '4', initials: 'MJ' })
     expect(await row(3)).toMatchObject({
       name: 'Mary Jane',
       balance: 0,
@@ -53,11 +53,11 @@ describe('POST /api/parent/children', () => {
 
   it.each([
     ['bad_name', { name: '' }],
-    ['bad_name', { name: 'a'.repeat(41) }],
+    ['bad_name', { name: 'a'.repeat(21) }],
     ['bad_name', { name: '\u200B' }],
     ['bad_name', { name: 'Sam\u202E' }],
     ['bad_name', { grade: '4th' }],
-    ['bad_grade', { name: 'Sam', grade: 'g'.repeat(21) }],
+    ['bad_grade', { name: 'Sam', grade: 'g'.repeat(6) }],
     ['bad_initials', { name: 'Sam', initials: 'ABCD' }],
     ['bad_initials', { name: 'Sam', initials: '12' }],
     ['bad_initials', { name: '123' }],
@@ -123,7 +123,7 @@ describe('PATCH /api/parent/children/:id', () => {
     ['bad_name', { name: ' ' }],
     ['bad_name', { name: '\u200B' }],
     ['bad_name', { name: 'Sam\u202E' }],
-    ['bad_grade', { grade: 'g'.repeat(21) }],
+    ['bad_grade', { grade: 'g'.repeat(6) }],
     ['bad_initials', { initials: 'ABCD' }],
     ['bad_initials', { name: '123', initials: '' }],
     ['bad_body', {}],

@@ -5,7 +5,7 @@ import { expect, test, type Page } from '@playwright/test'
 // (402) run phone.spec.ts, and other phone widths set their own viewport.
 
 const children = [
-  { id: 1, name: 'Ada', grade: '4th grade', initials: 'A' },
+  { id: 1, name: 'Ada', grade: '4', initials: 'A' },
   { id: 2, name: 'Bo', grade: '', initials: 'B' },
 ]
 
@@ -238,7 +238,7 @@ test('the child switcher picks the first child, switches every read, and is reme
   for (const name of READS) expect(reads(calls, name)).toEqual([`/api/parent/${name}?child=1`])
 
   const switcher = page.locator('.portal-switcher > button')
-  await expect(switcher).toContainText('4th grade · Child profile')
+  await expect(switcher).toContainText('4 · Child profile')
   await switcher.click()
   const list = page.getByRole('list', { name: 'Choose a child' })
   // Each child has a choose button and a Rename button, and the list ends with "Add a child".
@@ -551,14 +551,14 @@ test('Add keeps what is typed when another child is chosen, and clears it after 
   await expect(name).toHaveValue('')
 })
 
-test('a name over 40 characters can be saved and says why it is not', async ({ page }) => {
+test('a name over 20 characters can be saved and says why it is not', async ({ page }) => {
   const calls = await portalApi(page)
   await page.goto('/parent/overview')
-  await panel(page).getByLabel('Name', { exact: true }).fill('A'.repeat(41))
+  await panel(page).getByLabel('Name', { exact: true }).fill('A'.repeat(21))
   await expect(panel(page).getByRole('button', { name: 'Save' })).toBeEnabled()
   calls.length = 0
   await panel(page).getByRole('button', { name: 'Save' }).click()
-  await expect(panel(page).getByRole('alert')).toHaveText('Give the name 1 to 40 characters.')
+  await expect(panel(page).getByRole('alert')).toHaveText('Give the name 1 to 20 characters.')
   expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
 })
 
@@ -567,7 +567,7 @@ test('typed initials stay, and Rename can be chosen from the panel', async ({ pa
   await page.goto('/parent/overview')
   await panel(page).getByRole('radio', { name: 'Rename' }).click()
   await expect(panel(page).getByLabel('Name', { exact: true })).toHaveValue('Ada')
-  await expect(panel(page).getByLabel('Grade (optional)')).toHaveValue('4th grade')
+  await expect(panel(page).getByLabel('Grade (optional)')).toHaveValue('4')
   await panel(page).getByLabel('Initials').fill('ax')
   await panel(page).getByRole('button', { name: 'Save' }).click()
   await expect(page.locator('.portal-switcher .portal-avatar').first()).toHaveText('AX')

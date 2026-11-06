@@ -6,6 +6,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Changed
+
+- **Shorter child names and grades (parents):** a child's name is 1 to 20 characters (was 40) and a grade is at most 5 (was 20; "Pre-K" is the longest of Pre-K, K and 1 to 12), for Add and Rename. A grade is shown as typed. There is no stored data to change. The device name still allows 40.
+
 ## [0.5.1] - 2026-11-06
 
 ### Changed
