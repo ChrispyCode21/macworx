@@ -22,15 +22,15 @@ const SPACING = [2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 28, 32
 // The first :root block: where the tokens are defined.
 const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
 
-// The literal spacing values from the scale in a stretch of CSS: padding, margin and gap, with `calc()` and `env()`
-// (safe areas) left alone, and negative values (not on the scale).
+// The literal spacing values from the scale in a stretch of CSS: padding, margin and gap, with the `calc()` and `env()`
+// (safe areas) parts left alone, and negative values (not on the scale).
 function literalSpacing(text: string): string[] {
   const found: string[] = []
   for (const m of text.matchAll(
     /^\s*((?:padding|margin)(?:-[a-z-]+)?|gap|row-gap|column-gap):\s*([^;]+);/gm,
   )) {
-    if (/calc\(|env\(/.test(m[2])) continue
-    for (const n of m[2].matchAll(/(?<![\w.#-])(\d+)px/g))
+    const own = m[2].replace(/calc\((?:[^()]|\([^()]*\))*\)|env\([^()]*\)/g, '')
+    for (const n of own.matchAll(/(?<![\w.#-])(\d+)px/g))
       if (SPACING.includes(Number(n[1]))) found.push(`${m[1]}: ${n[1]}px (use var(--space-${n[1]}))`)
   }
   return found
