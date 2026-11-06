@@ -187,7 +187,8 @@ describe('sync', () => {
     async (route) => {
       setSeeds([9])
       setWorkerState(state)
-      worker([], { [route]: () => json(401, {}) })
+      // The Worker still lists seed 9, so the seeds step keeps it and only the 401 can clear it.
+      worker([9], { [route]: () => json(401, {}) })
       expect(await sync.sync()).toBe('unpaired')
       expect([getDeviceKey(), getQueue(), getSeeds(), getWorkerState()]).toEqual([null, [], [], null])
     },
