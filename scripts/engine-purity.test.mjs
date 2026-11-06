@@ -11,7 +11,9 @@ const createdDir = !existsSync(dir)
 
 const run = (cmd) => {
   const r = spawnSync(cmd, { shell: true, encoding: 'utf8' })
-  return { status: r.status, out: r.stdout + r.stderr }
+  // A command that could not start, or was ended early, has no status or output: say why instead (#29).
+  const why = [r.error && `Could not run it: ${r.error.message}`, r.signal && `Ended by ${r.signal}.`]
+  return { status: r.status, out: [`${r.stdout ?? ''}${r.stderr ?? ''}`, ...why].filter(Boolean).join('\n') }
 }
 
 // Each test starts oxlint or check-conventions in a child process, which can take well over Vitest's default
