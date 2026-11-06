@@ -13,7 +13,6 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 ### Changed
 
 - **More blank-looking names are refused (parents):** a child's name made only of combining marks, other format characters (such as U+0600 to U+0605 or U+FFF9 to U+FFFB), private-use or unassigned characters, or the braille blank (U+2800) is refused when adding or renaming, like one made of spaces or zero-width characters. A name with a visible letter and one of these still works.
-
 - **Shorter child names and grades (parents):** a child's name is 1 to 20 characters (was 40) and a grade is at most 5 (was 20; "Pre-K" is the longest of Pre-K, K and 1 to 12), for Add and Rename. A grade is shown as typed. There is no stored data to change. The device name still allows 40.
 
 ## [0.5.1] - 2026-11-06
