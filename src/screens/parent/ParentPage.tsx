@@ -16,6 +16,7 @@ import { Button } from '../../ui/Button'
 import { minutesLeft } from '../../ui/format'
 import { DevicesScreen } from './DevicesScreen'
 import { Overview } from './Overview'
+import { Pending } from './Pending'
 import { PointsScreen } from './PointsScreen'
 import { Shop } from './Shop'
 import { StreakScreen } from './StreakScreen'
@@ -167,8 +168,8 @@ export function ParentPage({
     await refresh()
   }
 
-  // Before a list or the numbers arrive: "Loading…", or a dash and a note once a call has failed.
-  const pending = <span className="parent-pending">{problem ? COPY.parentNoValue : COPY.parentLoading}</span>
+  // Before a list or the numbers arrive: "Loading…", or the plain words once a call has failed.
+  const pending = <Pending failed={problem !== null} />
   const unavailable = problem ? <p>{COPY.parentUnavailable}</p> : null
 
   const left = code ? minutesLeft(code.expiresAt, now) : 0

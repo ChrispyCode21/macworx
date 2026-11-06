@@ -429,6 +429,22 @@ test('with no connection, offers Try again', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText("We can't show your children right now.")
 })
 
+test('when the numbers and lists fail to load, each block says so instead of showing a dash', async ({
+  page,
+}) => {
+  await page.route('/api/parent/**', (route) => {
+    if (new URL(route.request().url()).pathname === '/api/parent/children')
+      return route.fulfill({ json: readViews('/api/parent/children', []) })
+    return route.fulfill({ status: 500, json: { error: 'server' } })
+  })
+  await page.goto('/parent/overview')
+  await expect(page.getByRole('alert')).toBeVisible()
+  const overview = page.locator('.overview')
+  await expect(overview.locator('.overview-stat-value').first()).toHaveText('Not available right now.')
+  await expect(overview.getByText('—')).toHaveCount(0)
+  await expect(page.getByText('Loading…')).toHaveCount(0)
+})
+
 test('a later success clears an earlier message', async ({ page }) => {
   let fail = true
   await page.route('/api/parent/**', (route) => {
