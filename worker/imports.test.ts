@@ -25,16 +25,19 @@ function findCycle(graph: Map<string, string[]>): string | null {
   return null
 }
 
+/** The sibling modules a source text imports: `from './x'` (also across lines, `export … from`, `./x.ts`), `import './x'` and `import('./x')`, not ones named in comments. */
+function importedNames(text: string): string[] {
+  const code = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+  const names = [...code.matchAll(/(?:from|import)\s*\(?\s*'\.\/([\w-]+)(?:\.ts)?'/g)].map((m) => m[1])
+  return [...new Set(names)]
+}
+
 /** Each module in worker/ (not its tests or worker/test/) and the sibling modules it imports, types included. */
 function workerImports(): Map<string, string[]> {
   const graph = new Map<string, string[]>()
   const files = readdirSync('worker').filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
-  for (const file of files) {
-    const text = readFileSync(join('worker', file), 'utf8')
-    // `from './x'` (also across lines, and `export … from`) and `import './x'`.
-    const names = [...text.matchAll(/(?:from|import)\s+'\.\/([\w-]+)'/g)].map((m) => m[1])
-    graph.set(file.replace(/\.ts$/, ''), [...new Set(names)])
-  }
+  for (const file of files)
+    graph.set(file.replace(/\.ts$/, ''), importedNames(readFileSync(join('worker', file), 'utf8')))
   return graph
 }
 
@@ -55,6 +58,23 @@ describe('the Worker modules', () => {
         ]),
       ),
     ).toBeNull()
+  })
+
+  it('reads every form of import, and ignores comments and other folders', () => {
+    const text = [
+      "import { a } from './one'",
+      "import type { B } from './two'",
+      'import {',
+      '  c,',
+      "} from './three.ts'",
+      "export * from './four'",
+      "import './five'",
+      "const six = await import('./six')",
+      "import { engine } from '../src/engine'",
+      "// moved from './commented'",
+      "/* import { x } from './blocked' */",
+    ].join('\n')
+    expect(importedNames(text)).toEqual(['one', 'two', 'three', 'four', 'five', 'six'])
   })
 
   it('reads the imports in worker/', () => {
