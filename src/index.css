@@ -2129,7 +2129,9 @@ p {
 }
 
 .overview-hero-row .parent-pending,
-.overview-stat-value .parent-pending {
+.overview-stat-value .parent-pending,
+.points-hero-number .parent-pending,
+.streak-hero-number .parent-pending {
   font-size: 14px;
 }
 

@@ -16,6 +16,7 @@ import { Button } from '../../ui/Button'
 import { minutesLeft } from '../../ui/format'
 import { DevicesScreen } from './DevicesScreen'
 import { Overview } from './Overview'
+import { Pending } from './Pending'
 import { PointsScreen } from './PointsScreen'
 import { Shop } from './Shop'
 import { StreakScreen } from './StreakScreen'
@@ -68,6 +69,8 @@ export function ParentPage({
   const [now, setNow] = useState(() => new Date())
   const [confirming, setConfirming] = useState<Device | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
+  // True once one of the page's reads has failed: only then does a missing value say it is not available.
+  const [readFailed, setReadFailed] = useState(false)
   const [making, setMaking] = useState(false)
   const [days, setDays] = useState<string[] | null>(null)
   // Kept apart from the page banner, which a later successful refresh clears.
@@ -84,23 +87,30 @@ export function ParentPage({
     // One clock reading per refresh: the numbers and the Overview's list and sync line all use this day.
     const readAt = new Date()
     const day = localDay(readAt)
+    // No message means the page is reloading for a sign-in: nothing says "not available" in the meantime.
+    const stop = (message: string | null) => {
+      if (message !== null) setReadFailed(true)
+      setProblem(message)
+    }
+    // Each read is kept as it arrives, so the blocks that did load keep their values when a later read fails.
     const summaryResult = await getSummary(day)
     if (!live.current) return
-    if (!summaryResult.ok) return setProblem(summaryFailure(summaryResult))
-    const resultsResult = await listResults()
-    if (!live.current) return
-    if (!resultsResult.ok) return setProblem(failure(resultsResult))
-    const devicesResult = await listDevices()
-    if (!live.current) return
-    if (!devicesResult.ok) return setProblem(failure(devicesResult))
-    const logResult = await listLog()
-    if (!live.current) return
-    if (!logResult.ok) return setProblem(failure(logResult))
+    if (!summaryResult.ok) return stop(summaryFailure(summaryResult))
     setSummary(summaryResult.body)
     setSummaryAt({ day, at: readAt })
+    const resultsResult = await listResults()
+    if (!live.current) return
+    if (!resultsResult.ok) return stop(failure(resultsResult))
     setResults(resultsResult.body.results)
+    const devicesResult = await listDevices()
+    if (!live.current) return
+    if (!devicesResult.ok) return stop(failure(devicesResult))
     setDevices(devicesResult.body.devices)
+    const logResult = await listLog()
+    if (!live.current) return
+    if (!logResult.ok) return stop(failure(logResult))
     setLog(logResult.body.entries)
+    setReadFailed(false)
     setProblem(null)
   }
   const adjust = useAdjust({
@@ -167,9 +177,9 @@ export function ParentPage({
     await refresh()
   }
 
-  // Before a list or the numbers arrive: "Loading…", or a dash and a note once a call has failed.
-  const pending = <span className="parent-pending">{problem ? COPY.parentNoValue : COPY.parentLoading}</span>
-  const unavailable = problem ? <p>{COPY.parentUnavailable}</p> : null
+  // Before a list or the numbers arrive: "Loading…", or the plain words once a call has failed.
+  const pending = <Pending failed={readFailed} />
+  const unavailable = readFailed ? <p>{COPY.parentUnavailable}</p> : null
 
   const left = code ? minutesLeft(code.expiresAt, now) : 0
 
@@ -181,9 +191,7 @@ export function ParentPage({
         </p>
       )}
 
-      {tab === 'shop' && (
-        <Shop name={childName} balance={summary?.balance ?? null} problem={problem !== null} />
-      )}
+      {tab === 'shop' && <Shop name={childName} balance={summary?.balance ?? null} problem={readFailed} />}
 
       {tab === 'overview' && (
         <Overview
@@ -221,7 +229,7 @@ export function ParentPage({
         <StreakScreen
           summary={summary}
           days={days}
-          problem={problem !== null || daysFailed}
+          problem={readFailed || daysFailed}
           today={localDay()}
           form={streakForm}
           pending={pending}

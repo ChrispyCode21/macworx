@@ -35,7 +35,7 @@ export function Shop({ name, balance, problem }: Props) {
             <p className="shop-summary-title">
               {balance === null
                 ? problem
-                  ? COPY.parentNoValue
+                  ? COPY.parentUnavailable
                   : COPY.parentLoading
                 : COPY.parentShopSummary(name, balance)}
             </p>

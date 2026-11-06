@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Changed
 
+- **A failed read says so, block by block (parents):** when the numbers or a list can't load, the Overview tiles, Today's assignments, the devices row and the Macaronis and Streak numbers show "Not available right now." in place of a dash, matching Results. Blocks that did load keep their values.
 - **When the children can't be listed (parents):** every portal screen shows "We can't show your children right now." with a Try again button, and no forms or switcher, in place of forms with no child. If the sign-in has run out, it shows that message instead, without the button. A household with no children shows "No children yet." and the Add form on every screen.
 
 ## [0.5.0] - 2026-11-06

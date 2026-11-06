@@ -68,9 +68,10 @@ describe('Shop', () => {
     expect(html).toContain('Loading…')
   })
 
-  it('shows a dash instead of Loading when a call has failed', () => {
+  it('says Not available right now instead of Loading when a call has failed', () => {
     const html = render('Ada', null, true)
     expect(html).not.toContain('Loading…')
-    expect(html).toContain('>—<')
+    expect(html).toContain('Not available right now.')
+    expect(html).not.toContain('>—<')
   })
 })
