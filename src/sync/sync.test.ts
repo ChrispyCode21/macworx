@@ -182,6 +182,17 @@ describe('sync', () => {
     expect([getDeviceKey(), getQueue(), getSeeds(), getWorkerState()]).toEqual([null, [], [], null])
   })
 
+  it.each(['POST /api/seeds', 'GET /api/state'])(
+    'forgets her stored numbers too when %s answers 401',
+    async (route) => {
+      setSeeds([9])
+      setWorkerState(state)
+      worker([], { [route]: () => json(401, {}) })
+      expect(await sync.sync()).toBe('unpaired')
+      expect([getDeviceKey(), getQueue(), getSeeds(), getWorkerState()]).toEqual([null, [], [], null])
+    },
+  )
+
   it('keeps stored seeds in order, adds new ones, and leaves out the in-progress seed', async () => {
     setSeeds([4, 2, 3, 8])
     expect(sync.takeSeed()).toBe(4)
