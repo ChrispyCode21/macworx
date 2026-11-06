@@ -5,14 +5,17 @@ import { createTestDb } from './test/db'
 
 let t: Awaited<ReturnType<typeof createTestDb>>
 let parent: string
+// Building and disposing the D1 database can pass Vitest's default 10 seconds for hooks under a parallel run, so
+// the hooks get the same limit as the slow tests (#99, #117, #114).
+const SLOW = 30_000
 beforeEach(async () => {
   clearAccessKeys()
   t = await createTestDb()
   parent = await accessToken()
-})
+}, SLOW)
 afterEach(async () => {
   await t.dispose()
-})
+}, SLOW)
 
 const NOW = new Date('2026-10-17T12:00:00Z')
 const minutesLater = (m: number) => new Date(NOW.getTime() + m * 60_000)
@@ -224,7 +227,7 @@ describe('preview pairing (SPEC §6.9)', () => {
     it(
       `A9: the preview code is refused when the Worker ${label}`,
       // Rebuilds the D1 database, which can pass Vitest's default 5 seconds under a parallel run (#99, #117).
-      { timeout: 30_000 },
+      { timeout: SLOW },
       async () => {
         await t.dispose()
         t = await createTestDb(env)
