@@ -110,7 +110,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
                 ? COPY.parentBelowZero
                 : summary
                   ? COPY.parentPreviewValue(a.after ?? summary.balance)
-                  : COPY.parentNoValue}
+                  : pending}
             </span>
           </div>
           {a.below && summary && !a.problem && (

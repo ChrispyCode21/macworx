@@ -331,7 +331,6 @@ export const COPY = {
   parentShopRedeemedLabel: 'Last redeemed',
   parentShopNoRedeemed: 'No rewards redeemed yet.',
   parentLoading: 'Loading…',
-  parentNoValue: '—',
   parentUnavailable: 'Not available right now.',
   parentChildrenUnavailable: "We can't show your children right now.",
   parentTryAgain: 'Try again',
