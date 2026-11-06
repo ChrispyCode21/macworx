@@ -71,11 +71,9 @@ describe('size tokens', () => {
       expect(root).toContain(line)
   })
 
-  it("uses a spacing token, not a literal value, in the portal's padding, margin and gap", () => {
-    expect(portal.length).toBeGreaterThan(1000)
-    expect(literalSpacing(portal), 'the parent portal block uses a literal spacing from the scale').toEqual(
-      [],
-    )
+  it('uses a spacing token, not a literal value, in every padding, margin and gap', () => {
+    expect(portal.length, 'the portal block markers are missing').toBeGreaterThan(1000)
+    expect(literalSpacing(css), 'src/index.css uses a literal spacing from the scale').toEqual([])
   })
 
   it('uses a radius token, not a literal value, wherever the value is on the scale', () => {

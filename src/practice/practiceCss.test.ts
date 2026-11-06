@@ -63,9 +63,9 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(rule('.practice .stacked')).toMatch(/font-size:\s*52px;/)
     expect(rule('.practice .stacked')).toMatch(/font-weight:\s*500;/)
     expect(rule('.practice .stacked-rule')).toContain('border-top: 2px solid var(--l-text);')
-    expect(rule('.practice-panel')).toContain('padding: 32px;')
+    expect(rule('.practice-panel')).toContain('padding: var(--space-32);')
     expect(rule('.practice-panel-warm')).toContain('background: var(--l-warm);')
-    expect(rule('.practice-panel-warm')).toContain('padding: 24px;')
+    expect(rule('.practice-panel-warm')).toContain('padding: var(--space-24);')
     expect(rule('.practice-panel-warm')).toContain('min-height: 406px;')
     // Link text on the warm panel is 4.42:1, so its heading is plain text.
     expect(rule('.practice-panel-warm')).not.toContain('--l-link')
