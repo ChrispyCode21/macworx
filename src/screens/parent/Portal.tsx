@@ -111,8 +111,8 @@ export function Portal() {
       // Before the screens mount, so their first reads are for this child.
       if (next.status === 'ready') chooseChild(next.selected.id)
       setLoad(next)
-      // The Try again button is gone once the screens show: focus goes to the page heading.
-      if (attempt > 0 && next.status === 'ready') title.current?.focus()
+      // The Try again button is gone once the screens (or the Add form) show: focus goes to the page heading.
+      if (attempt > 0 && next.status !== 'unavailable') title.current?.focus()
     })
     return () => {
       live = false

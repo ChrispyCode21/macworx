@@ -291,6 +291,7 @@ test("when the children can't be listed, Try again lists them and the remembered
   expect(reads(calls, 'summary')).toEqual([])
   await page.getByRole('button', { name: 'Try again' }).click()
   await expect(page.getByText("Bo's overview")).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused()
   await expect.poll(() => reads(calls, 'summary').length).toBe(1)
   expect(reads(calls, 'summary')).toEqual(['/api/parent/summary?child=2'])
 })
