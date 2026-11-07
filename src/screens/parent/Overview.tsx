@@ -95,16 +95,12 @@ export function Overview({
   return (
     <div className="overview">
       <HeroPanel variant="overview" label={COPY.parentHomeworkLabel} icon={<SunIcon size={21} />}>
-        {summary ? (
-          <>
-            <HeroRow>
-              <HeroNumber>{formatNumber(summary.completedToday)}</HeroNumber>
-              <HeroUnit>{COPY.parentHomeworkUnit(summary.completedToday)}</HeroUnit>
-            </HeroRow>
-            {summary.earnedToday > 0 && <HeroLine>{COPY.parentHomeworkEarned(summary.earnedToday)}</HeroLine>}
-          </>
-        ) : (
-          <HeroRow>{pending}</HeroRow>
+        <HeroRow>
+          <HeroNumber>{summary ? formatNumber(summary.completedToday) : pending}</HeroNumber>
+          <HeroUnit>{COPY.parentHomeworkUnit(summary ? summary.completedToday : 0)}</HeroUnit>
+        </HeroRow>
+        {summary && summary.earnedToday > 0 && (
+          <HeroLine>{COPY.parentHomeworkEarned(summary.earnedToday)}</HeroLine>
         )}
       </HeroPanel>
 

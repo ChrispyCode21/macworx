@@ -89,9 +89,9 @@ Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-
 | switcher-name | 14 | 13 | 400 | 1.45 | as is | text-strong | child name |
 | switcher-sub | 11 | 10 | 400 | 1.45 | as is | text-muted | "{grade} · Child profile" |
 | avatar | 13 | 12 | 400 | normal | upper | text-strong | initials |
-| hero-label | 13 (Overview) / 12 (Macaronis) | same | 600 | 1.45 | upper | hero-muted | hero panel label |
+| hero-label | 13 (Overview, Streak) / 12 (Macaronis) | same | 600 | 1.45 | upper | hero-muted | hero panel label (Today's homework, Available balance, Current streak) |
 | hero-number | 42 Overview / 44 Macaronis / 40 Streak | 44 / 48 / 44 | 600 | normal | n/a | hero-ink | big number |
-| hero-unit | 14 Overview / 15 Macaronis | 14 / 15 | 400 | normal | as is | hero-muted | unit after number (baseline-aligned) |
+| hero-unit | 14 Overview, Streak / 15 Macaronis | 14 / 15 | 400 | normal | as is | hero-muted | unit after number (baseline-aligned) |
 | hero-line | 12 | 12 | 400 | 1.45 | as is | hero-muted | line under the number |
 | stat-value | 26 | 30 | 400 | 1.45 / normal | as is | text-strong | stat card number |
 | stat-label | 11 | 12 | 400 | 1.45 | as is | text-muted | stat card label |
@@ -249,7 +249,7 @@ Fill `--p-surface`, border 1 px `--p-divider`, radius 20, padding 18 (wide 22), 
 
 ### Hero panel
 Built as `src/ui/HeroPanel.tsx` (`HeroPanel` with a label row and optional icon, then `HeroRow` / `HeroNumber` / `HeroUnit` and `HeroLine`); the shared classes are `.parent-hero*` and each screen's sizes (§4) are set under its own `.overview-hero` / `.points-hero`.
-Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), gap 14 (wide 16). Text is `--p-primary-ink` (numbers) and `--p-hero-muted` (labels and lines). Contains: hero-label row, hero number row (baseline aligned, gap 7; Macaronis gap 8, wide 9 to 10), hero-line.
+Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), gap 14 (wide 16). Text is `--p-primary-ink` (numbers) and `--p-hero-muted` (labels and lines). Contains: hero-label row (the label, 600, with an optional icon 21 [22] at the right, `--p-hero-muted`), hero number row (number then unit, baseline aligned, gap 7 [10]; Macaronis gap 8 [9]), optional hero-line, and on Streak a details row. While a value has not arrived the number shows the pending text and the label and unit stay.
 
 ### Section heading row
 Row, align center, gap 8 (wide 12, min-height 28): section-title (flex 1) + optional section-action. Gap to the panel below: 12.
@@ -362,7 +362,7 @@ Frames: `points-phone.png` (4:2737), `points-wide.png` (11:1907). Route stays `/
 
 Copy: title "Macaronis, kept fair." Subline "Adjust {name}'s balance without changing the work."
 
-1. **Hero panel**: hero-label "Available balance" (12 / upper); number row baseline gap 8 [9]: `{balance}` (44 [48]) + "Macaronis" (15, `--p-hero-muted`); hero-line "+{earned} earned today" (12; omit when 0). The Figma "−120 redeemed yesterday" is dropped (no purchases data).
+1. **Hero panel**: hero-label "Available balance" (12 / 600 / upper; a pile-of-macaroni icon 21 [22] at the right once it is drawn, issue #180); number row baseline gap 8 [9]: `{balance}` (44 [48]) + "Macaronis" (15, `--p-hero-muted`); hero-line "+{earned} earned today" (12; omit when 0). The Figma "−120 redeemed yesterday" is dropped (no purchases data).
 2. **Adjust balance** [wide: right column]
    - Section heading "Adjust balance" (no action). Panel padding 18 [22], gap 14.
    - Segmented control, options "Add Macaronis" and "Remove Macaronis" (final copy). Option height 42 [44].
@@ -396,7 +396,9 @@ Frames: `streak-phone.png` (4:2849), `streak-wide.png` (11:2041). Route `/parent
 Copy: title "Make every day count." Subline "{name}'s effort adds up, one day at a time." (Figma's original subline trips the never-negative rule.)
 
 1. **Hero panel**
-   - Row, align center, gap 14 [16]: flame icon 36 [40] (color `--p-hero-muted`), then column: hero-number "{streak} days" (40 [44] / 600, gap 4 on wide) and hero-line "Current streak · {start}–{end}" (12; en dash U+2013; range is the counted days ending on `lastDay`).
+   - Row: hero-label "Current streak" (13 / 600 / upper / `--p-hero-muted`) + flame icon 21 [22] (color `--p-hero-muted`), space-between. The same label row as Overview.
+   - Number row, baseline, gap 7 [10]: hero-number `{streak}` (40 [44] / 600) + hero-unit "days" (14, `--p-hero-muted`; "day" when 1).
+   - hero-line (12): "{start}–{end}" (en dash U+2013; the counted days ending on `lastDay`); omitted when there is no range (streak 0).
    - Details row (space-between, 12 px): "Personal best: {n} days" (`--p-hero-muted`; **placeholder**, section 15) and "Today ✓" (600, `--p-primary-ink`; shows when `lastDay` is today; the check mark is the text glyph U+2713).
 2. **The last 7 days** [wide: left column]
    - Section heading "The last 7 days" + action "{Month}" (e.g. October).
@@ -518,7 +520,7 @@ Legend: **Real** = already returned by an existing route. **Derived** = computed
 3. **Child switcher list** (open, "Add a child", rename) has no Figma frame. Interim design (owner, #83): the popover has rows in the switcher style (avatar, name, grade), a "Rename" button beside each row and an "Add a child" row at the end. Add and rename happen on Overview, in a Children Panel with the Add / Rename Segmented control (the Macaronis Add / Remove chrome) and Form fields Name, Grade (optional) and Initials, then a primary Save. Errors use the `warn` Safeguard. Needs an owner design in Figma.
 4. **Pairing code display and device name field** have no frame (Figma shows only the Generate button).
 5. **Disabled/read-only styles** and focus rings are not in Figma; defined in section 7.
-6. **Streak not-counted day** and the Streak hero when the streak is 0 are not in Figma.
+6. **Streak not-counted day** and the Streak hero when the streak is 0 are not in Figma. At 0 the hero shows "0 days" and no range line.
 7. **"{k} rewards within reach"** with the real rewards (30 to 10,000) will often be 4 or 0.
 8. **The PNGs show a sample child name** and the green theme; they are only a layout reference. The owner should confirm the sample name is not a real child's, or re-export with a neutral name.
 9. **Hard-coded "her"** in Figma headings is replaced with `{name}`; the pronoun in remaining copy ("her choice") only appears in reward sample text that is not built.
@@ -532,7 +534,7 @@ Legend: **Real** = already returned by an existing route. **Derived** = computed
 
 Source: the icon set is Lucide (ISC). Each icon below is exported at the pixel size Figma used, so each has its own `viewBox` equal to that size; the stroke width is 1.7 in those units. Render with `fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"`. Scale by changing the rendered `width`/`height`, not the viewBox: the stroke scales proportionally with it (this is how Figma's 20 px icons become 22 px in the sidebar). Colors: see per-component notes (`--p-accent-ink` for icons on light surfaces, `--p-hero-muted` for the hero panel's sun and flame, `--p-primary-ink` for arrow-right and plus on a primary button, `--p-danger-ink` for unlink, `--p-warn-ink` for the info icon in a warn notice, `--p-muted` for lock-keyhole and inactive nav icons).
 
-Where used (sizes phone / wide): sprout (brand 25 / 27), chevrons-up-down (switcher 17 / 14), sun (hero 21 / 22), coins (nav, stat, summary 20 / 22 / 24), flame (nav, stat 20 / 22; streak hero 36 / 40), check (completion 17 / 20; activity 18 / 20; streak tile 12 / 14), tablet (nav-adjacent shortcut 20 / 22; device tile 25 / 27), chevron-right (18), shopping-bag (nav, shortcut 20 / 22), lock-keyhole (13 / 15), layout-dashboard (nav 20 / 22), smartphone (nav 20 / 22), shield-check (17 / 18; Access card 20 / 22), arrow-right (18), ticket (activity, 18 / 20), calendar-check (18 / 20), info (17 / 18), history (20 / 22), pencil (17 / 19), unlink (18 / 20), laptop (25 / 27), scan-line (24 / 26), plus (18), ticket-check (19 / 21). Design draws (not icons): the "→", "✓" and "−" are text glyphs.
+Where used (sizes phone / wide): sprout (brand 25 / 27), chevrons-up-down (switcher 17 / 14), sun (hero 21 / 22), coins (nav, stat, summary 20 / 22 / 24), flame (nav, stat 20 / 22; streak hero 21 / 22), check (completion 17 / 20; activity 18 / 20; streak tile 12 / 14), tablet (nav-adjacent shortcut 20 / 22; device tile 25 / 27), chevron-right (18), shopping-bag (nav, shortcut 20 / 22), lock-keyhole (13 / 15), layout-dashboard (nav 20 / 22), smartphone (nav 20 / 22), shield-check (17 / 18; Access card 20 / 22), arrow-right (18), ticket (activity, 18 / 20), calendar-check (18 / 20), info (17 / 18), history (20 / 22), pencil (17 / 19), unlink (18 / 20), laptop (25 / 27), scan-line (24 / 26), plus (18), ticket-check (19 / 21). Design draws (not icons): the "→", "✓" and "−" are text glyphs.
 
 ### Icon paths
 
@@ -545,7 +547,6 @@ One row per icon: name, native `viewBox`, then every `d` string (join them as se
 | sun | 0 0 21 21 | `M10.5 1.7493V3.49944M10.5 17.5006V19.2507M4.31298 4.31298L5.54683 5.54683M15.453 15.453L16.6869 16.6869M1.7493 10.5H3.49944M17.5006 10.5H19.2507M5.54683 15.453L4.31298 16.6869M16.6869 4.31298L15.453 5.54683M14.0003 10.5C14.0003 12.4332 12.4332 14.0003 10.5 14.0003C8.56685 14.0003 6.99972 12.4332 6.99972 10.5C6.99972 8.56685 8.56685 6.99972 10.5 6.99972C12.4332 6.99972 14.0003 8.56685 14.0003 10.5Z` |
 | coins | 0 0 20 20 | `M11.4539 14.7792C11.2038 15.6064 10.7435 16.3546 10.118 16.9509C9.49248 17.5471 8.72311 17.9711 7.88493 18.1814C7.04675 18.3918 6.16836 18.3813 5.33544 18.151C4.50253 17.9206 3.74353 17.4784 3.13247 16.8673C2.52141 16.2563 2.07915 15.4973 1.84884 14.6644C1.61853 13.8314 1.60803 12.9531 1.81835 12.1149C2.02868 11.2767 2.45266 10.5073 3.04893 9.88182C3.6452 9.25633 4.39341 8.79605 5.22058 8.54588M12.5005 4.99933H13.3339V8.33267M5.11201 12.3056L5.83368 11.889L7.50034 14.7756M18.3339 6.666C18.3339 9.42742 16.0953 11.666 13.3339 11.666C10.5724 11.666 8.33385 9.42742 8.33385 6.666C8.33385 3.90458 10.5724 1.666 13.3339 1.666C16.0953 1.666 18.3339 3.90458 18.3339 6.666Z` |
 | flame | 0 0 20 20 | `M10 2.5C10.5556 4.72232 11.6669 6.52795 13.3337 7.91689C15.0006 9.30584 15.834 10.8337 15.834 12.5004C15.834 14.0476 15.2193 15.5314 14.1253 16.6254C13.0312 17.7194 11.5473 18.334 10 18.334C8.45273 18.334 6.96883 17.7194 5.87474 16.6254C4.78065 15.5314 4.166 14.0476 4.166 12.5004C4.166 11.5988 4.45844 10.7216 4.99943 10.0003C4.99943 10.5529 5.21895 11.0828 5.60969 11.4735C6.00044 11.8642 6.5304 12.0837 7.083 12.0837C7.6356 12.0837 8.16556 11.8642 8.55631 11.4735C8.94705 11.0828 9.16657 10.5529 9.16657 10.0003C9.16657 8.33358 7.91643 7.50021 7.91643 5.83347C7.91643 4.72232 8.61095 3.61116 10 2.5Z` |
-| flame (large, 36) | 0 0 36 36 | `M18 4.5C19.0001 8.50017 21.0003 11.7503 24.0007 14.2504C27.001 16.7505 28.5012 19.5006 28.5012 22.5008C28.5012 25.2856 27.3948 27.9565 25.4255 29.9257C23.4561 31.8949 20.7851 33.0012 18 33.0012C15.2149 33.0012 12.5439 31.8949 10.5745 29.9257C8.60517 27.9565 7.4988 25.2856 7.4988 22.5008C7.4988 20.8779 8.02519 19.2988 8.99897 18.0006C8.99897 18.9952 9.3941 19.949 10.0974 20.6523C10.8008 21.3556 11.7547 21.7507 12.7494 21.7507C13.7441 21.7507 14.698 21.3556 15.4014 20.6523C16.1047 19.949 16.4998 18.9952 16.4998 18.0006C16.4998 15.0004 14.2496 13.5004 14.2496 10.5003C14.2496 8.50017 15.4997 6.50008 18 4.5Z` |
 | check | 0 0 17 17 | `M14.1661 4.25L6.37521 12.0411L2.8339 8.49969` |
 | tablet (20) | 0 0 20 20 | `M10 15.0004H10.0083M5.0005 1.666H14.9995C15.9199 1.666 16.666 2.41225 16.666 3.3328V16.6672C16.666 17.5877 15.9199 18.334 14.9995 18.334H5.0005C4.08012 18.334 3.334 17.5877 3.334 16.6672V3.3328C3.334 2.41225 4.08012 1.666 5.0005 1.666Z` |
 | tablet (device tile, 25) | 0 0 25 25 | `M12.5 18.7505H12.5104M6.25062 2.0825H18.7494C19.8999 2.0825 20.8325 3.01531 20.8325 4.166V20.834C20.8325 21.9847 19.8999 22.9175 18.7494 22.9175H6.25062C5.10015 22.9175 4.1675 21.9847 4.1675 20.834V4.166C4.1675 3.01531 5.10015 2.0825 6.25062 2.0825Z` |

@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
  * `variant` picks the screen's sizes (docs/DESIGN.md §4) and names the label's heading id.
  */
 type Props = {
-  variant: 'overview' | 'points'
+  variant: 'overview' | 'points' | 'streak'
   label: string
   icon?: ReactNode
   children: ReactNode

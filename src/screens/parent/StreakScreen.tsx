@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { COPY } from '../../copy'
 import type { Summary } from '../../parent/api'
-import { CalendarCheckIcon, CheckIcon, FlameLargeIcon } from '../../parent/icons'
+import { CalendarCheckIcon, CheckIcon, FlameIcon } from '../../parent/icons'
 import { personalBestStreak } from '../../parent/placeholders'
 import { formatRange, monthName, previewText, streakRange, weekStrip } from '../../parent/streakDays'
 import { streakFields } from '../../parent/streakForm'
+import { HeroLine, HeroNumber, HeroPanel, HeroRow, HeroUnit } from '../../ui/HeroPanel'
 import { ReviewStep } from '../../ui/ReviewStep'
 import { Safeguard } from '../../ui/Safeguard'
-import { formatCalendarDay } from '../../ui/format'
+import { formatCalendarDay, formatNumber } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 import type { StreakFormState } from './useStreakForm'
 
@@ -34,16 +35,12 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
 
   return (
     <div className="streak">
-      <section className="parent-hero streak-hero">
-        <div className="streak-hero-main">
-          <FlameLargeIcon size={36} />
-          <div className="streak-hero-text">
-            <p className="streak-hero-number">{summary ? COPY.parentStreakValue(summary.streak) : pending}</p>
-            <p className="streak-hero-line">
-              {COPY.parentStreakHeroLine(heroRange ? formatRange(heroRange.start, heroRange.end) : null)}
-            </p>
-          </div>
-        </div>
+      <HeroPanel variant="streak" label={COPY.parentStreakHeroLabel} icon={<FlameIcon size={21} />}>
+        <HeroRow>
+          <HeroNumber>{summary ? formatNumber(summary.streak) : pending}</HeroNumber>
+          <HeroUnit>{COPY.parentStreakHeroUnit(summary ? summary.streak : 0)}</HeroUnit>
+        </HeroRow>
+        {heroRange && <HeroLine>{formatRange(heroRange.start, heroRange.end)}</HeroLine>}
         <div className="streak-hero-details">
           <span className="streak-hero-best">
             {COPY.parentStreakBest(personalBestStreak)}{' '}
@@ -51,7 +48,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
           </span>
           {summary?.lastDay === today && <span className="streak-hero-today">{COPY.parentStreakToday}</span>}
         </div>
-      </section>
+      </HeroPanel>
 
       <div className="streak-week">
         <div className="streak-heading-row">
