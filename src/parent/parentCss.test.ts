@@ -73,4 +73,13 @@ describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
       /\.(?:shop|overview)-divider|\.(?:device-meta|pair-footnote|shop-footnote|points-footnote|streak-footnote|activity-meta)\b|\.(?:device|portal)-chip|\.shop-chip-warn/,
     )
   })
+
+  it('centers every parent button in the base rule, not per screen (docs/DESIGN.md §7)', () => {
+    expect(portal).toMatch(
+      /\.parent \.button-soft \{\s*display: flex;\s*align-items: center;\s*justify-content: center;\s*gap: var\(--space-8\);/,
+    )
+    expect(portal, 'a screen sets its own flex on a parent button').not.toMatch(
+      /\.(?:pair-panel|points|streak|shop) \.button-(?:primary|secondary|soft)[^{]*\{[^}]*display: flex/,
+    )
+  })
 })
