@@ -248,7 +248,7 @@ The builder must re-run the ratios (a ten-line script) if any token value change
 Fill `--p-surface`, border 1 px `--p-divider`, radius 20, padding 18 (wide 22), flex column. Inner gap 14 phone; wide gap 16 unless the screen says otherwise.
 
 ### Hero panel
-Built as `src/ui/HeroPanel.tsx` (`HeroPanel` with a label row and optional icon, then `HeroRow` / `HeroNumber` / `HeroUnit` and `HeroLine`); the shared classes are `.parent-hero*` and each screen's sizes (§4) are set under its own `.overview-hero` / `.points-hero` / `.streak-hero`.
+Built as `src/ui/HeroPanel.tsx` (`HeroPanel` with a label row and optional icon, then `HeroRow` / `HeroNumber` / `HeroUnit` and `HeroLine`); the shared classes are `.parent-hero*` and each screen's sizes (§4) are set under its own `.overview-hero` / `.points-hero`.
 Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), gap 14 (wide 16). Text is `--p-primary-ink` (numbers) and `--p-hero-muted` (labels and lines). Contains: hero-label row, hero number row (baseline aligned, gap 7; Macaronis gap 8, wide 9 to 10), hero-line.
 
 ### Section heading row
