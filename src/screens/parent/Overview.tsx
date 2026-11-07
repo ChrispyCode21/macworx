@@ -97,7 +97,7 @@ export function Overview({
       <HeroPanel variant="overview" label={COPY.parentHomeworkLabel} icon={<SunIcon size={21} />}>
         <HeroRow>
           <HeroNumber>{summary ? formatNumber(summary.completedToday) : pending}</HeroNumber>
-          <HeroUnit>{COPY.parentHomeworkUnit(summary ? summary.completedToday : 0)}</HeroUnit>
+          {summary && <HeroUnit>{COPY.parentHomeworkUnit(summary.completedToday)}</HeroUnit>}
         </HeroRow>
         {summary && summary.earnedToday > 0 && (
           <HeroLine>{COPY.parentHomeworkEarned(summary.earnedToday)}</HeroLine>

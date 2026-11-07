@@ -46,7 +46,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
       <HeroPanel variant="points" label={COPY.parentHeroLabel}>
         <HeroRow>
           <HeroNumber>{summary ? formatNumber(summary.balance) : pending}</HeroNumber>
-          <HeroUnit>{COPY.parentHeroUnit}</HeroUnit>
+          {summary && <HeroUnit>{COPY.parentHeroUnit}</HeroUnit>}
         </HeroRow>
         {summary && summary.earnedToday > 0 && (
           <HeroLine>{COPY.parentEarnedToday(summary.earnedToday)}</HeroLine>

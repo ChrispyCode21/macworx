@@ -38,7 +38,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
       <HeroPanel variant="streak" label={COPY.parentStreakHeroLabel} icon={<FlameIcon size={21} />}>
         <HeroRow>
           <HeroNumber>{summary ? formatNumber(summary.streak) : pending}</HeroNumber>
-          <HeroUnit>{COPY.parentStreakHeroUnit(summary ? summary.streak : 0)}</HeroUnit>
+          {summary && <HeroUnit>{COPY.parentStreakHeroUnit(summary.streak)}</HeroUnit>}
         </HeroRow>
         {heroRange && <HeroLine>{formatRange(heroRange.start, heroRange.end)}</HeroLine>}
         <div className="streak-hero-details">
