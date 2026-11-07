@@ -66,11 +66,15 @@ const testRules = [
   },
 ]
 
-// Shared building blocks (ARCHITECTURE.md, "UI"): one Button, one place for display formatting.
+// Shared building blocks (ARCHITECTURE.md, "UI"): one Button, one Safeguard notice, one place for display formatting.
 const reuseRules = [
   {
     test: (l) => /<button[\s>]/.test(l),
     message: 'Use <Button> from src/ui/Button, not a raw <button>.',
+  },
+  {
+    test: (l) => /className=["'`{][^"'`}]*\bsafeguard\b/.test(l),
+    message: 'Use <Safeguard> from src/ui/Safeguard, not a hand-written .safeguard element.',
   },
   {
     test: (l) => /\.(toLocaleString|toFixed)\(|\bIntl\./.test(l),

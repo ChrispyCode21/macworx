@@ -281,7 +281,7 @@ Column, gap 7: field-label, then input. Input: min-height 48, padding 12, radius
 Track: fill `--p-bg`, radius 12, padding 4, gap 4, flex row. Options flex 1, height 42 (wide 44), radius 9, 13 px / 600, centered. Active: fill `--p-chip`, text `--p-accent-ink`. Inactive: fill `--p-bg`, text `--p-muted`. Radio-group semantics (`role="radiogroup"` with two radios). Built as `src/ui/Segmented.tsx` (options, value, onChange, label), first used for Add / Rename on Overview.
 
 ### Safeguard (notice)
-Row, align start, gap 10, padding 12, radius 12, icon 17 (wide 18) + text (safeguard, flex 1). Variants: `info` (fill `--p-chip`, text and icon `--p-accent-ink`, icon shield-check), `warn` (fill `--p-warn-soft`, text and icon `--p-warn-ink`, icon info).
+Row, align start, gap 10, padding 12, radius 12, icon 17 (wide 18) + text (safeguard, flex 1). Variants: `info` (fill `--p-chip`, text and icon `--p-accent-ink`, icon shield-check), `warn` (fill `--p-warn-soft`, text and icon `--p-warn-ink`, icon info). A result notice may use the check icon in place of shield-check (the Streak "saved" notice does). Built as `src/ui/Safeguard.tsx` (`tone`, optional `icon`, `role` "status" for a result and "alert" for a problem); `check-conventions` fails on a hand-written `.safeguard` element elsewhere.
 
 ### Icon tile / row icon
 See per screen. All icons: inline SVG, `fill="none"`, `stroke="currentColor"`, `stroke-linecap="round"`, `stroke-linejoin="round"`, `aria-hidden="true"`. Icon-only buttons carry an `aria-label`.

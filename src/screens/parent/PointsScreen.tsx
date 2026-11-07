@@ -11,12 +11,11 @@ import {
   CoinsIcon,
   FlameIcon,
   HistoryIcon,
-  InfoIcon,
   ScanLineIcon,
-  ShieldCheckIcon,
   UnlinkIcon,
 } from '../../parent/icons'
 import { Button } from '../../ui/Button'
+import { Safeguard } from '../../ui/Safeguard'
 import { formatMoment, formatNumber } from '../../ui/format'
 import { Segmented } from '../../ui/Segmented'
 import { TextField } from '../../ui/TextField'
@@ -114,15 +113,9 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
             </span>
           </div>
           {a.below && summary && !a.problem && (
-            <p className="safeguard safeguard-warn">
-              <InfoIcon size={17} />
-              <span>{COPY.parentOverdraw(summary.balance)}</span>
-            </p>
+            <Safeguard tone="warn">{COPY.parentOverdraw(summary.balance)}</Safeguard>
           )}
-          <p className="safeguard safeguard-info">
-            <ShieldCheckIcon size={17} />
-            <span>{COPY.parentAdjustNotice}</span>
-          </p>
+          <Safeguard tone="info">{COPY.parentAdjustNotice}</Safeguard>
           {reviewing && check?.ok && summary ? (
             <div className="points-confirm">
               <p>
@@ -148,16 +141,14 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
             </Button>
           )}
           {a.notice && (
-            <p className="safeguard safeguard-info" role="status">
-              <ShieldCheckIcon size={17} />
-              <span>{a.notice}</span>
-            </p>
+            <Safeguard tone="info" role="status">
+              {a.notice}
+            </Safeguard>
           )}
           {a.problem && (
-            <p className="safeguard safeguard-warn" role="alert">
-              <InfoIcon size={17} />
-              <span>{a.problem}</span>
-            </p>
+            <Safeguard tone="warn" role="alert">
+              {a.problem}
+            </Safeguard>
           )}
           <p className="points-footnote">{COPY.parentAdjustFootnote}</p>
         </section>

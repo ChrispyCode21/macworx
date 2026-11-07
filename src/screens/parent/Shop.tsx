@@ -2,9 +2,10 @@ import { Fragment } from 'react'
 import { COPY } from '../../copy'
 import { RewardIcon } from '../../components/RewardIcon'
 import { REWARDS } from '../../engine'
-import { CoinsIcon, PencilIcon, PlusIcon, ShieldCheckIcon, TicketCheckIcon } from '../../parent/icons'
+import { CoinsIcon, PencilIcon, PlusIcon, TicketCheckIcon } from '../../parent/icons'
 import { reachOf } from '../../parent/shop'
 import { Button } from '../../ui/Button'
+import { Safeguard } from '../../ui/Safeguard'
 import { formatNumber } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 
@@ -96,10 +97,7 @@ export function Shop({ name, balance, problem }: Props) {
             inputMode="numeric"
             disabled
           />
-          <p className="shop-notice">
-            <ShieldCheckIcon size={17} />
-            <span>{COPY.parentShopComingSoon}</span>
-          </p>
+          <Safeguard tone="info">{COPY.parentShopComingSoon}</Safeguard>
           <Button variant="primary" disabled>
             {COPY.parentShopSave}
           </Button>

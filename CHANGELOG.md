@@ -10,6 +10,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 - **Add / Rename looks like Add / Remove (parents):** the Add and Rename choice on Overview is now the same segmented control as Add and Remove on Macaronis, as the design says. It had two plain buttons before.
 
+### Changed
+
+- **One notice look (parents):** the "coming soon" notice on Shop now uses the same notice component as the other screens, so on a wide screen its icon is 18 (it was 17), as the design says.
+
 ## [0.5.2] - 2026-11-06
 
 ### Fixed
