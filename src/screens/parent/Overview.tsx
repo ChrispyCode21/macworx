@@ -19,6 +19,7 @@ import type { Tab } from '../../parent/route'
 import { reachOf } from '../../parent/shop'
 import { formatCalendarDay, formatClock, formatNumber } from '../../ui/format'
 import { HeroLine, HeroNumber, HeroPanel, HeroRow, HeroUnit } from '../../ui/HeroPanel'
+import { HeadingAction, SectionHeading } from '../../ui/SectionHeading'
 
 interface Props {
   /** Her numbers; null before they arrive. */
@@ -65,6 +66,34 @@ function TabLink({
   )
 }
 
+/** One of the two number cards (docs/DESIGN.md §9): an icon, a value, its label, and a link to its tab. */
+function StatCard({
+  icon,
+  value,
+  label,
+  tab,
+  linkText,
+  onGo,
+}: {
+  icon: ReactNode
+  value: ReactNode
+  label: string
+  tab: Tab
+  linkText: string
+  onGo: (tab: Tab) => void
+}) {
+  return (
+    <div className="overview-stat">
+      {icon}
+      <p className="overview-stat-value">{value}</p>
+      <p className="overview-stat-label">{label}</p>
+      <TabLink tab={tab} onGo={onGo} className="overview-stat-link">
+        {linkText}
+      </TabLink>
+    </div>
+  )
+}
+
 /**
  * The Overview tab (SPEC §5.3): Today's homework, her two numbers, today's assignments, links to Devices and
  * Shop, and her results. The DOM is the phone order; the wide layout places it with grid areas.
@@ -105,22 +134,22 @@ export function Overview({
       </HeroPanel>
 
       <div className="overview-stats">
-        <div className="overview-stat">
-          <CoinsIcon size={20} />
-          <p className="overview-stat-value">{summary ? formatNumber(summary.balance) : pending}</p>
-          <p className="overview-stat-label">{COPY.parentStatMacaronis}</p>
-          <TabLink tab={OVERVIEW_LINKS.macaronis} onGo={onGo} className="overview-stat-link">
-            {COPY.parentManageMacaronis}
-          </TabLink>
-        </div>
-        <div className="overview-stat">
-          <FlameIcon size={20} />
-          <p className="overview-stat-value">{summary ? COPY.parentStreakValue(summary.streak) : pending}</p>
-          <p className="overview-stat-label">{COPY.parentStatStreak}</p>
-          <TabLink tab={OVERVIEW_LINKS.streak} onGo={onGo} className="overview-stat-link">
-            {COPY.parentManageStreak}
-          </TabLink>
-        </div>
+        <StatCard
+          icon={<CoinsIcon size={20} />}
+          value={summary ? formatNumber(summary.balance) : pending}
+          label={COPY.parentStatMacaronis}
+          tab={OVERVIEW_LINKS.macaronis}
+          linkText={COPY.parentManageMacaronis}
+          onGo={onGo}
+        />
+        <StatCard
+          icon={<FlameIcon size={20} />}
+          value={summary ? COPY.parentStreakValue(summary.streak) : pending}
+          label={COPY.parentStatStreak}
+          tab={OVERVIEW_LINKS.streak}
+          linkText={COPY.parentManageStreak}
+          onGo={onGo}
+        />
       </div>
 
       {summary && (
@@ -133,12 +162,16 @@ export function Overview({
       )}
 
       <div className="overview-block overview-assignments">
-        <div className="overview-heading">
-          <h2 id="overview-assignments-heading">{COPY.parentAssignmentsHeading}</h2>
-          <a className="overview-view-all" href="#overview-results" onClick={viewAll}>
-            {COPY.parentViewAll}
-          </a>
-        </div>
+        <SectionHeading
+          id="overview-assignments-heading"
+          action={
+            <HeadingAction href="#overview-results" onClick={viewAll}>
+              {COPY.parentViewAll}
+            </HeadingAction>
+          }
+        >
+          {COPY.parentAssignmentsHeading}
+        </SectionHeading>
         <section className="parent-section overview-list" aria-labelledby="overview-assignments-heading">
           {results === null && pending}
           {todays?.length === 0 && <p className="overview-empty">{COPY.parentNoAssignmentsToday}</p>}
@@ -161,9 +194,7 @@ export function Overview({
       </div>
 
       <div className="overview-block overview-sync">
-        <div className="overview-heading">
-          <h2 id="overview-sync-heading">{COPY.parentSyncHeading}</h2>
-        </div>
+        <SectionHeading id="overview-sync-heading">{COPY.parentSyncHeading}</SectionHeading>
         <section className="parent-section overview-links" aria-labelledby="overview-sync-heading">
           <TabLink tab={OVERVIEW_LINKS.devices} onGo={onGo} className="overview-link-row">
             <TabletIcon size={20} />

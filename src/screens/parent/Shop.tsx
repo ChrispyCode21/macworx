@@ -8,6 +8,7 @@ import { Button } from '../../ui/Button'
 import { Safeguard } from '../../ui/Safeguard'
 import { formatNumber } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
+import { HeadingAction, SectionHeading } from '../../ui/SectionHeading'
 
 interface Props {
   /** The chosen child's name, or null when no child is known. */
@@ -46,10 +47,9 @@ export function Shop({ name, balance, problem }: Props) {
       )}
 
       <div className="shop-block shop-block-rewards">
-        <div className="shop-heading">
-          <h2>{heading}</h2>
-          <span className="shop-action">{COPY.parentShopActive(REWARDS.length)}</span>
-        </div>
+        <SectionHeading action={<HeadingAction>{COPY.parentShopActive(REWARDS.length)}</HeadingAction>}>
+          {heading}
+        </SectionHeading>
         <section className="parent-section shop-rewards" aria-label={heading}>
           {rewards.map(({ reward, within, short }, i) => (
             <Fragment key={reward.id}>
@@ -83,10 +83,11 @@ export function Shop({ name, balance, problem }: Props) {
       </div>
 
       <div className="shop-block shop-block-editor">
-        <div className="shop-heading">
-          <h2>{COPY.parentShopEditorHeading}</h2>
-          <span className="parent-chip parent-chip-warn">{COPY.parentShopReadOnly}</span>
-        </div>
+        <SectionHeading
+          action={<span className="parent-chip parent-chip-warn">{COPY.parentShopReadOnly}</span>}
+        >
+          {COPY.parentShopEditorHeading}
+        </SectionHeading>
         <section className="parent-section shop-editor" aria-label={COPY.parentShopEditorHeading}>
           <TextField label={COPY.parentShopNameLabel} defaultValue={first.name} disabled />
           <TextField label={COPY.parentShopDescriptionLabel} defaultValue="" disabled />

@@ -85,7 +85,7 @@ Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-
 | page-title | 29 (lh 1.45) | 30 (lh 1.25) | 400 | see col. | as is | text-strong | headline |
 | page-sub | 13 | 13 | 400 | 1.45 | as is | text-muted | subline |
 | section-title | 17 (lh 1.45) | 18 (lh normal, min-h 28) | 400 | see col. | as is | text-strong | section headings |
-| section-action | 12 | 12 | 600 | normal | as is | accent-ink | "View all", "Full history", count |
+| section-action | 12 | 12 | 600 | normal | as is | accent-ink | "View all", "Full history", count; a plain label at the end of the row (the Streak month) is 12 / 400 / muted |
 | switcher-name | 14 | 13 | 400 | 1.45 | as is | text-strong | child name |
 | switcher-sub | 11 | 10 | 400 | 1.45 | as is | text-muted | "{grade} · Child profile" |
 | avatar | 13 | 12 | 400 | normal | upper | text-strong | initials |
@@ -252,7 +252,7 @@ Built as `src/ui/HeroPanel.tsx` (`HeroPanel` with a label row and optional icon,
 Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), gap 14 (wide 16). Text is `--p-primary-ink` (numbers) and `--p-hero-muted` (labels and lines). Contains: hero-label row (the label, 600, with an optional icon 21 [22] at the right, `--p-hero-muted`), hero number row (number then unit, baseline aligned, gap 7 [10]; Macaronis gap 8 [9]), optional hero-line, and on Streak a details row. While the numbers have not arrived the label stays and the pending text stands where the number and unit go (no unit, so a failed read never reads "Not available right now. days").
 
 ### Section heading row
-Row, align center, gap 8 (wide 12, min-height 28): section-title (flex 1) + optional section-action. Gap to the panel below: 12.
+Row, align center, gap 8 (wide 12, min-height 28 on wide only): section-title (flex 1) + optional section-action. Gap to the panel below: 12. Built as `src/ui/SectionHeading.tsx` (`SectionHeading` with an optional `action`, and `HeadingAction` for the link, count or muted label; the classes are `.parent-heading*`). A heading with no action is the title alone.
 
 ### Divider
 1 px `--p-divider`, full width, inside a panel; gap above and below equals the panel's inner gap. The class is `.parent-divider`.
