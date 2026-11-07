@@ -79,7 +79,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
               ))}
             </ol>
           )}
-          <p className="streak-footnote">{COPY.parentStreakWeekFoot}</p>
+          <p className="parent-note">{COPY.parentStreakWeekFoot}</p>
         </section>
       </div>
 
@@ -138,7 +138,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
               {form.problem}
             </Safeguard>
           )}
-          <p className="streak-footnote">{COPY.parentStreakFoot}</p>
+          <p className="parent-note">{COPY.parentStreakFoot}</p>
         </section>
       </div>
     </div>

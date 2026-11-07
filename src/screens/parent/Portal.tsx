@@ -211,7 +211,7 @@ export function Portal() {
           <SproutIcon size={25} />
           {COPY.parentBrand}
         </span>
-        <span className="portal-chip">{COPY.parentSpace}</span>
+        <span className="parent-chip parent-chip-soft parent-chip-upper">{COPY.parentSpace}</span>
       </header>
 
       <div className="portal-side">
@@ -275,7 +275,7 @@ export function Portal() {
         </nav>
 
         <div className="portal-assurance">
-          <span className="portal-chip">{COPY.parentSpace}</span>
+          <span className="parent-chip parent-chip-soft parent-chip-upper">{COPY.parentSpace}</span>
           <p>
             <LockKeyholeIcon size={15} />
             {COPY.parentAssurance}

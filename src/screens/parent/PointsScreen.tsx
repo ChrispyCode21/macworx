@@ -128,7 +128,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
               {a.problem}
             </Safeguard>
           )}
-          <p className="points-footnote">{COPY.parentAdjustFootnote}</p>
+          <p className="parent-note">{COPY.parentAdjustFootnote}</p>
         </section>
       </div>
 
@@ -149,7 +149,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
                     </span>
                     <div className="activity-event">
                       <p className="activity-title">{what.title}</p>
-                      <p className="activity-meta">
+                      <p className="parent-note">
                         {COPY.parentActivityMeta(formatMoment(entry.at), entry.email)}
                       </p>
                     </div>
@@ -161,7 +161,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
               })}
             </ul>
           )}
-          {log?.length === LIST_LIMIT && <p className="activity-meta">{COPY.parentLatest(LIST_LIMIT)}</p>}
+          {log?.length === LIST_LIMIT && <p className="parent-note">{COPY.parentLatest(LIST_LIMIT)}</p>}
         </section>
       </div>
     </div>

@@ -53,7 +53,7 @@ export function Shop({ name, balance, problem }: Props) {
         <section className="parent-section shop-rewards" aria-label={heading}>
           {rewards.map(({ reward, within, short }, i) => (
             <Fragment key={reward.id}>
-              {i > 0 && <hr className="shop-divider" />}
+              {i > 0 && <hr className="parent-divider" />}
               <div className="shop-row">
                 <span className="shop-tile">
                   <RewardIcon id={reward.id} size={24} />
@@ -85,7 +85,7 @@ export function Shop({ name, balance, problem }: Props) {
       <div className="shop-block shop-block-editor">
         <div className="shop-heading">
           <h2>{COPY.parentShopEditorHeading}</h2>
-          <span className="shop-chip-warn">{COPY.parentShopReadOnly}</span>
+          <span className="parent-chip parent-chip-warn">{COPY.parentShopReadOnly}</span>
         </div>
         <section className="parent-section shop-editor" aria-label={COPY.parentShopEditorHeading}>
           <TextField label={COPY.parentShopNameLabel} defaultValue={first.name} disabled />
@@ -109,7 +109,7 @@ export function Shop({ name, balance, problem }: Props) {
               {COPY.parentShopRemove}
             </Button>
           </div>
-          <p className="shop-footnote">{COPY.parentShopFootnote}</p>
+          <p className="parent-note">{COPY.parentShopFootnote}</p>
         </section>
       </div>
 

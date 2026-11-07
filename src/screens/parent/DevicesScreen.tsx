@@ -68,10 +68,10 @@ export function DevicesScreen({
         {devices === null && unavailable}
         {devices && (
           <div className="device-count">
-            <span className="device-chip device-chip-soft">
+            <span className="parent-chip parent-chip-soft">
               {COPY.parentConnectedCount(connected.length)}
             </span>
-            <p className="device-meta">{COPY.parentSyncsAcross}</p>
+            <p className="parent-note">{COPY.parentSyncsAcross}</p>
           </div>
         )}
         {devices && connected.length === 0 && <p>{COPY.parentNoDevices}</p>}
@@ -84,8 +84,8 @@ export function DevicesScreen({
                 </span>
                 <div className="device-detail">
                   <p className="device-name">{d.label}</p>
-                  <p className="device-meta">{COPY.parentAddedOn(formatDay(d.createdAt))}</p>
-                  <p className="device-meta">
+                  <p className="parent-note">{COPY.parentAddedOn(formatDay(d.createdAt))}</p>
+                  <p className="parent-note">
                     {deviceBrowserLine(d)} <span className="device-sample">{COPY.parentSample}</span>
                   </p>
                 </div>
@@ -98,17 +98,17 @@ export function DevicesScreen({
                   <span
                     className={
                       deviceStatus(d) === 'online'
-                        ? 'device-chip device-chip-soft'
-                        : 'device-chip device-chip-warn'
+                        ? 'parent-chip parent-chip-soft'
+                        : 'parent-chip parent-chip-warn'
                     }
                   >
                     {deviceStatus(d) === 'online' ? COPY.parentStatusOnline : COPY.parentStatusOffline}
                   </span>{' '}
                   <span className="device-sample">{COPY.parentSample}</span>
                 </span>
-                <p className="device-meta">{syncedLine(d.lastResultAt, now)}</p>
+                <p className="parent-note">{syncedLine(d.lastResultAt, now)}</p>
               </div>
-              <hr className="shop-divider" />
+              <hr className="parent-divider" />
               <div className="device-actions">
                 <Button variant="soft" disabled>
                   {COPY.parentViewDetails}
@@ -161,14 +161,14 @@ export function DevicesScreen({
               )}
             </div>
           )}
-          <p className="pair-footnote">{COPY.parentCodeFootnote}</p>
+          <p className="parent-note">{COPY.parentCodeFootnote}</p>
         </section>
 
         <h2 className="devices-heading">{COPY.parentDisconnectHeading}</h2>
         {childName !== null && balance !== null && streak !== null && (
           <Safeguard tone="info">{COPY.parentDisconnectSafe(childName, balance, streak)}</Safeguard>
         )}
-        <p className="pair-footnote pair-note">{COPY.parentDisconnectNote}</p>
+        <p className="parent-note pair-note">{COPY.parentDisconnectNote}</p>
 
         <div className="access-card">
           <ShieldCheckIcon size={20} />

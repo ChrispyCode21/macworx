@@ -258,10 +258,10 @@ Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), 
 Row, align center, gap 8 (wide 12, min-height 28): section-title (flex 1) + optional section-action. Gap to the panel below: 12.
 
 ### Divider
-1 px `--p-divider`, full width, inside a panel; gap above and below equals the panel's inner gap.
+1 px `--p-divider`, full width, inside a panel; gap above and below equals the panel's inner gap. The class is `.parent-divider`.
 
 ### Chip
-Radius 100, padding 4 9 (wide 5 10), 11 px / 600. Variants: `soft` (fill `--p-chip`, text `--p-accent-ink`): PARENT SPACE, Online, "{n} connected". `warn` (fill `--p-warn-soft`, text `--p-warn-ink`): Offline.
+Radius 100, padding 4 9 (wide 5 10), 11 px / 600. The classes are `.parent-chip` with `.parent-chip-soft` or `.parent-chip-warn` (and `.parent-chip-upper` for the PARENT SPACE chip); small muted text (footnotes, row meta) is `.parent-note`. Variants: `soft` (fill `--p-chip`, text `--p-accent-ink`): PARENT SPACE, Online, "{n} connected". `warn` (fill `--p-warn-soft`, text `--p-warn-ink`): Offline.
 
 ### Buttons (parent size)
 Height 48, radius 12, flex row centered, gap 8, 14 px / 600, no border, icon 18. Full width unless stated.
