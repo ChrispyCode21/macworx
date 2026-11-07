@@ -15,6 +15,7 @@ import { Safeguard } from '../../ui/Safeguard'
 import { formatClock, formatCode, formatDay, isSameLocalDay } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 import { SectionHeading } from '../../ui/SectionHeading'
+import { Panel } from '../../ui/Panel'
 
 interface Props {
   /** Every device of the chosen child, unpaired ones too; null before they arrive. */
@@ -78,7 +79,7 @@ export function DevicesScreen({
         {devices && connected.length === 0 && <p>{COPY.parentNoDevices}</p>}
         <ul className="device-list">
           {connected.map((d) => (
-            <li key={d.id} className="parent-section device-card">
+            <Panel as="li" key={d.id} className="device-card">
               <div className="device-identity">
                 <span className="device-tile">
                   <TabletIcon size={25} />
@@ -122,14 +123,14 @@ export function DevicesScreen({
                   <UnlinkIcon size={18} />
                 </Button>
               </div>
-            </li>
+            </Panel>
           ))}
         </ul>
       </div>
 
       <div className="devices-right">
         <SectionHeading>{COPY.parentPairSection}</SectionHeading>
-        <section className="parent-section pair-panel">
+        <Panel className="pair-panel">
           <div className="pair-intro">
             <span className="pair-intro-icon">
               <ScanLineIcon size={24} />
@@ -163,7 +164,7 @@ export function DevicesScreen({
             </div>
           )}
           <p className="parent-note">{COPY.parentCodeFootnote}</p>
-        </section>
+        </Panel>
 
         <SectionHeading>{COPY.parentDisconnectHeading}</SectionHeading>
         {childName !== null && balance !== null && streak !== null && (

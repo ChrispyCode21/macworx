@@ -12,6 +12,7 @@ import { formatMoment, formatNumber } from '../../ui/format'
 import { Segmented } from '../../ui/Segmented'
 import { TextField } from '../../ui/TextField'
 import { SectionHeading } from '../../ui/SectionHeading'
+import { Panel } from '../../ui/Panel'
 import type { AdjustState } from './useAdjust'
 
 interface Props {
@@ -56,7 +57,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
 
       <div className="points-adjust">
         <SectionHeading>{COPY.parentAdjustHeading}</SectionHeading>
-        <section className="parent-section">
+        <Panel>
           <Segmented
             label={COPY.parentAdjustModeLabel}
             options={[
@@ -130,12 +131,12 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
             </Safeguard>
           )}
           <p className="parent-note">{COPY.parentAdjustFootnote}</p>
-        </section>
+        </Panel>
       </div>
 
       <div className="points-activity">
         <SectionHeading>{COPY.parentActivityHeading}</SectionHeading>
-        <section className="parent-section">
+        <Panel>
           {log === null && unavailable}
           {log?.length === 0 && <p>{COPY.parentNoLog}</p>}
           {log && log.length > 0 && (
@@ -163,7 +164,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
             </ul>
           )}
           {log?.length === LIST_LIMIT && <p className="parent-note">{COPY.parentLatest(LIST_LIMIT)}</p>}
-        </section>
+        </Panel>
       </div>
     </div>
   )

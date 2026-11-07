@@ -20,6 +20,7 @@ import { reachOf } from '../../parent/shop'
 import { formatCalendarDay, formatClock, formatNumber } from '../../ui/format'
 import { HeroLine, HeroNumber, HeroPanel, HeroRow, HeroUnit } from '../../ui/HeroPanel'
 import { HeadingAction, SectionHeading } from '../../ui/SectionHeading'
+import { Panel } from '../../ui/Panel'
 
 interface Props {
   /** Her numbers; null before they arrive. */
@@ -83,14 +84,14 @@ function StatCard({
   onGo: (tab: Tab) => void
 }) {
   return (
-    <div className="overview-stat">
+    <Panel as="div" className="overview-stat">
       {icon}
       <p className="overview-stat-value">{value}</p>
       <p className="overview-stat-label">{label}</p>
       <TabLink tab={tab} onGo={onGo} className="overview-stat-link">
         {linkText}
       </TabLink>
-    </div>
+    </Panel>
   )
 }
 
@@ -172,7 +173,7 @@ export function Overview({
         >
           {COPY.parentAssignmentsHeading}
         </SectionHeading>
-        <section className="parent-section overview-list" aria-labelledby="overview-assignments-heading">
+        <Panel className="overview-list" aria-labelledby="overview-assignments-heading">
           {results === null && pending}
           {todays?.length === 0 && <p className="overview-empty">{COPY.parentNoAssignmentsToday}</p>}
           {todays?.map((r, i) => (
@@ -190,12 +191,12 @@ export function Overview({
               </div>
             </div>
           ))}
-        </section>
+        </Panel>
       </div>
 
       <div className="overview-block overview-sync">
         <SectionHeading id="overview-sync-heading">{COPY.parentSyncHeading}</SectionHeading>
-        <section className="parent-section overview-links" aria-labelledby="overview-sync-heading">
+        <Panel className="overview-links" aria-labelledby="overview-sync-heading">
           <TabLink tab={OVERVIEW_LINKS.devices} onGo={onGo} className="overview-link-row">
             <TabletIcon size={20} />
             <span className="overview-detail">
@@ -219,10 +220,10 @@ export function Overview({
             </span>
             <ChevronRightIcon size={18} />
           </TabLink>
-        </section>
+        </Panel>
       </div>
 
-      <section className="parent-section overview-results" id="overview-results">
+      <Panel className="overview-results" id="overview-results">
         <h2 ref={resultsHeading} tabIndex={-1}>
           {COPY.parentResultsHeading}
         </h2>
@@ -253,7 +254,7 @@ export function Overview({
           </div>
         )}
         {results?.length === LIST_LIMIT && <p>{COPY.parentLatest(LIST_LIMIT)}</p>}
-      </section>
+      </Panel>
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { Safeguard } from '../../ui/Safeguard'
 import { formatNumber } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 import { HeadingAction, SectionHeading } from '../../ui/SectionHeading'
+import { Panel } from '../../ui/Panel'
 
 interface Props {
   /** The chosen child's name, or null when no child is known. */
@@ -50,7 +51,7 @@ export function Shop({ name, balance, problem }: Props) {
         <SectionHeading action={<HeadingAction>{COPY.parentShopActive(REWARDS.length)}</HeadingAction>}>
           {heading}
         </SectionHeading>
-        <section className="parent-section shop-rewards" aria-label={heading}>
+        <Panel className="shop-rewards" aria-label={heading}>
           {rewards.map(({ reward, within, short }, i) => (
             <Fragment key={reward.id}>
               {i > 0 && <hr className="parent-divider" />}
@@ -79,7 +80,7 @@ export function Shop({ name, balance, problem }: Props) {
             <PlusIcon size={18} />
             {COPY.parentShopAdd}
           </Button>
-        </section>
+        </Panel>
       </div>
 
       <div className="shop-block shop-block-editor">
@@ -88,7 +89,7 @@ export function Shop({ name, balance, problem }: Props) {
         >
           {COPY.parentShopEditorHeading}
         </SectionHeading>
-        <section className="parent-section shop-editor" aria-label={COPY.parentShopEditorHeading}>
+        <Panel className="shop-editor" aria-label={COPY.parentShopEditorHeading}>
           <TextField label={COPY.parentShopNameLabel} defaultValue={first.name} disabled />
           <TextField label={COPY.parentShopDescriptionLabel} defaultValue="" disabled />
           <TextField
@@ -111,7 +112,7 @@ export function Shop({ name, balance, problem }: Props) {
             </Button>
           </div>
           <p className="parent-note">{COPY.parentShopFootnote}</p>
-        </section>
+        </Panel>
       </div>
 
       <section className="shop-redeemed" aria-label={COPY.parentShopRedeemedLabel}>

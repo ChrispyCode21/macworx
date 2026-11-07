@@ -11,6 +11,7 @@ import { Safeguard } from '../../ui/Safeguard'
 import { formatCalendarDay, formatNumber } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 import { HeadingAction, SectionHeading } from '../../ui/SectionHeading'
+import { Panel } from '../../ui/Panel'
 import type { StreakFormState } from './useStreakForm'
 
 interface Props {
@@ -55,7 +56,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
         <SectionHeading action={<HeadingAction muted>{monthName(today)}</HeadingAction>}>
           {COPY.parentStreakWeekHeading}
         </SectionHeading>
-        <section className="parent-section">
+        <Panel>
           {days === null ? (
             <p>{problem ? COPY.parentUnavailable : COPY.parentLoading}</p>
           ) : (
@@ -77,12 +78,12 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
             </ol>
           )}
           <p className="parent-note">{COPY.parentStreakWeekFoot}</p>
-        </section>
+        </Panel>
       </div>
 
       <div className="streak-correct">
         <SectionHeading>{COPY.parentStreakCorrectHeading}</SectionHeading>
-        <section className="parent-section">
+        <Panel>
           <TextField
             label={COPY.parentStreakLengthLabel}
             hint={COPY.parentStreakHint}
@@ -136,7 +137,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
             </Safeguard>
           )}
           <p className="parent-note">{COPY.parentStreakFoot}</p>
-        </section>
+        </Panel>
       </div>
     </div>
   )

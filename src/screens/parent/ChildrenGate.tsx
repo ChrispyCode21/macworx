@@ -1,5 +1,6 @@
 import { COPY } from '../../copy'
 import { Button } from '../../ui/Button'
+import { Panel } from '../../ui/Panel'
 
 interface Props {
   /** True when the sign-in has run out: reloading signs in again, so there is no Try again. */
@@ -12,7 +13,7 @@ interface Props {
 /** What every screen shows when the children can't be listed (SPEC §5.3): no forms, no switcher. */
 export function ChildrenGate({ signedOut, retrying, onRetry }: Props) {
   return (
-    <section className="parent-section">
+    <Panel>
       <p role="alert">
         {signedOut ? COPY.parentSignedOut : retrying ? COPY.parentLoading : COPY.parentChildrenUnavailable}
       </p>
@@ -21,6 +22,6 @@ export function ChildrenGate({ signedOut, retrying, onRetry }: Props) {
           {COPY.parentTryAgain}
         </Button>
       )}
-    </section>
+    </Panel>
   )
 }
