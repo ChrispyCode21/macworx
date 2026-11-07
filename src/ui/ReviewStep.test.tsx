@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { ReviewStep } from './ReviewStep'
 
-// Focus following the step needs a browser: e2e/parent.spec.ts and e2e/phone.spec.ts check it.
+// Focus following the step needs a browser: e2e/parent.spec.ts checks it.
 function html(reviewing: boolean, extra: Partial<Parameters<typeof ReviewStep>[0]> = {}) {
   return renderToStaticMarkup(
     <ReviewStep

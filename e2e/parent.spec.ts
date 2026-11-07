@@ -770,6 +770,8 @@ test('Back from Review returns to the form with what was typed, and saves nothin
   await page.goto('/parent/points')
   await page.getByLabel('Macaronis to add').fill('20')
   await page.getByLabel('Reason · required').fill('Homework grades')
+  // Nothing takes focus on load.
+  await expect(page.getByRole('button', { name: 'Review +20 Macaronis' })).not.toBeFocused()
   await page.getByRole('button', { name: 'Review +20 Macaronis' }).click()
   // Focus follows the step: to Confirm, then back to Review.
   await expect(page.getByRole('button', { name: 'Confirm' })).toBeFocused()
