@@ -80,4 +80,12 @@ describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
       /\.(?:pair-panel|points|streak|shop) \.button-(?:primary|secondary|soft)[^{]*\{[^}]*display: flex/,
     )
   })
+
+  it('has one section heading style, not one per screen (docs/DESIGN.md §7)', () => {
+    for (const name of ['parent-heading-row', 'parent-heading', 'parent-heading-action'])
+      expect(portal.match(new RegExp(`\\n\\.${name} \\{`, 'g')), `.${name} is defined once`).toHaveLength(1)
+    expect(portal).not.toMatch(
+      /\.(?:overview|shop|streak|points|devices)-heading|\.(?:overview-view-all|shop-action|streak-heading-action)\b/,
+    )
+  })
 })

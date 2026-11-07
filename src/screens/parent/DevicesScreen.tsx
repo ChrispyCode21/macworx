@@ -14,6 +14,7 @@ import { Button } from '../../ui/Button'
 import { Safeguard } from '../../ui/Safeguard'
 import { formatClock, formatCode, formatDay, isSameLocalDay } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
+import { SectionHeading } from '../../ui/SectionHeading'
 
 interface Props {
   /** Every device of the chosen child, unpaired ones too; null before they arrive. */
@@ -127,7 +128,7 @@ export function DevicesScreen({
       </div>
 
       <div className="devices-right">
-        <h2 className="devices-heading">{COPY.parentPairSection}</h2>
+        <SectionHeading>{COPY.parentPairSection}</SectionHeading>
         <section className="parent-section pair-panel">
           <div className="pair-intro">
             <span className="pair-intro-icon">
@@ -164,7 +165,7 @@ export function DevicesScreen({
           <p className="parent-note">{COPY.parentCodeFootnote}</p>
         </section>
 
-        <h2 className="devices-heading">{COPY.parentDisconnectHeading}</h2>
+        <SectionHeading>{COPY.parentDisconnectHeading}</SectionHeading>
         {childName !== null && balance !== null && streak !== null && (
           <Safeguard tone="info">{COPY.parentDisconnectSafe(childName, balance, streak)}</Safeguard>
         )}

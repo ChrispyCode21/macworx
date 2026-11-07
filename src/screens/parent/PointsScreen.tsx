@@ -11,6 +11,7 @@ import { Safeguard } from '../../ui/Safeguard'
 import { formatMoment, formatNumber } from '../../ui/format'
 import { Segmented } from '../../ui/Segmented'
 import { TextField } from '../../ui/TextField'
+import { SectionHeading } from '../../ui/SectionHeading'
 import type { AdjustState } from './useAdjust'
 
 interface Props {
@@ -54,7 +55,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
       </HeroPanel>
 
       <div className="points-adjust">
-        <h2 className="points-heading">{COPY.parentAdjustHeading}</h2>
+        <SectionHeading>{COPY.parentAdjustHeading}</SectionHeading>
         <section className="parent-section">
           <Segmented
             label={COPY.parentAdjustModeLabel}
@@ -133,7 +134,7 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
       </div>
 
       <div className="points-activity">
-        <h2 className="points-heading">{COPY.parentActivityHeading}</h2>
+        <SectionHeading>{COPY.parentActivityHeading}</SectionHeading>
         <section className="parent-section">
           {log === null && unavailable}
           {log?.length === 0 && <p>{COPY.parentNoLog}</p>}
