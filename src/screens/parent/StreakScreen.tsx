@@ -2,11 +2,12 @@ import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { COPY } from '../../copy'
 import type { Summary } from '../../parent/api'
-import { ArrowRightIcon, CalendarCheckIcon, CheckIcon, FlameLargeIcon, InfoIcon } from '../../parent/icons'
+import { ArrowRightIcon, CalendarCheckIcon, CheckIcon, FlameLargeIcon } from '../../parent/icons'
 import { personalBestStreak } from '../../parent/placeholders'
 import { formatRange, monthName, previewText, streakRange, weekStrip } from '../../parent/streakDays'
 import { streakFields } from '../../parent/streakForm'
 import { Button } from '../../ui/Button'
+import { Safeguard } from '../../ui/Safeguard'
 import { formatCalendarDay } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 import type { StreakFormState } from './useStreakForm'
@@ -118,10 +119,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
               <span>{preview}</span>
             </p>
           )}
-          <p className="safeguard safeguard-warn">
-            <InfoIcon size={17} />
-            <span>{COPY.parentStreakWarn}</span>
-          </p>
+          <Safeguard tone="warn">{COPY.parentStreakWarn}</Safeguard>
           {reviewing && summary && fields ? (
             <div className="streak-confirm">
               <h3>{COPY.parentStreakReviewHeading}</h3>
@@ -146,16 +144,14 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
             </Button>
           )}
           {form.saved && (
-            <p className="safeguard safeguard-info" role="status">
-              <CheckIcon size={17} />
-              <span>{COPY.parentStreakSaved}</span>
-            </p>
+            <Safeguard tone="info" icon={<CheckIcon size={17} />} role="status">
+              {COPY.parentStreakSaved}
+            </Safeguard>
           )}
           {form.problem && (
-            <p className="safeguard safeguard-warn" role="alert">
-              <InfoIcon size={17} />
-              <span>{form.problem}</span>
-            </p>
+            <Safeguard tone="warn" role="alert">
+              {form.problem}
+            </Safeguard>
           )}
           <p className="streak-footnote">{COPY.parentStreakFoot}</p>
         </section>

@@ -11,6 +11,7 @@ import {
 } from '../../parent/icons'
 import { deviceBrowserLine, deviceStatus } from '../../parent/placeholders'
 import { Button } from '../../ui/Button'
+import { Safeguard } from '../../ui/Safeguard'
 import { formatClock, formatCode, formatDay, isSameLocalDay } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
 
@@ -165,10 +166,7 @@ export function DevicesScreen({
 
         <h2 className="devices-heading">{COPY.parentDisconnectHeading}</h2>
         {childName !== null && balance !== null && streak !== null && (
-          <p className="safeguard safeguard-info">
-            <ShieldCheckIcon size={17} />
-            <span>{COPY.parentDisconnectSafe(childName, balance, streak)}</span>
-          </p>
+          <Safeguard tone="info">{COPY.parentDisconnectSafe(childName, balance, streak)}</Safeguard>
         )}
         <p className="pair-footnote pair-note">{COPY.parentDisconnectNote}</p>
 

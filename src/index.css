@@ -1124,6 +1124,11 @@ p {
   color: var(--p-accent-ink);
 }
 
+.safeguard-warn {
+  background: var(--p-warn-soft);
+  color: var(--p-warn-ink);
+}
+
 .access-card {
   display: flex;
   align-items: center;
@@ -1423,21 +1428,6 @@ p {
   height: 17px;
 }
 
-.shop-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-10);
-  padding: var(--space-12);
-  border-radius: var(--radius-control);
-  background: var(--p-chip);
-  color: var(--p-accent-ink);
-  font-size: var(--text-12);
-}
-
-.shop-notice svg {
-  flex-shrink: 0;
-}
-
 .shop-actions {
   display: flex;
   gap: var(--space-10);
@@ -1687,11 +1677,6 @@ p {
   color: var(--p-warn-ink);
 }
 
-.safeguard-warn {
-  background: var(--p-warn-soft);
-  color: var(--p-warn-ink);
-}
-
 .points .button-primary {
   display: flex;
   align-items: center;
@@ -1834,11 +1819,6 @@ p {
 
   .activity-amount {
     font-size: var(--text-18);
-  }
-
-  .safeguard-warn svg {
-    width: 18px;
-    height: 18px;
   }
 }
 

@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Summary } from '../../parent/api'
+import { CheckIcon } from '../../parent/icons'
 import { StreakScreen } from './StreakScreen'
 import type { StreakFormState } from './useStreakForm'
 
@@ -87,6 +88,8 @@ describe('StreakScreen', () => {
 
   it('shows the saved notice and a problem as announcements', () => {
     expect(render({ saved: true })).toMatch(/role="status"[^>]*>.*Streak saved\./)
+    // The saved notice keeps the check icon (docs/DESIGN.md §7), not the shield-check of a plain notice.
+    expect(render({ saved: true })).toContain(renderToStaticMarkup(<CheckIcon size={17} />))
     expect(render({ problem: 'That didn’t save.' })).toMatch(/role="alert"/)
   })
 
