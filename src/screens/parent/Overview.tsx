@@ -155,7 +155,7 @@ export function Overview({
           {todays?.length === 0 && <p className="overview-empty">{COPY.parentNoAssignmentsToday}</p>}
           {todays?.map((r, i) => (
             <div key={r.id} className="overview-item">
-              {i > 0 && <hr className="overview-divider" />}
+              {i > 0 && <hr className="parent-divider" />}
               <div className="overview-row">
                 <span className="overview-tile">
                   <CheckIcon size={17} />
@@ -188,7 +188,7 @@ export function Overview({
             </span>
             <ChevronRightIcon size={18} />
           </TabLink>
-          <hr className="overview-divider" />
+          <hr className="parent-divider" />
           <TabLink tab={OVERVIEW_LINKS.shop} onGo={onGo} className="overview-link-row">
             <ShoppingBagIcon size={20} />
             <span className="overview-detail">

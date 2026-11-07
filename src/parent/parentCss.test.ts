@@ -65,4 +65,21 @@ describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
     expect(portal).toMatch(/\n\.parent-choice \{[^}]*padding: var\(--space-4\);/)
     expect(portal, 'a .parent-choice rule is scoped to one screen').not.toMatch(/\.[a-z-]+ \.parent-choice/)
   })
+
+  it('has one divider, one note style and one chip (docs/DESIGN.md §7), not a copy per screen', () => {
+    for (const name of ['parent-divider', 'parent-note', 'parent-chip'])
+      expect(portal.match(new RegExp(`\\n\\.${name} \\{`, 'g')), `.${name} is defined once`).toHaveLength(1)
+    expect(portal).not.toMatch(
+      /\.(?:shop|overview)-divider|\.(?:device-meta|pair-footnote|shop-footnote|points-footnote|streak-footnote|activity-meta)\b|\.(?:device|portal)-chip|\.shop-chip-warn/,
+    )
+  })
+
+  it('centers every parent button in the base rule, not per screen (docs/DESIGN.md §7)', () => {
+    expect(portal).toMatch(
+      /\.parent \.button-soft \{\s*display: flex;\s*align-items: center;\s*justify-content: center;\s*gap: var\(--space-8\);/,
+    )
+    expect(portal, 'a screen sets its own flex on a parent button').not.toMatch(
+      /\.(?:pair-panel|points|streak|shop) \.button-(?:primary|secondary|soft)[^{]*\{[^}]*display: flex/,
+    )
+  })
 })
