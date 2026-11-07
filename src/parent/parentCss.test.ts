@@ -60,4 +60,9 @@ describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
       if (/#[0-9a-f]{3,8}\b/i.test(line)) expect(line).toMatch(/^\s*--p-[a-z-]+: #[0-9a-f]{6};$/)
     expect(portal).not.toContain('box-shadow')
   })
+
+  it('styles the Segmented track for every screen, not one (docs/DESIGN.md §7)', () => {
+    expect(portal).toMatch(/\n\.parent-choice \{[^}]*padding: var\(--space-4\);/)
+    expect(portal, 'a .parent-choice rule is scoped to one screen').not.toMatch(/\.[a-z-]+ \.parent-choice/)
+  })
 })
