@@ -71,10 +71,10 @@ afterEach(() => vi.useRealTimers())
 describe('Overview', () => {
   it('O7: the hero count reads with its unit, with no total and no progress bar', () => {
     const cases: [number, string][] = [
-      [0, '0</span><span class="overview-hero-unit">assignments done'],
-      [1, '1</span><span class="overview-hero-unit">assignment done'],
-      [2, '2</span><span class="overview-hero-unit">assignments done'],
-      [1234, '1,234</span><span class="overview-hero-unit">assignments done'],
+      [0, '0</span><span class="parent-hero-unit">assignments done'],
+      [1, '1</span><span class="parent-hero-unit">assignment done'],
+      [2, '2</span><span class="parent-hero-unit">assignments done'],
+      [1234, '1,234</span><span class="parent-hero-unit">assignments done'],
     ]
     for (const [n, text] of cases) {
       const html = render({ summary: summary({ completedToday: n }) })

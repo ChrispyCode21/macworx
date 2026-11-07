@@ -124,6 +124,6 @@ test('adds Macaronis through Review then Confirm at phone width', async ({ page 
   await confirm.tap()
 
   await expect(page.getByText('Saved. Her balance is now 61.')).toBeVisible()
-  await expect(page.locator('.points-hero-number')).toHaveText('61')
+  await expect(page.locator('.points-hero .parent-hero-number')).toHaveText('61')
   expect(posts).toEqual(['/api/parent/balance'])
 })

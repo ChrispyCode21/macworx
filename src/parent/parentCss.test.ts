@@ -15,8 +15,6 @@ const TOKENS: Record<string, string> = {
   '--p-primary': '#f2a516',
   '--p-primary-ink': '#3b2a05',
   '--p-hero-muted': '#5a3f08',
-  '--p-hero-track': '#c98a10',
-  '--p-hero-fill': '#3b2a05',
   '--p-accent-ink': '#8a5a00',
   '--p-chip': '#fde9b8',
   '--p-warm': '#f6dc9e',

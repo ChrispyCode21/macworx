@@ -34,7 +34,7 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
 
   return (
     <div className="streak">
-      <section className="streak-hero">
+      <section className="parent-hero streak-hero">
         <div className="streak-hero-main">
           <FlameLargeIcon size={36} />
           <div className="streak-hero-text">

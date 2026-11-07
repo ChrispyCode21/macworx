@@ -5,6 +5,7 @@ import type { ActivityKind } from '../../parent/activity'
 import { LIST_LIMIT, MAX_NOTE } from '../../parent/api'
 import type { Device, LogEntry, Summary } from '../../parent/api'
 import { CheckIcon, CoinsIcon, FlameIcon, HistoryIcon, ScanLineIcon, UnlinkIcon } from '../../parent/icons'
+import { HeroLine, HeroNumber, HeroPanel, HeroRow, HeroUnit } from '../../ui/HeroPanel'
 import { ReviewStep } from '../../ui/ReviewStep'
 import { Safeguard } from '../../ui/Safeguard'
 import { formatMoment, formatNumber } from '../../ui/format'
@@ -42,16 +43,15 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
   const check = a.check
   return (
     <div className="points">
-      <section className="points-hero">
-        <p className="points-hero-label">{COPY.parentHeroLabel}</p>
-        <p className="points-hero-row">
-          <span className="points-hero-number">{summary ? formatNumber(summary.balance) : pending}</span>
-          <span className="points-hero-unit">{COPY.parentHeroUnit}</span>
-        </p>
+      <HeroPanel variant="points" label={COPY.parentHeroLabel}>
+        <HeroRow>
+          <HeroNumber>{summary ? formatNumber(summary.balance) : pending}</HeroNumber>
+          <HeroUnit>{COPY.parentHeroUnit}</HeroUnit>
+        </HeroRow>
         {summary && summary.earnedToday > 0 && (
-          <p className="points-hero-line">{COPY.parentEarnedToday(summary.earnedToday)}</p>
+          <HeroLine>{COPY.parentEarnedToday(summary.earnedToday)}</HeroLine>
         )}
-      </section>
+      </HeroPanel>
 
       <div className="points-adjust">
         <h2 className="points-heading">{COPY.parentAdjustHeading}</h2>
