@@ -249,7 +249,7 @@ Fill `--p-surface`, border 1 px `--p-divider`, radius 20, padding 18 (wide 22), 
 
 ### Hero panel
 Built as `src/ui/HeroPanel.tsx` (`HeroPanel` with a label row and optional icon, then `HeroRow` / `HeroNumber` / `HeroUnit` and `HeroLine`); the shared classes are `.parent-hero*` and each screen's sizes (§4) are set under its own `.overview-hero` / `.points-hero`.
-Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), gap 14 (wide 16). Text is `--p-primary-ink` (numbers) and `--p-hero-muted` (labels and lines). Contains: hero-label row (the label, 600, with an optional icon 21 [22] at the right, `--p-hero-muted`), hero number row (number then unit, baseline aligned, gap 7 [10]; Macaronis gap 8 [9]), optional hero-line, and on Streak a details row. While a value has not arrived the number shows the pending text and the label and unit stay.
+Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), gap 14 (wide 16). Text is `--p-primary-ink` (numbers) and `--p-hero-muted` (labels and lines). Contains: hero-label row (the label, 600, with an optional icon 21 [22] at the right, `--p-hero-muted`), hero number row (number then unit, baseline aligned, gap 7 [10]; Macaronis gap 8 [9]), optional hero-line, and on Streak a details row. While the numbers have not arrived the label stays and the pending text stands where the number and unit go (no unit, so a failed read never reads "Not available right now. days").
 
 ### Section heading row
 Row, align center, gap 8 (wide 12, min-height 28): section-title (flex 1) + optional section-action. Gap to the panel below: 12.
