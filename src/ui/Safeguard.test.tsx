@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { CheckIcon } from '../parent/icons'
+import { CheckIcon, InfoIcon, ShieldCheckIcon } from '../parent/icons'
 import { Safeguard } from './Safeguard'
 
 describe('Safeguard', () => {
@@ -31,8 +31,8 @@ describe('Safeguard', () => {
   it('draws a different default icon for each tone, and the one a caller names', () => {
     const icon = (tone: 'info' | 'warn') =>
       renderToStaticMarkup(<Safeguard tone={tone}>x</Safeguard>).match(/<svg.*<\/svg>/)![0]
-    expect(icon('info')).not.toBe(icon('warn'))
-    expect(icon('info')).toContain('width="17"')
+    expect(icon('info')).toBe(renderToStaticMarkup(<ShieldCheckIcon size={17} />))
+    expect(icon('warn')).toBe(renderToStaticMarkup(<InfoIcon size={17} />))
     const named = renderToStaticMarkup(
       <Safeguard tone="info" icon={<CheckIcon size={17} />}>
         x

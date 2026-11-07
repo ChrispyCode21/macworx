@@ -73,7 +73,9 @@ const reuseRules = [
     message: 'Use <Button> from src/ui/Button, not a raw <button>.',
   },
   {
-    test: (l) => /className=["'`{][^"'`}]*\bsafeguard\b/.test(l),
+    // The class as a word inside any string, so a template literal, clsx call or wrapped className is caught,
+    // while `my-safeguard` is not.
+    test: (l) => /["'`][^"'`]*(?<![\w-])safeguard(?:-(?:info|warn))?(?![\w-])/.test(l),
     message: 'Use <Safeguard> from src/ui/Safeguard, not a hand-written .safeguard element.',
   },
   {

@@ -460,7 +460,7 @@ Copy: title "Motivation, made personal." Subline "Thoughtful rewards for {name}'
    - Heading row (gap 8 [12]): section-title "Edit reward" + chip `warn` "Read-only" (replaces "Unsaved draft").
    - Panel padding 18 [22], gap 14 (wide 13). Fields: "Reward name", "Description", "Price in Macaronis" (unit "Macaronis").
    - No price-change preview and no "future redemptions" notice (there is nothing to change).
-   - Notice `info`: "Editing rewards is coming soon."
+   - Safeguard `info`: "Editing rewards is coming soon."
    - Buttons (disabled): primary "Save reward changes"; row gap 10: soft "Discard changes" + danger "Remove reward" (each flex 1). Footnote (11): "Removal asks for confirmation. Past redemptions stay in the history."
 4. **Redemption summary**: row gap 10: ticket-check icon 19 [21] `--p-accent-ink` + column (gap 3 [4]): title (13 / 600) and meta (11). Empty state (the only state today): title "No rewards redeemed yet." and no meta line.
 
