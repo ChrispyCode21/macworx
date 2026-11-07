@@ -663,7 +663,6 @@ p {
 
 .parent-choice {
   display: flex;
-  gap: var(--space-12);
 }
 
 .parent-choice .button {
@@ -1635,25 +1634,25 @@ p {
   color: var(--p-text);
 }
 
-.points .parent-choice {
+.parent-choice {
   gap: var(--space-4);
   padding: var(--space-4);
   border-radius: var(--radius-control);
   background: var(--p-bg);
 }
 
-.points .parent-choice .button {
+.parent-choice .button {
   height: 42px;
   border-radius: var(--radius-segment);
   font-size: var(--text-13);
 }
 
-.points .parent-choice .button-secondary {
+.parent-choice .button-secondary {
   background: var(--p-bg);
   color: var(--p-muted);
 }
 
-.points .parent-choice .button-primary {
+.parent-choice .button-primary {
   background: var(--p-chip);
   color: var(--p-accent-ink);
 }
@@ -1804,7 +1803,7 @@ p {
     gap: var(--space-20);
   }
 
-  .points .parent-choice .button {
+  .parent-choice .button {
     height: 44px;
   }
 

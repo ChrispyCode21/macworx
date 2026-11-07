@@ -6,6 +6,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Fixed
+
+- **Add / Rename looks like Add / Remove (parents):** the Add and Rename choice on Overview is now the same segmented control as Add and Remove on Macaronis, as the design says. It had two plain buttons before.
+
 ## [0.5.2] - 2026-11-06
 
 ### Fixed
