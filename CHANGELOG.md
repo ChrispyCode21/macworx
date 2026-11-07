@@ -12,6 +12,9 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Changed
 
+- **The three top panels match (parents):** Today's homework, Available balance and Current streak now share one look, and their small headings are bold, as the design says.
+- **Streak's top panel:** it now has a "CURRENT STREAK" heading with the flame beside it (as Today's homework has its sun). The number is shown with "days" next to it, and the line below it shows just the date range, for example "Oct 14–16".
+- **While the numbers load (parents):** Today's homework shows its placeholder next to "assignments done", as the other two panels do.
 - **One notice look (parents):** the "coming soon" notice on Shop now uses the same notice component as the other screens, so on a wide screen its icon is 18 (it was 17), as the design says.
 
 ## [0.5.2] - 2026-11-06

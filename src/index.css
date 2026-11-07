@@ -711,7 +711,7 @@ p {
   color: var(--p-hero-muted);
 }
 
-.parent-hero-label {
+.parent-hero .parent-hero-label {
   font-size: var(--text-13);
   font-weight: 600;
   line-height: 1.45;
@@ -744,6 +744,10 @@ p {
 
 .overview-hero .parent-hero-number {
   font-size: var(--text-42);
+}
+
+.streak-hero .parent-hero-number {
+  font-size: var(--text-40);
 }
 
 .points-hero .parent-hero-label {
@@ -1812,28 +1816,6 @@ p {
   min-width: 0;
 }
 
-.streak-hero-main {
-  display: flex;
-  align-items: center;
-  gap: var(--space-14);
-  color: var(--p-hero-muted);
-}
-
-.streak-hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.streak-hero-number {
-  font-size: var(--text-40);
-  font-weight: 600;
-  line-height: normal;
-  font-variant-numeric: tabular-nums;
-  color: var(--p-primary-ink);
-}
-
-.streak-hero-line,
 .streak-hero-details {
   font-size: var(--text-12);
   color: var(--p-hero-muted);
@@ -1948,23 +1930,6 @@ p {
 }
 
 @media (min-width: 768px) {
-  .streak-hero-main {
-    gap: var(--space-16);
-  }
-
-  .streak-hero-main svg {
-    width: 40px;
-    height: 40px;
-  }
-
-  .streak-hero-text {
-    gap: var(--space-4);
-  }
-
-  .streak-hero-number {
-    font-size: var(--text-44);
-  }
-
   .streak-heading-row {
     gap: var(--space-12);
   }
@@ -2048,8 +2013,7 @@ p {
 }
 
 .parent-hero-row .parent-pending,
-.overview-stat-value .parent-pending,
-.streak-hero-number .parent-pending {
+.overview-stat-value .parent-pending {
   font-size: var(--text-14);
 }
 
@@ -2210,7 +2174,8 @@ p {
     height: 22px;
   }
 
-  .overview-hero .parent-hero-number {
+  .overview-hero .parent-hero-number,
+  .streak-hero .parent-hero-number {
     font-size: var(--text-44);
   }
 

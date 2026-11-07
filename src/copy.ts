@@ -179,6 +179,8 @@ export const COPY = {
   parentSignedOut: 'Your sign-in has run out. Reload the page to sign in again.',
   parentOffline: 'No connection. Check the Wi-Fi and try again.',
   parentServerTrouble: 'Something went wrong on our side. Try again in a minute.', // conventions-ignore: parent-facing, approved in #18
+  parentStreakHeroLabel: 'Current streak',
+  parentStreakHeroUnit: (n: number) => (n === 1 ? 'day' : 'days'),
   parentStreakValue: (n: number) => `${formatNumber(n)} ${n === 1 ? 'day' : 'days'}`,
   parentNoLastDay: 'None yet',
   parentHomeworkLabel: "Today's homework",
@@ -220,7 +222,6 @@ export const COPY = {
   parentLastDayLabel: 'Last counted day',
   parentLastDayHint: 'Leave empty only when the streak is 0. It can be at most tomorrow.',
   parentStreakSaved: 'Streak saved.',
-  parentStreakHeroLine: (range: string | null) => (range ? `Current streak · ${range}` : 'Current streak'),
   parentStreakBest: (n: number) => `Personal best: ${formatNumber(n)} ${n === 1 ? 'day' : 'days'}`,
   parentStreakToday: 'Today ✓',
   parentStreakWeekHeading: 'The last 7 days',

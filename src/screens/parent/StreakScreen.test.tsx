@@ -42,10 +42,24 @@ const render = (
 describe('StreakScreen', () => {
   it('shows her streak, its range and the sample personal best', () => {
     const html = render()
-    expect(html).toContain('3 days')
-    expect(html).toContain('Current streak · Oct 14–16')
+    expect(html).toContain('Current streak</h2>')
+    expect(html).toContain('3</span><span class="parent-hero-unit">days')
+    expect(html).toContain('<p class="parent-hero-line">Oct 14–16</p>')
     expect(html).toContain('Personal best: 14 days')
     expect(html).toMatch(/Personal best: 14 days <span[^>]*>Sample<\/span>/)
+  })
+
+  it('says day for one, and shows no range line at streak 0', () => {
+    expect(render({}, { ...summary, streak: 1 })).toContain('1</span><span class="parent-hero-unit">day<')
+    const none = render({}, { ...summary, streak: 0, lastDay: null })
+    expect(none).toContain('0</span><span class="parent-hero-unit">days')
+    expect(none).not.toContain('parent-hero-line')
+  })
+
+  it('keeps the label and unit while the streak has not arrived', () => {
+    const html = render({}, null)
+    expect(html).toContain('…</span><span class="parent-hero-unit">days')
+    expect(html).toContain('Current streak</h2>')
   })
 
   it('shows Today ✓ only when the last counted day is today', () => {
