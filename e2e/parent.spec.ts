@@ -744,7 +744,7 @@ test('adds Macaronis through Review then Confirm, then removes some', async ({ p
   await page.getByRole('button', { name: 'Confirm' }).click()
   await expect(page.getByText('Saved. Her balance is now 61.')).toBeVisible()
   await expect(page.getByLabel('Macaronis to add')).toHaveValue('')
-  await expect(page.locator('.points-hero-number')).toHaveText('61')
+  await expect(page.locator('.points-hero .parent-hero-number')).toHaveText('61')
   await expect(page.locator('.activity-row').first().locator('.activity-amount')).toHaveText('+20')
   await expect(page.getByText('Added 20 Macaronis: Homework grades')).toBeVisible()
   // Overview shows the new balance.
@@ -887,7 +887,7 @@ test('shows what she earned today beside her balance, and nothing at 0', async (
 test('leaves the earned-today line out at 0', async ({ page }) => {
   await parentApi(page, [])
   await page.goto('/parent/points')
-  await expect(page.locator('.points-hero-number')).toHaveText('41')
+  await expect(page.locator('.points-hero .parent-hero-number')).toHaveText('41')
   await expect(page.getByText('earned today')).toHaveCount(0)
 })
 

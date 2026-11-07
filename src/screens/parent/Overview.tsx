@@ -18,6 +18,7 @@ import { tabPath } from '../../parent/route'
 import type { Tab } from '../../parent/route'
 import { reachOf } from '../../parent/shop'
 import { formatCalendarDay, formatClock, formatNumber } from '../../ui/format'
+import { HeroLine, HeroNumber, HeroPanel, HeroRow, HeroUnit } from '../../ui/HeroPanel'
 
 interface Props {
   /** Her numbers; null before they arrive. */
@@ -93,27 +94,19 @@ export function Overview({
 
   return (
     <div className="overview">
-      <section className="overview-hero" aria-labelledby="overview-hero-heading">
-        <div className="overview-hero-top">
-          <h2 id="overview-hero-heading" className="overview-hero-label">
-            {COPY.parentHomeworkLabel}
-          </h2>
-          <SunIcon size={21} />
-        </div>
+      <HeroPanel variant="overview" label={COPY.parentHomeworkLabel} icon={<SunIcon size={21} />}>
         {summary ? (
           <>
-            <p className="overview-hero-row">
-              <span className="overview-hero-number">{formatNumber(summary.completedToday)}</span>
-              <span className="overview-hero-unit">{COPY.parentHomeworkUnit(summary.completedToday)}</span>
-            </p>
-            {summary.earnedToday > 0 && (
-              <p className="overview-hero-line">{COPY.parentHomeworkEarned(summary.earnedToday)}</p>
-            )}
+            <HeroRow>
+              <HeroNumber>{formatNumber(summary.completedToday)}</HeroNumber>
+              <HeroUnit>{COPY.parentHomeworkUnit(summary.completedToday)}</HeroUnit>
+            </HeroRow>
+            {summary.earnedToday > 0 && <HeroLine>{COPY.parentHomeworkEarned(summary.earnedToday)}</HeroLine>}
           </>
         ) : (
-          <p className="overview-hero-row">{pending}</p>
+          <HeroRow>{pending}</HeroRow>
         )}
-      </section>
+      </HeroPanel>
 
       <div className="overview-stats">
         <div className="overview-stat">

@@ -135,8 +135,6 @@ Figma's palette (greens, beige) is replaced by macworx mustards, yellows and whi
 | Primary (fill) | `#275d48` | `--p-primary` | `#f2a516` (= `--accent`) | hero panel, primary button, today tile |
 | Primary ink (on primary) | `#ffffff` | `--p-primary-ink` | `#3b2a05` (= `--ink`) | text and icons on primary |
 | Hero muted text | `#c8dbce` | `--p-hero-muted` | `#5a3f08` | muted text on primary |
-| Hero track | `#51806a` | `--p-hero-track` | `#c98a10` | progress track (not used on Overview, see 9) |
-| Hero fill | `#d9e8c3` | `--p-hero-fill` | `#3b2a05` | progress fill (not used on Overview) |
 | Accent ink | `#275d48` as text | `--p-accent-ink` | `#8a5a00` (= `--answer-ink`) | links, active nav, values, icons on light |
 | Chip and soft fill | `#e7eee6` | `--p-chip` | `#fde9b8` (= `--soft`) | chips, active nav, soft buttons, completion tile, info safeguard, streak day, segment active |
 | Warm surface | `#efe7d8` | `--p-warm` | `#f6dc9e` | child switcher, reward tile, Access card |
@@ -162,8 +160,6 @@ Add to `src/index.css` next to the other tokens. All values are hex on `--name:`
   --p-primary: #f2a516;
   --p-primary-ink: #3b2a05;
   --p-hero-muted: #5a3f08;
-  --p-hero-track: #c98a10;
-  --p-hero-fill: #3b2a05;
   --p-accent-ink: #8a5a00;
   --p-chip: #fde9b8;
   --p-warm: #f6dc9e;
@@ -204,7 +200,7 @@ Computed with the relative-luminance formula. Every text/background pair the por
 | `--p-accent-ink` | `--p-warm` | 4.42: icons only (3:1 non-text), never text on warm |
 | `--p-muted` | `--p-avatar` | 4.42: not used; avatar text is `--p-text` |
 
-The builder must re-run the ratios (a ten-line script) if any token value changes. `--p-primary` (`#f2a516`) is 2.07:1 on white: **never use it as text or a thin icon on a light surface**; use `--p-accent-ink`. The hero track vs fill is a non-text graphic; the fill (`--p-hero-fill`) carries the meaning.
+The builder must re-run the ratios (a ten-line script) if any token value changes. `--p-primary` (`#f2a516`) is 2.07:1 on white: **never use it as text or a thin icon on a light surface**; use `--p-accent-ink`.
 
 ## 6. Shared chrome
 
@@ -252,6 +248,7 @@ The builder must re-run the ratios (a ten-line script) if any token value change
 Fill `--p-surface`, border 1 px `--p-divider`, radius 20, padding 18 (wide 22), flex column. Inner gap 14 phone; wide gap 16 unless the screen says otherwise.
 
 ### Hero panel
+Built as `src/ui/HeroPanel.tsx` (`HeroPanel` with a label row and optional icon, then `HeroRow` / `HeroNumber` / `HeroUnit` and `HeroLine`); the shared classes are `.parent-hero*` and each screen's sizes (§4) are set under its own `.overview-hero` / `.points-hero` / `.streak-hero`.
 Fill `--p-primary`, border 1 px `--p-primary`, radius 20, padding 18 (wide 22), gap 14 (wide 16). Text is `--p-primary-ink` (numbers) and `--p-hero-muted` (labels and lines). Contains: hero-label row, hero number row (baseline aligned, gap 7; Macaronis gap 8, wide 9 to 10), hero-line.
 
 ### Section heading row

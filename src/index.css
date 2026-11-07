@@ -312,8 +312,6 @@ p {
   --p-primary: #f2a516;
   --p-primary-ink: #3b2a05;
   --p-hero-muted: #5a3f08;
-  --p-hero-track: #c98a10;
-  --p-hero-fill: #3b2a05;
   --p-accent-ink: #8a5a00;
   --p-chip: #fde9b8;
   --p-warm: #f6dc9e;
@@ -692,6 +690,76 @@ p {
 
 .parent-chip-upper {
   text-transform: uppercase;
+}
+
+/* Hero panel (docs/DESIGN.md §7): the shared parts; each screen sets its sizes (§4) below */
+.parent-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  padding: var(--space-18);
+  border: 1px solid var(--p-primary);
+  border-radius: var(--radius-panel);
+  background: var(--p-primary);
+  color: var(--p-primary-ink);
+}
+
+.parent-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--p-hero-muted);
+}
+
+.parent-hero-label {
+  font-size: var(--text-13);
+  font-weight: 600;
+  line-height: 1.45;
+  text-transform: uppercase;
+  color: var(--p-hero-muted);
+}
+
+.parent-hero-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-7);
+}
+
+.parent-hero-number {
+  font-weight: 600;
+  line-height: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.parent-hero-unit {
+  font-size: var(--text-14);
+  color: var(--p-hero-muted);
+}
+
+.parent-hero-line {
+  font-size: var(--text-12);
+  line-height: 1.45;
+  color: var(--p-hero-muted);
+}
+
+.overview-hero .parent-hero-number {
+  font-size: var(--text-42);
+}
+
+.points-hero .parent-hero-label {
+  font-size: var(--text-12);
+}
+
+.points-hero .parent-hero-row {
+  gap: var(--space-8);
+}
+
+.points-hero .parent-hero-number {
+  font-size: var(--text-44);
+}
+
+.points-hero .parent-hero-unit {
+  font-size: var(--text-15);
 }
 
 /* Devices screen (docs/DESIGN.md §12) */
@@ -1529,48 +1597,6 @@ p {
   min-width: 0;
 }
 
-.points-hero {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-14);
-  padding: var(--space-18);
-  border: 1px solid var(--p-primary);
-  border-radius: var(--radius-panel);
-  background: var(--p-primary);
-  color: var(--p-primary-ink);
-}
-
-.points-hero-label {
-  font-size: var(--text-12);
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--p-hero-muted);
-}
-
-.points-hero-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-8);
-}
-
-.points-hero-number {
-  font-size: var(--text-44);
-  font-weight: 600;
-  line-height: normal;
-  font-variant-numeric: tabular-nums;
-  color: var(--p-primary-ink);
-}
-
-.points-hero-unit {
-  font-size: var(--text-15);
-  color: var(--p-hero-muted);
-}
-
-.points-hero-line {
-  font-size: var(--text-12);
-  color: var(--p-hero-muted);
-}
-
 .points-adjust,
 .points-activity {
   display: flex;
@@ -1700,19 +1726,6 @@ p {
 }
 
 @media (min-width: 768px) {
-  .points-hero {
-    gap: var(--space-16);
-    padding: var(--space-22);
-  }
-
-  .points-hero-number {
-    font-size: var(--text-48);
-  }
-
-  .points-hero-row {
-    gap: 9px;
-  }
-
   .points-heading {
     font-size: var(--text-18);
     line-height: normal;
@@ -1797,17 +1810,6 @@ p {
   flex-direction: column;
   gap: var(--space-22);
   min-width: 0;
-}
-
-.streak-hero {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-14);
-  padding: var(--space-18);
-  border: 1px solid var(--p-primary);
-  border-radius: var(--radius-panel);
-  background: var(--p-primary);
-  color: var(--p-primary-ink);
 }
 
 .streak-hero-main {
@@ -1946,11 +1948,6 @@ p {
 }
 
 @media (min-width: 768px) {
-  .streak-hero {
-    gap: var(--space-16);
-    padding: var(--space-22);
-  }
-
   .streak-hero-main {
     gap: var(--space-16);
   }
@@ -2050,61 +2047,10 @@ p {
   min-width: 0;
 }
 
-.overview-hero {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-14);
-  padding: var(--space-18);
-  border: 1px solid var(--p-primary);
-  border-radius: var(--radius-panel);
-  background: var(--p-primary);
-  color: var(--p-primary-ink);
-}
-
-.overview-hero-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--p-hero-muted);
-}
-
-.overview-hero-label {
-  font-size: var(--text-13);
-  font-weight: 600;
-  line-height: 1.45;
-  text-transform: uppercase;
-  color: var(--p-hero-muted);
-}
-
-.overview-hero-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-7);
-}
-
-.overview-hero-row .parent-pending,
+.parent-hero-row .parent-pending,
 .overview-stat-value .parent-pending,
-.points-hero-number .parent-pending,
 .streak-hero-number .parent-pending {
   font-size: var(--text-14);
-}
-
-.overview-hero-number {
-  font-size: var(--text-42);
-  font-weight: 600;
-  line-height: normal;
-  font-variant-numeric: tabular-nums;
-}
-
-.overview-hero-unit {
-  font-size: var(--text-14);
-  color: var(--p-hero-muted);
-}
-
-.overview-hero-line {
-  font-size: var(--text-12);
-  line-height: 1.45;
-  color: var(--p-hero-muted);
 }
 
 .overview-stats {
@@ -2250,22 +2196,30 @@ p {
 }
 
 @media (min-width: 768px) {
-  .overview-hero {
+  .parent-hero {
     gap: var(--space-16);
     padding: var(--space-22);
   }
 
-  .overview-hero-row {
+  .parent-hero-row {
     gap: var(--space-10);
   }
 
-  .overview-hero-top svg {
+  .parent-hero-top svg {
     width: 22px;
     height: 22px;
   }
 
-  .overview-hero-number {
+  .overview-hero .parent-hero-number {
     font-size: var(--text-44);
+  }
+
+  .points-hero .parent-hero-row {
+    gap: 9px;
+  }
+
+  .points-hero .parent-hero-number {
+    font-size: var(--text-48);
   }
 
   .overview-stat {
