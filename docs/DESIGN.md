@@ -287,7 +287,7 @@ Row, align start, gap 10, padding 12, radius 12, icon 17 (wide 18) + text (safeg
 See per screen. All icons: inline SVG, `fill="none"`, `stroke="currentColor"`, `stroke-linecap="round"`, `stroke-linejoin="round"`, `aria-hidden="true"`. Icon-only buttons carry an `aria-label`.
 
 ### Two-step confirm ("Review, then Confirm")
-Every parent write (adjust, streak correction, unpair) is two steps: the primary button reads "Review ..." and opens a confirm panel (same panel style, in place below the form, replacing the Review button) that restates the change and has two buttons: primary "Confirm" and soft "Cancel". Only Confirm calls the API. After success show a notice row (`info` safeguard) with the result; on error show a `warn` safeguard with plain wording (section 14).
+The two form writes (adjust, streak correction) are two steps: the primary button reads "Review ..." and opens a confirm panel in place below the form, replacing the Review button. The confirm panel is a soft panel (radius 12, padding 14, border 1 px `--p-divider`, fill `--p-surface`, gap 10, 13 px) that restates the change and has two buttons: primary "Confirm" and soft "Back". Focus follows the step: to Confirm when the panel opens, back to Review when the Review button returns (Back, or after Confirm), and never on first load. Built as `src/ui/ReviewStep.tsx`. Unpair has its own confirm (section 12). Only Confirm calls the API. After success show a notice row (`info` safeguard) with the result; on error show a `warn` safeguard with plain wording (section 14).
 
 ## 8. Wide layout rules
 
@@ -442,7 +442,7 @@ Copy: title "{name}'s devices, connected." Subline "Manage where {name} can open
    - Paragraph (12, muted): "You'll review the device name, then confirm. Anything not yet synced from that device stays on it."
 5. **Access card**: fill `--p-warm`, radius 12, padding 16, row gap 10, align center: shield-check icon 20 [22] `--p-accent-ink`; column (gap 3 [4]): access-title "Child access only", access-body "Paired devices can't open parent controls."
 
-Unpair flow: the danger icon button opens the confirm step (section 7): "Unpair {label}?" with Confirm/Cancel; Confirm calls `unpair(id)`.
+Unpair flow: the danger icon button opens a confirm dialog (`role="alertdialog"`, after the screen content) that asks "Unpair {label}? Results this device hasn't sent yet won't be saved." with a primary "Unpair" button and a secondary "Keep it paired" button; "Unpair" calls `unpair(id)`.
 
 ## 13. Screen: Shop
 

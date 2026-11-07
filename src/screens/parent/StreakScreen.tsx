@@ -1,12 +1,11 @@
-import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { COPY } from '../../copy'
 import type { Summary } from '../../parent/api'
-import { ArrowRightIcon, CalendarCheckIcon, CheckIcon, FlameLargeIcon } from '../../parent/icons'
+import { CalendarCheckIcon, CheckIcon, FlameLargeIcon } from '../../parent/icons'
 import { personalBestStreak } from '../../parent/placeholders'
 import { formatRange, monthName, previewText, streakRange, weekStrip } from '../../parent/streakDays'
 import { streakFields } from '../../parent/streakForm'
-import { Button } from '../../ui/Button'
+import { ReviewStep } from '../../ui/ReviewStep'
 import { Safeguard } from '../../ui/Safeguard'
 import { formatCalendarDay } from '../../ui/format'
 import { TextField } from '../../ui/TextField'
@@ -32,15 +31,6 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
   const fields = streakFields(form.streakText, form.dayText)
   const heroRange = summary ? streakRange(summary.streak, summary.lastDay, 7) : null
   const preview = summary ? previewText(summary.streak, form.streakText, form.dayText) : null
-  const confirmRef = useRef<HTMLButtonElement>(null)
-  const reviewRef = useRef<HTMLButtonElement>(null)
-  const was = useRef(reviewing)
-  // Review, Confirm and Back replace one another, so focus follows to the button now shown.
-  useEffect(() => {
-    if (was.current === reviewing) return
-    was.current = reviewing
-    ;(reviewing ? confirmRef : reviewRef).current?.focus()
-  }, [reviewing])
 
   return (
     <div className="streak">
@@ -120,29 +110,24 @@ export function StreakScreen({ summary, days, problem, today, form, pending }: P
             </p>
           )}
           <Safeguard tone="warn">{COPY.parentStreakWarn}</Safeguard>
-          {reviewing && summary && fields ? (
-            <div className="streak-confirm">
-              <h3>{COPY.parentStreakReviewHeading}</h3>
-              <p>{COPY.parentStreakChangeLength(summary.streak, fields.streak)}</p>
-              <p>
-                {COPY.parentStreakChangeDay(
-                  summary.lastDay ? formatCalendarDay(summary.lastDay) : COPY.parentNoLastDay,
-                  fields.lastDay ? formatCalendarDay(fields.lastDay) : COPY.parentNoLastDay,
-                )}
-              </p>
-              <Button ref={confirmRef} onClick={form.confirm} disabled={form.saving}>
-                {COPY.parentConfirm}
-              </Button>
-              <Button variant="soft" onClick={form.back} disabled={form.saving}>
-                {COPY.parentBack}
-              </Button>
-            </div>
-          ) : (
-            <Button ref={reviewRef} onClick={form.review} disabled={!summary}>
-              {COPY.parentStreakReview}
-              <ArrowRightIcon size={18} />
-            </Button>
-          )}
+          <ReviewStep
+            reviewing={reviewing && !!summary && !!fields}
+            review={{ label: COPY.parentStreakReview, onClick: form.review, disabled: !summary }}
+            confirm={{ onConfirm: form.confirm, onBack: form.back, saving: form.saving }}
+            heading={COPY.parentStreakReviewHeading}
+          >
+            {summary && fields && (
+              <>
+                <p>{COPY.parentStreakChangeLength(summary.streak, fields.streak)}</p>
+                <p>
+                  {COPY.parentStreakChangeDay(
+                    summary.lastDay ? formatCalendarDay(summary.lastDay) : COPY.parentNoLastDay,
+                    fields.lastDay ? formatCalendarDay(fields.lastDay) : COPY.parentNoLastDay,
+                  )}
+                </p>
+              </>
+            )}
+          </ReviewStep>
           {form.saved && (
             <Safeguard tone="info" icon={<CheckIcon size={17} />} role="status">
               {COPY.parentStreakSaved}

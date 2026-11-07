@@ -1,20 +1,11 @@
-import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { COPY } from '../../copy'
 import { describe } from '../../parent/activity'
 import type { ActivityKind } from '../../parent/activity'
 import { LIST_LIMIT, MAX_NOTE } from '../../parent/api'
 import type { Device, LogEntry, Summary } from '../../parent/api'
-import {
-  ArrowRightIcon,
-  CheckIcon,
-  CoinsIcon,
-  FlameIcon,
-  HistoryIcon,
-  ScanLineIcon,
-  UnlinkIcon,
-} from '../../parent/icons'
-import { Button } from '../../ui/Button'
+import { CheckIcon, CoinsIcon, FlameIcon, HistoryIcon, ScanLineIcon, UnlinkIcon } from '../../parent/icons'
+import { ReviewStep } from '../../ui/ReviewStep'
 import { Safeguard } from '../../ui/Safeguard'
 import { formatMoment, formatNumber } from '../../ui/format'
 import { Segmented } from '../../ui/Segmented'
@@ -49,16 +40,6 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
   const a = adjust
   const reviewing = a.step === 'review'
   const check = a.check
-  const confirmRef = useRef<HTMLButtonElement>(null)
-  const reviewRef = useRef<HTMLButtonElement>(null)
-  const was = useRef(reviewing)
-  // Review, Confirm and Back replace one another, so focus follows to the button now shown. Only on a
-  // change of step, never on first mount.
-  useEffect(() => {
-    if (was.current === reviewing) return
-    was.current = reviewing
-    ;(reviewing ? confirmRef : reviewRef).current?.focus()
-  }, [reviewing])
   return (
     <div className="points">
       <section className="points-hero">
@@ -116,8 +97,16 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
             <Safeguard tone="warn">{COPY.parentOverdraw(summary.balance)}</Safeguard>
           )}
           <Safeguard tone="info">{COPY.parentAdjustNotice}</Safeguard>
-          {reviewing && check?.ok && summary ? (
-            <div className="points-confirm">
+          <ReviewStep
+            reviewing={reviewing && !!check?.ok && !!summary}
+            review={{
+              label: a.amount !== null ? COPY.parentReview(a.amount) : COPY.parentReviewPlain,
+              onClick: a.review,
+              disabled: !check?.ok,
+            }}
+            confirm={{ onConfirm: a.confirm, onBack: a.back, saving: a.saving }}
+          >
+            {check?.ok && summary && (
               <p>
                 {COPY.parentReviewLine(
                   a.removing,
@@ -127,19 +116,8 @@ export function PointsScreen({ summary, log, devices, adjust, unavailable, pendi
                   check.note,
                 )}
               </p>
-              <Button ref={confirmRef} onClick={a.confirm} disabled={a.saving}>
-                {COPY.parentConfirm}
-              </Button>
-              <Button variant="soft" onClick={a.back} disabled={a.saving}>
-                {COPY.parentBack}
-              </Button>
-            </div>
-          ) : (
-            <Button ref={reviewRef} onClick={a.review} disabled={!check?.ok}>
-              {a.amount !== null ? COPY.parentReview(a.amount) : COPY.parentReviewPlain}
-              <ArrowRightIcon size={18} />
-            </Button>
-          )}
+            )}
+          </ReviewStep>
           {a.notice && (
             <Safeguard tone="info" role="status">
               {a.notice}

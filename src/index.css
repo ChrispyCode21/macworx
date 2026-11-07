@@ -1684,7 +1684,7 @@ p {
   gap: var(--space-8);
 }
 
-.points-confirm {
+.parent-review {
   display: flex;
   flex-direction: column;
   gap: var(--space-10);
@@ -2007,17 +2007,6 @@ p {
   align-items: center;
   justify-content: center;
   gap: var(--space-8);
-}
-
-.streak-confirm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-10);
-  padding: var(--space-14);
-  border: 1px solid var(--p-divider);
-  border-radius: var(--radius-control);
-  background: var(--p-surface);
-  font-size: var(--text-13);
 }
 
 .streak-footnote {
