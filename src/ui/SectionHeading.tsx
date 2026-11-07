@@ -26,17 +26,11 @@ export function SectionHeading({ id, action, children }: Props) {
 }
 
 /** The small text at the end of a heading row: a link or count in the accent colour, or `muted` plain text. */
-export function HeadingAction({
-  muted,
-  href,
-  onClick,
-  children,
-}: {
-  muted?: boolean
-  href?: string
-  onClick?: MouseEventHandler<HTMLAnchorElement>
-  children: ReactNode
-}) {
+type ActionProps = { muted?: boolean; children: ReactNode } & (
+  { href: string; onClick?: MouseEventHandler<HTMLAnchorElement> } | { href?: undefined; onClick?: undefined }
+)
+
+export function HeadingAction({ muted, href, onClick, children }: ActionProps) {
   const className = muted ? 'parent-heading-action parent-heading-muted' : 'parent-heading-action'
   if (href)
     return (

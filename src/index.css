@@ -672,10 +672,13 @@ p {
 }
 
 .parent-heading {
-  flex: 1;
   font-size: var(--text-17);
   line-height: 1.45;
   color: var(--p-text);
+}
+
+.parent-heading-row .parent-heading {
+  flex: 1;
 }
 
 .parent-heading-action {
