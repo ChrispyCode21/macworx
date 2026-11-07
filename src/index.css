@@ -2015,6 +2015,7 @@ p {
 .parent-hero-row .parent-pending,
 .overview-stat-value .parent-pending {
   font-size: var(--text-14);
+  font-weight: 400;
 }
 
 .overview-stats {

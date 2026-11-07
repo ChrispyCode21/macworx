@@ -171,6 +171,10 @@ describe('Overview', () => {
     expect(html).not.toContain('NaN')
     expect(html).toContain('…')
     expect(html).not.toContain('connected device')
+    // The heading stays; the placeholder stands where the number and its unit go.
+    expect(html).toContain('Today&#x27;s homework</h2>')
+    expect(html).toContain('<p class="parent-hero-row"><span class="parent-hero-number">…</span></p>')
+    expect(html).not.toContain('parent-hero-unit')
   })
 
   it('names the shop after the child, or plainly with no name', () => {

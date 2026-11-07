@@ -56,10 +56,12 @@ describe('StreakScreen', () => {
     expect(none).not.toContain('parent-hero-line')
   })
 
-  it('keeps the label and unit while the streak has not arrived', () => {
+  it('keeps the label, and no unit, while the streak has not arrived', () => {
     const html = render({}, null)
-    expect(html).toContain('…</span><span class="parent-hero-unit">days')
     expect(html).toContain('Current streak</h2>')
+    expect(html).toContain('<span class="parent-hero-number">…</span></p>')
+    expect(html).not.toContain('parent-hero-unit')
+    expect(html).not.toContain('parent-hero-line')
   })
 
   it('shows Today ✓ only when the last counted day is today', () => {
