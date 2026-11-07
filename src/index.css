@@ -1127,6 +1127,10 @@ p {
     min-height: 28px;
   }
 
+  .parent-heading-row .parent-heading {
+    min-height: 0;
+  }
+
   .parent-chip {
     padding: var(--space-5) var(--space-10);
   }
