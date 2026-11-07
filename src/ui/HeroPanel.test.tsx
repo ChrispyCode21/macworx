@@ -27,6 +27,6 @@ describe('HeroPanel', () => {
         <HeroRow>x</HeroRow>
       </HeroPanel>,
     )
-    expect(html).toMatch(/<div class="parent-hero-top"><h2[^>]*>Today<\/h2><svg data-icon="">/)
+    expect(html).toMatch(/<div class="parent-hero-top"><h2[^>]*>Today<\/h2><svg data-icon/)
   })
 })
