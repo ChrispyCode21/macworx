@@ -71,7 +71,7 @@ describe('StreakScreen', () => {
     const html = render()
     expect(html).toContain('Preview: Oct 10–16 · 3 → 7 days')
     expect(html).toContain('Review streak correction')
-    expect(html).not.toContain('streak-confirm')
+    expect(html).not.toContain('parent-review')
     expect(html).toContain('Corrected streak length')
   })
 
@@ -79,7 +79,7 @@ describe('StreakScreen', () => {
     const html = render({ step: 'review' })
     expect(html).toContain('Streak 3 → 7 days')
     expect(html).toContain('Last counted day Oct 16 → Oct 16')
-    expect(html).toMatch(/streak-confirm.*>Confirm<\/button>.*>Back<\/button>/)
+    expect(html).toMatch(/parent-review.*>Confirm<\/button>.*>Back<\/button>/)
     expect(html).not.toContain('Review streak correction')
     const inputs = html.match(/<input\b[^>]*>/g) ?? []
     expect(inputs).toHaveLength(2)
