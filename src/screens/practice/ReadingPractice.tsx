@@ -1,12 +1,13 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { checkChoice } from '../../engine'
 import { ArrowLeftIcon, BookOpenIcon, CheckIcon } from '../../practice/icons'
-import { READING_COUNT, READING_PASSAGE } from '../../practice/samples'
+import { LETTERS, READING_COUNT, READING_PASSAGE } from '../../practice/samples'
 import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { Button } from '../../ui/Button'
 import { READY_AFTER_MS, useReadyAfter, whenReady } from '../../ui/useReadyAfter'
 import { BackToHomeButton } from './BackToHomeButton'
+import { ChoiceGroup, type ChoiceGroupHandle } from './ChoiceGroup'
 import { NextButton } from './NextButton'
 import { PracticeFrame } from './PracticeFrame'
 
@@ -17,7 +18,6 @@ interface Props {
   onBack: () => void
 }
 
-const LETTERS = ['A', 'B', 'C']
 const { questions } = READING_PASSAGE
 
 /**
@@ -50,13 +50,13 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
   const [checked, setChecked] = useState(false)
   const [finished, setFinished] = useState(false)
   const titleId = useId()
-  const choiceRefs = useRef<(HTMLButtonElement | null)[][]>([])
+  const choicesRefs = useRef<(ChoiceGroupHandle | null)[]>([])
 
   // Next unmounts the passage, so focus would fall to the page. Send it to the first question's choices.
   useEffect(() => {
     if (view !== 'questions' || checked) return
     const roving = chosen[0] ?? 0
-    choiceRefs.current[0]?.[roving]?.focus()
+    choicesRefs.current[0]?.focus(roving)
     // Only when the questions open, not on every choice.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view])
@@ -68,22 +68,6 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
   }
   const responseFor = (q: number) =>
     right(q) ? COPY.cheers[q % COPY.cheers.length] : COPY.readingBestAnswer(LETTERS[questions[q].answer])
-
-  // Arrow keys move through one question's choices and pick the one they land on, as a radio group does.
-  const onChoiceKey = (e: KeyboardEvent, q: number, from: number) => {
-    const step =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight'
-        ? 1
-        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
-          ? -1
-          : 0
-    if (step === 0) return
-    e.preventDefault()
-    const n = questions[q].choices.length
-    const to = (from + step + n) % n
-    setChosen((c) => c.map((v, i) => (i === q ? to : v)))
-    choiceRefs.current[q]?.[to]?.focus()
-  }
 
   const onPassage = view === 'passage' && !finished
   const progress = onPassage
@@ -171,31 +155,19 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
                 {COPY.questionEyebrow(q + 1, item.skill)}
               </p>
               <p className="practice-question">{item.question}</p>
-              <div className="practice-reading-choices" role="radiogroup" aria-label={item.question}>
-                {item.choices.map((text, i) => {
-                  const result = checked && i === chosen[q] ? (right(q) ? 'right' : 'not-right') : undefined
-                  return (
-                    <Button
-                      key={text}
-                      ref={(el) => {
-                        ;(choiceRefs.current[q] ??= [])[i] = el
-                      }}
-                      variant="choice"
-                      role="radio"
-                      aria-checked={i === chosen[q]}
-                      tabIndex={i === (chosen[q] ?? 0) ? 0 : -1}
-                      onKeyDown={(e) => onChoiceKey(e, q, i)}
-                      disabled={checked}
-                      data-result={result}
-                      onClick={() => setChosen((c) => c.map((v, j) => (j === q ? i : v)))}
-                    >
-                      <span className="choice-marker">{LETTERS[i]}</span>
-                      <span className="answer-choice">{text}</span>
-                      {result === 'right' && <CheckIcon size={22} />}
-                    </Button>
-                  )
-                })}
-              </div>
+              <ChoiceGroup
+                handle={(h) => {
+                  choicesRefs.current[q] = h
+                }}
+                className="practice-reading-choices"
+                textClass="answer-choice"
+                label={item.question}
+                choices={item.choices}
+                chosen={chosen[q]}
+                onChoose={(i) => setChosen((c) => c.map((v, j) => (j === q ? i : v)))}
+                checked={checked}
+                right={right(q)}
+              />
               {checked ? (
                 <div className="response practice-reading-response">
                   <p className={right(q) ? 'response-lead' : 'response-equation'}>{responseFor(q)}</p>

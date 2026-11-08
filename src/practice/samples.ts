@@ -98,3 +98,6 @@ export const READING_PASSAGE = {
 }
 
 export const READING_COUNT = READING_PASSAGE.questions.length
+
+/** The letter on each choice's marker (docs/DESIGN-PRACTICE.md §7.3). */
+export const LETTERS = ['A', 'B', 'C', 'D']
