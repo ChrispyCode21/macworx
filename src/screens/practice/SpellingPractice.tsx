@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { checkChoice } from '../../engine'
 import { CheckIcon, PlayIcon, Volume2Icon } from '../../practice/icons'
@@ -7,6 +7,7 @@ import { canSpeak, speak, stopSpeaking } from '../../practice/speech'
 import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { Button } from '../../ui/Button'
 import { BackToHomeButton } from './BackToHomeButton'
+import { ChoiceGroup, type ChoiceGroupHandle } from './ChoiceGroup'
 import { NextButton } from './NextButton'
 import { PracticeFrame } from './PracticeFrame'
 
@@ -16,8 +17,6 @@ interface Props {
   /** Back to Home: the crumb, and the button after the last word. Nothing is kept (SPEC §5.5 step 3). */
   onBack: () => void
 }
-
-const LETTERS = ['A', 'B', 'C', 'D']
 
 /** Spelling sample practice: 8 words, checked on the iPad. Nothing is recorded, sent or paid (SPEC §5.5). */
 export function SpellingPractice({ numbers, child, onBack }: Props) {
@@ -31,7 +30,7 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
   const [finished, setFinished] = useState(false)
 
   const playRef = useRef<HTMLButtonElement>(null)
-  const choiceRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const choicesRef = useRef<ChoiceGroupHandle>(null)
   const shownIndex = useRef(index)
 
   // What she was hearing never carries over to the next word, into the finished panel, or out of the screen.
@@ -45,7 +44,7 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
     if (shownIndex.current === index) return
     shownIndex.current = index
     if (speech) playRef.current?.focus()
-    else choiceRefs.current[0]?.focus()
+    else choicesRef.current?.focus(0)
   }, [index, speech])
 
   const item = SPELLING_WORDS[index]
@@ -57,22 +56,6 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
     setIndex((i) => i + 1)
     setChosen(null)
     setChecked(false)
-  }
-
-  // Arrow keys move through the choices and pick the one they land on, as a radio group does.
-  const onChoiceKey = (e: KeyboardEvent, from: number) => {
-    const step =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight'
-        ? 1
-        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
-          ? -1
-          : 0
-    if (step === 0) return
-    e.preventDefault()
-    const n = item.choices.length
-    const to = (from + step + n) % n
-    setChosen(to)
-    choiceRefs.current[to]?.focus()
   }
 
   const response = !checked
@@ -147,31 +130,17 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
               <p className="practice-choices-heading">{COPY.spellingChoiceHeading}</p>
               <p className="practice-choices-hint">{COPY.chooseHint}</p>
             </div>
-            <div className="practice-choice-list" role="radiogroup" aria-label={COPY.spellingChoiceHeading}>
-              {item.choices.map((text, i) => {
-                const result = checked && i === chosen ? (right ? 'right' : 'not-right') : undefined
-                return (
-                  <Button
-                    key={text}
-                    ref={(el) => {
-                      choiceRefs.current[i] = el
-                    }}
-                    variant="choice"
-                    role="radio"
-                    aria-checked={i === chosen}
-                    tabIndex={i === (chosen ?? 0) ? 0 : -1}
-                    onKeyDown={(e) => onChoiceKey(e, i)}
-                    disabled={checked}
-                    data-result={result}
-                    onClick={() => setChosen(i)}
-                  >
-                    <span className="choice-marker">{LETTERS[i]}</span>
-                    <span className="word-choice">{text}</span>
-                    {result === 'right' && <CheckIcon size={22} />}
-                  </Button>
-                )
-              })}
-            </div>
+            <ChoiceGroup
+              handle={choicesRef}
+              className="practice-choice-list"
+              textClass="word-choice"
+              label={COPY.spellingChoiceHeading}
+              choices={item.choices}
+              chosen={chosen}
+              onChoose={setChosen}
+              checked={checked}
+              right={right}
+            />
             {response ? (
               <div className="response practice-spelling-response">
                 <p className={right ? 'response-lead' : 'response-equation'}>{response}</p>
