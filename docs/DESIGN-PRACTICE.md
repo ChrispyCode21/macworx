@@ -89,7 +89,7 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
   - This is not in Figma. Today's assignment also stacks in portrait.
 - **Short landscape viewports:** the page scrolls; nothing shrinks below the sizes here. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
 
-**Values the Figma frames do not give.** These are in the CSS, decided with the owner on 2026-11-08 (issue #191), and are pinned by tests where a test fits:
+**Values the Figma frames do not give.** These are in the CSS, decided with the owner on 2026-11-08 (issue #191). Only the pad panel's height and its two tokens are pinned by tests:
 
 - Spelling: the listen block's padding is 32 24 (vertical, horizontal); below 1024 the listen block and the choices stack with a gap of 32.
 - Reading: a choice's `padding-block` is 12.

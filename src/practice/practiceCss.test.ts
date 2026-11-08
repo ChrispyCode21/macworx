@@ -138,6 +138,12 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ['.button-action', 'min-width: 220px;', '§7.4 action'],
     ['.button-action-secondary!', 'min-width: 170px;', '§7.4 action-secondary'],
     ['.button-crumb', 'min-height: 44px;', '§7.4 crumb hit area'],
+    [
+      '.button-support',
+      'border-radius: 0;',
+      '§7.4 support: square like the crumb, so their focus rings match (#191)',
+    ],
+    ['.practice-pad-heading', 'height: var(--practice-pad-heading);', '§8 pad heading, from its token'],
     ['.button-support', 'height: 44px;', '§7.4 support hit area'],
     ['.practice .button-key', 'height: var(--practice-key);', '§7.4 and §8 key (72px)'],
     ['.button-play', 'width: 112px;', '§7.4 play'],
