@@ -226,6 +226,7 @@ Height 64, space-between, centered.
 ## 7. Shared components
 
 ### 7.1 Panel
+Built as `src/ui/PracticePanel.tsx` (`as` section, aside or div; `variant` problem, warm or soft; a screen's own class adds the rest); `check-conventions` fails on a hand-written `.practice-panel`, and `practiceCss.test.ts` checks the panel look is drawn once.
 
 Fill `--l-surface`, border 1 px `--l-line`, radius 20, padding 32 (question cards 28). Column. Variants:
 

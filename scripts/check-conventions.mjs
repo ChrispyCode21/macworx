@@ -73,6 +73,10 @@ const reuseRules = [
     message: 'Use <Button> from src/ui/Button, not a raw <button>.',
   },
   {
+    test: (l) => /["'`][^"'`]*(?<![\w-])practice-panel(?:-(?:problem|warm|soft))?(?![\w-])/.test(l),
+    message: 'Use <PracticePanel> from src/ui/PracticePanel, not a hand-written .practice-panel element.',
+  },
+  {
     test: (l) => /["'`][^"'`]*(?<![\w-])parent-section(?![\w-])/.test(l),
     message: 'Use <Panel> from src/ui/Panel, not a hand-written .parent-section element.',
   },

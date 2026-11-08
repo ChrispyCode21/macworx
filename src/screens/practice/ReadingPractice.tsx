@@ -6,6 +6,7 @@ import { LETTERS, READING_COUNT, READING_PASSAGE } from '../../practice/samples'
 import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { Button } from '../../ui/Button'
 import { READY_AFTER_MS, useReadyAfter, whenReady } from '../../ui/useReadyAfter'
+import { PracticePanel } from '../../ui/PracticePanel'
 import { BackToHomeButton } from './BackToHomeButton'
 import { ChoiceGroup, type ChoiceGroupHandle } from './ChoiceGroup'
 import { NextButton } from './NextButton'
@@ -121,12 +122,12 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
         {announcement}
       </p>
       {finished ? (
-        <section className="practice-panel practice-done">
+        <PracticePanel className="practice-done">
           <p className="practice-done-title">{COPY.readingDone}</p>
-        </section>
+        </PracticePanel>
       ) : onPassage ? (
         <div className="practice-reading practice-reading-passage">
-          <section className="practice-panel practice-passage" tabIndex={0} aria-labelledby={titleId}>
+          <PracticePanel className="practice-passage" tabIndex={0} aria-labelledby={titleId}>
             <div className="practice-passage-head">
               <p className="practice-eyebrow">
                 {COPY.readingEyebrow(READING_PASSAGE.kind, READING_PASSAGE.minutes)}
@@ -140,17 +141,17 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
                 <p key={p}>{p}</p>
               ))}
             </div>
-          </section>
-          <aside className="practice-panel-soft practice-companion">
+          </PracticePanel>
+          <PracticePanel as="aside" variant="soft" className="practice-companion">
             <BookOpenIcon size={24} />
             <p className="practice-guide-title">{COPY.readingGuideTitle}</p>
             <p className="practice-guide-text">{READING_PASSAGE.hint}</p>
-          </aside>
+          </PracticePanel>
         </div>
       ) : (
         <div className="practice-reading practice-reading-questions">
           {questions.map((item, q) => (
-            <section key={item.question} className="practice-panel practice-question-card">
+            <PracticePanel key={item.question} className="practice-question-card">
               <p className="practice-eyebrow practice-eyebrow-question">
                 {COPY.questionEyebrow(q + 1, item.skill)}
               </p>
@@ -175,7 +176,7 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
               ) : (
                 <p className="practice-footnote">{COPY.readingChooseOne}</p>
               )}
-            </section>
+            </PracticePanel>
           ))}
         </div>
       )}
