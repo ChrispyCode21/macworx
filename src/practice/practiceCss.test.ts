@@ -78,4 +78,66 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(weights.length).toBeGreaterThan(0)
     for (const weight of weights) expect(['400', '500', '600']).toContain(weight)
   })
+
+  // The first top-level rule (its selector starts in column 0, so none nested in a media query) whose selector list
+  // includes `selector`; with a trailing "!", the first rule that is for that selector alone (a later override of
+  // a grouped rule).
+  const declarations = (selector: string): string => {
+    const alone = selector.endsWith('!')
+    const name = alone ? selector.slice(0, -1) : selector
+    for (const m of practice.matchAll(/(?:^|\n)([^\s{}@/][^{}]*)\{([^}]*)\}/g)) {
+      const list = m[1].split(',').map((x) => x.trim())
+      if (alone ? list.length === 1 && list[0] === name : list.includes(name)) return m[2]
+    }
+    throw new Error(`no rule for ${selector}`)
+  }
+  // The declaration as a whole property: `height: 48px;` must not be satisfied by `min-height: 48px;`.
+  const has = (body: string, declaration: string) =>
+    new RegExp(`(?<![-\\w])${declaration.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(body)
+
+  // The sizes DESIGN-PRACTICE.md gives each component (a section per row). Pinned here so a change to one is
+  // a decision, not an accident.
+  const SIZES: [selector: string, declaration: string, where: string][] = [
+    ['.practice-chip', 'height: 48px;', '§6.1 status chip'],
+    ['.practice-avatar', 'width: 44px;', '§6.1 avatar circle'],
+    ['.practice-avatar', 'height: 44px;', '§6.1 avatar circle'],
+    ['.practice-heading', 'min-height: 90px;', '§6.2 heading block'],
+    ['.practice-context', 'height: 24px;', '§6.2 context row'],
+    ['.practice-task', 'min-height: 54px;', '§6.2 task row'],
+    ['.practice-progress', 'width: 182px;', '§6.2 progress bar'],
+    ['.practice-progress-track', 'height: 6px;', '§6.2 progress track'],
+    ['.practice-progress-fill', 'height: 6px;', '§6.2 progress fill'],
+    ['.practice-activity', 'min-height: 478px;', '§3 activity row'],
+    ['.practice-actions', 'height: 64px;', '§6.3 buttons row'],
+    ['.button-action', 'height: 56px;', '§7.4 action'],
+    ['.button-action', 'min-width: 220px;', '§7.4 action'],
+    ['.button-action-secondary!', 'min-width: 170px;', '§7.4 action-secondary'],
+    ['.button-crumb', 'min-height: 44px;', '§7.4 crumb hit area'],
+    ['.button-support', 'height: 44px;', '§7.4 support hit area'],
+    ['.practice .button-key', 'height: 72px;', '§7.4 and §8 key'],
+    ['.button-play', 'width: 112px;', '§7.4 play'],
+    ['.button-play', 'height: 112px;', '§7.4 play'],
+    ['.button-choice', 'min-height: 78px;', '§7.3 choice'],
+    ['.choice-marker', 'width: 32px;', '§7.3 choice marker'],
+    ['.choice-marker', 'height: 32px;', '§7.3 choice marker'],
+    ['.practice-listen-text', 'width: 360px;', '§10 listen text'],
+    ['.practice-choices-head', 'height: 30px;', '§10 choices heading'],
+    ['.practice-question', 'min-height: 64px;', '§12 question'],
+  ]
+
+  it.each(SIZES)('%s has %s (%s)', (selector, declaration) => {
+    expect(has(declarations(selector), declaration), `${selector} lacks ${declaration}`).toBe(true)
+  })
+
+  it('gives every practice button that carries text its own font weight, not the base 700', () => {
+    for (const selector of [
+      '.button-action',
+      '.button-action-secondary',
+      '.button-crumb',
+      '.button-support',
+      '.button-choice',
+      '.practice .button-key',
+    ])
+      expect(declarations(selector), selector).toMatch(/font-weight:\s*(400|500|600);/)
+  })
 })
