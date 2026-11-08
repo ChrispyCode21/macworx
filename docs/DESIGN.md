@@ -102,7 +102,6 @@ Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-
 | row-amount | 12 | 13 | 600 | normal | as is | accent-ink (earned) / text-muted | "+30" right side |
 | activity-title | 13 | 13 | 600 | 1.45 | as is | text-strong | Macaronis activity |
 | activity-amount | 16 | 18 | 600 | normal | as is | accent-ink | "+30", uses U+2212 for minus |
-| activity-balance | 10 | 10 | 400 | normal | as is | text-muted | "Balance 240" |
 | field-label | 12 | 12 | 600 | 1.45 | as is | text-muted | form labels |
 | field-input | 14 | 14 | 400 | 1.45 | as is | text-strong | input value |
 | field-unit | 12 | 12 | 400 | normal | as is | text-muted | "Macaronis", "days" |
@@ -378,8 +377,8 @@ Copy: title "Macaronis, kept fair." Subline "Adjust {name}'s balance without cha
    - After Review: confirm step (section 7). Confirm calls `adjustBalance(amount, note)`.
 3. **Recent activity** [wide: left column under hero]
    - Section heading "Recent activity" + action "Full history" (expands to LIST_LIMIT 50).
-   - Panel padding 18 [22], gap 14 [20]; rows separated by dividers. Row: flex, align center, gap 10, icon 18 [20] (`--p-accent-ink`; check for earned, ticket for redemption in Figma), Event (flex 1, gap 3 [4]): activity-title, row-meta; Amount column fixed 76 wide, right aligned, gap 3 [4]: activity-amount "+30" / "−120" (16 [18] / 600), activity-balance "Balance 240" (10).
-   - Rows are the admin log (`GET /api/parent/log`, newest first, up to 50). One row per entry; the title is the existing `src/copy.ts` string for its `action`; the amount column is empty (no amount, no balance line) except for `balance` entries, which show `detail.amount` (signed) and "Balance {detail.after}". The meta line is the entry's date and time (`at`).
+   - Panel padding 18 [22], gap 14 [20]; rows separated by dividers. Row: flex, align center, gap 10, icon 18 [20] (`--p-accent-ink`; check for earned, ticket for redemption in Figma), Event (flex 1, gap 3 [4]): activity-title, row-meta; Amount column fixed 76 wide, right aligned: activity-amount "+30" / "−120" (16 [18] / 600). There is no balance line (SPEC §5.3: the row shows the signed amount, "and not her balance before or after").
+   - Rows are the admin log (`GET /api/parent/log`, newest first, up to 50). One row per entry; the title is the existing `src/copy.ts` string for its `action`; the amount column is empty except for `balance` entries, which show `detail.amount` (signed) and nothing else. The meta line is the entry's date and time (`at`).
 
      | `action` | Icon (`--p-accent-ink`) | Title (existing copy key) |
      |---|---|---|
@@ -497,7 +496,7 @@ Legend: **Real** = already returned by an existing route. **Derived** = computed
 | "+{earned} earned today" | Derived | as above |
 | "−120 redeemed yesterday", "Movie night redeemed" | Not built | no purchases table (decision 10) |
 | Adjust form | Real | `adjustBalance(amount, note)`; 409 `overdraw` returns balance; note 1 to 200 chars |
-| Recent activity rows | Real + derived | `listLog()` entries (`action`: `balance`, `streak`, pair/unpair, old `correction`; `detail` has `amount`, `before`, `after`, `note` for balance) merged with finished `listResults()` rows, newest first; "Balance {after}" is real only on `balance` entries (`detail.after`); on result rows omit the balance line |
+| Recent activity rows | Real + derived | `listLog()` entries (`action`: `balance`, `streak`, pair/unpair, old `correction`; `detail` has `amount`, `before`, `after`, `note` for balance) merged with finished `listResults()` rows, newest first; no balance line (SPEC §5.3) |
 | Streak count and range | Real + derived | `Summary.streak`, `Summary.lastDay`; range = last `min(streak, 7)` days ending on `lastDay` |
 | Weekday tiles state | Derived | same as above |
 | "Personal best: {n} days" | Placeholder | `src/parent/placeholders.ts` (`personalBestStreak`) |
