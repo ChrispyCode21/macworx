@@ -105,4 +105,11 @@ describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
     )
     expect(portal).toMatch(/\.portal-switcher li \.button-bare \{[^}]*height: 48px;/)
   })
+
+  it('resets heading and paragraph weight at element level, so a class can set its own (docs/DESIGN.md §4)', () => {
+    expect(portal).toMatch(/\n:where\(\.parent\) :is\(h1, h2, h3, p\) \{[^}]*font-weight: 400;/)
+    expect(portal, 'a class-level reset out-ranks single-class weights').not.toMatch(
+      /\n\.parent h1,\s*\.parent h2/,
+    )
+  })
 })
