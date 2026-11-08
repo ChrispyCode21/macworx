@@ -2812,7 +2812,7 @@ p {
   font-weight: 400;
 }
 
-.practice .practice-spelling-response {
+.practice .practice-inline-response {
   flex: none;
   align-items: flex-start;
   justify-content: flex-start;
@@ -2945,12 +2945,5 @@ p {
   flex: 1;
   font-size: var(--text-17);
   line-height: 1.4;
-}
-
-.practice .practice-reading-response {
-  flex: none;
-  align-items: flex-start;
-  justify-content: flex-start;
-  text-align: left;
 }
 /* practice: end */

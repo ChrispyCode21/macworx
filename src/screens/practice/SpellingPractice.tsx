@@ -9,7 +9,9 @@ import { Button } from '../../ui/Button'
 import { PracticePanel } from '../../ui/PracticePanel'
 import { BackToHomeButton } from './BackToHomeButton'
 import { ChoiceGroup, type ChoiceGroupHandle } from './ChoiceGroup'
+import { InlineResponse } from './InlineResponse'
 import { NextButton } from './NextButton'
+import { PracticeDone } from './PracticeDone'
 import { PracticeFrame } from './PracticeFrame'
 
 interface Props {
@@ -101,9 +103,7 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
         {finished ? COPY.spellingDone(SPELLING_COUNT) : response}
       </p>
       {finished ? (
-        <PracticePanel className="practice-done">
-          <p className="practice-done-title">{COPY.spellingDone(SPELLING_COUNT)}</p>
-        </PracticePanel>
+        <PracticeDone>{COPY.spellingDone(SPELLING_COUNT)}</PracticeDone>
       ) : (
         <PracticePanel className="practice-spelling">
           <div className="practice-listen">
@@ -143,9 +143,7 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
               right={right}
             />
             {response ? (
-              <div className="response practice-spelling-response">
-                <p className={right ? 'response-lead' : 'response-equation'}>{response}</p>
-              </div>
+              <InlineResponse right={right}>{response}</InlineResponse>
             ) : (
               <p className="practice-footnote">
                 {chosen === null ? COPY.spellingChooseOne : COPY.readyToCheck}
