@@ -97,4 +97,12 @@ describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
     expect(rule('parent-section')).toMatch(/border-radius: var\(--radius-panel\);/)
     expect(rule('overview-stat'), 'a stat card repeats the panel look').not.toMatch(/border|background/)
   })
+
+  it('sizes the switcher chevron on its button only, not on the list rows (docs/DESIGN.md §6.3)', () => {
+    expect(portal).toContain('.portal-switcher > .button-bare svg {')
+    expect(portal, 'the chevron size rule reaches the list rows').not.toMatch(
+      /\.portal-switcher \.button-bare svg/,
+    )
+    expect(portal).toMatch(/\.portal-switcher li \.button-bare \{[^}]*height: 48px;/)
+  })
 })
