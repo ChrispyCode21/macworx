@@ -12,6 +12,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Changed
 
+- **Two text sizes follow the design (parents):** reward names in the Shop are 14 (they were 15), and the line under "Child access only" on Devices is 11 (it was 12).
 - **The three top panels match (parents):** Today's homework, Available balance and Current streak now share one look, and their small headings are bold, as the design says.
 - **Streak's top panel:** it now has a "CURRENT STREAK" heading with the flame beside it (as Today's homework has its sun). The number is shown with "days" next to it, and the line below it shows just the date range, for example "Oct 14–16".
 - **While the balance loads (parents):** Available balance shows its placeholder without "Macaronis" beside it, so a failed read no longer reads "Not available right now. Macaronis".

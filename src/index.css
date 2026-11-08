@@ -824,7 +824,6 @@ p {
 
 .device-name {
   font-size: var(--text-15);
-  font-weight: 600;
   color: var(--p-text);
   overflow-wrap: anywhere;
 }
@@ -1224,7 +1223,7 @@ p {
 }
 
 .access-body {
-  font-size: var(--text-12);
+  font-size: var(--text-11);
   color: var(--p-text);
 }
 
@@ -1424,7 +1423,7 @@ p {
 }
 
 .shop-name {
-  font-size: var(--text-15);
+  font-size: var(--text-14);
   font-weight: 600;
 }
 
