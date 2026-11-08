@@ -312,10 +312,7 @@ p {
   box-sizing: border-box;
 }
 
-.parent h1,
-.parent h2,
-.parent h3,
-.parent p {
+:where(.parent) :is(h1, h2, h3, p) {
   margin: 0;
   font-weight: 400;
 }
@@ -1226,7 +1223,7 @@ p {
 
 .access-body {
   font-size: var(--text-11);
-  color: var(--p-text);
+  color: var(--p-muted);
 }
 
 @media (min-width: 768px) {
@@ -1427,7 +1424,6 @@ p {
 
 .shop-price {
   font-size: var(--text-11);
-  font-weight: 600;
   color: var(--p-muted);
 }
 
