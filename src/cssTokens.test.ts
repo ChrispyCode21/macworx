@@ -29,10 +29,7 @@ const REM_SIZES = [
   'h1 2.4rem',
   '.button-primary 1.6rem',
   '.button-check 1.2rem',
-  '.stacked 2.8rem',
-  '.response-lead 1.8rem',
-  '.response-equation 1.6rem',
-  '.result-macaronis 1.6rem',
+  '.result-count, .result-macaronis 1.6rem',
   '.home-numbers li 1.4rem',
   '.code-boxes 2.8rem',
 ]
@@ -116,8 +113,15 @@ describe('size tokens', () => {
     const literal: string[] = []
     const rem: string[] = []
     let selector = ''
+    // The lines of a selector list so far (`.a,` then `.b {`), so every selector of a group is named.
+    let group = ''
     for (const line of css.split('\n')) {
-      if (line.trimEnd().endsWith('{')) selector = line.trim().replace(/\s*\{$/, '')
+      const text = line.trim()
+      if (text.endsWith(',')) group = `${group} ${text}`.trim()
+      else if (text.endsWith('{')) {
+        selector = `${group} ${text.replace(/\s*\{$/, '')}`.trim()
+        group = ''
+      } else if (text.endsWith(';') || text.endsWith('}')) group = ''
       const m = line.match(/font-size:\s*(\d*\.?\d+)(px|rem|em)/i)
       if (!m) continue
       if (m[2] === 'px') {
