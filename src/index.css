@@ -986,8 +986,6 @@ p {
   .portal-switcher li .button-bare {
     height: auto;
     min-height: 48px;
-    padding: 0 var(--space-12);
-    gap: var(--space-10);
   }
 
   .portal-avatar {
