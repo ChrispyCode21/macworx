@@ -367,7 +367,7 @@ p {
   text-align: left;
 }
 
-.portal-switcher .button-bare svg {
+.portal-switcher > .button-bare svg {
   flex-shrink: 0;
   width: 17px;
   height: 17px;
@@ -384,6 +384,7 @@ p {
 }
 
 .portal-switcher li .button-bare {
+  height: 48px;
   border: 1px solid var(--p-divider);
   background: var(--p-surface);
 }
@@ -824,7 +825,6 @@ p {
 
 .device-name {
   font-size: var(--text-15);
-  font-weight: 600;
   color: var(--p-text);
   overflow-wrap: anywhere;
 }
@@ -978,9 +978,14 @@ p {
     gap: var(--space-7);
   }
 
-  .portal-switcher .button-bare svg {
+  .portal-switcher > .button-bare svg {
     width: 14px;
     height: 14px;
+  }
+
+  .portal-switcher li .button-bare {
+    height: auto;
+    min-height: 48px;
   }
 
   .portal-avatar {
@@ -1074,6 +1079,7 @@ p {
   }
 
   .parent-section {
+    gap: var(--space-16);
     padding: var(--space-22);
   }
 
@@ -1085,11 +1091,6 @@ p {
 
   .device-list {
     gap: var(--space-16);
-  }
-
-  .device-card.parent-section {
-    gap: var(--space-16);
-    padding: var(--space-22);
   }
 
   .parent-heading-row {
@@ -1224,15 +1225,11 @@ p {
 }
 
 .access-body {
-  font-size: var(--text-12);
+  font-size: var(--text-11);
   color: var(--p-text);
 }
 
 @media (min-width: 768px) {
-  .pair-panel {
-    gap: var(--space-16);
-  }
-
   .pair-intro-text {
     gap: var(--space-6);
   }
@@ -1424,7 +1421,7 @@ p {
 }
 
 .shop-name {
-  font-size: var(--text-15);
+  font-size: var(--text-14);
   font-weight: 600;
 }
 
@@ -1700,15 +1697,6 @@ p {
 }
 
 @media (min-width: 768px) {
-  .points-adjust .parent-section,
-  .points-activity .parent-section {
-    padding: var(--space-22);
-  }
-
-  .points-adjust .parent-section {
-    gap: var(--space-16);
-  }
-
   .points-activity .parent-section {
     gap: var(--space-20);
   }
@@ -1905,12 +1893,6 @@ p {
   .streak-preview svg {
     width: 20px;
     height: 20px;
-  }
-
-  .streak-week .parent-section,
-  .streak-correct .parent-section {
-    gap: var(--space-16);
-    padding: var(--space-22);
   }
 }
 
