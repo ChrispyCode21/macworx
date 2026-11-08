@@ -245,6 +245,7 @@ The builder must re-run the ratios (a ten-line script) if any token value change
 ## 7. Shared components
 
 ### Panel (card)
+Built as `src/ui/Panel.tsx` (`as` section, div or li; a screen's own class adds what is specific to it); `check-conventions` fails on a hand-written `.parent-section`. The Overview stat cards are panels too, with padding 16 [20] and gap 7 [8] set on `.overview-stat`.
 Fill `--p-surface`, border 1 px `--p-divider`, radius 20, padding 18 (wide 22), flex column. Inner gap 14 phone; wide gap 16 unless the screen says otherwise.
 
 ### Hero panel

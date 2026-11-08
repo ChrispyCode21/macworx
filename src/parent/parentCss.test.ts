@@ -90,4 +90,11 @@ describe('the parent portal CSS (docs/DESIGN.md §2, §3, §5)', () => {
       /\.(?:overview|shop|streak|points|devices)-heading|\.(?:overview-view-all|shop-action|streak-heading-action)\b/,
     )
   })
+
+  it('draws the panel look (border, radius, fill) once, in .parent-section (docs/DESIGN.md §7)', () => {
+    const rule = (name: string) => portal.match(new RegExp(`\\n\\.${name} \\{[^}]*\\}`))?.[0] ?? ''
+    expect(rule('parent-section')).toMatch(/border: 1px solid var\(--p-divider\);/)
+    expect(rule('parent-section')).toMatch(/border-radius: var\(--radius-panel\);/)
+    expect(rule('overview-stat'), 'a stat card repeats the panel look').not.toMatch(/border|background/)
+  })
 })

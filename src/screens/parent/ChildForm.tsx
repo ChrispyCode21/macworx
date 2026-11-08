@@ -7,6 +7,7 @@ import type { FieldError } from '../../parent/childFields'
 import { Button } from '../../ui/Button'
 import { Segmented } from '../../ui/Segmented'
 import { TextField } from '../../ui/TextField'
+import { Panel } from '../../ui/Panel'
 
 export type ChildMode = 'add' | 'rename'
 
@@ -114,7 +115,7 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
   }
 
   return (
-    <section className="parent-section" aria-labelledby="children-heading">
+    <Panel aria-labelledby="children-heading">
       <h2 id="children-heading">{COPY.parentChildrenHeading}</h2>
       {child && (
         <Segmented
@@ -163,6 +164,6 @@ export function ChildForm({ mode, onMode, child, focusName, onFocused, onAdded, 
         </p>
       )}
       <p role="status">{notice ?? ''}</p>
-    </section>
+    </Panel>
   )
 }
