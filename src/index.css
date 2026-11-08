@@ -1081,6 +1081,7 @@ p {
   }
 
   .parent-section {
+    gap: var(--space-16);
     padding: var(--space-22);
   }
 
@@ -1092,11 +1093,6 @@ p {
 
   .device-list {
     gap: var(--space-16);
-  }
-
-  .device-card.parent-section {
-    gap: var(--space-16);
-    padding: var(--space-22);
   }
 
   .parent-heading-row {
@@ -1236,10 +1232,6 @@ p {
 }
 
 @media (min-width: 768px) {
-  .pair-panel {
-    gap: var(--space-16);
-  }
-
   .pair-intro-text {
     gap: var(--space-6);
   }
@@ -1707,15 +1699,6 @@ p {
 }
 
 @media (min-width: 768px) {
-  .points-adjust .parent-section,
-  .points-activity .parent-section {
-    padding: var(--space-22);
-  }
-
-  .points-adjust .parent-section {
-    gap: var(--space-16);
-  }
-
   .points-activity .parent-section {
     gap: var(--space-20);
   }
@@ -1912,12 +1895,6 @@ p {
   .streak-preview svg {
     width: 20px;
     height: 20px;
-  }
-
-  .streak-week .parent-section,
-  .streak-correct .parent-section {
-    gap: var(--space-16);
-    padding: var(--space-22);
   }
 }
 
