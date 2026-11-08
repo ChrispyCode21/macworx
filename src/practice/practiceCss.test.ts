@@ -79,17 +79,21 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     for (const weight of weights) expect(['400', '500', '600']).toContain(weight)
   })
 
-  // The first top-level rule (not one nested in a media query) whose selector list includes `selector`; with a
-  // trailing "!", the first rule that is for that selector alone (a later override of a grouped rule).
+  // The first top-level rule (its selector starts in column 0, so none nested in a media query) whose selector list
+  // includes `selector`; with a trailing "!", the first rule that is for that selector alone (a later override of
+  // a grouped rule).
   const declarations = (selector: string): string => {
     const alone = selector.endsWith('!')
     const name = alone ? selector.slice(0, -1) : selector
-    for (const m of practice.matchAll(/(?:^|\n)([^\n{}@/][^{}]*)\{([^}]*)\}/g)) {
+    for (const m of practice.matchAll(/(?:^|\n)([^\s{}@/][^{}]*)\{([^}]*)\}/g)) {
       const list = m[1].split(',').map((x) => x.trim())
       if (alone ? list.length === 1 && list[0] === name : list.includes(name)) return m[2]
     }
     throw new Error(`no rule for ${selector}`)
   }
+  // The declaration as a whole property: `height: 48px;` must not be satisfied by `min-height: 48px;`.
+  const has = (body: string, declaration: string) =>
+    new RegExp(`(?<![-\\w])${declaration.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(body)
 
   // The sizes DESIGN-PRACTICE.md gives each component (a section per row). Pinned here so a change to one is
   // a decision, not an accident.
@@ -122,7 +126,7 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
   ]
 
   it.each(SIZES)('%s has %s (%s)', (selector, declaration) => {
-    expect(declarations(selector)).toContain(declaration)
+    expect(has(declarations(selector), declaration), `${selector} lacks ${declaration}`).toBe(true)
   })
 
   it('gives every practice button that carries text its own font weight, not the base 700', () => {
