@@ -230,7 +230,9 @@ The builder must re-run the ratios (a ten-line script) if any token value change
 - Avatar: circle 36 (wide 32), fill `--p-avatar`, `{initials}` (13 px, wide 12, `--p-text`).
 - Identity (flex 1, min-width 0, gap 1; wide gap 3): `{name}` (switcher-name), `{grade} · Child profile` (switcher-sub).
 - Chevrons-up-down icon 17 (wide 14), color `--p-accent-ink`.
-- Phone: height 58. Wide: min-height 76, padding 10, gap 7.
+- Phone: height 58. Wide: min-height 76, padding 10, gap 7. These sizes and the chevron are for the container button only.
+- With no grade, the sub line is "Child profile" alone.
+- The list rows (choose, Rename, and Add a child) are 48 high (min-height 48 on wide), padding-inline 12, gap 10, with a 1 px `--p-divider` border and `--p-surface` fill (`--p-chip` for the current child); the plus icon in "Add a child" is 18.
 
 ### 6.4 Wide (768 px and up): sidebar replaces header and bottom nav
 
