@@ -68,9 +68,15 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(rule('.practice-panel-warm')).toContain('padding: var(--space-24);')
     // 24 + 24 + 16 + 4 keys + 3 gaps of 10 + 24, from the key token (406 at 72px).
     expect(practice).toContain('--practice-key: 72px;')
+    expect(practice).toContain('--practice-pad-heading: 24px;')
     // Sum the calc term by term: the whole pad panel is 406px tall, so a dropped or changed term fails.
     const calc = /min-height: calc\(([\s\S]*?)\);/.exec(rule('.practice-panel-warm'))?.[1] ?? ''
-    const px = (name: string) => (name === 'practice-key' ? 72 : Number(/^space-(\d+)$/.exec(name)?.[1]))
+    const px = (name: string) =>
+      name === 'practice-key'
+        ? 72
+        : name === 'practice-pad-heading'
+          ? 24
+          : Number(/^space-(\d+)$/.exec(name)?.[1])
     const total = calc
       .split('+')
       .map((term) => {
@@ -132,6 +138,12 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ['.button-action', 'min-width: 220px;', '§7.4 action'],
     ['.button-action-secondary!', 'min-width: 170px;', '§7.4 action-secondary'],
     ['.button-crumb', 'min-height: 44px;', '§7.4 crumb hit area'],
+    [
+      '.button-support',
+      'border-radius: 0;',
+      '§7.4 support: square like the crumb, so their focus rings match (#191)',
+    ],
+    ['.practice-pad-heading', 'height: var(--practice-pad-heading);', '§8 pad heading, from its token'],
     ['.button-support', 'height: 44px;', '§7.4 support hit area'],
     ['.practice .button-key', 'height: var(--practice-key);', '§7.4 and §8 key (72px)'],
     ['.button-play', 'width: 112px;', '§7.4 play'],

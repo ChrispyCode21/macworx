@@ -220,7 +220,7 @@ p {
   font-size: 1.6rem;
 }
 
-/* Her numbers on Home (SPEC §5.1): a wrapping row of soft pills. */
+/* Her numbers on Home (SPEC §5.1): a wrapping row of soft rounded boxes. */
 .home-numbers {
   display: flex;
   flex-wrap: wrap;
@@ -895,6 +895,25 @@ p {
 .parent .text-field-input:focus-visible {
   outline: 2px solid var(--p-accent-ink);
   outline-offset: 2px;
+}
+
+/* TextField's own base rules; the portal's below override them. */
+.text-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.text-field-input {
+  font: inherit;
+  padding: var(--space-12);
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+}
+
+.text-field-hint {
+  opacity: 0.8;
 }
 
 .parent .text-field {
@@ -2187,24 +2206,6 @@ p {
 }
 /* parent portal: end */
 
-.text-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  width: 100%;
-}
-
-.text-field-input {
-  font: inherit;
-  padding: var(--space-12);
-  border: 2px solid var(--accent);
-  border-radius: 10px;
-}
-
-.text-field-hint {
-  opacity: 0.8;
-}
-
 /* Read by VoiceOver, not shown. */
 .visually-hidden {
   position: absolute;
@@ -2232,6 +2233,8 @@ p {
   --l-muted: #6b5420;
   /* A number pad key's height (docs/DESIGN-PRACTICE.md §7.4); the pad panel's height is built from it. */
   --practice-key: 72px;
+  /* The pad panel's heading row (docs/DESIGN-PRACTICE.md §8). */
+  --practice-pad-heading: 24px;
   box-sizing: border-box;
   min-height: 100dvh;
   display: flex;
@@ -2244,10 +2247,6 @@ p {
 .practice *::before,
 .practice *::after {
   box-sizing: border-box;
-}
-
-.practice h1 {
-  font-size: var(--text-30);
 }
 
 .practice-bar {
@@ -2374,17 +2373,18 @@ p {
   font-weight: 500;
 }
 
-.practice-progress-track {
-  display: block;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--l-line);
-}
-
+.practice-progress-track,
 .practice-progress-fill {
   display: block;
   height: 6px;
   border-radius: var(--radius-pill);
+}
+
+.practice-progress-track {
+  background: var(--l-line);
+}
+
+.practice-progress-fill {
   background: var(--l-link);
 }
 
@@ -2420,7 +2420,8 @@ p {
 /* The number pad. The response replaces its contents. The panel is at least as tall as the pad (padding 24, heading 24, gap 16, 4 keys, 3 gaps of 10, padding 24 = 406 at a 72px key), so the response fits without a jump. */
 .practice-panel-warm {
   min-height: calc(
-    var(--space-24) + 24px + var(--space-16) + 4 * var(--practice-key) + 3 * var(--space-10) + var(--space-24)
+    var(--space-24) + var(--practice-pad-heading) + var(--space-16) + 4 * var(--practice-key) + 3 *
+      var(--space-10) + var(--space-24)
   );
   gap: var(--space-16);
   padding: var(--space-24);
@@ -2458,7 +2459,7 @@ p {
 }
 
 .practice-pad-heading {
-  height: 24px;
+  height: var(--practice-pad-heading);
   color: var(--l-text);
   font-size: var(--text-15);
   font-weight: 600;
@@ -2632,10 +2633,17 @@ p {
   height: 44px;
   padding: 0;
   border: none;
+  border-radius: 0;
   background: none;
   color: var(--l-link);
   font-size: var(--text-14);
   font-weight: 500;
+}
+
+.word-choice,
+.answer-choice {
+  flex: 1;
+  line-height: 1.4;
 }
 
 .button-choice {
@@ -2779,9 +2787,7 @@ p {
 }
 
 .word-choice {
-  flex: 1;
   font-size: var(--text-24);
-  line-height: 1.4;
 }
 
 .practice-footnote {
@@ -2920,8 +2926,6 @@ p {
 }
 
 .answer-choice {
-  flex: 1;
   font-size: var(--text-17);
-  line-height: 1.4;
 }
 /* practice: end */

@@ -89,6 +89,14 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
   - This is not in Figma. Today's assignment also stacks in portrait.
 - **Short landscape viewports:** the page scrolls; nothing shrinks below the sizes here. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
 
+**Values the Figma frames do not give.** These are in the CSS, decided with the owner on 2026-11-08 (issue #191). Only the pad panel's height and its two tokens are pinned by tests:
+
+- Spelling: the listen block's padding is 32 24 (vertical, horizontal); below 1024 the listen block and the choices stack with a gap of 32.
+- Reading: a choice's `padding-block` is 12.
+- Math: the answer box is 68 high, and the stacked digits are 52 in cells 57 wide (`--digit`).
+- The warm number-pad panel is at least 406 high: its padding 24, heading 24 (`--practice-pad-heading`), gap 16, four keys of 72 (`--practice-key`), three key gaps of 10, and its padding 24.
+- `action` and `action-secondary` have 24 of padding-inline.
+
 ## 4. Type scale
 
 Sizes are the shared `--text-N` custom properties (docs/DESIGN.md §4); a literal px `font-size` fails `src/cssTokens.test.ts`.
