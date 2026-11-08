@@ -164,11 +164,8 @@ p {
   /* The operator, then one column per place value (StackedProblem sets --columns). */
   grid-template-columns: auto repeat(var(--columns), var(--digit));
   column-gap: var(--space-6);
-  font-size: 2.8rem;
-  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-  --digit: 1.1em;
+  /* The size, weight and --digit (the cell width) come from .practice .stacked: Math runs inside the practice frame. */
 }
 
 .stacked-digit {
@@ -181,8 +178,6 @@ p {
 
 .stacked-rule {
   grid-column: 1 / -1;
-  border-top: 6px solid var(--ink);
-  margin: var(--space-8) 0;
 }
 
 .answer-box {
@@ -216,35 +211,13 @@ p {
   gap: var(--gap);
 }
 
-.response {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--gap);
-  /* As tall as the pad, so the screen doesn't jump between pad and response. */
-  min-height: calc(4 * var(--key) + 3 * var(--gap));
-  justify-content: center;
-}
-
-.response-lead {
-  font-size: 1.8rem;
-  font-weight: 700;
-}
-
 .response-equation {
-  font-size: 1.6rem;
   font-variant-numeric: tabular-nums;
 }
 
 .result-count,
 .result-macaronis {
   font-size: 1.6rem;
-}
-
-.note {
-  padding: var(--space-12) var(--space-20);
-  border-radius: var(--radius);
-  background: var(--soft);
 }
 
 /* Her numbers on Home (SPEC §5.1): a wrapping row of soft pills. */
@@ -279,7 +252,7 @@ p {
   gap: var(--gap);
 }
 
-/* The pairing code's six boxes (CodeBoxes), the same size as the answer boxes. */
+/* The pairing code's six boxes (CodeBoxes): the answer-box look at its own size (67px digits), wider than Math's. */
 .code-boxes {
   display: grid;
   grid-template-columns: repeat(6, 1.1em);
