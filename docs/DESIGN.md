@@ -118,7 +118,7 @@ Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-
 | device-name | 15 | 16 | 400 | 1.45 | as is | text-strong | device card |
 | pair-title / pair-body | 15 600 / 12 400 | same | | 1.45 | as is | text-strong / text-muted | pairing card |
 | access-title / access-body | 13 600 / 11 400 | same | | 1.45 | as is | text-strong / text-muted | Child access card |
-| code-digits | 58 (existing `.parent-code-digits` 2.4rem at the 24 px root, now in px) | | 700 | normal | | text-strong | pairing code (no Figma frame; see Devices) |
+| code-digits | 58 (existing `.parent-code-digits` 2.4rem at the 24 px root, now in px) | | 600 | normal | | text-strong | pairing code (no Figma frame; see Devices) |
 
 ## 5. Color roles and tokens
 
