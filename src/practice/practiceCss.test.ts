@@ -66,7 +66,26 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(rule('.practice-panel')).toContain('padding: var(--space-32);')
     expect(rule('.practice-panel-warm')).toContain('background: var(--l-warm);')
     expect(rule('.practice-panel-warm')).toContain('padding: var(--space-24);')
-    expect(rule('.practice-panel-warm')).toContain('min-height: 406px;')
+    // 24 + 24 + 16 + 4 keys + 3 gaps of 10 + 24, from the key token (406 at 72px).
+    expect(practice).toContain('--practice-key: 72px;')
+    // Sum the calc term by term: the whole pad panel is 406px tall, so a dropped or changed term fails.
+    const calc = /min-height: calc\(([\s\S]*?)\);/.exec(rule('.practice-panel-warm'))?.[1] ?? ''
+    const px = (name: string) => (name === 'practice-key' ? 72 : Number(/^space-(\d+)$/.exec(name)?.[1]))
+    const total = calc
+      .split('+')
+      .map((term) => {
+        const factors = term
+          .trim()
+          .split('*')
+          .map((f) => f.trim())
+        return factors.reduce(
+          (product, f) =>
+            product * (/^var\(--(.+)\)$/.test(f) ? px(/^var\(--(.+)\)$/.exec(f)![1]) : parseFloat(f)),
+          1,
+        )
+      })
+      .reduce((sum, n) => sum + n, 0)
+    expect(total).toBe(406)
     // Link text on the warm panel is 4.42:1, so its heading is plain text.
     expect(rule('.practice-panel-warm')).not.toContain('--l-link')
     expect(rule('.practice-pad-heading')).not.toContain('--l-link')
@@ -114,7 +133,7 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ['.button-action-secondary!', 'min-width: 170px;', '§7.4 action-secondary'],
     ['.button-crumb', 'min-height: 44px;', '§7.4 crumb hit area'],
     ['.button-support', 'height: 44px;', '§7.4 support hit area'],
-    ['.practice .button-key', 'height: 72px;', '§7.4 and §8 key'],
+    ['.practice .button-key', 'height: var(--practice-key);', '§7.4 and §8 key (72px)'],
     ['.button-play', 'width: 112px;', '§7.4 play'],
     ['.button-play', 'height: 112px;', '§7.4 play'],
     ['.button-choice', 'min-height: 78px;', '§7.3 choice'],

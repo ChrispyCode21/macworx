@@ -2252,6 +2252,8 @@ p {
   --l-avatar: #f2c46b;
   --l-text: var(--ink);
   --l-muted: #6b5420;
+  /* A number pad key's height (docs/DESIGN-PRACTICE.md §7.4); the pad panel's height is built from it. */
+  --practice-key: 72px;
   box-sizing: border-box;
   min-height: 100dvh;
   display: flex;
@@ -2437,9 +2439,11 @@ p {
   justify-content: space-between;
 }
 
-/* The number pad. The response replaces its contents. The panel is at least as tall as the pad (24 + 24 + 16 + 4 x 72 + 3 x 10 + 24), so the response fits without a jump. */
+/* The number pad. The response replaces its contents. The panel is at least as tall as the pad (padding 24, heading 24, gap 16, 4 keys, 3 gaps of 10, padding 24 = 406 at a 72px key), so the response fits without a jump. */
 .practice-panel-warm {
-  min-height: 406px;
+  min-height: calc(
+    var(--space-24) + 24px + var(--space-16) + 4 * var(--practice-key) + 3 * var(--space-10) + var(--space-24)
+  );
   gap: var(--space-16);
   padding: var(--space-24);
   border: none;
@@ -2618,7 +2622,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 72px;
+  height: var(--practice-key);
   border-radius: var(--radius-control);
   background: var(--l-surface);
   color: var(--l-text);
