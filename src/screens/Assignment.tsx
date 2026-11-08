@@ -16,6 +16,7 @@ import { CheckIcon } from '../practice/icons'
 import type { HomeNumbers, PracticeChild } from '../sync/projection'
 import { Button } from '../ui/Button'
 import { formatEquation } from '../ui/format'
+import { PracticePanel } from '../ui/PracticePanel'
 import { NextButton } from './practice/NextButton'
 import { PracticeFrame } from './practice/PracticeFrame'
 
@@ -94,7 +95,7 @@ export function Assignment({ seed, numbers, child, onFinish, onLeave }: Props) {
         )
       }
     >
-      <section className="practice-panel practice-panel-problem">
+      <PracticePanel variant="problem">
         <div className="practice-instructions">
           <p className="practice-eyebrow">{COPY.mathEyebrow(problem.operation)}</p>
           <p className="practice-instruction">{COPY.mathInstruction(problem.operation)}</p>
@@ -113,8 +114,8 @@ export function Assignment({ seed, numbers, child, onFinish, onLeave }: Props) {
         <p className="visually-hidden" aria-live="polite">
           {response && [lead, formatEquation(problem), after].filter(Boolean).join(' ')}
         </p>
-      </section>
-      <section className="practice-panel practice-panel-warm">
+      </PracticePanel>
+      <PracticePanel variant="warm">
         {response === null ? (
           <>
             <p className="practice-pad-heading">{COPY.padHeading}</p>
@@ -131,7 +132,7 @@ export function Assignment({ seed, numbers, child, onFinish, onLeave }: Props) {
             {after && <p className="response-after">{after}</p>}
           </div>
         )}
-      </section>
+      </PracticePanel>
     </PracticeFrame>
   )
 }

@@ -140,4 +140,14 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ])
       expect(declarations(selector), selector).toMatch(/font-weight:\s*(400|500|600);/)
   })
+
+  it('draws the panel look (border, radius, flex column) once, in .practice-panel (docs/DESIGN-PRACTICE.md §7.1)', () => {
+    expect(declarations('.practice-panel')).toMatch(/border: 1px solid var\(--l-line\);/)
+    expect(declarations('.practice-panel')).toMatch(/border-radius: var\(--radius-panel\);/)
+    expect(declarations('.practice-panel')).toMatch(/flex-direction: column;/)
+    // The variants only change what differs.
+    expect(declarations('.practice-panel-soft'), 'the soft panel repeats the panel look').not.toMatch(
+      /display|flex-direction|border-radius|min-width/,
+    )
+  })
 })

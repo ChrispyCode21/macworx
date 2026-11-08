@@ -6,6 +6,7 @@ import { SPELLING_COUNT, SPELLING_WORDS } from '../../practice/samples'
 import { canSpeak, speak, stopSpeaking } from '../../practice/speech'
 import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { Button } from '../../ui/Button'
+import { PracticePanel } from '../../ui/PracticePanel'
 import { BackToHomeButton } from './BackToHomeButton'
 import { ChoiceGroup, type ChoiceGroupHandle } from './ChoiceGroup'
 import { NextButton } from './NextButton'
@@ -100,11 +101,11 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
         {finished ? COPY.spellingDone(SPELLING_COUNT) : response}
       </p>
       {finished ? (
-        <section className="practice-panel practice-done">
+        <PracticePanel className="practice-done">
           <p className="practice-done-title">{COPY.spellingDone(SPELLING_COUNT)}</p>
-        </section>
+        </PracticePanel>
       ) : (
-        <section className="practice-panel practice-spelling">
+        <PracticePanel className="practice-spelling">
           <div className="practice-listen">
             <p className="practice-eyebrow">{COPY.spellingEyebrow}</p>
             <Button
@@ -151,7 +152,7 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
               </p>
             )}
           </div>
-        </section>
+        </PracticePanel>
       )}
     </PracticeFrame>
   )
