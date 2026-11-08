@@ -156,4 +156,9 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
       /display|flex-direction|border-radius|min-width/,
     )
   })
+
+  it('has one inline response style for Spelling and Reading, not one per subject', () => {
+    expect(declarations('.practice .practice-inline-response')).toContain('flex: none;')
+    expect(practice).not.toMatch(/practice-(?:spelling|reading)-response/)
+  })
 })

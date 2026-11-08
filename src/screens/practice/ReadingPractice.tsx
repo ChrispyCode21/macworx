@@ -9,7 +9,9 @@ import { READY_AFTER_MS, useReadyAfter, whenReady } from '../../ui/useReadyAfter
 import { PracticePanel } from '../../ui/PracticePanel'
 import { BackToHomeButton } from './BackToHomeButton'
 import { ChoiceGroup, type ChoiceGroupHandle } from './ChoiceGroup'
+import { InlineResponse } from './InlineResponse'
 import { NextButton } from './NextButton'
+import { PracticeDone } from './PracticeDone'
 import { PracticeFrame } from './PracticeFrame'
 
 interface Props {
@@ -122,9 +124,7 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
         {announcement}
       </p>
       {finished ? (
-        <PracticePanel className="practice-done">
-          <p className="practice-done-title">{COPY.readingDone}</p>
-        </PracticePanel>
+        <PracticeDone>{COPY.readingDone}</PracticeDone>
       ) : onPassage ? (
         <div className="practice-reading practice-reading-passage">
           <PracticePanel className="practice-passage" tabIndex={0} aria-labelledby={titleId}>
@@ -170,9 +170,7 @@ export function ReadingPractice({ numbers, child, onBack }: Props) {
                 right={right(q)}
               />
               {checked ? (
-                <div className="response practice-reading-response">
-                  <p className={right(q) ? 'response-lead' : 'response-equation'}>{responseFor(q)}</p>
-                </div>
+                <InlineResponse right={right(q)}>{responseFor(q)}</InlineResponse>
               ) : (
                 <p className="practice-footnote">{COPY.readingChooseOne}</p>
               )}
