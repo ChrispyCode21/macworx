@@ -80,7 +80,7 @@ SPEC §6.8. `src/storage/device.ts` keeps four `localStorage` entries: the devic
 
 ## Data
 
-D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql`, `0002_admin_log.sql`, `0003_pairing.sql`, `0004_children.sql` and `0005_children_state.sql`:
+D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql`, `0002_admin_log.sql`, `0003_pairing.sql`, `0004_children.sql`, `0005_children_state.sql` and `0006_reading_passages.sql`:
 
 | Table | Holds |
 |---|---|
@@ -90,6 +90,9 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 | `pairing_codes` | Pairing codes: the code's SHA-256, the iPad's name, expiry, wrong tries, and when it was used or voided. Only the newest usable code counts. |
 | `admin_log` | Every change a parent makes in admin mode (SPEC §5.3): when, which parent (Access email), the action and a JSON detail. Written in the same batch as the change. |
 | `children` | One row per child: name, grade, initials, created_at and her own balance, streak, last counted day, completed and `revision`. The live copy of her numbers: the Worker reads and writes only this (see "Multiple children"). A parent restores a broken streak from the dashboard (`POST /api/parent/streak`), which edits `streak` and `last_day` here and changes `revision` in the same statement (see below). |
+| `passages` | Reading passages (SPEC §6.10): title, genre, minutes, hint, text (paragraphs split by a blank line) and `image`, the picture's name in R2 (the passage id and an extension) or NULL. Ids are explicit in the owner's hand-run SQL files, so they match on preview and production; her next passage is the lowest id she hasn't finished. No passage text is in the repo. |
+| `questions` | A passage's questions in `position` order. |
+| `choices` | A question's choices in `position` order (1 to 4) and a `correct` flag. A unique index allows at most one correct choice per question. "Exactly four, exactly one correct" isn't a CHECK (a trigger's writes would count in D1's `meta.changes`), so the seed script checks it. Foreign keys stop deleting a passage that has questions. |
 | `child` | Legacy: the one row the Worker used before `children`. Nothing reads or writes it since `0005`; it is stale from that migration on. |
 
 - **One write at a time:** recording a result is one D1 batch. Its first statement updates the device's child's `children` row only if `revision` still has the value read before the write, and sets a new random revision. The result insert and the seed update apply only if the new revision is in place. So a lost race changes nothing; the Worker re-reads and retries (3 tries, then 503), and a repeat of the same seed returns the recorded result.
