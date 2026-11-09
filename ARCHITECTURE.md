@@ -141,6 +141,16 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 
 CI (`.github/workflows/ci.yml`) runs the same checks as two jobs, **Checks** and **Playwright**. Playwright runs in Microsoft's `mcr.microsoft.com/playwright` container, so no browsers or system libraries are installed at run time; the image tag, the exact `@playwright/test` version in `package.json` and the lockfile move together (`check:conventions` fails if they differ). `security.yml` adds CodeQL and dependency review. Dependabot opens weekly grouped updates. `merge-gate.yml` labels each PR `touches-data` or `touches-gates` from its paths, so nightshift's reviewer leaves those PRs for the owner to merge (PIPELINE.md, "Who merges").
 
+### Writing and trimming tests
+
+Tests are a running cost, and the Playwright job is the biggest part of it: it takes about 6 to 8 minutes per PR, most of it in a handful of flows that tap through a whole assignment. Keep the suite small by reading before writing.
+
+- **Read the existing tests first.** Before adding a test, read the ones for that screen or behavior (`grep` the spec for it). Extend or reuse one if it can cover the new case.
+- **Delete or merge what is redundant.** If an existing test is redundant, overlaps a stronger one, or covers behavior that is gone, delete or merge it in the same PR. Say in the PR description what still covers each behavior you removed.
+- **Run a test once when it can be.** A test that sets its own viewport, or does not depend on the engine or orientation, runs once per engine, not on every Playwright project: tag it `@landscape` (or `@portrait`), or `@full-assignment` for a whole-assignment flow. `playwright.config.ts` explains the tags.
+- **Never trade coverage for speed.** Don't delete, skip or loosen a test or an assertion just to make CI pass or run faster. A removed run needs a named test that still covers it.
+- **Find the slow ones.** The Playwright job's log lists every test with its time. Sort it, and look at the slowest few before anything else.
+
 `.github/rulesets/main.json` protects `main`: PRs only, no force-push or deletion, and all the checks above must pass. Apply it once with:
 
 ```bash
