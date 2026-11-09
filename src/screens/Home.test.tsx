@@ -67,4 +67,18 @@ describe('Home (SPEC §5.1 step 1)', () => {
     expect(render()).not.toContain('Pair this device')
     expect(render({ onPair: () => {} })).toContain('Pair this device')
   })
+
+  it('says "days" for a streak of 2 or more', () => {
+    expect(render({ numbers: { ...NUMBERS, streak: 2 } })).toContain('>2 days<')
+  })
+
+  it('marks Home as the current page, with Shop and Parents after it, Pair under the subjects', () => {
+    const html = render({ onPair: () => {} })
+    const at = (text: string) => html.indexOf(text)
+    expect(html).toContain('aria-current="page"')
+    expect(at('>Home<')).toBeLessThan(at('>Shop<'))
+    expect(at('>Shop<')).toBeLessThan(at('Parents</a>'))
+    expect(at('aria-label="Start Reading"')).toBeLessThan(at('Pair this device'))
+    expect(at('Pair this device')).toBeLessThan(at('Your progress'))
+  })
 })

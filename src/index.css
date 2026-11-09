@@ -312,6 +312,7 @@ p {
 
 .home-nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-8);
 }
@@ -521,7 +522,21 @@ p {
   font-size: var(--text-16);
 }
 
+.home-progress {
+  min-width: 0;
+}
+
+.home-subjects > .button-secondary {
+  align-self: flex-start;
+}
+
+.button-home-nav[aria-disabled='true'],
+.button-home-link[aria-disabled='true'] {
+  cursor: default;
+}
+
 .home-balance-number {
+  overflow-wrap: anywhere;
   color: var(--l-text);
   font-size: var(--text-52);
   font-variant-numeric: tabular-nums;

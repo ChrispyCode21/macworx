@@ -115,7 +115,7 @@ export function Home({ onStart, onOpen, onPair, noSeeds, numbers }: Props) {
               </Button>
             )}
           </section>
-          <aside className="home-side" aria-labelledby="home-progress-heading">
+          <div className="home-side">
             <div className="home-section-head">
               <h2 id="home-progress-heading">{COPY.homeProgressHeading}</h2>
             </div>
@@ -126,7 +126,7 @@ export function Home({ onStart, onOpen, onPair, noSeeds, numbers }: Props) {
               </p>
               {numbers ? (
                 <p className="home-balance">
-                  <span className="home-balance-number">{formatNumber(numbers.balance)}</span>
+                  <span className="home-balance-number">{formatNumber(numbers.balance)}</span>{' '}
                   {COPY.homeAvailable}
                 </p>
               ) : (
@@ -145,10 +145,10 @@ export function Home({ onStart, onOpen, onPair, noSeeds, numbers }: Props) {
               )}
             </div>
             <div className="home-shop">
-              <h3 className="home-shop-title">
+              <p className="home-shop-title">
                 <ShoppingBagIcon />
                 {COPY.homeShopTitle}
-              </h3>
+              </p>
               <p className="home-shop-line">{COPY.homeShopLine}</p>
               {/* Inert until the shop screen exists (SPEC §5.1 step 1). */}
               <Button variant="home-link" aria-disabled="true">
@@ -156,7 +156,7 @@ export function Home({ onStart, onOpen, onPair, noSeeds, numbers }: Props) {
                 <ArrowRightIcon />
               </Button>
             </div>
-          </aside>
+          </div>
         </div>
         <footer className="home-footer">
           <span>{COPY.homeFooterLeft}</span>

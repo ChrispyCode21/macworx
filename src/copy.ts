@@ -42,7 +42,6 @@ export const COPY = {
     `${formatNumber(base)}${accuracy > 0 ? ` + ${formatNumber(accuracy)} bonus` : ''}${
       streak > 0 ? ` + ${formatNumber(streak)} streak bonus` : ''
     } = `,
-  streakDays: (n: number) => `${formatNumber(n)} day streak`,
   // The practice screens' frame (docs/DESIGN-PRACTICE.md §6, §13)
   /** Two spaces each side of the slash. */
   practiceCrumb: (subject: string) => `Practice  /  ${subject}`,

@@ -124,10 +124,11 @@ describe('PracticeFrame', () => {
       const frame = render(numbers)
       const page = home(numbers)
       const balance = numbers ? COPY.macaronis(numbers.balance) : 'no numbers'
-      const homeBalance = numbers ? `>${formatNumber(numbers.balance)}<` : 'no numbers'
+      const homeBalance = numbers ? `home-balance-number">${formatNumber(numbers.balance)}<` : 'no numbers'
       expect(frame.includes(balance), name + ': balance').toBe(page.includes(homeBalance))
       const streak = numbers?.streak == null ? 'no streak' : COPY.streakChip(numbers.streak)
-      const homeStreak = numbers?.streak == null ? 'no streak' : COPY.streakChip(numbers.streak)
+      const homeStreak =
+        numbers?.streak == null ? 'no streak' : `>${numbers.streak} ${numbers.streak === 1 ? 'day' : 'days'}<`
       expect(frame.includes(streak), name + ': streak').toBe(page.includes(homeStreak))
     }
   })
