@@ -9,6 +9,7 @@ const SYMBOLS: Record<Operation, string> = {
   addition: '+',
   subtraction: '−', // minus sign, wider than a hyphen
   multiplication: '×',
+  division: '÷',
 }
 
 export function operatorSymbol(operation: Operation): string {

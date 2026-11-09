@@ -4,8 +4,11 @@ export {
   ASSIGNMENT_SIZE,
   GENERATOR,
   GRADES,
+  LEVELS,
+  MAX_PICKS,
   MAX_ANSWER,
   PAYOUT,
+  RANGES,
   REWARDS,
   type Grade,
   type RewardId,
@@ -13,7 +16,16 @@ export {
 export { checkChoice } from './choice'
 export { grade } from './grade'
 export { leftEarlyPayout, payout, type LeftEarlyInput, type Payout, type PayoutInput } from './payout'
-export { generateAssignment, makeProblem, type Operation, type Problem } from './problems'
+export {
+  generateAssignment,
+  isMix,
+  makeProblem,
+  type Level,
+  type Mix,
+  type Operation,
+  type Pick,
+  type Problem,
+} from './problems'
 export { scoreReading } from './reading'
 export { checkAnswer } from './score'
 export { addDays, dayNumber, nextStreak, type StreakResult, type StreakState } from './streak'

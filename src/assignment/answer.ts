@@ -1,20 +1,20 @@
 // Answer entry on the number pad (SPEC §5.1): pure helpers for the assignment screen.
 // `typed` holds her digits in the order she tapped them; the boxes and her answer derive from it.
-import { GENERATOR, type Operation, type Problem } from '../engine'
+import type { Operation, Problem } from '../engine'
 
 /**
  * - onesFirst: addition and subtraction, worked from the ones place, so each digit goes one column left.
- * - leftToRight: multiplication, written like a number, staying lined up under the ones column.
+ * - leftToRight: multiplication and division, written like a number, staying lined up under the ones column.
  */
 export type Entry = 'onesFirst' | 'leftToRight'
 
 export function entryFor(operation: Operation): Entry {
-  return operation === 'multiplication' ? 'leftToRight' : 'onesFirst'
+  return operation === 'multiplication' || operation === 'division' ? 'leftToRight' : 'onesFirst'
 }
 
 const digitsIn = (n: number) => String(n).length
 
-/** Answer boxes: one per column, plus one for a carry in addition; multiplication fits the largest product. */
+/** Answer boxes: one per column, plus one for a carry in addition; multiplication has one per digit of both factors; division one per digit of the dividend. */
 export function boxCount(problem: Problem): number {
   switch (problem.operation) {
     case 'addition':
@@ -22,7 +22,9 @@ export function boxCount(problem: Problem): number {
     case 'subtraction':
       return digitsIn(problem.a)
     case 'multiplication':
-      return digitsIn(GENERATOR.factorMax ** 2)
+      return digitsIn(problem.a) + digitsIn(problem.b)
+    case 'division':
+      return digitsIn(problem.a)
   }
 }
 
