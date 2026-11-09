@@ -417,6 +417,19 @@ Frame `practice-reading-questions.png`. Crumb "Practice  /  Reading". Title is t
 
 **Finished:** as Spelling (section 10), done-title "You finished the passage and its questions!"
 
+### 12.1 The paid assignment (#210)
+
+On a paired iPad Reading is the paid assignment of SPEC §5.6, with the Worker's passage in place of the sample. It uses the layout above with these differences:
+
+- **Four choices** (A to D) per question, in the Worker's order, in the same column with the same gap 12 and padding-block 12 (Spelling's four-choice sizing).
+- **Two questions at a time**, in order; an odd last one comes alone. The eyebrow is "Question {n}" (the sample's skill word is not used). The footnote stays "Choose one answer."
+- **The passage** shows the title, "{n} min read" (with the genre before it when there is one), the paragraphs and the hint panel only when there is a hint; with none, the text takes the whole row. No picture until Reading 3b (#222).
+- **Actions row:** "Read again", then "Back" from the second pair on, then "Next"; on the last pair "Next" becomes "Check answers" (disabled until every question has a choice; the note then reads "Pick an answer for each question: {k} to go."). After Check, "Back" and "Read again" still work and "Done" replaces "Check answers".
+- **Note:** "Questions {a} and {b} of {total}." (or "Question {a} of {total}."); with no connection at Check, "Connect to Wi-Fi, then tap Check answers again."
+- **After Check** each question's chosen choice turns green or coral as in section 12, and the response line is the question's explanation when it has one, otherwise "The best answer is {letter}. {choice text}".
+- **Done** shows the Math result (SPEC §5.1 step 5) without "Do another one".
+- **Fit:** two cards of four choices do not fit a short landscape viewport at the sizes the sample fits at (they scroll by up to about 60 px at 1133x744, 1024x768 and 1194x834); the page scrolls, as in Split View.
+
 ## 13. Copy
 
 Final decisions on every Figma string:

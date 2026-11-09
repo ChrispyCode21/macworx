@@ -20,6 +20,8 @@ interface Props {
   onOpen: (subject: 'spelling' | 'reading') => void
   /** Set only while this installed iPad isn't paired (SPEC §5.4). */
   onPair?: () => void
+  /** Reading found no connection for her next story (SPEC §5.6 step 1). */
+  readingOffline?: boolean
   /** Her numbers; absent until a paired iPad has the Worker's state (SPEC §6.8). */
   numbers?: HomeNumbers
 }
@@ -53,7 +55,7 @@ function SubjectCard({
 }
 
 /** The child Home (SPEC §5.1 step 1, docs/DESIGN.md "Home"). */
-export function Home({ onStart, onOpen, onPair, numbers }: Props) {
+export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props) {
   return (
     <div className="home">
       <HomeBar />
@@ -83,7 +85,7 @@ export function Home({ onStart, onOpen, onPair, numbers }: Props) {
               />
               <SubjectCard
                 title={COPY.subjectReading}
-                line={COPY.homeReadingLine}
+                line={readingOffline ? COPY.readingOffline : COPY.homeReadingLine}
                 icon={<BookOpenIcon size={32} />}
                 onStart={() => onOpen('reading')}
               />
