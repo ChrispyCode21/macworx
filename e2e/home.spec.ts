@@ -307,6 +307,14 @@ test('the Math screen fits tablets from an iPad mini to an iPad Pro, in both ori
 test('Spelling and Reading fit landscape tablets from an iPad mini to an iPad Pro, before and after Check', async ({
   page,
 }) => {
+  // The safe areas of a landscape iPad (status bar 24, home indicator 20); env() is 0 in the browser.
+  await page.route('**/*.css', async (route) => {
+    const response = await route.fetch()
+    const body = (await response.text())
+      .replaceAll('env(safe-area-inset-top)', '24px')
+      .replaceAll('env(safe-area-inset-bottom)', '20px')
+    await route.fulfill({ response, body })
+  })
   await openApp(page, false)
   const sizes = [
     [1133, 744],
@@ -320,7 +328,7 @@ test('Spelling and Reading fit landscape tablets from an iPad mini to an iPad Pr
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height })
       const overflow = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
-      // One pixel of rounding is allowed.
+      // One pixel is allowed: Spelling after Check overflows by 1 at 1133x744.
       expect(overflow, `${at} at ${width}x${height} scrolls`).toBeLessThanOrEqual(1)
     }
   }
