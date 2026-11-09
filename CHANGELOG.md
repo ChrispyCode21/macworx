@@ -15,6 +15,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Fixed
 
+- **The mix screen matches its design (children):** the math mix screen now has the sizes of the design: an 80 high top bar, a bigger heading, a plain "Same as last time" button, round level dots, taller cells and a fixed-size summary, so it fits an iPad held sideways without scrolling.
 - **Spelling and Reading fit smaller landscape iPads without scrolling (children):** on an iPad mini, a 10.2-inch iPad or an 11-inch iPad held sideways, the choices are a little shorter (56 high, from 78), the play button is a little smaller (96, from 112) the listen parts sit a little closer and the panels have a little less padding, so the whole screen stays in view, also after Check. On a bigger iPad they look as they did. Held upright, these two still scroll.
 - **The pairing screen fits smaller iPads without scrolling (children):** in landscape the pairing pad now fits the screen on an iPad mini, a 10.2-inch iPad or an 11-inch iPad, where the screen is short, the keys get shorter (down to 48 high). On a bigger iPad, or held upright, it looks as it did.
 - **The Math screen fits smaller iPads without scrolling (children):** on an iPad mini, a 10.2-inch iPad or any tablet shorter than the one it was drawn on, the whole Math screen stays in view. In a short window the number pad's keys get shorter (down to 48 high). On bigger iPads it looks as it did.

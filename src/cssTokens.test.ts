@@ -21,7 +21,7 @@ const SPACING = [2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 28, 32
 
 // The type scale (docs/DESIGN.md §4 and docs/DESIGN-PRACTICE.md §4): every px size the two contracts use.
 const TEXT = [
-  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 28, 29, 30, 40, 42, 44, 48, 52, 58,
+  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 28, 29, 30, 36, 40, 42, 44, 48, 52, 58,
 ]
 
 // The first :root block: where the tokens are defined.

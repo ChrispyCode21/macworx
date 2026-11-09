@@ -63,6 +63,7 @@
   --text-28: 28px;
   --text-29: 29px;
   --text-30: 30px;
+  --text-36: 36px;
   --text-40: 40px;
   --text-42: 42px;
   --text-44: 44px;
@@ -614,32 +615,99 @@ p {
   align-items: center;
   gap: var(--space-8);
 }
-/* The mix screen (SPEC §5.1 step 2, docs/DESIGN-PRACTICE.md §17): it is a .home page, so it has Home's bar and tokens. */
+/* The mix screen (SPEC §5.1 step 2, docs/DESIGN-PRACTICE.md §17): a .home page with its own bar and sizes from the frames. */
 .mix {
   --l-inset: #fffbee;
+  --l-pick: #ffe6a0;
+  --l-summary: #fff0bd;
+  --l-rule: #e3ca83;
   --l-primary: var(--accent);
   --l-primary-ink: var(--ink);
 }
 
+/* The bar: 80 high, with the frame's sizes. */
+.mix .home-bar {
+  min-height: 80px;
+  padding: 0 max(var(--space-40), env(safe-area-inset-right)) 0
+    max(var(--space-40), env(safe-area-inset-left));
+}
+
+.mix .home-brand {
+  font-size: var(--text-26);
+  font-weight: 500;
+}
+
+.mix .home-nav {
+  gap: var(--space-12);
+}
+
+.mix .home-nav-item,
+.mix .button-home-nav {
+  padding: var(--space-10) var(--space-20);
+  color: var(--l-text);
+  font-size: var(--text-15);
+  font-weight: 500;
+}
+
+.mix a.home-nav-item {
+  color: var(--l-muted);
+}
+
 .mix-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-16);
+  padding: var(--space-24) max(var(--space-40), env(safe-area-inset-right))
+    max(var(--space-24), env(safe-area-inset-bottom)) max(var(--space-40), env(safe-area-inset-left));
 }
 
 .mix .button-crumb {
   align-self: flex-start;
+  min-height: 44px;
+  margin-block: -12px;
+  gap: var(--space-10);
+  color: var(--l-text);
+  font-weight: 500;
+}
+
+.mix-crumb-here {
+  color: var(--l-muted);
+  font-weight: 400;
+}
+
+.mix-heading {
+  font-size: var(--text-36);
+  line-height: 1.4;
+}
+
+.mix-line {
+  margin-top: var(--space-4);
+  color: var(--l-muted);
+  font-size: var(--text-14);
+  line-height: 1.4;
 }
 
 .mix-tools {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-12) var(--space-24);
-  min-height: 48px;
+  gap: var(--space-24);
+  min-height: 44px;
 }
 
-.mix-tools .button-secondary {
+.mix .button-mix-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: var(--space-10);
-  min-height: 48px;
+  min-width: 228px;
+  height: 44px;
+  border: 1px solid var(--l-line);
+  border-radius: 10px;
+  background: var(--l-surface);
+  color: var(--l-text);
+  font-size: var(--text-15);
+  font-weight: 500;
 }
 
 .mix-swap {
@@ -653,7 +721,8 @@ p {
 .mix-count {
   margin-left: auto;
   color: var(--l-muted);
-  font-size: var(--text-16);
+  font-size: var(--text-15);
+  font-weight: 500;
 }
 
 .mix-columns {
@@ -664,12 +733,12 @@ p {
 
 .mix-grid {
   display: grid;
-  grid-template-columns: minmax(96px, 150px) repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(96px, 164px) repeat(3, minmax(0, 1fr));
   gap: var(--space-8);
   align-content: start;
   padding: var(--space-16);
   border: 1px solid var(--l-line);
-  border-radius: var(--radius-panel);
+  border-radius: 16px;
   background: var(--l-surface);
 }
 
@@ -677,7 +746,6 @@ p {
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
-  align-items: center;
   gap: var(--space-8);
 }
 
@@ -685,49 +753,58 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-  font-size: var(--text-21);
+  justify-content: center;
+  gap: var(--space-6);
+  height: 68px;
+  font-size: var(--text-22);
   font-weight: 600;
 }
 
 .mix-dots {
-  color: var(--l-link);
-  font-size: var(--text-10);
-  letter-spacing: 2px;
+  display: flex;
+  gap: var(--space-4);
+}
+
+.mix-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--l-link);
 }
 
 .mix-operation {
   display: flex;
   align-items: center;
-  gap: var(--space-10);
-  color: var(--l-text);
-  font-size: var(--text-17);
+  gap: var(--space-8);
+  padding-left: var(--space-4);
+  font-size: var(--text-16);
+  font-weight: 500;
 }
 
 .mix-operation span {
-  width: 18px;
+  width: 24px;
+  font-size: var(--text-24);
   text-align: center;
 }
 
 .button-mix-cell {
-  min-height: 64px;
+  min-height: 76px;
   padding: 0 var(--space-4);
   border: 1px solid var(--l-line);
   border-radius: var(--radius-control);
   background: var(--l-surface);
   color: var(--l-text);
-  font-size: var(--text-23);
+  font-size: var(--text-26);
   font-weight: 600;
   white-space: nowrap;
 }
 
 .button-mix-cell[aria-pressed='true'] {
   border: 2px solid var(--l-link);
-  background: var(--l-chip);
+  background: var(--l-pick);
 }
 
 .button-mix-cell[aria-disabled='true'] {
-  border-color: var(--l-line);
   background: var(--l-inset);
   color: var(--l-muted);
   cursor: default;
@@ -742,20 +819,24 @@ p {
 .mix-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
+  gap: var(--space-12);
   padding: var(--space-24);
-  border-radius: var(--radius-panel);
-  background: var(--l-chip);
+  border-radius: 16px;
+  background: var(--l-summary);
 }
 
-.mix-panel-title {
-  font-size: var(--text-26);
+.mix-panel-title,
+.mix-empty-title,
+.mix-total-title {
+  font-size: var(--text-24);
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .mix-picks {
   display: flex;
   flex-direction: column;
-  gap: var(--space-14);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -763,14 +844,19 @@ p {
 
 .mix-picks li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-12);
-  font-size: var(--text-17);
+  min-height: 52px;
+  font-size: var(--text-14);
+  font-weight: 500;
 }
 
-.mix-picks .mix-muted {
-  display: block;
+.mix-pick-name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--text-16);
 }
 
 .mix-empty {
@@ -779,36 +865,35 @@ p {
   gap: var(--space-8);
 }
 
-.mix-empty-title {
-  font-size: var(--text-24);
-}
-
 .mix-muted {
   color: var(--l-muted);
-  font-size: var(--text-15);
+  font-size: var(--text-14);
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 .mix-total {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
-  padding-top: var(--space-16);
-  border-top: 1px solid var(--l-line);
+  gap: var(--space-12);
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--l-rule);
 }
 
-.mix-total-title {
-  font-size: var(--text-24);
+.mix-total .mix-muted {
+  font-size: var(--text-15);
 }
 
 .mix-earn {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  gap: var(--space-10);
-  padding: var(--space-10) var(--space-16);
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
   border-radius: var(--radius-pill);
-  background: var(--l-surface);
+  background: var(--l-pick);
   font-size: var(--text-16);
+  font-weight: 500;
 }
 
 .mix-start {
@@ -819,9 +904,16 @@ p {
   gap: var(--space-12) var(--space-16);
 }
 
+.mix .button-action {
+  gap: var(--space-12);
+  min-width: 240px;
+  height: 52px;
+  border-radius: 10px;
+}
+
 @media (min-width: 1024px) {
   .mix-columns {
-    grid-template-columns: minmax(0, 650fr) minmax(0, 440fr);
+    grid-template-columns: minmax(0, 1fr) 330px;
   }
 }
 /* home: end */
