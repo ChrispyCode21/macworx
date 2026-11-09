@@ -14,7 +14,7 @@ import { error, isUint32, json, readJson, utcDay } from './http'
 const MAX_QUESTIONS = 50
 
 /**
- * Her next passage (SPEC §6.10): among the complete ones (a question, and for every question exactly four choices
+ * Her next passage (SPEC §6.10): among the complete ones (1 to 50 questions, and for every question exactly four choices
  * and exactly one right), the lowest id she has no finished result for, else the one whose latest finished result
  * was recorded longest ago (result ids rise in the order the Worker saved them).
  */
@@ -26,7 +26,7 @@ const NEXT_PASSAGE = `
     GROUP BY a.passage_id
   )
   SELECT p.id FROM passages p LEFT JOIN finished f ON f.passage_id = p.id
-  WHERE EXISTS (SELECT 1 FROM questions q WHERE q.passage_id = p.id)
+  WHERE (SELECT COUNT(*) FROM questions q WHERE q.passage_id = p.id) BETWEEN 1 AND ${MAX_QUESTIONS}
     AND NOT EXISTS (
       SELECT 1 FROM questions q WHERE q.passage_id = p.id AND (
         (SELECT COUNT(*) FROM choices c WHERE c.question_id = q.id) <> 4

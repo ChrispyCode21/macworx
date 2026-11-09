@@ -122,12 +122,14 @@ export async function listResults(req: ParentRequest): Promise<Response> {
   if (childId instanceof Response) return childId
   const { results } = await db
     .prepare(
-      `SELECT id, day, answered, correct, finished, grade, total, created_at FROM results
-       WHERE child_id = ? ORDER BY day DESC, id DESC LIMIT ?`,
+      `SELECT id, kind, json_extract(detail, '$.title') AS title, day, answered, correct, finished, grade, total, created_at
+       FROM results WHERE child_id = ? ORDER BY day DESC, id DESC LIMIT ?`,
     )
     .bind(childId, LIST_LIMIT)
     .all<{
       id: number
+      kind: 'math' | 'reading'
+      title: string | null
       day: string
       answered: number
       correct: number
@@ -139,6 +141,9 @@ export async function listResults(req: ParentRequest): Promise<Response> {
   return json(200, {
     results: results.map((r) => ({
       id: r.id,
+      kind: r.kind,
+      // The passage's title, from the snapshot kept with a reading result; null for math.
+      title: r.title,
       day: r.day,
       answered: r.answered,
       correct: r.correct,
@@ -391,8 +396,8 @@ function readingView(row: StoredResult) {
     finished: row.finished === 1,
     grade: row.grade,
     total: row.total,
-    title: detail.title,
-    questions: detail.questions,
+    title: detail.title ?? '',
+    questions: detail.questions ?? [],
   }
 }
 

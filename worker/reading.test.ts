@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { generateAssignment } from '../src/engine'
 import { clearAccessKeys } from './access'
 import { accessToken } from './test/access-keys'
+import { postReadingResult } from './reading'
 import { createTestDb } from './test/db'
 
 let t: Awaited<ReturnType<typeof createTestDb>>
@@ -126,6 +127,9 @@ describe('POST /api/reading/start', () => {
     await passage(1)
     const { body } = await start()
     expect(JSON.stringify(body)).not.toContain('correct')
+    // Only an id and its text: nothing else about a choice can carry the answer.
+    for (const q of body.passage.questions)
+      for (const c of q.choices) expect(Object.keys(c).sort()).toEqual(['id', 'text'])
     expect(body.passage.paragraphs).toEqual(['One.', 'Two.'])
     expect(body.passage.questions[0].choices).toHaveLength(4)
   })
@@ -167,6 +171,40 @@ describe('POST /api/reading/result', () => {
     expect(again.body.result).toEqual(body.result)
     expect(again.body.state.balance).toBe(body.state.balance)
     expect((await first('SELECT COUNT(*) AS n FROM results')).n).toBe(1)
+  })
+
+  it('L9: two submits of one attempt at the same moment record it once', async () => {
+    await passage(1)
+    const { body } = await start()
+    const send = () =>
+      t.call('POST', '/api/reading/result', {
+        body: { attempt: body.attempt, day: '2026-10-17', picks: picks(body, 3) },
+      })
+    const both = await Promise.all([send(), send()])
+    expect(both.map((r) => r.status).sort()).toEqual([200, 201])
+    expect((await first('SELECT COUNT(*) AS n FROM results')).n).toBe(1)
+    expect((await first('SELECT balance, completed FROM children WHERE id = 1')).completed).toBe(1)
+  })
+
+  it('refuses a result on its way when the iPad is unpaired, and records nothing (SPEC §6.9)', async () => {
+    await passage(1)
+    const { body } = await start()
+    // The key check already passed for device 1; then a parent unpairs it before the write.
+    await run("UPDATE devices SET revoked_at = '2026-10-17T12:00:00Z' WHERE id = 1")
+    const response = await postReadingResult({
+      request: new Request('https://macworx.test/api/reading/result', {
+        method: 'POST',
+        body: JSON.stringify({ attempt: body.attempt, day: '2026-10-17', picks: picks(body, 3) }),
+      }),
+      url: new URL('https://macworx.test/api/reading/result'),
+      db: t.db,
+      device: 1,
+      childId: 1,
+      now: at('2026-10-17'),
+    })
+    expect(response.status).toBe(401)
+    expect((await first('SELECT COUNT(*) AS n FROM results')).n).toBe(0)
+    expect((await first('SELECT balance FROM children WHERE id = 1')).balance).toBe(0)
   })
 
   it('L10: after math earlier today the reading result takes no streak bonus and leaves the streak', async () => {
@@ -244,6 +282,8 @@ describe('keys and the parent view', () => {
     })
     expect(status).toBe(200)
     expect(body.result).toMatchObject({ kind: 'reading', title: 'Story 1', answered: 3, correct: 2 })
+    const list = await t.call('GET', '/api/parent/results', { key: null, accessToken: await accessToken() })
+    expect(list.body.results[0]).toMatchObject({ id, kind: 'reading', title: 'Story 1' })
     expect(body.result.questions.map((q: any) => q.text)).toEqual(['Q1?', 'Q2?', 'Q3?'])
     expect(body.result.questions[0].right).toBe(1012)
     expect(body.result.questions[0].picked).toBe(1012)
