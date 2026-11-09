@@ -128,4 +128,13 @@ describe('size tokens', () => {
     ).toEqual(TEXT)
     expect(literal, 'src/index.css uses a literal font size').toEqual([])
   })
+
+  it('lets the pairing pad shrink from 96 to 48 high a key (#201)', () => {
+    const rule = css.match(/\n\.pair \.pad \{([^}]*)\}/)?.[1] ?? ''
+    expect(root).toContain('--key-min: 48px;')
+    expect(rule).toContain('flex: 1;')
+    expect(rule).toContain('grid-template-rows: repeat(4, 1fr);')
+    expect(rule).toContain('min-height: calc(4 * var(--key-min) + 3 * var(--gap));')
+    expect(rule).toContain('max-height: calc(4 * var(--key) + 3 * var(--gap));')
+  })
 })

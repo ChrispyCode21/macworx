@@ -72,6 +72,8 @@
   --tap: 56px;
   --tap-large: 88px;
   --key: 96px;
+  /* The least a pad key shrinks to on a short tablet (docs/DESIGN-PRACTICE.md §3); --key is the most. */
+  --key-min: 48px;
   font-family:
     system-ui,
     -apple-system,
@@ -263,6 +265,19 @@ p {
 
 .pair-message {
   min-height: 1.5em;
+}
+
+/* The pairing pad fills the height a short tablet leaves, a key from 48 to 96 high. */
+.pair .pad {
+  flex: 1;
+  grid-template-rows: repeat(4, 1fr);
+  min-height: calc(4 * var(--key-min) + 3 * var(--gap));
+  max-height: calc(4 * var(--key) + 3 * var(--gap));
+}
+
+.pair .button-key,
+.pair .button-check {
+  height: auto;
 }
 
 /* The Parents link on Home (SPEC §5.3): small and quiet, with a tap area big enough for a finger. */
@@ -2231,9 +2246,8 @@ p {
   --l-avatar: #f2c46b;
   --l-text: var(--ink);
   --l-muted: #6b5420;
-  /* A number pad key's height with room (docs/DESIGN-PRACTICE.md §7.4), and the least it shrinks to on a short tablet (§3). The pad panel's height is built from them. */
+  /* A number pad key's height with room (docs/DESIGN-PRACTICE.md §7.4); with --key-min, the pad panel's height is built from it. */
   --practice-key: 72px;
-  --practice-key-min: 48px;
   /* The pad panel's heading row (docs/DESIGN-PRACTICE.md §8). */
   --practice-pad-heading: 24px;
   box-sizing: border-box;
@@ -2420,7 +2434,7 @@ p {
 /* The number pad. The response replaces its contents. The panel is at least as tall as the pad at its smallest (padding 24, heading 24, gap 16, 4 keys, 3 gaps of 10, padding 24 = 310 at a 48px key), so the response fits without a jump. */
 .practice-panel-warm {
   min-height: calc(
-    var(--space-24) + var(--practice-pad-heading) + var(--space-16) + 4 * var(--practice-key-min) + 3 *
+    var(--space-24) + var(--practice-pad-heading) + var(--space-16) + 4 * var(--key-min) + 3 *
       var(--space-10) + var(--space-24)
   );
   gap: var(--space-16);
@@ -2496,7 +2510,7 @@ p {
   grid-template-rows: repeat(4, 1fr);
   gap: var(--space-10);
   width: 100%;
-  min-height: calc(4 * var(--practice-key-min) + 3 * var(--space-10));
+  min-height: calc(4 * var(--key-min) + 3 * var(--space-10));
   max-height: calc(4 * var(--practice-key) + 3 * var(--space-10));
 }
 

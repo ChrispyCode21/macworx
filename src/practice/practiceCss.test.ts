@@ -70,16 +70,12 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(rule('.practice-activity')).not.toContain('min-height')
     // 24 + 24 + 16 + 4 keys + 3 gaps of 10 + 24, from the smallest key token (310 at 48px; 406 at the full 72px).
     expect(practice).toContain('--practice-key: 72px;')
-    expect(practice).toContain('--practice-key-min: 48px;')
+    expect(css).toContain('--key-min: 48px;')
     expect(practice).toContain('--practice-pad-heading: 24px;')
     // Sum the calc term by term: the whole pad panel is 310px tall at its least, so a dropped or changed term fails.
     const calc = /min-height: calc\(([\s\S]*?)\);/.exec(rule('.practice-panel-warm'))?.[1] ?? ''
     const px = (name: string) =>
-      name === 'practice-key-min'
-        ? 48
-        : name === 'practice-pad-heading'
-          ? 24
-          : Number(/^space-(\d+)$/.exec(name)?.[1])
+      name === 'key-min' ? 48 : name === 'practice-pad-heading' ? 24 : Number(/^space-(\d+)$/.exec(name)?.[1])
     const total = calc
       .split('+')
       .map((term) => {
@@ -156,7 +152,7 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ],
     [
       '.practice .pad',
-      'min-height: calc(4 * var(--practice-key-min) + 3 * var(--space-10));',
+      'min-height: calc(4 * var(--key-min) + 3 * var(--space-10));',
       '§3 keys at least 48px',
     ],
     ['.button-play', 'width: 112px;', '§7.4 play'],

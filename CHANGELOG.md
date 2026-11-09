@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Fixed
 
+- **The pairing screen fits smaller iPads without scrolling (children):** in landscape the pairing pad now fits the screen on an iPad mini, a 10.2-inch iPad or an 11-inch iPad, with the keys a little shorter (96 down to 48 high) where the screen is short. On a bigger iPad, or held upright, it looks as it did.
 - **The Math screen fits smaller iPads without scrolling (children):** on an iPad mini, a 10.2-inch iPad or any tablet shorter than the one it was drawn on, the whole Math screen stays in view. In a short window the number pad's keys get shorter (down to 48 high). On bigger iPads it looks as it did. Spelling, Reading and the pairing screen are still to come.
 - **Add / Rename looks like Add / Remove (parents):** the Add and Rename choice on Overview is now the same segmented control as Add and Remove on Macaronis, as the design says. It had two plain buttons before.
 

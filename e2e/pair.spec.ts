@@ -121,3 +121,35 @@ test('a paired device with no seeds and no connection asks for Wi-Fi', async ({ 
   await page.getByRole('button', { name: 'Math', exact: true }).click()
   await expect(page.getByText('Connect to Wi-Fi to get more problems!')).toBeVisible()
 })
+
+// Tablets other than the one the layout was drawn on (#201): the pairing pad shrinks to fit, from 96 down to 48.
+test('the pairing screen fits tablets from an iPad mini to an iPad Pro, in both orientations', async ({
+  page,
+}) => {
+  await asInstalledApp(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Pair this device' }).click()
+  await expect(page.locator('.pad[data-ready]')).toBeVisible()
+  // [width, height, whether the keys are the full 96: true, or shorter: false]
+  const sizes: [number, number, boolean][] = [
+    [744, 1133, true],
+    [820, 1180, true],
+    [1366, 1024, true],
+    [1133, 744, false],
+    [1024, 768, false],
+    [1194, 834, false],
+  ]
+  for (const [width, height, full] of sizes) {
+    await page.setViewportSize({ width, height })
+    const m = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollHeight - innerHeight,
+      key: document.querySelector('.button-key')!.getBoundingClientRect().height,
+    }))
+    const at = `${width}x${height}`
+    // One pixel of rounding is allowed.
+    expect(m.overflow, `${at} scrolls`).toBeLessThanOrEqual(1)
+    expect(m.key, `${at} keys`).toBeGreaterThanOrEqual(47)
+    if (full) expect(m.key, `${at} keys have room for 96`).toBeGreaterThanOrEqual(95)
+    else expect(m.key, `${at} keys shrink`).toBeLessThan(95)
+  }
+})
