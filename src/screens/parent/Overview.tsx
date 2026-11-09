@@ -13,7 +13,13 @@ import {
   SunIcon,
   TabletIcon,
 } from '../../parent/icons'
-import { connectedDevices, lastSyncedLine, OVERVIEW_LINKS, todaysAssignments } from '../../parent/overview'
+import {
+  connectedDevices,
+  lastSyncedLine,
+  OVERVIEW_LINKS,
+  practiceWords,
+  todaysAssignments,
+} from '../../parent/overview'
 import { tabPath } from '../../parent/route'
 import type { Tab } from '../../parent/route'
 import { reachOf } from '../../parent/shop'
@@ -235,6 +241,7 @@ export function Overview({
               <thead>
                 <tr>
                   <th scope="col">{COPY.parentColDate}</th>
+                  <th scope="col">{COPY.parentColPractice}</th>
                   <th scope="col">{COPY.parentColRight}</th>
                   <th scope="col">{COPY.parentColGrade}</th>
                   <th scope="col">{COPY.parentColEarned}</th>
@@ -244,6 +251,7 @@ export function Overview({
                 {results.map((r) => (
                   <tr key={r.id}>
                     <td>{formatCalendarDay(r.day)}</td>
+                    <td>{practiceWords(r)}</td>
                     <td>{COPY.parentRightOf(r.correct, r.answered)}</td>
                     <td>{r.finished && r.grade ? r.grade : COPY.parentLeftEarly}</td>
                     <td>{formatNumber(r.total)}</td>

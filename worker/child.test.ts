@@ -225,6 +225,131 @@ describe('saving results (SPEC §6.8)', () => {
   })
 })
 
+describe('saving a result with a mix (SPEC §6.8)', () => {
+  const two = [
+    { operation: 'division', level: 'easy' },
+    { operation: 'multiplication', level: 'medium' },
+  ] as const
+  const rows = async () => (await t.db.prepare('SELECT seed, mix FROM results').all()).results
+  const unused = async (s: number) =>
+    (await t.db.prepare('SELECT used FROM seeds WHERE seed = ?').bind(s).first<{ used: number }>())?.used ===
+    0
+  const mixAnswers = (s: number, mix: readonly { operation: string; level: string }[], correct = 20) =>
+    generateAssignment(s, mix as never).map((p, i) => (i < correct ? p.answer : p.answer + 1))
+
+  /** Refuses every body: 400 bad_mix, nothing recorded, the seed still unused, her numbers unchanged. */
+  async function refused(mixes: unknown[]) {
+    const s = await seed()
+    for (const mix of mixes) {
+      const { status, body } = await t.call('POST', '/api/results', {
+        body: { seed: s, day: '2026-10-17', answers: answers(s), mix },
+      })
+      expect([status, body.error], JSON.stringify(mix)).toEqual([400, 'bad_mix'])
+    }
+    expect(await rows()).toEqual([])
+    expect(await unused(s)).toBe(true)
+    expect((await t.call('GET', '/api/state')).body).toMatchObject({ balance: 0, streak: 0, completed: 0 })
+  }
+  const pick = (operation: string, level: string) => ({ operation, level })
+
+  it('W8: a mix with 4 picks → 400 bad_mix, nothing recorded, the seed still unused', async () => {
+    await refused([
+      [
+        pick('addition', 'easy'),
+        pick('addition', 'medium'),
+        pick('addition', 'hard'),
+        pick('division', 'easy'),
+      ],
+    ])
+  })
+
+  it('W9: a mix that repeats a pick → 400 bad_mix, nothing recorded, the seed still unused', async () => {
+    await refused([[pick('division', 'easy'), pick('division', 'easy')]])
+  })
+
+  it('refuses every other mix that is not 1 to 3 known picks, whatever its type', async () => {
+    await refused([
+      [],
+      null,
+      'division',
+      {},
+      [pick('algebra', 'easy')],
+      [pick('division', 'impossible')],
+      [{ operation: 'division' }],
+      [{ ...pick('division', 'easy'), extra: 1 }],
+      [{ operation: 7, level: 'easy' }],
+      [null],
+    ])
+  })
+
+  it('refuses a body with both a bad mix and bad fields as bad_result, and checks the key first', async () => {
+    const s = await seed()
+    const bad = await t.call('POST', '/api/results', { body: { seed: s, day: 'x', answers: [1], mix: [] } })
+    expect(bad.body.error).toBe('bad_result')
+    const noKey = await t.call('POST', '/api/results', {
+      key: null,
+      body: { seed: s, day: '2026-10-17', answers: answers(s), mix: [] },
+    })
+    expect(noKey.status).toBe(401)
+  })
+
+  it("W10: a mix of 2 picks, 20 answers → re-scored against that seed's 10 + 10 problems and recorded with its mix", async () => {
+    const s = await seed()
+    const problems = generateAssignment(s, two)
+    expect(problems.filter((p) => p.operation === 'division')).toHaveLength(10)
+    expect(problems.filter((p) => p.operation === 'multiplication')).toHaveLength(10)
+    // 15 right against the mix's problems; against the fixed mix's problems these answers would score far lower.
+    const { status, body } = await t.call('POST', '/api/results', {
+      body: { seed: s, day: '2026-10-17', answers: mixAnswers(s, two, 15), mix: two },
+    })
+    expect(status).toBe(201)
+    expect(body.result).toMatchObject({
+      correct: 15,
+      answered: 20,
+      finished: true,
+      grade: 'Improving',
+    })
+    expect(JSON.parse(((await rows())[0] as { mix: string }).mix)).toEqual(two)
+    expect(await unused(s)).toBe(false)
+  })
+
+  it('keeps the picks in the order she picked them', async () => {
+    const reversed = [two[1], two[0]]
+    const s = await seed()
+    await t.call('POST', '/api/results', {
+      body: { seed: s, day: '2026-10-17', answers: mixAnswers(s, reversed), mix: reversed },
+    })
+    expect(JSON.parse(((await rows())[0] as { mix: string }).mix)).toEqual(reversed)
+  })
+
+  it('the same seed sent again returns the recorded result, its row keeping the mix, counting nothing twice', async () => {
+    const s = await seed()
+    const request = { body: { seed: s, day: '2026-10-17', answers: mixAnswers(s, two), mix: two } }
+    await t.call('POST', '/api/results', request)
+    const again = await t.call('POST', '/api/results', request)
+    expect(again.status).toBe(200)
+    expect(JSON.parse(((await rows())[0] as { mix: string }).mix)).toEqual(two)
+    expect(await rows()).toHaveLength(1)
+    expect(again.body.state).toMatchObject({ balance: 25, completed: 1 })
+  })
+
+  it.each([5, 7, 4242, 123456789, 4294967295])(
+    'a result with no mix still re-scores against the fixed mix (seed %i)',
+    async (fixed) => {
+      await t.db
+        .prepare("INSERT INTO seeds (seed, device_id, issued_day) VALUES (?, 1, '2026-10-17')")
+        .bind(fixed)
+        .run()
+      const { status, body } = await t.call('POST', '/api/results', {
+        body: { seed: fixed, day: '2026-10-17', answers: answers(fixed, 18) },
+      })
+      expect(status).toBe(201)
+      expect(body.result).toMatchObject({ correct: 18 })
+      expect((await rows()).find((r) => (r as { seed: number }).seed === fixed)).toMatchObject({ mix: null })
+    },
+  )
+})
+
 describe('seeds', () => {
   it('tops a device up to 20 unused seeds and never hands out a used one again', async () => {
     const first = await t.call('POST', '/api/seeds')

@@ -1,5 +1,6 @@
 // The parent API (SPEC §5.3, §6.9, §8). Every route here runs only after parentEmail() accepted the request.
 import { addDays, dayNumber, generateAssignment } from '../src/engine'
+import { storedMix } from './child'
 import { error, json, readJson, utcDay } from './http'
 import { logChange } from './admin-log'
 import { patchChild, postChild } from './children'
@@ -122,7 +123,7 @@ export async function listResults(req: ParentRequest): Promise<Response> {
   if (childId instanceof Response) return childId
   const { results } = await db
     .prepare(
-      `SELECT id, kind, json_extract(detail, '$.title') AS title, day, answered, correct, finished, grade, total, created_at
+      `SELECT id, kind, json_extract(detail, '$.title') AS title, mix, day, answered, correct, finished, grade, total, created_at
        FROM results WHERE child_id = ? ORDER BY day DESC, id DESC LIMIT ?`,
     )
     .bind(childId, LIST_LIMIT)
@@ -130,6 +131,7 @@ export async function listResults(req: ParentRequest): Promise<Response> {
       id: number
       kind: 'math' | 'reading'
       title: string | null
+      mix: string | null
       day: string
       answered: number
       correct: number
@@ -144,6 +146,8 @@ export async function listResults(req: ParentRequest): Promise<Response> {
       kind: r.kind,
       // The passage's title, from the snapshot kept with a reading result; null for math.
       title: r.title,
+      // A math result's picks, or null for the fixed mix (and for reading). A mix we can't read fails the list (500).
+      mix: storedMix(r.mix),
       day: r.day,
       answered: r.answered,
       correct: r.correct,
@@ -342,10 +346,11 @@ interface StoredResult {
   grade: string | null
   streak_bonus: number
   total: number
+  mix: string | null
 }
 
 const RESULT_COLUMNS =
-  'id, kind, seed, detail, day, answers, answered, correct, finished, grade, streak_bonus, total'
+  'id, kind, seed, detail, mix, day, answers, answered, correct, finished, grade, streak_bonus, total'
 
 /** A stored result's answers, or null when they don't match its answered count. */
 function storedAnswers(row: StoredResult): number[] | null {
@@ -361,10 +366,12 @@ function storedAnswers(row: StoredResult): number[] | null {
 
 /** One result with its problems, her answers and the right answers (SPEC §8). */
 function resultView(row: StoredResult & { seed: number }, answers: number[]) {
-  const problems = generateAssignment(row.seed)
+  const mix = storedMix(row.mix)
+  const problems = generateAssignment(row.seed, mix ?? undefined)
   return {
     id: row.id,
     kind: 'math' as const,
+    mix,
     day: row.day,
     answered: row.answered,
     correct: row.correct,

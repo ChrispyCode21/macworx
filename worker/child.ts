@@ -6,10 +6,12 @@ import {
   dayNumber,
   generateAssignment,
   grade,
+  isMix,
   leftEarlyPayout,
   MAX_ANSWER,
   nextStreak,
   payout,
+  type Mix,
   type Payout,
 } from '../src/engine'
 import { error, isUint32, json, readJson, utcDay } from './http'
@@ -55,6 +57,15 @@ interface ResultRow {
   accuracy_bonus: number
   streak_bonus: number
   total: number
+  mix: string | null
+}
+
+/** A stored mix: the picks as JSON, or null for the fixed mix (SPEC §6.1). Anything else is not one we wrote. */
+export function storedMix(text: string | null): Mix | null {
+  if (text === null) return null
+  const value: unknown = JSON.parse(text)
+  if (!isMix(value)) throw new Error('A stored mix is not a mix')
+  return value
 }
 
 function toResult(row: ResultRow) {
@@ -149,23 +160,30 @@ interface ResultBody {
   seed: number
   day: string
   answers: number[]
+  /** Absent is the fixed mix (SPEC §6.8). */
+  mix?: Mix
 }
 
-function parseResult(body: unknown): ResultBody | null {
-  if (typeof body !== 'object' || body === null) return null
-  const { seed, day, answers } = body as Record<string, unknown>
-  if (!isUint32(seed) || typeof day !== 'string' || !Array.isArray(answers)) return null
-  if (answers.length < 1 || answers.length > ASSIGNMENT_SIZE) return null
+/** The body's fields, or why it was refused: `bad_result` for the usual fields, `bad_mix` for a `mix` that isn't one. */
+function parseResult(body: unknown): ResultBody | 'bad_result' | 'bad_mix' {
+  if (typeof body !== 'object' || body === null) return 'bad_result'
+  const { seed, day, answers, mix } = body as Record<string, unknown>
+  if (!isUint32(seed) || typeof day !== 'string' || !Array.isArray(answers)) return 'bad_result'
+  if (answers.length < 1 || answers.length > ASSIGNMENT_SIZE) return 'bad_result'
   const wholeNumbers = answers.every(
     (a) => typeof a === 'number' && Number.isInteger(a) && a >= 0 && a <= MAX_ANSWER,
   )
-  if (!wholeNumbers) return null
+  if (!wholeNumbers) return 'bad_result'
   try {
     dayNumber(day)
   } catch {
-    return null
+    return 'bad_result'
   }
-  return { seed, day, answers }
+  if (!('mix' in body)) return { seed, day, answers }
+  // Present but not 1 to 3 different known picks (null included): refused, nothing recorded (SPEC §6.8, W8, W9).
+  if (!isMix(mix)) return 'bad_mix'
+  // Her order; isMix has checked each pick is exactly an operation and a level.
+  return { seed, day, answers, mix }
 }
 
 /** The day moved into range: no earlier than the day before the seed was handed out, no later than tomorrow. */
@@ -209,10 +227,10 @@ export function settleFinished({
 const findResult = (db: D1Database, seed: number) =>
   db.prepare('SELECT * FROM results WHERE seed = ?').bind(seed).first<ResultRow>()
 
-/** POST /api/results { seed, day, answers } (SPEC §6.8). */
+/** POST /api/results { seed, day, answers, mix? } (SPEC §6.8). */
 export async function postResult({ request, db, device, childId, now }: ChildRequest): Promise<Response> {
   const body = parseResult(await readJson(request))
-  if (!body) return error(400, 'bad_result')
+  if (typeof body === 'string') return error(400, body)
 
   const recorded = await findResult(db, body.seed)
   if (recorded) {
@@ -228,7 +246,7 @@ export async function postResult({ request, db, device, childId, now }: ChildReq
   const day = clampDay(body.day, seedRow.issued_day, now)
   // A day that had to be moved came from a wrong clock, so it doesn't touch the streak (§6.8, W7).
   const clockWrong = day !== body.day
-  const problems = generateAssignment(body.seed)
+  const problems = generateAssignment(body.seed, body.mix)
   const answered = body.answers.length
   const correct = body.answers.filter((a, i) => checkAnswer(problems[i], a)).length
   const finished = answered === ASSIGNMENT_SIZE
@@ -278,8 +296,8 @@ export async function postResult({ request, db, device, childId, now }: ChildReq
       db
         .prepare(
           `INSERT INTO results (seed, device_id, child_id, day, answers, answered, correct, finished, grade, base,
-           accuracy_bonus, streak_bonus, total, created_at)
-           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT revision FROM children WHERE id = ?) = ?
+           accuracy_bonus, streak_bonus, total, created_at, mix)
+           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT revision FROM children WHERE id = ?) = ?
            AND NOT EXISTS (SELECT 1 FROM results WHERE seed = ?)`,
         )
         .bind(
@@ -297,6 +315,7 @@ export async function postResult({ request, db, device, childId, now }: ChildReq
           earned.streakBonus,
           earned.total,
           now.toISOString(),
+          body.mix ? JSON.stringify(body.mix) : null,
           childId,
           revision,
           body.seed,

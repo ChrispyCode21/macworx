@@ -359,8 +359,8 @@ test('shows her numbers, results and the activity log in plain words', async ({ 
 
   const results = page.getByRole('table')
   await expect(results.getByRole('row')).toHaveCount(3)
-  await expect(results.getByRole('row').nth(1)).toHaveText(/Oct 167 of 8Left early7/)
-  await expect(results.getByRole('row').nth(2)).toHaveText(/Oct 1518 of 20Great22/)
+  await expect(results.getByRole('row').nth(1)).toHaveText(/Oct 16Mixed7 of 8Left early7/)
+  await expect(results.getByRole('row').nth(2)).toHaveText(/Oct 15Mixed18 of 20Great22/)
   await expect(page.getByRole('button', { name: /Review the result/ })).toHaveCount(0)
 
   await page.getByRole('link', { name: 'Macaronis', exact: true }).click()

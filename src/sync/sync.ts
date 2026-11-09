@@ -1,5 +1,6 @@
 // Saving her results (SPEC §6.8): sends the results this iPad hasn't sent yet, oldest first, then tops up
 // its seeds and its copy of the Worker's state. One sync runs at a time.
+import { isMix, type Mix } from '../engine'
 import {
   dropQueued,
   forgetDeviceKey,
@@ -39,7 +40,7 @@ export function takeSeed(): number | null {
  * She's done with `seed`: answers go in the queue and are sent; with no answers the seed goes to the back.
  * Does nothing for a seed that wasn't taken, or when the iPad was unpaired meanwhile.
  */
-export function endSeed(seed: number, answers: number[], now: Date): void {
+export function endSeed(seed: number, answers: number[], now: Date, mix?: Mix): void {
   const started = inProgress
   inProgress = null
   if (started?.seed !== seed || getDeviceKey() !== started.key) return
@@ -47,7 +48,9 @@ export function endSeed(seed: number, answers: number[], now: Date): void {
     setSeeds([...getSeeds().filter((s) => s !== seed), seed])
     return
   }
-  queueResult({ seed, day: localDay(now), answers })
+  // A mix the Worker would refuse can never be recorded, so it isn't queued (the queue would skip it unread).
+  if (mix !== undefined && !isMix(mix)) return
+  queueResult({ seed, day: localDay(now), answers, ...(mix && { mix }) })
   void sync()
 }
 
@@ -122,7 +125,7 @@ async function syncOnce(): Promise<SyncOutcome> {
     if (unpaired(response)) return 'unpaired'
     const body = await readBody(response)
     // Refused as not valid: it can never be recorded, so it mustn't hold up the rest (§6.8).
-    if (body?.error === 'bad_result' || body?.error === 'unknown_seed') {
+    if (body?.error === 'bad_result' || body?.error === 'bad_mix' || body?.error === 'unknown_seed') {
       dropQueued(next.seed)
       continue
     }

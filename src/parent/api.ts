@@ -3,6 +3,7 @@
 // Access can ask the parent to sign in again. A JSON answer is the Worker's own and never reloads (it's
 // what a preview, which has no Access, always gets), so a refusal there can't loop.
 
+import type { Mix } from '../engine'
 import type { ChildFields } from './childFields'
 import { pickChild, readSelectedChild } from './selection'
 
@@ -72,6 +73,11 @@ export interface Summary {
 
 export interface ResultRow {
   id: number
+  kind: 'math' | 'reading'
+  /** The passage's title of a reading result; null for math. */
+  title: string | null
+  /** A math result's picks in the order she picked them; null for the fixed mix and for reading. */
+  mix: Mix | null
   day: string
   answered: number
   correct: number

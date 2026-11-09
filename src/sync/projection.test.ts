@@ -15,6 +15,17 @@ const state = (over: Partial<WorkerState> = {}): WorkerState => ({
   ...over,
 })
 
+describe('a queued result with a mix', () => {
+  it("is scored against the mix's problems, as the Worker does (SPEC §6.8)", () => {
+    const mix = [{ operation: 'division', level: 'easy' }] as const
+    const right = generateAssignment(3, mix).map((p) => p.answer)
+    const queued: QueuedResult = { seed: 3, day: TODAY, answers: right, mix }
+    // Every answer right against the mix: Excellent and completed +1; scored as the fixed mix it would not be.
+    expect(project(state(), [queued])).toMatchObject({ completed: 11, latestGrade: 'Excellent' })
+    expect(project(state(), [{ ...queued, mix: undefined }])).not.toMatchObject({ latestGrade: 'Excellent' })
+  })
+})
+
 describe('her name, grade and initials', () => {
   const child = { name: 'Ada', grade: '4th grade', initials: 'AL' }
 
