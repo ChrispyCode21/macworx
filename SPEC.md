@@ -40,12 +40,12 @@ macworx gives her:
 
 ### 5.1 Do a math assignment (child)
 
-1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home has three buttons: Math starts a math assignment (below), Reading starts a reading assignment (§5.6) and Spelling opens its sample (§5.5). Every kind of assignment counts the same: none takes precedence over another in her totals, streak or grade.
-2. She starts an assignment: 20 math problems (§6.2). The screen has a top bar with her Macaroni balance and her streak, shown and hidden by the same rules as on home, then a heading with the "Practice / Math" crumb and "Problem n of 20" with a progress bar, then two panels, the problem in its own panel under an "{Operation} practice" label (for example "Addition practice") with a one-line instruction, and the number pad in a panel headed "Tap to enter your answer", then a row of actions with a note on the left and the buttons on the right.
-3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
+1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home has three buttons: Math opens the mix screen (step 2), Reading starts a reading assignment (§5.6) and Spelling opens its sample (§5.5). Every kind of assignment counts the same: none takes precedence over another in her totals, streak or grade.
+2. She taps Math and sees the mix screen: the heading "Make a math mix of your own.", the line "Tap the problems you'd like to try. Pick up to 3.", a count "n of 3 picked", and a grid with a row for each operation (Addition, Subtraction, Multiplication, Division) and a column for each level (Easy, Medium, Hard, marked with one, two and three dots). Each cell shows a sample problem: 3 + 4, 27 + 16 and 248 + 375; 8 − 3, 42 − 17 and 504 − 268; 3 × 4, 7 × 8 and 24 × 6; 12 ÷ 3, 56 ÷ 7 and 144 ÷ 12. She taps a cell to pick it and taps it again to unpick it. With 3 picked, the other cells dim and take no taps, and the note "Tap one of your picks to swap it." shows: tapping a pick unpicks it, and the cell she picks next goes last in the order. A side panel shows her mix. With none picked it says "Your next little win." and "Pick something to start"; with 1 pick, "One at a time."; with 2, "A little of both."; with 3, "A little of everything." With picks it lists each one in the order she picked it, with its operation, its level and its number of problems (§6.2), then "20 problems", "Mixed together into one practice." (for 2 or 3 picks) and "Earn up to X Macaronis.", where X is the most the assignment could pay her today (§6.4, M14 to M17). "Same as last time" picks the mix of the last assignment she started on this iPad, in the same order; it shows only when there is one, and she can still change the picks. The "Home / Math" crumb goes back to Home. "Start 20 problems" is disabled until she has picked at least one cell; it starts the assignment: 20 math problems (§6.2) of her mix. The screen has a top bar with her Macaroni balance and her streak, shown and hidden by the same rules as on home, then a heading with the "Practice / Math" crumb and "Problem n of 20" with a progress bar, then two panels, the problem in its own panel under an "{Operation} practice" label (for example "Addition practice") with a one-line instruction, and the number pad in a panel headed "Tap to enter your answer", then a row of actions with a note on the left and the buttons on the right.
+3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and one per digit of both factors together for multiplication (two for 7 × 8, three for 24 × 6). A division problem is stacked like a long-division bracket: the divisor to the left of a bracket around the dividend, with one answer box above each digit of the dividend, lined up so the last box is over the dividend's ones digit. No thousands separators appear in the stacked problem, so the columns stay lined up.
 4. She enters her answer on an on-screen number pad (digits 0–9 and a delete key) and submits it with the Check button in the actions row at the bottom right of the screen. The iPad keyboard never opens. After Check, her response replaces the number pad in that same panel. She answers each problem once.
    - Addition and subtraction fill from the ones place leftward, the way she works the columns: for 100 + 200 she types 0, 0, 3.
-   - Multiplication fills left to right, the way she writes a number: for 7 × 8 she types 5, 6. The answer stays lined up under the ones column, so a one-digit product sits in the ones box.
+   - Multiplication and division fill left to right, the way she writes a number: for 7 × 8 she types 5, 6, and for 56 ÷ 7 she types 8. The answer stays lined up with the ones column: her first digit goes in the ones box and moves one box left as each next digit comes, so for 144 ÷ 12 typing 1, 2 shows the 1 in the ones box, then the 1 in the tens box and the 2 in the ones box. The highlighted box is the ones box until all the boxes are full.
    - The box where her next digit goes is highlighted. Delete removes the digit she typed last. A box past the last one takes nothing.
    - Her answer is the number the boxes show; a leading 0 doesn't change it.
    - After Check, her answer stays in the boxes exactly as she typed it; the boxes never change to a different answer.
@@ -53,7 +53,7 @@ macworx gives her:
    - Not correct: her boxes turn a soft coral (never bright red, and no ✗), and the line above Next shows the right answer in a friendly way (for example "7 × 8 = 56"). The right answer appears only there, never in her boxes.
    - Either way, she taps Next when she's ready. Next takes Check's place in the actions row and ignores taps for a moment after it appears, so a quick double tap on Check can't also move on. Nothing moves on by itself.
 5. After the 20th problem she sees the result: correct answers, Macaronis earned (with the accuracy bonus, and the streak bonus on her first finished assignment of the day, shown), and the grade. Before the iPad has the Worker's numbers the streak bonus is left out.
-6. She can start another assignment right away. Assignments are unlimited.
+6. She can start another assignment right away: "Do another one" starts a new assignment of the same mix. Assignments are unlimited.
 7. She can leave an assignment at any time with the "Practice / Math" crumb. It ends early: she sees how many problems she did and the Macaronis they earned (§6.4), then home. When they earned none, the Macaroni line is left out rather than showing 0. Leaving before answering any problem records nothing. Leaving after answering all 20 counts as finishing, with the full result. The next assignment she starts is a new one.
 
 ### 5.2 Buy a reward (child)
@@ -177,17 +177,26 @@ A reading assignment is one passage and its questions. It is a paid, recorded as
 
 ### 6.1 Problem generator
 
-Problems come from code, not a question bank, so the supply never runs out.
+Problems come from code, not a question bank, so the supply never runs out. Each problem has an operation and a level (Easy, Medium or Hard):
 
-- **Addition:** pick a digit count `d` from 3, 4 or 5, each equally likely. Both numbers have `d` digits (between 10^(d−1) and 10^d − 1). The answer is their sum, which can have `d + 1` digits.
-- **Subtraction:** same digit rule as addition. The larger number comes first, so the answer is never negative. Equal numbers are allowed, and give 0.
-- **Multiplication:** both factors are whole numbers from 0 to 9. The answer is their product, which can have two digits.
+| | Easy | Medium | Hard |
+|---|---|---|---|
+| Addition | both numbers 1 to 9 | both numbers 10 to 99 | both numbers 100 to 999 |
+| Subtraction | both numbers 1 to 9 | both numbers 10 to 99 | both numbers 100 to 999 |
+| Multiplication | both factors 0 to 5 | both factors 0 to 9 | first factor 10 to 99, second 2 to 9 |
+| Division | divisor 1 to 5, answer 1 to 5 | divisor 1 to 9, answer 1 to 9 | divisor 2 to 12, answer 2 to 12 |
+
+- **Addition:** the answer is the sum, which can have one more digit than the numbers.
+- **Subtraction:** the larger number comes first, so the answer is never negative. Equal numbers are allowed, and give 0.
+- **Multiplication:** the answer is the product.
+- **Division:** the dividend is the divisor times the answer, so every division is exact, with no remainder. The divisor and the answer are each drawn evenly from their range, and the problem shows the dividend ÷ the divisor; her answer is the quotient. The same problem can come up twice in one assignment.
+- **The fixed mix:** a result that carries no mix (§6.8) is scored against the fixed mix: 7 addition, 7 subtraction and 6 multiplication problems in shuffled order, where each addition and subtraction problem has both numbers of the same digit count, 3, 4 or 5 (each equally likely), and the multiplication factors run from 0 to 9. For a given seed it gives exactly the 20 problems, in the same order, that every earlier version of the app gave, so work saved before mixes existed is still scored against the problems she saw (M13).
 
 ### 6.2 Assignment
 
-- A math assignment is 20 problems: 7 addition, 7 subtraction and 6 multiplication, in shuffled order.
+- A math assignment is 20 problems from her mix: 1 to 3 different picks, each an operation and a level (§6.1). Each pick gets 20 ÷ the number of picks, rounded down, and any problems left over go one each to the earliest picks: 1 pick gives 20, 2 picks give 10 and 10, and 3 picks give 7, 7 and 6, in the order she picked them. The problems are shuffled together.
 - A reading assignment (§5.6) is one passage and all of its questions (§6.10). Its size is the number of questions.
-- Every math assignment is generated from a seed. The same seed always gives the same 20 problems, in the same order. The app sends the seed and her answers; the Worker regenerates the problems from the seed and re-scores them. A reading assignment is made from an attempt the Worker hands out (§6.8); the app sends the attempt and her choices, and the Worker marks them against the passage's right answers.
+- Every math assignment is generated from a seed and its mix. The same seed and mix always give the same 20 problems, in the same order. The app sends the seed, the mix and her answers; the Worker regenerates the problems from the seed and re-scores them. A reading assignment is made from an attempt the Worker hands out (§6.8); the app sends the attempt and her choices, and the Worker marks them against the passage's right answers.
 
 ### 6.3 Scoring
 
@@ -203,6 +212,8 @@ Finishing an assignment pays:
 - **Accuracy bonus:** 20% of the base, rounded down. A finished assignment pays up to +4.
 - **Streak bonus:** on her first finished assignment of the day only, +1 per streak day, including today, up to +10 (§6.5).
 - **Minimum:** a finished assignment always pays at least 1 Macaroni in total.
+
+Every mix pays the same: the payout depends on the correct answers and the size, never on the operation or the level. The mix screen's "Earn up to X Macaronis" is the most a finished assignment could pay today: 20 plus the accuracy bonus of 4, plus the streak bonus when it would be her first finished assignment of the day (§6.5); before the iPad has the Worker's numbers (§6.8) the streak bonus is left out.
 
 A math assignment she leaves early (§5.1) pays the base only: 1 Macaroni per correct answer so far. It gets no accuracy bonus, streak bonus, minimum or grade, and doesn't count toward the streak.
 
@@ -246,15 +257,15 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 - **Whose numbers:** seeds, results and numbers belong to the child of the device that sends them. A child's balance, streak, last counted day and completed assignments are hers alone.
 - **Seeds:** the Worker hands each iPad up to 20 unused seeds at a time and accepts each seed once. An iPad keeps its unused seeds so assignments work offline.
 - **Reading:** the Worker chooses her next passage (§6.10) and hands it out with an attempt: a single-use number kept for her device (and its child), with the day it was handed out. Her choices come back with the attempt. The Worker marks them against the passage's right answers, records the result, with the passage's title and, for each question, its text, its choices, her choice and the right choice as they are at that moment, and pays it by the rules below. Before any reading start or result, the iPad sends the math results it hasn't sent yet, oldest first, so offline work is counted before the streak moves; if they can't be sent, Reading shows the Wi-Fi line of §5.6 and starts nothing. Her day comes with the choices and follows the day range rule below. The right answers stay on the Worker until the result is recorded. An attempt she never checks records nothing.
-- **Recording:** the Worker regenerates a math assignment from its seed and re-scores her answers. 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
+- **Recording:** a math result carries its seed, its mix and her answers. The Worker regenerates the assignment from the seed and the mix and re-scores her answers; a result with no mix is the fixed mix of §6.1, and the Worker records the mix it used. An absent `mix` is the fixed mix; a `mix` that is present has 1 to 3 picks, each a known operation and level, none repeated, and anything else is refused with 400 `bad_mix`, records nothing and leaves the seed unused (W8, W9). 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
 - **The same result twice:** sending a result for a seed or attempt that's already recorded returns the recorded result and counts nothing again, so a retry after a lost connection is safe.
 - **Day range:** a result's day may be no earlier than the day before its seed (or reading attempt) was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. A day that had to be moved means the iPad's clock was wrong, so that result doesn't touch the streak: it's paid its base and accuracy bonus and counts as completed, but the streak, last counted day and streak bonus stay as they were. Because of this, her last counted day is never more than a day ahead of the real date, and a clock that's off by more than a day can't reset her streak. (A clock off by only a day looks the same as a time-zone difference, so it counts like any other day.)
 - **Results that arrive late:** a result whose day is earlier than her last counted day counts as that same last day for the streak (no streak change, no streak bonus) and is still paid.
 - **Completed assignments** counts finished assignments only, math and reading.
-- **On the iPad:** a paired iPad keeps its unused seeds, the results it hasn't sent yet, and the Worker's latest state in its own storage, and asks the browser to keep that storage. Each assignment uses the next stored seed, and its result is dated with the iPad's own day. Results go to the Worker one at a time, oldest first, whenever the app opens, Home shows, a result is saved, or the connection comes back; the Worker's numbers replace the iPad's. Home shows the Worker's latest numbers with each result not yet sent applied on top, oldest first, using the engine. Every result adds what it pays to the balance. A finished result also adds 1 to completed assignments, moves the streak (§6.5; a result dated before her last counted day counts as that day) and sets the latest grade. A result she left early adds only its base. Each result is applied with the day the iPad dated it. The Worker's numbers replace these after each sync. A result the Worker refuses as not valid is dropped, so it can't hold up the rest. When the iPad tops up its seeds, it leaves out seeds in its unsent results and the one she's working on. A stored seed she leaves without answering anything goes to the back of the list.
-- **No seeds:** when a paired iPad has no seeds left and can't reach the Worker, Start shows "Connect to Wi-Fi to get more problems!"
+- **On the iPad:** a paired iPad keeps its unused seeds, the results it hasn't sent yet, and the Worker's latest state in its own storage, and asks the browser to keep that storage. Each assignment uses the next stored seed, and the iPad keeps the mix of the last assignment she started for "Same as last time". Its result is dated with the iPad's own day. Results go to the Worker one at a time, oldest first, whenever the app opens, Home shows, a result is saved, or the connection comes back; the Worker's numbers replace the iPad's. Home shows the Worker's latest numbers with each result not yet sent applied on top, oldest first, using the engine. Every result adds what it pays to the balance. A finished result also adds 1 to completed assignments, moves the streak (§6.5; a result dated before her last counted day counts as that day) and sets the latest grade. A result she left early adds only its base. Each result is applied with the day the iPad dated it. The Worker's numbers replace these after each sync. A result the Worker refuses as not valid is dropped, so it can't hold up the rest. When the iPad tops up its seeds, it leaves out seeds in its unsent results and the one she's working on. A stored seed she leaves without answering anything goes to the back of the list.
+- **No seeds:** when a paired iPad has no seeds left and can't reach the Worker, Start 20 problems on the mix screen shows "Connect to Wi-Fi to get more problems!"; Math still opens the mix screen.
 - **Before the iPad has numbers:** a paired iPad that hasn't yet received the Worker's state, and an iPad that isn't paired, show no numbers on Home (not a balance of 0). A finished result leaves out the streak bonus: its total is base plus accuracy bonus, with the minimum applied.
-- **Not paired:** an iPad without a device key still does math assignments, each from a random seed, and saves nothing. Its Reading is the sample (§5.5).
+- **Not paired:** an iPad without a device key still does math assignments, each from a random seed, and saves nothing but the mix for "Same as last time". Its Reading is the sample (§5.5).
 
 ### 6.9 Parent access and pairing
 
@@ -319,14 +330,23 @@ Each example is one unit test named with its stable ID, e.g. `it('P4: ...')`. If
 
 | ID | Given | Expected |
 |---|---|---|
-| M1 | Any seed | 20 problems: **7 addition, 7 subtraction, 6 multiplication** |
-| M2 | Addition and subtraction problems from 1,000 seeds | Both numbers have the **same digit count, 3 to 5** (100–999, 1,000–9,999 or 10,000–99,999) |
+| M1 | One pick (any), any seed | **20** problems, all of that operation and level |
+| M2 | Addition and subtraction problems of each level from 1,000 seeds | Both numbers in the level's range: **1 to 9**, **10 to 99**, **100 to 999** |
 | M3 | Subtraction problems from 1,000 seeds | First number ≥ second; answer **never negative** |
 | M4 | Subtraction 4,512 − 4,512 | Allowed; answer **0** |
-| M5 | Addition 99,999 + 99,999 | Answer **199,998** (one more digit than the numbers) |
-| M6 | Multiplication problems from 1,000 seeds | Both factors **0 to 9** |
+| M5 | Addition 999 + 999 | Answer **1,998** (one more digit than the numbers) |
+| M6 | Multiplication problems of each level from 1,000 seeds | Easy: both factors **0 to 5**; Medium: both **0 to 9**; Hard: first **10 to 99**, second **2 to 9** |
 | M7 | 7 × 8, answered 56; then answered 54 | 56 is **correct**; 54 is **not correct** |
-| M8 | The same seed, generated twice | **Identical** problems in identical order |
+| M8 | The same seed and mix, generated twice | **Identical** problems in identical order |
+| M9 | Two picks | **10 and 10** problems, shuffled together |
+| M10 | Three picks, in the order Multiplication Medium, Division Easy, Addition Hard | **7, 7 and 6** problems, in that order of picks |
+| M11 | Division problems of each level from 1,000 seeds | Dividend ÷ divisor is a **whole number**; Easy: divisor and answer **1 to 5**; Medium: **1 to 9**; Hard: **2 to 12** |
+| M12 | A division problem 144 ÷ 12, answered 12; then answered 11 | 12 is **correct**; 11 is **not correct** |
+| M13 | Seed 1, no mix | The fixed mix: **7 addition, 7 subtraction, 6 multiplication**; its first four problems are 463 + 322 = **785**, 1 × 7 = **7**, 692 − 591 = **101**, 74,885 − 27,353 = **47,532** |
+| M14 | The mix screen with a mix picked; streak 0, no assignment finished today | Earn up to **25** (20 + 4 + 1) |
+| M15 | The same, but an assignment is already finished today | Earn up to **24** |
+| M16 | Streak 9, last counted day yesterday | Earn up to **34** (20 + 4 + 10) |
+| M17 | The iPad has no Worker numbers yet | Earn up to **24** (no streak bonus, §6.8) |
 
 ### 7.W Saving results (§6.8)
 
@@ -341,6 +361,9 @@ Unless stated, the Worker's date is 2026-10-17 (UTC), the seed was handed out th
 | W5 | Last counted day 2026-10-17 (streak 4); a finished result dated 2026-10-15 arrives | Counts as 2026-10-17: streak stays **4**, last counted day stays **2026-10-17**, no streak bonus; still paid |
 | W6 | A result she left early: 8 answered, 7 correct | Paid **7**; streak, last counted day and completed unchanged; no grade |
 | W7 | Streak 5, last counted day 2026-10-16; a finished result, 20 correct, dated 2026-10-20 (the clock was wrong) | Recorded on **2026-10-18**, paid 20 + 4 = **24** (no streak bonus); streak stays **5**, last counted day stays **2026-10-16**; completed **+1**, grade **Excellent** |
+| W8 | A math result whose mix has 4 picks | Refused: **400 `bad_mix`**, nothing recorded, the seed still unused |
+| W9 | A math result whose mix repeats a pick | Refused: **400 `bad_mix`**, nothing recorded, the seed still unused |
+| W10 | A math result with a mix of 2 picks, 20 answers | Re-scored against that seed's 10 + 10 problems; recorded with its mix |
 
 ### 7.A Parent access and pairing (§6.9)
 
@@ -479,14 +502,14 @@ A parent opens a result the Worker recorded.
 
 | ID | Given | Expected |
 |---|---|---|
-| D13 | A parent opens a recorded result | Each problem with its operation, numbers, her answer and the right answer, in order; the same seed always shows the same problems |
+| D13 | A parent opens a recorded result | Its mix, and each problem with its operation, numbers (for division, the dividend then the divisor), her answer and the right answer, in order; the same seed and mix always show the same problems |
 | D14 | A parent opens a recorded reading result, after the owner has since edited the passage's text or a right choice | The passage's title, then each question with its choices, her choice and the right choice, in order, as they were when the result was recorded |
 
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
 The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock and no `Math.random`. Randomness comes from the seed, and dates are passed in. It exposes:
 
-- `generateAssignment(seed)`: the 20 problems of §6.2.
+- `generateAssignment(seed, mix)`: the 20 problems of §6.2 for a mix of 1 to 3 picks, `{ operation, level }`; with no mix, the fixed mix of §6.1.
 - `checkAnswer(problem, answer)`: §6.3.
 - `nextStreak(state, today)`: the streak after finishing an assignment today, and whether it was the first of the day (§6.5).
 - `payout(result)`: base, accuracy bonus, streak bonus and total for a finished assignment of any kind, from its correct answers and its size (§6.4).
@@ -499,7 +522,7 @@ The Worker's child API (every route needs the iPad's device key):
 
 - `GET /api/state?pending=…`: the device's child (name, grade and initials, for the practice screens' top bar), balance, streak, last counted day, completed assignments, the latest finished assignment's grade, and which of the listed seeds (up to 100) are already recorded.
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
-- `POST /api/results`: records a math result (§6.8) and returns it with the new state.
+- `POST /api/results`: records a math result (§6.8), with its `mix` when it has one, and returns it with the new state.
 - `POST /api/reading/start`: chooses her next passage (§6.10), makes an attempt and returns both, without the right choices. With no passages it returns `passage: null`.
 - `POST /api/reading/result { attempt, day, picks }`: `day` is the iPad's own day (§6.5). Marks her choices, records the result with the passage's title and each question's text, choices, her choice and the right choice, and returns it with, per question, whether she was right and the right choice, and the new state (§6.8). 400 for choices that miss a question or name a choice of another question; 404 for an attempt that isn't this device's.
 - `GET /api/reading/image/:name`: a passage's picture from R2.
@@ -518,9 +541,9 @@ The parent API (every route needs a valid Access token, §6.9). A parent can lis
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
 - `GET /api/parent/summary`: balance, streak, last counted day, completed assignments and `earnedToday`: the sum of the total paid on the chosen child's results whose day is the parent's calendar day (finished and left-early results count; parent adjustments do not), 0 with none, and `completedToday`: the number of the chosen child's finished results whose day is the parent's calendar day (results she left early do not count), 0 with none. It takes an optional `today` query parameter, the parent's calendar day as `YYYY-MM-DD`. A value that is not a real date, or is more than 1 day from the Worker's UTC date, is 400 `bad_day`. Without it, the Worker's UTC date is used. The `child` check comes first. `POST /api/parent/streak` answers with the same fields, for the Worker's UTC date.
 - `GET /api/parent/days`: for the chosen child, the days among the seven ending on the parent's calendar day on which she has at least one finished result, oldest first, each once: `{ days: ["2026-10-11", ...] }`. It takes the same optional `today` query parameter as `GET /api/parent/summary`, with the same rule (absent: the Worker's date; not a real date, or more than 1 day from the Worker's date: 400 `bad_day`, nothing read).
-- `GET /api/parent/results`: the latest 50 recorded results, newest first: kind (`math` or `reading`), the passage's title for a reading result, day, answered, correct, finished, grade, total paid and `createdAt` (when the Worker recorded the result, an ISO timestamp).
+- `GET /api/parent/results`: the latest 50 recorded results, newest first: kind (`math` or `reading`), the mix of a math result (its picks, or none for the fixed mix of §6.1), the passage's title for a reading result, day, answered, correct, finished, grade, total paid and `createdAt` (when the Worker recorded the result, an ISO timestamp).
 - `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
-- `GET /api/parent/results/:id`: one recorded result with its problems (a reading result: the passage's title and, per question, its text, choices, her choice and the right choice): day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
+- `GET /api/parent/results/:id`: one recorded result with its problems (a math result: its mix as in the list; a reading result: the passage's title and, per question, its text, choices, her choice and the right choice): day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
 - `GET /api/parent/log`: the latest 50 admin log entries for the chosen child, newest first: when, which parent, the action and its details.
 
 Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
@@ -536,7 +559,6 @@ Ideas outside the MVP. Each needs a spec section before it is built.
 - **Loot box:** earned-only surprise rewards.
 - **Carrying and borrowing:** work space on the stacked problem to mark a carried 1 or regroup from the next place.
 - **Retry and partial credit:** a hint and a second try, with partial credit for a fixed answer.
-- **Difficulty levels:** stretch problems that pay more than warm-ups.
 - **Parent tools:** push notification on a purchase, adding spelling words and assignments.
 - **Rewards peek:** a read-only list of rewards, opened from the practice top bar during an assignment.
 - **Portal detail:** purchase history beyond Last redeemed (with the reward shop, §5.2).
