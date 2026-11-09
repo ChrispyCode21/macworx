@@ -1,6 +1,6 @@
 # Practice screens design contract
 
-Read this whole file before building the Math assignment screen or the Spelling and Reading samples (SPEC §5.1, §5.5). The builder can't see Figma, so this file and the four PNGs in `docs/design/` are the design. Home, the result screen and the Pair screen are not in Figma and keep their current look. The only addition is Home's two new buttons (section 9).
+Read this whole file before building the Math assignment screen or the Spelling and Reading samples (SPEC §5.1, §5.5). The builder can't see Figma, so this file and the four PNGs in `docs/design/` are the design. Home, the result screen and the Pair screen are not in Figma; their look is the one in `src/index.css`, and the Pair screen's pad fits the viewport as in section 3. The only addition is Home's two new buttons (section 9).
 
 ## Contents
 
@@ -58,9 +58,9 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
 - Icons are inline SVG (section 16).
 - **Weights:** 400, 500 and 600. 500 is Figma's "Medium".
 - **Superseded child CSS** (in `src/index.css`):
-  - `.assignment`, `.assignment-bar`, `.pad` and `.response` are replaced by the layout in sections 6 to 8.
-  - The practice screens don't use `.button-primary`, `.button-key` or `.button-check`.
-  - The Pair screen still uses `.button-key` and `.button-check`, and `NumberPad` keeps its Check key for it, with no Check key on the Math screen.
+  - `.assignment`, `.assignment-bar` and `.response` are replaced by the layout in sections 6 to 8.
+  - The practice screens don't use `.button-primary`.
+  - Both pads are `NumberPad` on the base `.pad` and `.button-key`. On Math, `.practice .pad` and `.practice .button-key` restyle them and there is no Check key. The Pair screen keeps the base look, its `.button-check` key and `.pair .pad`'s 96-to-48 range.
   - Keep `.stacked`, `.stacked-*` and `.answer-box*`, with the size overrides in section 8.
 
 ## 3. Units and layout frame

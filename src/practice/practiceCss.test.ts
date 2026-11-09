@@ -144,7 +144,7 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ['.practice-pad-heading', 'height: var(--practice-pad-heading);', '§8 pad heading, from its token'],
     ['.button-support', 'height: 44px;', '§7.4 support hit area'],
     ['.practice .pad', 'flex: 1;', '§8 the keys share the pad panel'],
-    ['.practice .pad', 'grid-template-rows: repeat(4, 1fr);', '§8 four equal key rows'],
+    ['.practice .pad', 'grid-template-rows: repeat(4, minmax(0, 1fr));', '§8 four equal key rows'],
     [
       '.practice .pad',
       'max-height: calc(4 * var(--practice-key) + 3 * var(--space-10));',

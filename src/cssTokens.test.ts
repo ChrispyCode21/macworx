@@ -132,8 +132,12 @@ describe('size tokens', () => {
   it('lets the pairing pad shrink from 96 to 48 high a key (#201)', () => {
     const rule = css.match(/\n\.pair \.pad \{([^}]*)\}/)?.[1] ?? ''
     expect(root).toContain('--key-min: 48px;')
+    // A key's least height is its text (48), so the floor is real.
+    const key = css.match(/\n\.button-key,\n\.button-check \{([^}]*)\}/)?.[1] ?? ''
+    expect(key).toContain('line-height: 1;')
+    expect(key).toContain('padding: 0;')
     expect(rule).toContain('flex: 1;')
-    expect(rule).toContain('grid-template-rows: repeat(4, 1fr);')
+    expect(rule).toContain('grid-template-rows: repeat(4, minmax(0, 1fr));')
     expect(rule).toContain('min-height: calc(4 * var(--key-min) + 3 * var(--gap));')
     expect(rule).toContain('max-height: calc(4 * var(--key) + 3 * var(--gap));')
   })

@@ -150,7 +150,9 @@ p {
 
 .button-key,
 .button-check {
-  height: var(--key);
+  /* The height comes from the pad's rows; with line-height 1 and no padding a key's least height is its text (48), the floor in --key-min. */
+  padding: 0;
+  line-height: 1;
   font-size: var(--text-48);
   background: var(--soft);
 }
@@ -270,14 +272,9 @@ p {
 /* The pairing pad fills the height a short tablet leaves, a key from 48 to 96 high. */
 .pair .pad {
   flex: 1;
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(4, minmax(0, 1fr));
   min-height: calc(4 * var(--key-min) + 3 * var(--gap));
   max-height: calc(4 * var(--key) + 3 * var(--gap));
-}
-
-.pair .button-key,
-.pair .button-check {
-  height: auto;
 }
 
 /* The Parents link on Home (SPEC §5.3): small and quiet, with a tap area big enough for a finger. */
@@ -2507,7 +2504,7 @@ p {
 .practice .pad {
   flex: 1;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(4, minmax(0, 1fr));
   gap: var(--space-10);
   width: 100%;
   min-height: calc(4 * var(--key-min) + 3 * var(--space-10));
@@ -2618,7 +2615,6 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: auto;
   border-radius: var(--radius-control);
   background: var(--l-surface);
   color: var(--l-text);
