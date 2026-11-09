@@ -209,7 +209,7 @@ describe('generator (SPEC §6.1, §6.2)', () => {
     ])
   })
 
-  it('the fixed mix picks 3, 4 and 5 digits about equally often', () => {
+  it('the fixed mix picks 3, 4 and 5 digits about equally often, both numbers sharing a count', () => {
     const problems = SEEDS.flatMap((s) => generateAssignment(s)).filter(
       (p) => p.operation !== 'multiplication',
     )
@@ -218,7 +218,7 @@ describe('generator (SPEC §6.1, §6.2)', () => {
       expect(share, `${d} digits`).toBeGreaterThan(0.3)
       expect(share, `${d} digits`).toBeLessThan(0.37)
     }
-    for (const p of problems) expect(digits(p.a) === digits(p.b) || p.operation === 'subtraction').toBe(true)
+    for (const p of problems) expect(digits(p.a)).toBe(digits(p.b))
   })
 
   it('rejects seeds that are not whole numbers from 0 to 2^32 − 1, with or without a mix', () => {
@@ -240,6 +240,12 @@ describe('generator (SPEC §6.1, §6.2)', () => {
       [{ operation: 'addition' }],
       [{ ...add, extra: 1 }],
       [{ operation: 'toString', level: 'easy' }],
+      [{ operation: ['addition'], level: 'easy' }],
+      [{ operation: 'addition', level: ['easy'] }],
+      // eslint-disable-next-line no-sparse-arrays
+      [,],
+      // eslint-disable-next-line no-sparse-arrays
+      [add, , { operation: 'division', level: 'easy' }],
       [null],
       'addition',
       { 0: add, length: 1 },

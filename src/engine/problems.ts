@@ -82,19 +82,17 @@ export function generateAssignment(seed: number, mix?: Mix): Problem[] {
 /** Whether `value` is a mix: 1 to 3 different picks, each exactly an operation and a level (SPEC §6.2). */
 export function isMix(value: unknown): value is Mix {
   if (!Array.isArray(value) || value.length < 1 || value.length > MAX_PICKS) return false
-  const picks = value as unknown[]
-  const known = picks.every(
-    (p) =>
-      typeof p === 'object' &&
-      p !== null &&
-      !Array.isArray(p) &&
-      Object.keys(p).length === 2 &&
-      Object.hasOwn(RANGES, (p as Pick).operation) &&
-      LEVELS.includes((p as Pick).level),
-  )
-  if (!known) return false
-  const keys = new Set(picks.map((p) => `${(p as Pick).operation}/${(p as Pick).level}`))
-  return keys.size === picks.length
+  const seen = new Set<string>()
+  // An index loop, not every/map: those skip the holes of a sparse array.
+  for (let i = 0; i < value.length; i++) {
+    const p: unknown = value[i]
+    if (typeof p !== 'object' || p === null || Array.isArray(p) || Object.keys(p).length !== 2) return false
+    const { operation, level } = p as Record<string, unknown>
+    if (typeof operation !== 'string' || !Object.hasOwn(RANGES, operation)) return false
+    if (typeof level !== 'string' || !(LEVELS as readonly string[]).includes(level)) return false
+    seen.add(`${operation}/${level}`)
+  }
+  return seen.size === value.length
 }
 
 function pickProblem(pick: Pick, rng: Rng): Problem {
