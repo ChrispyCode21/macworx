@@ -13,6 +13,12 @@ const render = (numbers?: HomeNumbers) =>
   )
 
 describe('Assignment frame', () => {
+  it('opens a fixed-mix assignment when it has no mix', () => {
+    const html = renderToStaticMarkup(<Assignment seed={1} onFinish={() => {}} onLeave={() => {}} />)
+    expect(html).toContain('Problem 1 of 20')
+    expect(html).toContain(`>${COPY.mathEyebrow(generateAssignment(1)[0].operation)}<`)
+  })
+
   it('opens on problem 1 of 20 with the top bar, the crumb and a disabled Check', () => {
     const html = render(NUMBERS)
     expect(html).toContain('40 Macaronis')
