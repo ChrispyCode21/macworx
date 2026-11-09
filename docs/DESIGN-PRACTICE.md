@@ -1,6 +1,6 @@
 # Practice screens design contract
 
-Read this whole file before building the Math assignment screen or the Spelling and Reading samples (SPEC §5.1, §5.5). The builder can't see Figma, so this file and the four PNGs in `docs/design/` are the design. Home, the result screen and the Pair screen are not in Figma and keep their current look. The only addition is Home's two new buttons (section 9).
+Read this whole file before building the Math assignment screen or the Spelling and Reading samples (SPEC §5.1, §5.5). The builder can't see Figma, so this file and the four PNGs in `docs/design/` are the design. Home, the result screen and the Pair screen are not in Figma; their look is the one in `src/index.css`, and the Pair screen's pad fits the viewport as in section 3. The only addition is Home's two new buttons (section 9).
 
 ## Contents
 
@@ -58,9 +58,9 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
 - Icons are inline SVG (section 16).
 - **Weights:** 400, 500 and 600. 500 is Figma's "Medium".
 - **Superseded child CSS** (in `src/index.css`):
-  - `.assignment`, `.assignment-bar`, `.pad` and `.response` are replaced by the layout in sections 6 to 8.
-  - The practice screens don't use `.button-primary`, `.button-key` or `.button-check`.
-  - The Pair screen still uses `.button-key` and `.button-check`, and `NumberPad` keeps its Check key for it, with no Check key on the Math screen.
+  - `.assignment`, `.assignment-bar` and `.response` are replaced by the layout in sections 6 to 8.
+  - The practice screens don't use `.button-primary`.
+  - Both pads are `NumberPad` on the base `.pad` and `.button-key`. On Math, `.practice .pad` and `.practice .button-key` restyle them and there is no Check key. The Pair screen keeps the base look, its `.button-check` key and `.pair .pad`'s 96-to-48 range.
   - Keep `.stacked`, `.stacked-*` and `.answer-box*`, with the size overrides in section 8.
 
 ## 3. Units and layout frame
@@ -72,7 +72,7 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
   1. **Top bar**: 82 high, plus `env(safe-area-inset-top)` above it (section 6.1).
   2. **Workspace**: padding 24 40 0 plus the safe areas left and right. Flex column, gap 20, `flex: 1`. It holds:
      1. the heading block (90 high)
-     2. the activity row (478 in the frame). It takes `flex: 1; min-height: 478px`, and its panels stretch to its height.
+     2. the activity row. It takes `flex: 1` with no fixed minimum: it is the rest of the viewport (518 in the 1194x834 frame), and its panels stretch to its height. Its least height is what its content needs (below).
      3. the actions row (64 high)
   3. Bottom padding is `max(16px, env(safe-area-inset-bottom))`, which replaces the home indicator.
 - **Activity columns** (landscape, 1024 px wide and up). The content is 1114 wide at 1194:
@@ -84,17 +84,17 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
 | Reading passage | `minmax(0, 746fr) minmax(0, 344fr)` |
 | Reading questions | `minmax(0, 1fr) minmax(0, 1fr)`. More than two questions wrap to new rows. |
 
-- **Below 1024 px wide** (a portrait iPad, 834 wide): one column, in DOM order. Each panel's height is its content, and the page scrolls. The heading block and actions row stay as they are; if the title doesn't fit beside the progress, the progress drops below it.
+- **Below 1024 px wide** (a portrait iPad, 834 wide): one column, in DOM order. The free height is shared between the two rows, so the panels fill the viewport; the page scrolls only when the floors don't fit ("Fitting the viewport", below). The heading block and actions row stay as they are; if the title doesn't fit beside the progress, the progress drops below it.
   - DOM order is: problem then pad; listen then choices; passage then companion; question 1 then question 2.
   - This is not in Figma. Today's assignment also stacks in portrait.
-- **Short landscape viewports:** the page scrolls; nothing shrinks below the sizes here. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
+- **Fitting the viewport.** The Math screen fits a tablet of any size without scrolling, so the sizes that follow the viewport's height are a range: the size given here is the most, and a floor is the least. Number pad keys are 72 down to 48 (`--key-min`). They stay at 72 in the 1194x834 frame as drawn and wherever a landscape row has room; in portrait the two stacked panels share the spare height, so the keys give some back sooner (52 at 768x1024). The Pair screen's pad does the same, from 96 (`--key`) down to 48. If a window is shorter than even the floors allow (Split View), the page scrolls. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
 
-**Values the Figma frames do not give.** These are in the CSS, decided with the owner on 2026-11-08 (issue #191). Only the pad panel's height and its two tokens are pinned by tests:
+**Values the Figma frames do not give.** These are in the CSS, decided with the owner on 2026-11-08 (issue #191), except the key floor of 48. Only the pad panel's height and its tokens are pinned by tests:
 
 - Spelling: the listen block's padding is 32 24 (vertical, horizontal); below 1024 the listen block and the choices stack with a gap of 32.
 - Reading: a choice's `padding-block` is 12.
 - Math: the answer box is 68 high, and the stacked digits are 52 in cells 57 wide (`--digit`).
-- The warm number-pad panel is at least 406 high: its padding 24, heading 24 (`--practice-pad-heading`), gap 16, four keys of 72 (`--practice-key`), three key gaps of 10, and its padding 24.
+- The warm number-pad panel is at least 310 high: its padding 24, heading 24 (`--practice-pad-heading`), gap 16, four keys of 48 (`--key-min`), three key gaps of 10, and its padding 24. With room, its keys grow to 72 (`--practice-key`), which makes it 406.
 - `action` and `action-secondary` have 24 of padding-inline.
 
 ## 4. Type scale
@@ -272,7 +272,7 @@ A `<Button variant="choice">` in a `role="radiogroup"`. Each choice has `role="r
 | `action` | height 56, min-width 220, radius 12, gap 12, icon 20 after the label | `--l-primary` | 1 px `--l-primary` | `--l-primary-ink`, action | Check, Next, Check answers, Done, Back to Home |
 | `action-secondary` | height 56, min-width 170, same | `--l-surface` | 1 px `--l-line` | `--l-link`, action | Read again |
 | `crumb` | min-height 44 (hit area; the row is 24), gap 8, no padding, no fill | none | none | `--l-link`, crumb | back control |
-| `key` (practice size) | height 72, radius 12 | `--l-surface` | none | `--l-text`, key; delete icon 27 `--l-link` | number pad |
+| `key` (practice size) | height 72 with room, 48 at the least, radius 12 | `--l-surface` | none | `--l-text`, key; delete icon 27 `--l-link` | number pad |
 | `play` | circle 112 | `--l-primary` | none | play icon 40, `--l-primary-ink` | Play word |
 | `support` | height 44, gap 8 | none | none | `--l-link`, support; volume-2 18 | Hear it in a sentence |
 | `choice` | 7.3 | | | | |
@@ -308,7 +308,7 @@ Frame `practice-math.png`. Crumb "Practice  /  Math". Title "A little practice, 
    Fractions are a "Later" subject (SPEC §9): the PNG is their layout reference.
 2. **Number pad panel** (7.1 `warm`, padding 24, column, gap 16):
    - **Heading row** (height 24): pad-heading "Tap to enter your answer". Figma's keyboard icon is dropped, because the keyboard never opens.
-   - **Keys:** a 3-column grid, gap 10, `key` buttons 72 high, filled 1 2 3 / 4 5 6 / 7 8 9.
+   - **Keys:** a 3-column grid, gap 10, `key` buttons 72 high with room and down to 48 on a short tablet (§3), filled 1 2 3 / 4 5 6 / 7 8 9.
      - The bottom row is an empty cell, 0, then delete (delete icon 27, accessible name "Delete").
      - Figma's "/" key is dropped, and so is "Clear answer" (not in SPEC §5.1).
    - **After Check:** the panel's contents are replaced by the response (7.5), centered, in the same panel at the same size, so nothing jumps.

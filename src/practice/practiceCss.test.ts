@@ -66,17 +66,16 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(rule('.practice-panel')).toContain('padding: var(--space-32);')
     expect(rule('.practice-panel-warm')).toContain('background: var(--l-warm);')
     expect(rule('.practice-panel-warm')).toContain('padding: var(--space-24);')
-    // 24 + 24 + 16 + 4 keys + 3 gaps of 10 + 24, from the key token (406 at 72px).
+    // The activity row is the rest of the viewport, with no fixed minimum of its own (§3).
+    expect(rule('.practice-activity')).not.toContain('min-height')
+    // 24 + 24 + 16 + 4 keys + 3 gaps of 10 + 24, from the smallest key token (310 at 48px; 406 at the full 72px).
     expect(practice).toContain('--practice-key: 72px;')
+    expect(css).toContain('--key-min: 48px;')
     expect(practice).toContain('--practice-pad-heading: 24px;')
-    // Sum the calc term by term: the whole pad panel is 406px tall, so a dropped or changed term fails.
+    // Sum the calc term by term: the whole pad panel is 310px tall at its least, so a dropped or changed term fails.
     const calc = /min-height: calc\(([\s\S]*?)\);/.exec(rule('.practice-panel-warm'))?.[1] ?? ''
     const px = (name: string) =>
-      name === 'practice-key'
-        ? 72
-        : name === 'practice-pad-heading'
-          ? 24
-          : Number(/^space-(\d+)$/.exec(name)?.[1])
+      name === 'key-min' ? 48 : name === 'practice-pad-heading' ? 24 : Number(/^space-(\d+)$/.exec(name)?.[1])
     const total = calc
       .split('+')
       .map((term) => {
@@ -91,7 +90,7 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
         )
       })
       .reduce((sum, n) => sum + n, 0)
-    expect(total).toBe(406)
+    expect(total).toBe(310)
     // Link text on the warm panel is 4.42:1, so its heading is plain text.
     expect(rule('.practice-panel-warm')).not.toContain('--l-link')
     expect(rule('.practice-pad-heading')).not.toContain('--l-link')
@@ -132,7 +131,6 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ['.practice-progress', 'width: 182px;', '§6.2 progress bar'],
     ['.practice-progress-track', 'height: 6px;', '§6.2 progress track'],
     ['.practice-progress-fill', 'height: 6px;', '§6.2 progress fill'],
-    ['.practice-activity', 'min-height: 478px;', '§3 activity row'],
     ['.practice-actions', 'height: 64px;', '§6.3 buttons row'],
     ['.button-action', 'height: 56px;', '§7.4 action'],
     ['.button-action', 'min-width: 220px;', '§7.4 action'],
@@ -145,7 +143,18 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ],
     ['.practice-pad-heading', 'height: var(--practice-pad-heading);', '§8 pad heading, from its token'],
     ['.button-support', 'height: 44px;', '§7.4 support hit area'],
-    ['.practice .button-key', 'height: var(--practice-key);', '§7.4 and §8 key (72px)'],
+    ['.practice .pad', 'flex: 1;', '§8 the keys share the pad panel'],
+    ['.practice .pad', 'grid-template-rows: repeat(4, minmax(0, 1fr));', '§8 four equal key rows'],
+    [
+      '.practice .pad',
+      'max-height: calc(4 * var(--practice-key) + 3 * var(--space-10));',
+      '§7.4 and §8 keys at most 72px',
+    ],
+    [
+      '.practice .pad',
+      'min-height: calc(4 * var(--key-min) + 3 * var(--space-10));',
+      '§3 keys at least 48px',
+    ],
     ['.button-play', 'width: 112px;', '§7.4 play'],
     ['.button-play', 'height: 112px;', '§7.4 play'],
     ['.button-choice', 'min-height: 78px;', '§7.3 choice'],
