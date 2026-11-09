@@ -39,16 +39,17 @@ export function Mix({ initial = [], lastMix, earn, noSeeds, onChange, onStart, o
       <main className="home-main mix-main">
         <Button variant="crumb" onClick={onBack}>
           <ArrowLeftIcon />
-          {COPY.mixCrumb}
+          {COPY.mixCrumbHome}
+          <span className="mix-crumb-here">{COPY.mixCrumbHere}</span>
         </Button>
-        <div className="home-intro">
-          <h1 className="home-heading">{COPY.mixHeading}</h1>
-          <p className="home-subheading">{COPY.mixLine}</p>
+        <div>
+          <h1 className="mix-heading">{COPY.mixHeading}</h1>
+          <p className="mix-line">{COPY.mixLine}</p>
         </div>
         <div className="mix-tools">
           {lastMix && (
-            <Button variant="secondary" onClick={() => change(lastMix)}>
-              <RotateCwIcon />
+            <Button variant="mix-shortcut" onClick={() => change(lastMix)}>
+              <RotateCwIcon size={22} />
               {COPY.mixSame}
             </Button>
           )}
@@ -66,7 +67,9 @@ export function Mix({ initial = [], lastMix, earn, noSeeds, onChange, onStart, o
               <span key={level} className="mix-level">
                 {COPY.levelName(level)}
                 <span className="mix-dots" aria-hidden="true">
-                  {'●'.repeat(i + 1)}
+                  {Array.from({ length: i + 1 }, (_, n) => (
+                    <span key={n} className="mix-dot" />
+                  ))}
                 </span>
               </span>
             ))}
@@ -108,7 +111,7 @@ export function Mix({ initial = [], lastMix, earn, noSeeds, onChange, onStart, o
               <ol className="mix-picks">
                 {picks.map((pick, i) => (
                   <li key={`${pick.operation}-${pick.level}`}>
-                    <span>
+                    <span className="mix-pick-name">
                       {COPY.operationName(pick.operation)}
                       <span className="mix-muted">{COPY.levelName(pick.level)}</span>
                     </span>
@@ -121,7 +124,7 @@ export function Mix({ initial = [], lastMix, earn, noSeeds, onChange, onStart, o
               <p className="mix-total-title">{COPY.mixTotal}</p>
               {picks.length >= 2 && <p className="mix-muted">{COPY.mixTogether}</p>}
               <p className="mix-earn">
-                <CoinsIcon />
+                <CoinsIcon size={22} />
                 {COPY.mixEarn(earn)}
               </p>
             </div>

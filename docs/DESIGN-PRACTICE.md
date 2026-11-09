@@ -109,6 +109,7 @@ Sizes are the shared `--text-N` custom properties (docs/DESIGN.md §4); a litera
 | avatar | 14 | 400 | normal | 0 | upper | `--l-text` | initials |
 | crumb | 14 | 400 | normal | 0 | as is | `--l-link` | "Practice  /  Math" |
 | crumb-meta | 14 | 400 | normal | 0 | as is | `--l-muted` | "{name} · {grade}" |
+| mix-title | 36 | 400 | 1.4 | 0 | as is | `--l-text` | the mix screen's heading |
 | task-title | 30 | 400 | normal | −0.6 | as is | `--l-text` | screen title |
 | progress | 14 | 500 | normal | 0 | as is | `--l-link` | "Problem 4 of 20" |
 | eyebrow | 12 | 600 | normal | 1 (0.7 on question cards) | upper | `--l-link` | panel labels |
@@ -554,23 +555,24 @@ The frames show a top bar with Home, Shop and Parents (the same bar as the Home 
 
 ### 17.1 Layout
 
-Built as `src/screens/Mix.tsx` and the `.mix` block of `src/index.css` (px only, the spacing, radius and type tokens). It is a `.home` page: it has Home's top bar (`HomeBar`, whose Home link is a button back to Home) and Home's `--l-*` tokens, plus `--l-primary` and `--l-inset` on `.mix`.
+Built as `src/screens/Mix.tsx` and the `.mix` block of `src/index.css` (the spacing, radius and type tokens, px only), from the Figma frame (1194 x 834). It is a `.home` page: Home's `--l-*` tokens and `HomeBar` (its Home link is a button back to Home), with the sizes below on `.mix`. Colors without a Home token are `--l-pick` (picked cells, the earn chip), `--l-summary` (the side panel), `--l-rule` (its divider) and `--l-inset` (dimmed cells), defined on `.mix`.
 
-- **Frame:** `.home-main` (padding 32, gap 16), in this order: the crumb, the heading block, the tools row, the columns, the start row.
-- **Crumb:** a `crumb` button (7.4), arrow-left 18 + "Home  /  Math", the same visible name as its accessible name.
-- **Heading block:** h1 (text-40) "Make a math mix of your own." and the line under it (`home-subheading`) "Tap the problems you'd like to try. Pick up to 3."
-- **Tools row** (min-height 48, wrapping, gap 12 by 24): "Same as last time" (a `secondary` button 48 high, rotate-cw 20 + label; left out with no last mix), the swap note "Tap one of your picks to swap it." (text-15, `--l-muted`, centered, shown only at 3 picks) and, at the end, the count "n of 3 picked" (text-16, `--l-muted`, `aria-live="polite"`).
-- **Columns:** one column below 1024 wide (grid, then panel), and from 1024 `minmax(0, 650fr) minmax(0, 440fr)`, gap 24, as the Math screen.
-- **Grid card** (white, 1 px `--l-line`, radius 20, padding 16, gap 8): columns `minmax(96px, 150px)` then three equal ones. The header row has an empty cell, then Easy, Medium and Hard (text-21, weight 600) each over 1, 2 or 3 dots (text-10, `--l-link`, aria-hidden). Each operation row has its sign (18 wide, aria-hidden) and name (text-17) then three cells.
-- **Cell:** `mix-cell` `Button`, min-height 64 (44 is the least target), radius 12, 1 px `--l-line`, fill `--l-surface`, the sample problem in text-23 weight 600. Its accessible name is "{problem}, {Operation}, {Level}" and it has `aria-pressed`.
+- **Bar:** 80 high, padding-inline 40; brand 26 / 500; links 15 / 500, padding 10 20, gap 12 (Parents `--l-muted`).
+- **Workspace** (padding 24 40, gap 16), in this order:
+  1. **Crumb:** a `crumb` button, arrow-left 18, gap 10, "Home" 14 / 500 then "/  Math" 14 / 400 `--l-muted`; one accessible name, "Home / Math".
+  2. **Heading:** h1 36 / 400 (line height 1.4), then the line 14 / 400 `--l-muted`, 4 below.
+  3. **Tools row** (44 high, gap 24): "Same as last time" (`mix-shortcut`: 228 wide, 44 high, white, 1 px `--l-line`, radius 10, rotate-cw 22 + label 15 / 500; left out with no last mix), the swap note (15, `--l-muted`, centered, shown only at 3 picks) and the count at the end (15 / 500 `--l-muted`, `aria-live="polite"`).
+  4. **Columns:** one column below 1024 wide (grid, panel, Start), and from 1024 the grid and a 330 wide panel, gap 24.
+  5. **Start row:** right-aligned, 52 high. `action` (7.4) restyled on `.mix`: 240 wide, 52 high, radius 10, gap 12, "Start 20 problems" 16 / 600 + arrow-right 20, disabled with no picks. The note "Connect to Wi-Fi to get more problems!" (`role="status"`) shows to its left after a start found no seeds.
+- **Grid card** (white, 1 px `--l-line`, radius 16, padding 16, gap 8): columns 164 then three equal ones. Header row 68 high: the level (22 / 600) over 1, 2 or 3 dots (8 round, `--l-link`, gap 4, gap 6 from the level). Each row is 76 high: the sign (24 wide, 24 / 500) and name (16 / 500) at the left with 4 of padding and a gap of 8, then three cells.
+- **Cell:** `mix-cell` `Button`, 76 high, radius 12, the sample problem 26 / 600. Its accessible name is "{problem}, {Operation}, {Level}" and it has `aria-pressed`.
 
 | State | Fill | Border | Other |
 |---|---|---|---|
 | Not picked | `--l-surface` | 1 px `--l-line` | |
-| Picked | `--l-chip` | 2 px `--l-link` | `aria-pressed="true"` |
+| Picked | `--l-pick` | 2 px `--l-link` | `aria-pressed="true"` |
 | Dimmed (3 picked, not itself picked) | `--l-inset` | 1 px `--l-line` | opacity 0.55, text `--l-muted`, `aria-disabled="true"`, takes no taps |
 
-- **Side panel** (`aside`, fill `--l-chip`, radius 20, padding 24, column, gap 16): the title (text-26) from the pick count; with none, "Pick something to start" (text-24) and "Tap a problem that looks fun."; with picks, a list, one row for each pick in pick order, its operation over its level (text-15, `--l-muted`) at the left and "{n} problems" at the right (17), the numbers from the engine's `pickSizes`. Under a 1 px `--l-line` rule: "20 problems" (text-24), "Mixed together into one practice." for 2 or 3 picks, and the earn chip (white pill, radius 100, coins 20 + "Earn up to X Macaronis.", text-16).
-- **Start row:** right-aligned, wrapping. The note "Connect to Wi-Fi to get more problems!" (`role="status"`) shows to the left of the button after a start found no seeds. The button is `action` (7.4) "Start 20 problems" with arrow-right 20, disabled with no picks.
+- **Side panel** (`aside`, fill `--l-summary`, radius 16, padding 24, column, gap 12): the title (24 / 500) from the pick count. With none: "Pick something to start" (24 / 500) and "Tap a problem that looks fun." (14, `--l-muted`). With picks, a list in pick order, each row 52 high, gap 8: the operation (16 / 500) over its level (14 / 400 `--l-muted`, gap 3) at the left and "{n} problems" (14 / 500) at the right, the numbers from the engine's `pickSizes`. Under a 1 px `--l-rule` rule (12 above and below): "20 problems" (24 / 500), "Mixed together into one practice." for 2 or 3 picks (15, `--l-muted`) and the earn chip (`--l-pick` pill, padding 8 12, gap 8, coins 22 + "Earn up to X Macaronis." 16 / 500).
 - **Focus:** 2 px outline `--l-link`, 2 px offset on every button.
-- **Portrait (820 x 1180) and landscape (1180 x 820):** the page never scrolls sideways. Landscape fits without scrolling; portrait is a little taller than the screen (the grid, then the panel, then Start) and scrolls down. The cells keep their 64 height.
+- **Sizes:** at 1194 x 834 and at 1180 x 820 the page fits with no scroll and no sideways scroll; in portrait (820 x 1180) it never scrolls sideways and is a little taller than the screen, so it scrolls down. A cell is never under 44 high.

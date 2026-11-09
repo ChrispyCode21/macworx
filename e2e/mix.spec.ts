@@ -66,6 +66,14 @@ test('picks up to 3 in order, dims the rest, and a pick can be swapped', async (
   for (const cell of await page.locator('.mix-grid .button').all())
     expect((await cell.boundingBox())!.height).toBeGreaterThanOrEqual(44)
   await noSidewaysScroll(page)
+  // In landscape the whole screen fits (docs/DESIGN-PRACTICE.md §17.1); portrait scrolls down a little.
+  const view = page.viewportSize()!
+  if (view.width > view.height)
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+      ),
+    ).toBeLessThanOrEqual(4)
   const start = (await page.getByRole('button', { name: 'Start 20 problems' }).boundingBox())!
   expect(start.x + start.width / 2).toBeGreaterThan(page.viewportSize()!.width / 2)
 })
