@@ -38,11 +38,12 @@ async function passage(id: number, n = 3, choices = 4) {
   for (let q = 1; q <= n; q++) {
     const qid = id * 100 + q
     await run(
-      'INSERT INTO questions (id, passage_id, position, text) VALUES (?, ?, ?, ?)',
+      'INSERT INTO questions (id, passage_id, position, text, explanation) VALUES (?, ?, ?, ?, ?)',
       qid,
       id,
       q,
       `Q${q}?`,
+      `Because ${q}.`,
     )
     for (let c = 1; c <= choices; c++)
       await run(
@@ -127,6 +128,8 @@ describe('POST /api/reading/start', () => {
     await passage(1)
     const { body } = await start()
     expect(JSON.stringify(body)).not.toContain('correct')
+    expect(JSON.stringify(body)).not.toContain('explanation')
+    expect(JSON.stringify(body)).not.toContain('Because')
     // Only an id and its text: nothing else about a choice can carry the answer.
     for (const q of body.passage.questions)
       for (const c of q.choices) expect(Object.keys(c).sort()).toEqual(['id', 'text'])
@@ -147,6 +150,9 @@ describe('POST /api/reading/result', () => {
     expect(body.result.correct).toBe(8)
     expect(body.result.payout).toEqual({ base: 16, accuracyBonus: 3, streakBonus: 1, total: 20 })
     expect(body.result.questions.filter((q: any) => q.right)).toHaveLength(8)
+    expect(body.result.questions.map((q: any) => q.explanation)).toEqual(
+      Array.from({ length: 10 }, (_, i) => `Because ${i + 1}.`),
+    )
     expect(body.state).toMatchObject({ balance: 20, streak: 1, completed: 1, latestGrade: 'Good' })
     const row = await first("SELECT * FROM results WHERE kind = 'reading'")
     expect(row).toMatchObject({
@@ -272,7 +278,7 @@ describe('keys and the parent view', () => {
     await passage(1)
     const { started } = await finish(2)
     await run("UPDATE passages SET title = 'Renamed' WHERE id = 1")
-    await run("UPDATE questions SET text = 'Reworded?' WHERE id = 101")
+    await run("UPDATE questions SET text = 'Reworded?', explanation = 'Changed.' WHERE id = 101")
     await run('UPDATE choices SET correct = 0 WHERE question_id = 101 AND position = 2')
     await run('UPDATE choices SET correct = 1 WHERE question_id = 101 AND position = 1')
     const id = (await first('SELECT id FROM results WHERE attempt = ?', started.attempt)).id
@@ -285,7 +291,22 @@ describe('keys and the parent view', () => {
     const list = await t.call('GET', '/api/parent/results', { key: null, accessToken: await accessToken() })
     expect(list.body.results[0]).toMatchObject({ id, kind: 'reading', title: 'Story 1' })
     expect(body.result.questions.map((q: any) => q.text)).toEqual(['Q1?', 'Q2?', 'Q3?'])
+    expect(body.result.questions.map((q: any) => q.explanation)).toEqual([
+      'Because 1.',
+      'Because 2.',
+      'Because 3.',
+    ])
     expect(body.result.questions[0].right).toBe(1012)
     expect(body.result.questions[0].picked).toBe(1012)
+    // A snapshot recorded without an explanation (by the Worker running during a deploy) reads as ''.
+    await run(
+      "UPDATE results SET detail = json_remove(detail, '$.questions[0].explanation') WHERE id = ?",
+      id,
+    )
+    const old = await t.call('GET', `/api/parent/results/${id}`, {
+      key: null,
+      accessToken: await accessToken(),
+    })
+    expect(old.body.result.questions[0].explanation).toBe('')
   })
 })

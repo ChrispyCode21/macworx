@@ -385,7 +385,13 @@ function resultView(row: StoredResult & { seed: number }, answers: number[]) {
 function readingView(row: StoredResult) {
   const detail = JSON.parse(row.detail ?? '{}') as {
     title: string
-    questions: { text: string; choices: { id: number; text: string }[]; picked: number; right: number }[]
+    questions: {
+      text: string
+      explanation?: string
+      choices: { id: number; text: string }[]
+      picked: number
+      right: number
+    }[]
   }
   return {
     id: row.id,
@@ -397,7 +403,7 @@ function readingView(row: StoredResult) {
     grade: row.grade,
     total: row.total,
     title: detail.title ?? '',
-    questions: detail.questions ?? [],
+    questions: (detail.questions ?? []).map((q) => ({ ...q, explanation: q.explanation ?? '' })),
   }
 }
 
