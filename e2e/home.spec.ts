@@ -65,26 +65,27 @@ const state = (over = {}) => ({
   ...over,
 })
 
-test('Home shows her four numbers, including results not yet sent', async ({ page }) => {
+test('Home shows her balance and streak, including results not yet sent', async ({ page }) => {
   const answers = generateAssignment(1).map((p) => p.answer)
   await openApp(page, true, {
     'macworx.state': state(),
     'macworx.queue': [{ seed: 1, day: today(), answers }],
   })
-  const numbers = page.locator('.home-numbers')
+  const progress = page.locator('.home-progress')
   // 100 + 20 + 4 accuracy bonus + 4 streak bonus (streak 3 becomes 4).
-  await expect(numbers).toContainText('128 Macaronis')
-  await expect(numbers).toContainText('6 assignments done')
-  await expect(numbers).toContainText('4 day streak')
-  await expect(numbers).toContainText('Latest: Excellent')
+  await expect(progress).toContainText('128')
+  await expect(progress).toContainText('available to spend')
+  await expect(progress).toContainText('4 days')
+  await expect(progress).toContainText('Current streak')
+  await expect(page.getByText(/assignments? done|Latest:/)).toHaveCount(0)
   await noSidewaysScroll(page)
   await expect(page.getByText('Macaronis start saving soon!')).toHaveCount(0)
 })
 
 test('Home takes the Worker numbers when the connection comes back', async ({ page }) => {
   await openApp(page, true, { 'macworx.state': state() })
-  const numbers = page.locator('.home-numbers')
-  await expect(numbers).toContainText('100 Macaronis')
+  const numbers = page.locator('.home-progress')
+  await expect(numbers).toContainText('100')
 
   await page.unroute('/api/**')
   await page.route('/api/**', (route) =>
@@ -93,15 +94,15 @@ test('Home takes the Worker numbers when the connection comes back', async ({ pa
       : route.fulfill({ json: state({ balance: 150, completed: 7 }) }),
   )
   await page.evaluate(() => dispatchEvent(new Event('online')))
-  await expect(numbers).toContainText('150 Macaronis')
-  await expect(numbers).toContainText('7 assignments done')
+  await expect(numbers).toContainText('150')
 })
 
-test('Home shows none of the numbers on an iPad that is not paired', async ({ page }) => {
+test('Home shows no numbers on an iPad that is not paired', async ({ page }) => {
   await openApp(page, false)
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
-  await expect(page.locator('.home-numbers')).toHaveCount(0)
-  await expect(page.getByText(/Macaroni/)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
+  await expect(page.locator('.home-balance')).toHaveCount(0)
+  await expect(page.getByText('Your Macaronis will show up here.')).toBeVisible()
+  await expect(page.getByText(/Current streak/)).toHaveCount(0)
 })
 
 const FULL = { tag: '@full-assignment' }
@@ -114,11 +115,12 @@ test('a paired iPad that has never synced shows no numbers and no streak bonus',
   test.setTimeout(90_000)
   await fastClock(page)
   await openApp(page, true, { 'macworx.seeds': [21] })
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
-  await expect(page.locator('.home-numbers')).toHaveCount(0)
-  await expect(page.getByText(/Macaroni/)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
+  await expect(page.locator('.home-balance')).toHaveCount(0)
+  await expect(page.getByText('Your Macaronis will show up here.')).toBeVisible()
+  await expect(page.getByText(/Current streak/)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await finishRight(page, 'Done for now')
   await expect(page.getByRole('heading', { name: 'Excellent!' })).toBeVisible()
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
@@ -130,7 +132,7 @@ test('the streak bonus shows on the first assignment of the day', PORTRAIT, asyn
   test.setTimeout(90_000)
   await fastClock(page)
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus + 4 streak bonus = 28 Macaronis')
   await expect(page.getByText('Macaronis start saving soon!')).toHaveCount(0)
@@ -147,14 +149,13 @@ test('the second assignment of the day gets no streak bonus', FULL, async ({ pag
     'macworx.queue': [{ seed: 31, day: today(), answers }],
     'macworx.seeds': [32],
   })
-  await expect(page.locator('.home-numbers')).toContainText('128 Macaronis')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await expect(page.locator('.home-progress')).toContainText('128')
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
 
   await page.getByRole('button', { name: 'Home' }).click()
-  await expect(page.locator('.home-numbers')).toContainText('152 Macaronis')
-  await expect(page.locator('.home-numbers')).toContainText('7 assignments done')
+  await expect(page.locator('.home-progress')).toContainText('152')
 })
 
 test('Home shows a Parents link that opens the portal with a full page load', async ({ page }) => {
@@ -196,7 +197,7 @@ test('an assignment shows her balance and streak in the top bar, the title and t
   page,
 }) => {
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   const bar = page.locator('.practice-bar')
   await expect(bar).toContainText('macworx')
   await expect(bar).toContainText('100 Macaronis')
@@ -212,14 +213,14 @@ test('an assignment shows her balance and streak in the top bar, the title and t
 
 test('the top bar shows neither number on an iPad that is not paired', async ({ page }) => {
   await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await expect(page.locator('.practice-bar')).toContainText('macworx')
   await expect(page.locator('.practice-chip')).toHaveCount(0)
 })
 
 test('Check sits at the bottom right of the screen', async ({ page }) => {
   await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
   const view = page.viewportSize()!
   expect(box.x + box.width / 2).toBeGreaterThan(view.width / 2)
@@ -236,7 +237,7 @@ test(
   LANDSCAPE,
   async ({ page }) => {
     await openApp(page, false, { 'macworx.seeds': [31] })
-    await page.getByRole('button', { name: 'Math', exact: true }).click()
+    await page.getByRole('button', { name: 'Start Math', exact: true }).click()
     await expect(page.locator('.pad[data-ready]')).toBeVisible()
     // In the landscape project's own 1180x820, the whole practice screen fits with no tolerance at all.
     const own = page.viewportSize()!
@@ -349,7 +350,7 @@ test(
         .first()
         .evaluate((el) => el.getBoundingClientRect().height)
 
-    await page.getByRole('button', { name: 'Spelling', exact: true }).click()
+    await page.getByRole('button', { name: 'Start Spelling', exact: true }).click()
     await fits('Spelling')
     await page.setViewportSize({ width: 1194, height: 834 })
     expect(await choice(), 'a choice keeps its 78 in the 1194x834 frame').toBeGreaterThanOrEqual(77)
@@ -360,7 +361,7 @@ test(
     await fits('Spelling after Check')
     await page.locator('.button-crumb').click()
 
-    await page.getByRole('button', { name: 'Reading', exact: true }).click()
+    await page.getByRole('button', { name: 'Start Reading', exact: true }).click()
     await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
     await page.getByRole('button', { name: 'Next' }).click()
     await expect(page.getByRole('progressbar', { name: 'Step 2 of 2 · Questions' })).toBeVisible()
@@ -378,7 +379,7 @@ test(
   async ({ page }) => {
     const view = page.viewportSize()!
     await openApp(page, false)
-    await page.getByRole('button', { name: 'Reading', exact: true }).click()
+    await page.getByRole('button', { name: 'Start Reading', exact: true }).click()
     const fits = () =>
       page.evaluate(() => document.documentElement.scrollHeight <= document.documentElement.clientHeight)
     expect(await fits()).toBe(true)
@@ -392,7 +393,7 @@ test(
   },
 )
 
-test('Home shows Math, Spelling and Reading;Spelling and Reading open their practice, and both return to Home without any request', async ({
+test('Home shows Math, Spelling and Reading;Spelling and Reading open their practice, and both return to Home without any request; Shop does nothing yet', async ({
   page,
 }) => {
   const api: string[] = []
@@ -401,10 +402,20 @@ test('Home shows Math, Spelling and Reading;Spelling and Reading open their prac
   })
   await openApp(page, false)
   for (const name of ['Math', 'Spelling', 'Reading']) {
-    await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: `Start ${name}`, exact: true })).toBeVisible()
   }
+  // The shop screen doesn't exist yet (SPEC §5.1 step 1): both Shop controls are there and do nothing.
+  for (const shop of [
+    page.getByRole('button', { name: 'Shop', exact: true }),
+    page.getByRole('button', { name: 'Explore the shop' }),
+  ]) {
+    await expect(shop).toBeVisible()
+    await expect(shop).toHaveAttribute('aria-disabled', 'true')
+    await shop.click({ force: true })
+  }
+  await expect(page).toHaveURL(/\/$/)
   for (const name of ['Spelling', 'Reading']) {
-    await page.getByRole('button', { name, exact: true }).click()
+    await page.getByRole('button', { name: `Start ${name}`, exact: true }).click()
     await expect(page.getByRole('button', { name: `Practice  /  ${name}, Back`, exact: true })).toBeVisible()
     if (name === 'Spelling') {
       await expect(page.getByRole('progressbar', { name: 'Word 1 of 8' })).toBeVisible()
@@ -418,7 +429,33 @@ test('Home shows Math, Spelling and Reading;Spelling and Reading open their prac
     }
     const before = api.length
     await page.getByRole('button', { name: `Practice  /  ${name}, Back`, exact: true }).click()
-    await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: `Start ${name}`, exact: true })).toBeVisible()
     expect(api.length).toBe(before)
   }
 })
+
+// Her progress sits beside the subjects from 768 wide and above them on a phone (SPEC §5.1 step 1). Sets its own viewports.
+test(
+  'Home is two columns on an iPad, either way up, and one column on a phone',
+  LANDSCAPE,
+  async ({ page }) => {
+    await openApp(page, true, { 'macworx.state': state() })
+    const subjects = page.locator('.home-subjects')
+    const side = page.locator('.home-side')
+    for (const [width, height] of [
+      [1180, 820],
+      [820, 1180],
+    ]) {
+      await page.setViewportSize({ width, height })
+      const [a, b] = [(await subjects.boundingBox())!, (await side.boundingBox())!]
+      expect(b.x).toBeGreaterThan(a.x + a.width - 1)
+      expect(Math.abs(a.y - b.y)).toBeLessThan(40)
+      await noSidewaysScroll(page)
+    }
+    await page.setViewportSize({ width: 390, height: 844 })
+    const [a, b] = [(await subjects.boundingBox())!, (await side.boundingBox())!]
+    expect(b.y + b.height).toBeLessThanOrEqual(a.y + 1)
+    await noSidewaysScroll(page)
+    await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
+  },
+)

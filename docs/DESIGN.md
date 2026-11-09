@@ -77,7 +77,7 @@ Font: `system-ui`. Weights: 400 and 600 only. Case: as written unless "upper". "
 
 Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-14`, `--text-29`, …); use it for `font-size`, never a literal px. `src/cssTokens.test.ts` fails on a literal `font-size` (px, rem or em) and on a size with no token. A new size needs a row here and a token.
 
-Home, the result and Pair screens (the child base styles, not in Figma) use the same tokens, no rem: the title 58, the primary button and the result lines 40, the Pair Check key 29, Home's numbers 30, and the Pair code digits 58.
+Home, the result and Pair screens (the child base styles, not in Figma) use the same tokens, no rem: the title 58, the primary button and the result lines 40, the Pair Check key 29, and the Pair code digits 58. Home is the exception: it follows the practice screens' tokens and the Figma frame "Home" (see "Home" below).
 
 | Token | Phone px | Wide px | Weight | Line height | Case | Color role | Used for |
 |---|---|---|---|---|---|---|---|
@@ -531,7 +531,7 @@ Legend: **Real** = already returned by an existing route. **Derived** = computed
 10. **Result time of day** and **device id** are not on `ResultRow` today; the derived fields in section 15 need small additions to the API.
 11. Panel inner gaps vary per frame in Figma (14 phone; wide 13, 16, 17, 18, 20). Section 7 says 16 on wide; per-screen overrides: Overview homework list 17, Overview shortcuts 18, Macaronis activity 20, Macaronis adjust 14, Shop rewards 18, Shop editor 13. Apply these exact values.
 12. **Nav label "Macaronis"** for the Points tab: confirm the owner wants the label changed along with the copy.
-13. **Home link to the portal.** Decision 2 says only "a visible link in the app". This file proposes a small text link on the child app Home to `/parent/overview`; its exact placement and wording are not designed.
+13. **Home link to the portal.** The Home frame places the Parents link (lock icon) in the top bar, and the footer says "Grown-up settings live in Parents." (SPEC §5.3).
 14. **Copy written for this contract (not in Figma), needs owner approval:** "Editing rewards is coming soon.", "No assignments yet today.", "Read-only" (Shop chip), "No rewards redeemed yet.", "Expires in 10 minutes.", "Device name" (field label), "Add Macaronis" / "Remove Macaronis", "Can't go below zero.", the error messages in section 14, "{name}'s effort adds up, one day at a time." (replaces a Figma subline that breaks never-negative), the two rewritten Devices paragraphs, and the Home link text.
 
 ## 17. Icons
@@ -573,3 +573,16 @@ One row per icon: name, native `viewBox`, then every `d` string (join them as se
 | ticket-check | 0 0 19 19 | `M7.12481 9.5L8.70827 11.0835L11.8752 7.91649M1.5827 7.12473C2.21264 7.12473 2.81678 7.37498 3.26221 7.82043C3.70765 8.26588 3.95789 8.87004 3.95789 9.5C3.95789 10.13 3.70765 10.7341 3.26221 11.1796C2.81678 11.625 2.21264 11.8753 1.5827 11.8753V13.4588C1.5827 13.8788 1.74953 14.2815 2.04648 14.5785C2.34344 14.8755 2.7462 15.0423 3.16616 15.0423H15.8338C16.2538 15.0423 16.6566 14.8755 16.9535 14.5785C17.2505 14.2815 17.4173 13.8788 17.4173 13.4588V11.8753C16.7874 11.8753 16.1832 11.625 15.7378 11.1796C15.2924 10.7341 15.0421 10.13 15.0421 9.5C15.0421 8.87004 15.2924 8.26588 15.7378 7.82043C16.1832 7.37498 16.7874 7.12473 17.4173 7.12473V5.54121C17.4173 5.12124 17.2505 4.71847 16.9535 4.4215C16.6566 4.12453 16.2538 3.9577 15.8338 3.9577H3.16616C2.7462 3.9577 2.34344 4.12453 2.04648 4.4215C1.74953 4.71847 1.5827 5.12124 1.5827 5.54121V7.12473Z` |
 
 Notes: `info`, `coins`, `lock-keyhole`, `pencil`, `unlink` and `sun` were exported with a clip rectangle equal to the viewBox; it is not needed. `shield-check (20)` (Access card) is the same shape as the 17 version: scale it. Reward art and the Figma-only icons `book-open`, `clapperboard` and `utensils` are not used (rewards use the existing `RewardIcon`).
+
+## Home (child app)
+
+From the owner's Figma frame "Home" (macworx-parent-portal), SPEC §5.1 step 1. Colors are the practice screens' (`--l-*`), type uses the `--text-N` tokens, px only.
+
+- **Top bar:** white, 1 px `--l-line` bottom border, padding 8 32, wraps on a phone. Left: sprout icon and "macworx" (28). Right: Home (the current page: `--l-chip` pill, weight 600, `aria-current="page"`), Shop, and Parents with a lock icon (a plain `<a>` to `/parent/overview`). Items 44 high, radius 12, text 18. Shop is an `aria-disabled` button with no handler until the §5.2 screen exists.
+- **Page:** `--l-bg`, padding 32, gap 28. Heading 48 (40 below 768), subline 18 in `--l-muted`.
+- **Layout:** from 768 px wide (an iPad in either orientation) two columns: subjects on the left, a column of 0.4 width (at least 240) on the right with the progress card, then the shop card, gap 40. Below 768 px one column: the progress card, the shop card, then the subjects. The DOM order is subjects then progress; CSS `order` lifts the progress column first on a phone, so a screen reader reads the subjects first at every width (a deliberate choice: Start buttons are what she needs).
+- **Subject cards:** white, 1 px border, radius 20, padding 20, gap 20. Icon tile 56 square (radius 14, `--l-chip`), title 26 and a 16 line in `--l-muted`, then a Start button (48 high, radius 12, `--accent`, text 18 / 600, arrow icon 20), named "Start Math", "Start Spelling" and "Start Reading". On a narrow card the button wraps below the text.
+- **Progress card:** white, 1 px border, radius 20, padding 20. "Macaronis" with the coins icon (16); the balance at 52 with "available to spend" (16); with a streak, a 1 px divider, then a 56 tile with the flame icon, "{n} day(s)" at 26 and "Current streak". With no numbers: "Your Macaronis will show up here." (18) and nothing else. The streak and divider are left out when there is no streak to show.
+- **Shop card:** `--l-chip`, radius 20, padding 20: shopping-bag icon with "A little effort. A little reward." (19), a 16 line, and "Explore the shop" with an arrow (an `aria-disabled` button until the shop exists).
+- **Footer:** two 16 `--l-muted` lines, space-between, wrapping: "Take your time. You've got this." and, with a lock icon, "Grown-up settings live in Parents.".
+- **Pair this device** (SPEC §5.4) is the secondary button under the subject cards, owner's decision.

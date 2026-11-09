@@ -10,7 +10,7 @@ async function open(page: Page, api: string[]) {
   })
   await page.route('/api/**', (route) => route.fulfill({ status: 503, json: { error: 'busy' } }))
   await page.goto('/')
-  await page.getByRole('button', { name: 'Reading', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Reading', exact: true }).click()
 }
 
 const ready = (page: Page) => expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
@@ -72,7 +72,7 @@ test('read, answer, check, finish, and Read again keeps her choices before and a
   await expect(page.getByText('You finished the passage and its questions!').first()).toBeVisible()
   await ready(page)
   await page.getByRole('button', { name: 'Back to Home' }).click()
-  await expect(page.getByRole('button', { name: 'Reading', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Reading', exact: true })).toBeVisible()
   expect(api.length).toBe(before)
 })
 
@@ -91,7 +91,7 @@ test('leaving mid-way keeps nothing: reopening starts at the passage with no cho
   await page.getByRole('button', { name: 'Next' }).click()
   await page.getByRole('radio').first().click()
   await page.getByRole('button', { name: 'Practice  /  Reading, Back', exact: true }).click()
-  await page.getByRole('button', { name: 'Reading', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Reading', exact: true }).click()
   await expect(page.getByRole('progressbar', { name: 'Step 1 of 2 · Read' })).toBeVisible()
   await ready(page)
   await page.getByRole('button', { name: 'Next' }).click()

@@ -224,31 +224,6 @@ p {
   font-size: var(--text-40);
 }
 
-/* Her numbers on Home (SPEC §5.1): a wrapping row of soft rounded boxes. */
-.home-numbers {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-12);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.home-subjects {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-16);
-}
-
-.home-numbers li {
-  padding: var(--space-12) var(--space-20);
-  border-radius: var(--radius);
-  background: var(--soft);
-  font-size: var(--text-30);
-}
-
 .result-buttons {
   display: flex;
   flex-direction: column;
@@ -277,16 +252,354 @@ p {
   max-height: calc(4 * var(--key) + 3 * var(--gap));
 }
 
-/* The Parents link on Home (SPEC §5.3): small and quiet, with a tap area big enough for a finger. */
-.home-parents {
+/* home: start */
+/* The child Home (SPEC §5.1 step 1, docs/DESIGN.md "Home"): px only, the practice screens' colors. */
+.home {
+  --l-bg: var(--paper);
+  --l-surface: #ffffff;
+  --l-line: #efdba5;
+  --l-link: var(--answer-ink);
+  --l-chip: var(--soft);
+  --l-text: var(--ink);
+  --l-muted: #6b5420;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--l-bg);
+  color: var(--l-text);
+  text-align: left;
+}
+
+.home *,
+.home *::before,
+.home *::after {
+  box-sizing: border-box;
+}
+
+.home h1,
+.home h2,
+.home h3,
+.home p {
+  margin: 0;
+  font-weight: 400;
+}
+
+.home-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-16);
+  min-height: 66px;
+  padding: max(var(--space-8), env(safe-area-inset-top)) max(var(--space-32), env(safe-area-inset-right))
+    var(--space-8) max(var(--space-32), env(safe-area-inset-left));
+  background: var(--l-surface);
+  border-bottom: 1px solid var(--l-line);
+}
+
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  color: var(--l-link);
+  font-size: var(--text-28);
+}
+
+.home-brand span {
+  color: var(--l-text);
+}
+
+.home-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.home-nav-item,
+.button-home-nav {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-8);
   min-height: 44px;
-  padding: 0 var(--gap);
-  color: var(--answer-ink);
-  font-size: var(--text-24);
-  text-decoration: underline;
+  padding: 0 var(--space-16);
+  border: none;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--l-muted);
+  font-size: var(--text-18);
+  font-weight: 400;
+  text-decoration: none;
 }
+
+.home-nav-current {
+  background: var(--l-chip);
+  color: var(--l-text);
+  font-weight: 600;
+}
+
+.home-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-28);
+  padding: var(--space-32) max(var(--space-32), env(safe-area-inset-right))
+    max(var(--space-32), env(safe-area-inset-bottom)) max(var(--space-32), env(safe-area-inset-left));
+}
+
+.home-intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.home-heading {
+  font-size: var(--text-40);
+}
+
+.home-subheading {
+  color: var(--l-muted);
+  font-size: var(--text-18);
+}
+
+/* One column on a phone: her progress and the shop card come first. Two columns from 768 (an iPad, either way up). */
+.home-columns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-28);
+}
+
+.home-subjects {
+  order: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  min-width: 0;
+}
+
+.home-side {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .home-heading {
+    font-size: var(--text-48);
+  }
+
+  .home-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.4fr);
+    align-items: start;
+    gap: var(--space-40);
+  }
+
+  .home-subjects {
+    order: 0;
+  }
+
+  .home-side {
+    order: 0;
+  }
+}
+
+.home-section-head span {
+  white-space: nowrap;
+}
+
+.home-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+  color: var(--l-muted);
+  font-size: var(--text-16);
+}
+
+.home-section-head h2 {
+  color: var(--l-text);
+  font-size: var(--text-24);
+}
+
+.home-subject-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-subject {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-20);
+  padding: var(--space-20);
+  border: 1px solid var(--l-line);
+  border-radius: var(--radius-panel);
+  background: var(--l-surface);
+}
+
+.home-tile {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-reward);
+  background: var(--l-chip);
+  color: var(--l-text);
+}
+
+.home-aa {
+  font-size: var(--text-28);
+}
+
+.home-subject-text {
+  flex: 1 1 160px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.home-subject-title {
+  font-size: var(--text-26);
+}
+
+.home-subject-line {
+  color: var(--l-muted);
+  font-size: var(--text-16);
+}
+
+.button-home-start {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 48px;
+  padding: 0 var(--space-20);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--text-18);
+  font-weight: 600;
+}
+
+.home-progress,
+.home-shop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-20);
+  border-radius: var(--radius-panel);
+}
+
+.home-progress {
+  border: 1px solid var(--l-line);
+  background: var(--l-surface);
+}
+
+.home-progress-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  color: var(--l-text);
+  font-size: var(--text-16);
+}
+
+.home-balance {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  color: var(--l-muted);
+  font-size: var(--text-16);
+}
+
+.home-balance-number {
+  color: var(--l-text);
+  font-size: var(--text-52);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-empty {
+  color: var(--l-muted);
+  font-size: var(--text-18);
+}
+
+.home-streak {
+  display: flex;
+  align-items: center;
+  gap: var(--space-14);
+  margin-top: var(--space-8);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--l-line);
+  color: var(--l-muted);
+  font-size: var(--text-16);
+}
+
+.home-streak p {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-streak-days {
+  color: var(--l-text);
+  font-size: var(--text-26);
+}
+
+.home-shop {
+  background: var(--l-chip);
+  color: var(--l-text);
+}
+
+.home-shop-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  font-size: var(--text-19);
+}
+
+.home-shop-line {
+  color: var(--l-muted);
+  font-size: var(--text-16);
+}
+
+.button-home-link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--space-8);
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--l-text);
+  font-size: var(--text-16);
+  font-weight: 600;
+}
+
+.home-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  color: var(--l-muted);
+  font-size: var(--text-16);
+}
+
+.home-footer-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+/* home: end */
 
 /* parent portal: start */
 /* The parent portal (SPEC §5.3, docs/DESIGN.md): px only, no shadows, no letter-spacing, weights 400 and 600. */

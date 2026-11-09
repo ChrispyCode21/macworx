@@ -42,7 +42,6 @@ export const COPY = {
     `${formatNumber(base)}${accuracy > 0 ? ` + ${formatNumber(accuracy)} bonus` : ''}${
       streak > 0 ? ` + ${formatNumber(streak)} streak bonus` : ''
     } = `,
-  completedCount: (n: number) => `${formatNumber(n)} ${n === 1 ? 'assignment' : 'assignments'} done`,
   streakDays: (n: number) => `${formatNumber(n)} day streak`,
   // The practice screens' frame (docs/DESIGN-PRACTICE.md §6, §13)
   /** Two spaces each side of the slash. */
@@ -97,7 +96,6 @@ export const COPY = {
   padHeading: 'Tap to enter your answer',
   /** The top bar's streak chip. */
   streakChip: (n: number) => `${formatNumber(n)} ${n === 1 ? 'day' : 'days'}`,
-  latestGrade: (grade: Grade) => `Latest: ${grade}`,
   anotherOne: 'Do another one',
   // Pairing her device (SPEC §5.4)
   pairThisIpad: 'Pair this device',
@@ -113,6 +111,29 @@ export const COPY = {
   pairBusy: "Something's busy right now. Try again in a minute.",
   // The parent page (SPEC §5.3), for a parent
   parentsLink: 'Parents',
+  // Home (SPEC §5.1 step 1)
+  homeNavLabel: 'Main',
+  homeNavHome: 'Home',
+  homeNavShop: 'Shop',
+  homeHeading: 'Ready for a little progress?',
+  homeSubheading: 'Choose a subject and make it your own. One small step at a time.',
+  homeSubjectsHeading: 'What would you like to practice?',
+  homeSubjectsCount: '3 subjects',
+  homeProgressHeading: 'Your progress',
+  homeMacaronisLabel: 'Macaronis',
+  homeAvailable: 'available to spend',
+  homeNoNumbers: 'Your Macaronis will show up here.',
+  homeStreakLabel: 'Current streak',
+  homeSpellingLine: 'Listen to a word, then choose its spelling.',
+  homeReadingLine: 'Read a passage, then answer a few questions.',
+  homeStart: 'Start',
+  homeSpellingIcon: 'Aa',
+  homeStartLabel: (subject: string) => `Start ${subject}`,
+  homeShopTitle: 'A little effort. A little reward.',
+  homeShopLine: 'Put your Macaronis toward something you love.',
+  homeShopLink: 'Explore the shop',
+  homeFooterLeft: "Take your time. You've got this.",
+  homeFooterRight: 'Grown-up settings live in Parents.',
   parentBrand: 'macworx',
   parentSpace: 'Parent space',
   parentAssurance: 'Parent-only controls. Their progress stays theirs.',
