@@ -2231,8 +2231,9 @@ p {
   --l-avatar: #f2c46b;
   --l-text: var(--ink);
   --l-muted: #6b5420;
-  /* A number pad key's height (docs/DESIGN-PRACTICE.md §7.4); the pad panel's height is built from it. */
+  /* A number pad key's height with room (docs/DESIGN-PRACTICE.md §7.4), and the least it shrinks to on a short tablet (§3). The pad panel's height is built from them. */
   --practice-key: 72px;
+  --practice-key-min: 48px;
   /* The pad panel's heading row (docs/DESIGN-PRACTICE.md §8). */
   --practice-pad-heading: 24px;
   box-sizing: border-box;
@@ -2390,7 +2391,6 @@ p {
 
 .practice-activity {
   flex: 1;
-  min-height: 478px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-24);
@@ -2417,10 +2417,10 @@ p {
   justify-content: space-between;
 }
 
-/* The number pad. The response replaces its contents. The panel is at least as tall as the pad (padding 24, heading 24, gap 16, 4 keys, 3 gaps of 10, padding 24 = 406 at a 72px key), so the response fits without a jump. */
+/* The number pad. The response replaces its contents. The panel is at least as tall as the pad at its smallest (padding 24, heading 24, gap 16, 4 keys, 3 gaps of 10, padding 24 = 310 at a 48px key), so the response fits without a jump. */
 .practice-panel-warm {
   min-height: calc(
-    var(--space-24) + var(--practice-pad-heading) + var(--space-16) + 4 * var(--practice-key) + 3 *
+    var(--space-24) + var(--practice-pad-heading) + var(--space-16) + 4 * var(--practice-key-min) + 3 *
       var(--space-10) + var(--space-24)
   );
   gap: var(--space-16);
@@ -2489,12 +2489,15 @@ p {
   margin-top: var(--space-6);
 }
 
+/* The keys fill the room the panel has, from 48 to 72 high. */
 .practice .pad {
-  align-self: center;
-  justify-self: center;
+  flex: 1;
   grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
   gap: var(--space-10);
   width: 100%;
+  min-height: calc(4 * var(--practice-key-min) + 3 * var(--space-10));
+  max-height: calc(4 * var(--practice-key) + 3 * var(--space-10));
 }
 
 .practice .response {
@@ -2601,7 +2604,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: var(--practice-key);
+  height: auto;
   border-radius: var(--radius-control);
   background: var(--l-surface);
   color: var(--l-text);
