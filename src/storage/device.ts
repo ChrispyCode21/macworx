@@ -7,6 +7,7 @@ const KEY = 'macworx.deviceKey'
 const SEEDS = 'macworx.seeds'
 const QUEUE = 'macworx.queue'
 const STATE = 'macworx.state'
+const LAST_MIX = 'macworx.lastMix'
 
 /** A result waiting to be sent to `POST /api/results`. */
 export interface QueuedResult {
@@ -116,6 +117,13 @@ export const dropQueued = (seed: number): void =>
 
 export const getWorkerState = (): WorkerState | null => read(STATE, isState)
 export const setWorkerState = (state: WorkerState): void => write(STATE, state)
+
+/**
+ * The mix of the last assignment she started on this iPad, for "Same as last time" (SPEC §5.1 step 2, §6.8). It is
+ * kept on an iPad that isn't paired too, and `forgetDeviceKey` leaves it: it holds nothing of hers.
+ */
+export const getLastMix = (): Mix | null => read(LAST_MIX, isMix)
+export const setLastMix = (mix: Mix): void => write(LAST_MIX, mix)
 
 /** Asks the browser not to clear this storage under pressure (SPEC §6.8). */
 export function requestPersistence(): void {

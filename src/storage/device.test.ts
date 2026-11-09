@@ -4,11 +4,13 @@ import {
   dropQueued,
   forgetDeviceKey,
   getDeviceKey,
+  getLastMix,
   getQueue,
   getSeeds,
   getWorkerState,
   queueResult,
   setDeviceKey,
+  setLastMix,
   setSeeds,
   setWorkerState,
 } from './device'
@@ -120,9 +122,23 @@ describe('seeds, queue and state', () => {
     expect(getQueue()).toEqual([withMix, base])
   })
 
+  it('keeps the last mix through forgetting the key, and reads one that is not a mix as none', () => {
+    globalThis.localStorage = fakeStorage()
+    const mix = [{ operation: 'division', level: 'easy' }] as const
+    expect(getLastMix()).toBeNull()
+    setLastMix(mix)
+    setDeviceKey('abc')
+    forgetDeviceKey()
+    expect(getLastMix()).toEqual(mix)
+    localStorage.setItem('macworx.lastMix', JSON.stringify([mix[0], mix[0]]))
+    expect(getLastMix()).toBeNull()
+  })
+
   it('works without storage at all', () => {
     expect(() => setSeeds([1])).not.toThrow()
+    expect(() => setLastMix([{ operation: 'addition', level: 'easy' }])).not.toThrow()
     expect(getSeeds()).toEqual([])
+    expect(getLastMix()).toBeNull()
   })
 })
 

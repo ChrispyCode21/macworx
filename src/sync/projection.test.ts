@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { generateAssignment } from '../engine'
 import type { QueuedResult, WorkerState } from '../storage/device'
-import { homeNumbers, nextResult, practiceChild, project } from './projection'
+import { earnUpTo, homeNumbers, nextResult, practiceChild, project } from './projection'
 
 const TODAY = '2026-10-17'
 const answersFor = (seed: number) => generateAssignment(seed).map((p) => p.answer)
@@ -108,6 +108,24 @@ describe('nextResult', () => {
     expect(project(state(), [...queue, finished(2)]).balance - before).toBe(earned.total)
     expect(earned.streakBonus).toBe(0)
     expect(nextResult(state(), [], 20, TODAY).streakBonus).toBe(7)
+  })
+})
+
+describe('earnUpTo (the mix screen)', () => {
+  const none = { streak: 0, lastDay: null }
+  it('M14: streak 0 and nothing finished today: 25 (20 + 4 + 1)', () => {
+    expect(earnUpTo(state(none), [], TODAY)).toBe(25)
+  })
+  it('M15: an assignment already finished today: 24', () => {
+    expect(earnUpTo(state({ streak: 3, lastDay: TODAY }), [], TODAY)).toBe(24)
+    // One the Worker hasn't re-scored yet counts the same way.
+    expect(earnUpTo(state(none), [finished(1)], TODAY)).toBe(24)
+  })
+  it('M16: streak 9, last counted day yesterday: 34 (20 + 4 + 10)', () => {
+    expect(earnUpTo(state({ streak: 9, lastDay: '2026-10-16' }), [], TODAY)).toBe(34)
+  })
+  it('M17: no Worker numbers yet: 24, with no streak bonus', () => {
+    expect(earnUpTo(null, [], TODAY)).toBe(24)
   })
 })
 

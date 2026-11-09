@@ -105,15 +105,19 @@ function pickProblem(pick: Pick, rng: Rng): Problem {
   return { ...problem, level: pick.level }
 }
 
+/** The problems each of `picks` picks gets, in pick order: 20 split evenly, leftovers one each to the earliest (§6.2). */
+export function pickSizes(picks: number): number[] {
+  const share = Math.floor(ASSIGNMENT_SIZE / picks)
+  const extra = ASSIGNMENT_SIZE % picks
+  return Array.from({ length: picks }, (_, i) => share + (i < extra ? 1 : 0))
+}
+
 /** The 20 problems of a mix (SPEC §6.2): each pick's share in pick order, then shuffled together. */
 function generateMix(seed: number, mix: Mix): Problem[] {
   if (!isMix(mix)) throw new RangeError('A mix is 1 to 3 different picks, each an operation and a level')
   const rng = createRng(seed)
-  const share = Math.floor(ASSIGNMENT_SIZE / mix.length)
-  const extra = ASSIGNMENT_SIZE % mix.length
-  const problems = mix.flatMap((pick, i) =>
-    Array.from({ length: share + (i < extra ? 1 : 0) }, () => pickProblem(pick, rng)),
-  )
+  const sizes = pickSizes(mix.length)
+  const problems = mix.flatMap((pick, i) => Array.from({ length: sizes[i] }, () => pickProblem(pick, rng)))
   for (let i = problems.length - 1; i > 0; i--) {
     const j = rng.int(0, i)
     ;[problems[i], problems[j]] = [problems[j], problems[i]]
