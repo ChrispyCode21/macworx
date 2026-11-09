@@ -3028,6 +3028,34 @@ p {
   font-weight: 400;
 }
 
+/* Division: the divisor, then the dividend under a bracket (SPEC §5.1 step 3). Its answer boxes sit above the digits. */
+.stacked-division {
+  /* No gap between the dividend's digits, so the bracket's top line is one line; the boxes keep their own. */
+  column-gap: 0;
+}
+
+.stacked-division .answer-box {
+  margin-inline: var(--space-3);
+}
+
+.stacked-divisor {
+  /* The same offset as the dividend's top line, so the divisor shares its baseline. */
+  margin-top: var(--space-8);
+  padding-right: var(--space-10);
+  border-top: 2px solid transparent;
+  text-align: right;
+}
+
+.stacked-dividend {
+  margin-top: var(--space-8);
+  border-top: 2px solid var(--l-text);
+}
+
+.stacked-dividend-first {
+  border-left: 2px solid var(--l-text);
+  border-top-left-radius: var(--radius-control);
+}
+
 .practice .stacked-rule {
   border-top: 2px solid var(--l-text);
   margin: var(--space-8) 0;

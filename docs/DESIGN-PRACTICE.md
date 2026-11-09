@@ -302,6 +302,7 @@ Frame `practice-math.png`. Crumb "Practice  /  Math". Title "A little practice, 
    - **The stacked problem** (`StackedProblem`, SPEC §5.1 step 3), centered both ways in the remaining space:
      - `.stacked` font-size 52, weight 500 (digit). The operator is 44 / 400 / `--l-muted`. The rule is 2 px `--l-text` (Figma's fraction bar), margin 8 0.
      - Answer boxes keep their classes and colors.
+     - **Division** (SPEC §5.1 step 3) is a long-division bracket, in the same grid (`.stacked-division`, one `--digit` column for each digit of the dividend plus one for the divisor, same 52 type): the first row is an empty cell over the divisor, then one answer box over each dividend digit (the last box over the ones digit); the second row is the divisor (right-aligned, 10 from the bracket) and the dividend's digits, each with a 2 px `--l-text` top line (8 below the boxes), the first also with a 2 px left line and a 12 radius at the top left, which makes the bracket. There is no operator and no rule.
    - **Dropped from Figma:**
      - the fraction equation, the "Your answer" field and its hint (her answer is the boxes)
      - "Add the fractions. Simplify your answer."

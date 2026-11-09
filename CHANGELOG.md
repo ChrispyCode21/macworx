@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Division looks like long division (children):** a division problem shows the divisor to the left of a bracket round the number being divided, with a box for her answer above each of its digits.
 - **A math mix of her own (children):** Math now opens a screen where she taps up to 3 problems to try, from addition, subtraction, multiplication and division at three levels, and sees how many problems each gets, how many Macaronis she could earn and a Start button. "Same as last time" brings back the last mix. "Do another one" keeps the mix she did.
 - **Results show what she practiced (parents):** the Results list has a Practice column. A math result reads the problems she picked, in her order ("Multiplication, medium · Division, easy"); work from before she could pick reads "Mixed"; a reading result shows its passage. Nothing changes on her iPad yet.
 

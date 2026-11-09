@@ -121,7 +121,23 @@ test(
   ONCE,
   async ({ page }) => {
     await openApp(page, { 'macworx.seeds': [41] }, true)
-    await startMath(page, 'Multiplication', 'Easy')
+    await startMath(page, 'Division', 'Easy')
+    // A division is stacked like a long-division bracket (SPEC §5.1 step 3): the divisor left of the dividend,
+    // an answer box over each of its digits, the last box over the ones digit.
+    await expect(page.locator('.stacked-division')).toBeVisible()
+    const digits = page.locator('.stacked-dividend')
+    const boxes = page.locator('.answer-box')
+    expect(await boxes.count()).toBe(await digits.count())
+    const divisor = (await page.locator('.stacked-divisor').boundingBox())!
+    const first = (await digits.first().boundingBox())!
+    expect(divisor.x + divisor.width).toBeLessThanOrEqual(first.x + 1)
+    // The divisor is on the dividend's row, and each box is over its own digit.
+    expect(Math.abs(divisor.y - first.y)).toBeLessThanOrEqual(4)
+    for (let i = 0; i < (await digits.count()); i++) {
+      const [box, digit] = [(await boxes.nth(i).boundingBox())!, (await digits.nth(i).boundingBox())!]
+      expect(Math.abs(box.x + box.width / 2 - (digit.x + digit.width / 2))).toBeLessThanOrEqual(4)
+      expect(box.y + box.height).toBeLessThanOrEqual(digit.y + 1)
+    }
     await expect(page.locator('.pad[data-ready]')).toBeVisible()
     await page.getByRole('button', { name: '1', exact: true }).click()
     await page.getByRole('button', { name: 'Check' }).click()
@@ -129,7 +145,7 @@ test(
     await page.getByRole('button', { name: 'Done for now' }).click()
     await page.getByRole('button', { name: 'Do another one' }).click()
     await expect(page.getByText('Connect to Wi-Fi to get more problems!')).toBeVisible()
-    await expect(page.getByRole('button', { name: /, Multiplication, Easy$/ })).toHaveAttribute(
+    await expect(page.getByRole('button', { name: /, Division, Easy$/ })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
