@@ -21,7 +21,7 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `migrations/` | Numbered D1 SQL migrations, applied in order. See "Data". |
 | `public/` | Icons, `logo.svg` and `_headers`, copied into the build as is. |
 | `e2e/` | Playwright tests of the production build. |
-| `scripts/` | The check scripts CI runs, the engine purity test, and `create-device.mjs`. |
+| `scripts/` | The check scripts CI runs, the engine purity test, `create-device.mjs`, and `passage-sql.mjs` (see "Adding a passage"). |
 | `.github/` | CI, security, release and merge-gate workflows, the `main` ruleset, Dependabot, PR and issue templates. |
 | `.claude/` | nightshift's config for this repo (`nightshift.json`) and its release-issue text (PIPELINE.md). |
 
@@ -103,6 +103,7 @@ D1, one database per environment (see "Hosting"). STRICT tables, from `migration
 - **Editing by hand** (a fallback; the dashboard does this now): `UPDATE children SET streak = 5, last_day = '2026-10-17', revision = lower(hex(randomblob(16))) WHERE id = 1` (the child's id). Changing `revision` makes a result being recorded at that moment retry from the edited row rather than overwrite it.
 - **Seeds and the app:** `POST /api/seeds` returns every seed the Worker still counts as unused, including ones the iPad has used offline but not synced yet. The app leaves out seeds in its result queue and the one in progress.
 - **Migrations:** add the next numbered file in `migrations/`, never edit an applied one. Workers Builds applies them in the build step, before each deploy (see "Hosting"). `npx wrangler d1 migrations apply macworx --local` applies them to the local D1 for `npm run worker:dev`.
+- **Adding a passage:** keep the passage JSON outside the repo, then run `node scripts/passage-sql.mjs <passage.json> --id <N> [--image <ext>] --out <file.sql>`. It checks the passage (a title, no empty paragraph, 1 to 50 questions numbered in order, exactly four distinct choices and exactly one right answer each), lists every problem and writes nothing if any rule fails. Otherwise it writes `INSERT`s with explicit ids (question `N*100+number`, choice `question*10+position`), minutes computed from the word count, and each question's choices shuffled once. Run that same file once with `wrangler d1 execute <db> --remote --file <file.sql>` on preview and once on production, and don't run the script again in between, or the databases won't match. Upload the picture to R2 under the name it prints (for example `3.webp`). Never commit the passage, picture or SQL.
 - **Pairing by hand:** `node scripts/create-device.mjs --local|--remote "label"` creates a device for the first child without a pairing code and prints its key once (it fails, printing no key, when there is no child). The Pair screen is the normal way (SPEC §5.4).
 - **Tests** (`worker/*.test.ts`) run the Worker in Node against a real local D1 from Miniflare, with every migration applied. (`@cloudflare/vitest-pool-workers` doesn't support this repo's Vitest version.)
 
