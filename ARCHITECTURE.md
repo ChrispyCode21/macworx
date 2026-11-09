@@ -82,13 +82,13 @@ SPEC §6.8. `src/storage/device.ts` keeps four `localStorage` entries: the devic
 
 ## Data
 
-D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql`, `0002_admin_log.sql`, `0003_pairing.sql`, `0004_children.sql`, `0005_children_state.sql`, `0006_reading_passages.sql` and `0007_reading_results.sql` and `0008_question_explanations.sql`:
+D1, one database per environment (see "Hosting"). STRICT tables, from `migrations/0001_init.sql`, `0002_admin_log.sql`, `0003_pairing.sql`, `0004_children.sql`, `0005_children_state.sql`, `0006_reading_passages.sql`, `0007_reading_results.sql` and `0008_question_explanations.sql`:
 
 | Table | Holds |
 |---|---|
 | `devices` | Paired iPads: the SHA-256 of each device key (never the key), a label, and when it was revoked. |
 | `seeds` | Seeds handed out, the device and day they went to, and whether a result used them. |
-| `results` | Each recorded assignment of any kind as the Worker re-scored it: her answers (JSON), counts, grade and payout. `kind` is `math` (tied to a `seed`) or `reading` (tied to an `attempt`, with `seed` NULL and `detail` holding the passage title and each question's text, choices, her choice and the right choice as recorded, SPEC §6.8). A table CHECK keeps a row's kind, seed, attempt and detail consistent. A reading result's `answers` is her picks as JSON, `answered` the number of questions and `correct` the ones she got right. A recorded result never changes. Older `admin_log` rows with action `correction` may exist and still read in the activity log. |
+| `results` | Each recorded assignment of any kind as the Worker re-scored it: her answers (JSON), counts, grade and payout. `kind` is `math` (tied to a `seed`) or `reading` (tied to an `attempt`, with `seed` NULL and `detail` holding the passage title and each question's text, choices, explanation, her choice and the right choice as recorded, SPEC §6.8). A table CHECK keeps a row's kind, seed, attempt and detail consistent. A reading result's `answers` is her picks as JSON, `answered` the number of questions and `correct` the ones she got right. A recorded result never changes. Older `admin_log` rows with action `correction` may exist and still read in the activity log. |
 | `pairing_codes` | Pairing codes: the code's SHA-256, the iPad's name, expiry, wrong tries, and when it was used or voided. Only the newest usable code counts. |
 | `admin_log` | Every change a parent makes in admin mode (SPEC §5.3): when, which parent (Access email), the action and a JSON detail. Written in the same batch as the change. |
 | `children` | One row per child: name, grade, initials, created_at and her own balance, streak, last counted day, completed and `revision`. The live copy of her numbers: the Worker reads and writes only this (see "Multiple children"). A parent restores a broken streak from the dashboard (`POST /api/parent/streak`), which edits `streak` and `last_day` here and changes `revision` in the same statement (see below). |

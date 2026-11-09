@@ -129,6 +129,7 @@ describe('POST /api/reading/start', () => {
     const { body } = await start()
     expect(JSON.stringify(body)).not.toContain('correct')
     expect(JSON.stringify(body)).not.toContain('explanation')
+    expect(JSON.stringify(body)).not.toContain('Because')
     // Only an id and its text: nothing else about a choice can carry the answer.
     for (const q of body.passage.questions)
       for (const c of q.choices) expect(Object.keys(c).sort()).toEqual(['id', 'text'])
@@ -297,5 +298,15 @@ describe('keys and the parent view', () => {
     ])
     expect(body.result.questions[0].right).toBe(1012)
     expect(body.result.questions[0].picked).toBe(1012)
+    // A snapshot recorded without an explanation (by the Worker running during a deploy) reads as ''.
+    await run(
+      "UPDATE results SET detail = json_remove(detail, '$.questions[0].explanation') WHERE id = ?",
+      id,
+    )
+    const old = await t.call('GET', `/api/parent/results/${id}`, {
+      key: null,
+      accessToken: await accessToken(),
+    })
+    expect(old.body.result.questions[0].explanation).toBe('')
   })
 })

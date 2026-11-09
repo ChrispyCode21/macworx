@@ -524,7 +524,7 @@ The Worker's child API (every route needs the iPad's device key):
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
 - `POST /api/results`: records a math result (§6.8), with its `mix` when it has one, and returns it with the new state.
 - `POST /api/reading/start`: chooses her next passage (§6.10), makes an attempt and returns both, without the right choices. With no passages it returns `passage: null`.
-- `POST /api/reading/result { attempt, day, picks }`: `day` is the iPad's own day (§6.5). Marks her choices, records the result with the passage's title and each question's text, choices, her choice and the right choice, and returns it with, per question, whether she was right, the right choice and the question's explanation (empty when it has none), and the new state (§6.8). 400 for choices that miss a question or name a choice of another question; 404 for an attempt that isn't this device's.
+- `POST /api/reading/result { attempt, day, picks }`: `day` is the iPad's own day (§6.5). Marks her choices, records the result with the passage's title and each question's text, choices, explanation, her choice and the right choice, and returns it with, per question, whether she was right, the right choice and the question's explanation (empty when it has none), and the new state (§6.8). 400 for choices that miss a question or name a choice of another question; 404 for an attempt that isn't this device's.
 - `GET /api/reading/image/:name`: a passage's picture from R2.
 
 Child routes read and write only the device's child: the numbers are hers, and the seeds and results are the device's.
