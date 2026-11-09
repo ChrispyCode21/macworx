@@ -25,6 +25,7 @@ test(
       if (path === '/api/reading/start') return route.fulfill({ json: { attempt: 9, passage } })
       if (path === '/api/reading/result') {
         posted.push(route.request().postDataJSON())
+        if (posted.length === 1) return route.abort()
         return route.fulfill({
           status: 201,
           json: {
@@ -73,24 +74,50 @@ test(
     await expect(page.getByRole('button', { name: 'Check answers' })).toBeDisabled()
     await expect(page.getByText('Pick an answer for each question: 1 to go.')).toBeVisible()
     await page.getByRole('radio').first().click()
+
+    // Picks survive Back, and Read again.
+    const firstPairPicked = async () => {
+      await expect(page.locator('.practice-question-card').nth(0).getByRole('radio').first()).toHaveAttribute(
+        'aria-checked',
+        'true',
+      )
+      await expect(page.locator('.practice-question-card').nth(1).getByRole('radio').first()).toHaveAttribute(
+        'aria-checked',
+        'true',
+      )
+    }
+    await page.locator('.practice-buttons').getByRole('button', { name: 'Back', exact: true }).click()
+    await firstPairPicked()
+    await ready()
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+    await page.getByRole('button', { name: 'Read again' }).click()
+    await ready()
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+    await expect(page.getByRole('radio').first()).toHaveAttribute('aria-checked', 'true')
+
+    // A Check that can't reach the Worker keeps the picks, and tapping it again sends the same attempt.
     const check = page.getByRole('button', { name: 'Check answers' })
+    await expect(check).toBeEnabled()
+    await ready()
+    await check.click()
+    await expect(page.getByText('Connect to Wi-Fi, then tap Check answers again.')).toBeVisible()
+    await expect(page.getByRole('radio').first()).toHaveAttribute('aria-checked', 'true')
     await expect(check).toBeEnabled()
     await ready()
     await check.click()
 
     await expect(page.locator('[data-result="right"]')).toHaveCount(1)
     await expect(page.locator('.response-lead')).toHaveText('The best answer is A. One')
-    expect(posted).toEqual([
-      {
-        attempt: 9,
-        day: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-        picks: [
-          { question: 1, choice: 10 },
-          { question: 2, choice: 20 },
-          { question: 3, choice: 30 },
-        ],
-      },
-    ])
+    const sent = {
+      attempt: 9,
+      day: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      picks: [
+        { question: 1, choice: 10 },
+        { question: 2, choice: 20 },
+        { question: 3, choice: 30 },
+      ],
+    }
+    expect(posted).toEqual([sent, sent])
     await ready()
     await page.getByRole('button', { name: 'Done' }).click()
     await expect(page.getByText('2 of 3 right')).toBeVisible()
