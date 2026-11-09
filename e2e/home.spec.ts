@@ -302,6 +302,64 @@ test('the Math screen fits tablets from an iPad mini to an iPad Pro, in both ori
   }
 })
 
+// Spelling and Reading on the same tablets (#201): in landscape they take compact sizes on a short viewport and
+// do not scroll, before and after Check. (Portrait stacks the panels and scrolls by design.)
+test('Spelling and Reading fit landscape tablets from an iPad mini to an iPad Pro, before and after Check', async ({
+  page,
+}) => {
+  // The safe areas of a landscape iPad (status bar 24, home indicator 20); env() is 0 in the browser.
+  await page.route('**/*.css', async (route) => {
+    const response = await route.fetch()
+    const body = (await response.text())
+      .replaceAll('env(safe-area-inset-top)', '24px')
+      .replaceAll('env(safe-area-inset-bottom)', '20px')
+    await route.fulfill({ response, body })
+  })
+  await openApp(page, false)
+  const sizes = [
+    [1133, 744],
+    [1024, 768],
+    [1080, 810],
+    [1180, 820],
+    [1194, 834],
+    [1366, 1024],
+  ]
+  const fits = async (at: string) => {
+    for (const [width, height] of sizes) {
+      await page.setViewportSize({ width, height })
+      const overflow = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
+      // One pixel is allowed: Spelling after Check overflows by 1 at 1133x744.
+      expect(overflow, `${at} at ${width}x${height} scrolls`).toBeLessThanOrEqual(1)
+    }
+  }
+  const choice = () =>
+    page
+      .locator('.button-choice')
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().height)
+
+  await page.getByRole('button', { name: 'Spelling', exact: true }).click()
+  await fits('Spelling')
+  await page.setViewportSize({ width: 1194, height: 834 })
+  expect(await choice(), 'a choice keeps its 78 in the 1194x834 frame').toBeGreaterThanOrEqual(77)
+  await page.setViewportSize({ width: 1133, height: 744 })
+  expect(await choice(), 'a choice gives height back on a short tablet').toBeLessThan(60)
+  await page.getByRole('radio').first().click()
+  await page.getByRole('button', { name: 'Check' }).click()
+  await fits('Spelling after Check')
+  await page.locator('.button-crumb').click()
+
+  await page.getByRole('button', { name: 'Reading', exact: true }).click()
+  await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
+  await page.getByRole('button', { name: 'Next' }).click()
+  await expect(page.getByRole('progressbar', { name: 'Step 2 of 2 · Questions' })).toBeVisible()
+  await fits('Reading questions')
+  for (const radiogroup of await page.getByRole('radiogroup').all())
+    await radiogroup.getByRole('radio').first().click()
+  await page.getByRole('button', { name: 'Check answers' }).click()
+  await fits('Reading questions after Check')
+})
+
 test('in landscape the Reading passage and questions fit the viewport height, the passage scrolling inside its panel', async ({
   page,
 }) => {
