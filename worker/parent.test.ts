@@ -579,6 +579,8 @@ describe('parent API', () => {
       ])
       expect(body.results[0]).toEqual({
         id: 2,
+        kind: 'math',
+        title: null,
         day: '2026-10-17',
         answered: 8,
         correct: 7,
