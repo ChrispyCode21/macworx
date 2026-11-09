@@ -1,6 +1,6 @@
 # macworx — Design Spec
 
-Extra math practice for a 7-year-old, on her iPad, that rewards effort and never punishes.
+Extra practice (math and reading) for a 7-year-old, on her iPad, that rewards effort and never punishes.
 
 This is the source of truth for what the app does. It describes the MVP. Anything not described here is undecided: ask the owner before building it (CLAUDE.md).
 
@@ -10,20 +10,20 @@ Her homework is limited to what school assigns, and doing it needs home, a penci
 
 macworx gives her:
 
-- **Access:** extra math practice she can open anywhere on her iPad, on top of her assigned homework, never in place of it.
-- **Motivation:** Macaronis, a currency she earns by doing problems and spends on real-world rewards her parents grant.
+- **Access:** extra practice, math and reading, she can open anywhere on her iPad, on top of her assigned homework, never in place of it.
+- **Motivation:** Macaronis, a currency she earns by doing assignments and spends on real-world rewards her parents grant.
 
 ## 2. Platform & architecture
 
 - **Device:** an iPad. The app is a PWA, installed from Safari (Share, then Add to Home Screen), and runs full screen.
-- **Offline:** assignments work with no connection. Results sync when the iPad is back online. Buying a reward needs a connection (§5.2).
+- **Offline:** math assignments work with no connection, and their results sync when the iPad is back online. Reading assignments, and buying a reward (§5.2), need a connection.
 - **Hosting:** Cloudflare Workers serve the app's static files and an `/api/*` Worker. Data lives in Cloudflare D1.
-- **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record. The Worker hands out the seeds assignments are generated from (§6.8).
+- **Trust:** the Worker re-scores every result with the same question engine the app uses. The app never decides what she earned; the Worker's totals are the record. The Worker hands out the seeds math assignments are generated from and the passages reading assignments are made of (§6.8, §6.10).
 - **Users:** parents and one or more children. The child's side needs no sign-in: her iPad holds a device key, and every child request to the Worker carries it. Each device belongs to exactly one child, and a child request acts for its device's child. A request without a valid key is refused and changes nothing. A device can't move to another child: a parent unpairs it and pairs it again. The parent side (`/parent`, every path under it, and `/api/parent/*`) sits behind Cloudflare Access, and the Worker also checks every parent request's Access token itself, refusing any request without a valid one (§6.9).
 
 ## 3. Non-goals (MVP)
 
-- Recorded or paid subjects other than math. Spelling and Reading are sample practice only (§5.5).
+- Recorded or paid subjects other than Math and Reading. Spelling is sample practice only (§5.5).
 - The spinner and the loot box.
 - Push notifications to the parent.
 - Time limits or timers of any kind.
@@ -38,9 +38,9 @@ macworx gives her:
 
 ## 5. Core user flows
 
-### 5.1 Do an assignment (child)
+### 5.1 Do a math assignment (child)
 
-1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home has three buttons: Math starts an assignment, and Spelling and Reading open their samples (§5.5).
+1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home has three buttons: Math starts a math assignment (below), Reading starts a reading assignment (§5.6) and Spelling opens its sample (§5.5). Every kind of assignment counts the same: none takes precedence over another in her totals, streak or grade.
 2. She starts an assignment: 20 math problems (§6.2). The screen has a top bar with her Macaroni balance and her streak, shown and hidden by the same rules as on home, then a heading with the "Practice / Math" crumb and "Problem n of 20" with a progress bar, then two panels, the problem in its own panel under an "{Operation} practice" label (for example "Addition practice") with a one-line instruction, and the number pad in a panel headed "Tap to enter your answer", then a row of actions with a note on the left and the buttons on the right.
 3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
 4. She enters her answer on an on-screen number pad (digits 0–9 and a delete key) and submits it with the Check button in the actions row at the bottom right of the screen. The iPad keyboard never opens. After Check, her response replaces the number pad in that same panel. She answers each problem once.
@@ -58,7 +58,7 @@ macworx gives her:
 
 ### 5.2 Buy a reward (child)
 
-1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7). The practice screens' top bar also has a Shop button. During a math assignment it doesn't leave: it shows "Finish this assignment first, then visit the Shop." On the Spelling and Reading samples it opens the shop.
+1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7). The practice screens' top bar also has a Shop button. During a math or reading assignment it doesn't leave: it shows "Finish this assignment first, then visit the Shop." On the Spelling and Reading samples (§5.5) it opens the shop.
 2. She can buy any reward whose price is at most her balance, but only while the iPad can reach the Worker. The Worker checks the price against its own balance, deducts it and records the purchase, so the Worker's balance is always the one spent.
 3. A parent sees the purchase on the portal's Shop screen (§5.3) and grants the reward in real life.
 
@@ -92,9 +92,9 @@ Choosing a tab changes the address without reloading the page. Back and Forward 
 
 - **Today's homework:** one number, the assignments she completed today (her finished results whose day is the parent's calendar day, not the last 24 hours), with the unit "assignments done" ("assignment done" for 1). It has no "of" total and no progress bar. Any subject it names comes from data, never from fixed text. Under it, "N Macaronis earned today." shows when she earned any today (the `earnedToday` of the Points screen).
 - **Summary:** two tiles, her Macaronis (balance) and her streak in days, each with a Manage link to the Macaronis and Streak screens. Under them is one line with all her completed assignments and her last counted day.
-- **Today's assignments:** each assignment she finished today, newest first, with its grade, the time it was recorded and the Macaronis it earned. With none it says "No assignments yet today." A "View all" link goes to Results.
+- **Today's assignments:** each assignment she finished today, newest first, with its kind (Math, or Reading with the passage's title), its grade, the time it was recorded and the Macaronis it earned. With none it says "No assignments yet today." A "View all" link goes to Results.
 - **Keep things in sync:** a row for her devices ("N connected devices", and when the latest of them last synced), linking to Devices, and a row for her rewards shop ("N rewards", and how many are within reach of her balance, left out at 0), linking to Shop. No "of".
-- **Results:** each recorded assignment, newest first (the latest 50): date, correct count (of the problems she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
+- **Results:** each recorded assignment, newest first (the latest 50): date, kind (Math, or Reading with the passage's title), correct count (of the problems or questions she answered), grade and Macaronis earned. A result she left early shows "Left early" in place of a grade.
 
 Choosing a link keeps the selected child and does not reload the page.
 
@@ -150,16 +150,28 @@ A recorded result and her answers never change; Add or Remove on the Points scre
 4. Not paired: a friendly line says what to do (ask for a new code, wait a minute, connect to Wi-Fi, or try again soon), and the boxes clear.
 5. Whenever Home opens with a stored key, the device checks it with the Worker. If a parent has unpaired the device, the device forgets the key and the button comes back.
 
-### 5.5 Spelling and Reading practice (child, samples)
+### 5.5 Spelling practice and the Reading sample (child, samples)
 
-Spelling and Reading are sample practice: they work on any iPad, paired or not, and online or offline. Their content is a fixed set of samples built into the app. The iPad checks her answers itself. Nothing is recorded or sent to the Worker, and they pay no Macaronis and don't count toward her streak, completed assignments or grade.
+Spelling is sample practice, and so is Reading on an iPad that isn't paired. They work on any iPad, online or offline. Their content is a fixed set of samples built into the app. The iPad checks her answers itself. Nothing is recorded or sent to the Worker, and they pay no Macaronis and don't count toward her streak, completed assignments or grade.
 
 1. **Spelling:** 8 words, one at a time. For each word she plays it (the iPad says it aloud), can hear it in a sentence, and picks its spelling from four choices. She can play it as often as she likes. She picks one choice and taps Check. Then the choice she picked turns a soft green when it's right, or a soft coral when it's not, and a friendly line shows the right spelling. She taps Next when she's ready. After the 8th word she sees that she's done, with a button back to Home.
-2. **Reading:** one passage, then its questions. She reads the passage and taps Next. Each question has three choices, and she picks one per question. **Read again** shows the passage again and keeps her choices. When every question has a choice she taps Check answers. Each question then shows the same green or coral as Spelling, with a friendly line naming the right answer. Then she taps Done and sees that she's done, with a button back to Home.
+2. **Reading sample:** one built-in passage, then its questions. It looks and works like the reading assignment's screens (§5.6), except that the iPad checks her choices itself and nothing is earned or saved. It opens when the iPad isn't paired, and when the Worker has no passages (§6.10).
 3. She can leave either one at any time with the back control. Nothing is kept: the next time she starts, it begins again from the first word or the passage.
 4. If the iPad can't speak, the Play buttons are disabled and a line says the word can't be played on this iPad. She can still pick a choice.
 
 The screens' layout, the shared top bar and the Math screen's layout are in `docs/DESIGN-PRACTICE.md`.
+
+### 5.6 Do a reading assignment (child)
+
+A reading assignment is one passage and its questions. It is a paid, recorded assignment like a math assignment: it earns Macaronis (§6.4), counts toward her streak (§6.5), completed assignments and grade (§6.6), and shows in the parent portal. It needs a paired iPad and a connection, because the Worker chooses the passage and marks her choices (§6.8). The right answers never reach the iPad before she has checked.
+
+1. She taps Reading on Home. The iPad asks the Worker for her next passage (§6.10). Without a connection, Reading shows "Connect to Wi-Fi to get your next story!" and starts nothing. An iPad that isn't paired, or a Worker with no passages, opens the Reading sample instead (§5.5).
+2. **The passage:** she reads it and taps Next. The screen shows the passage's title, its genre and minutes to read, its text and, when it has one, its picture. If the picture can't load, the passage reads without it. Its hint is shown as guidance.
+3. **The questions:** the questions come two at a time, in order (an odd last one comes alone). Each question has four choices, and she picks one per question. Nothing is marked while she answers. Next moves to the next pair and Back to the one before, and her choices stay. **Read again** shows the passage again and keeps her choices. On the last pair, Next becomes Check answers. Check answers is available once every question has a choice; until then a friendly line says how many are left.
+4. **Check answers** sends her choices to the Worker, which marks them, records the result and pays her (§6.8). The screen then shows each question in the same soft green or soft coral as Math, and a friendly line naming the right answer. If the iPad can't reach the Worker, her choices stay as they are, a friendly line asks her to connect to Wi-Fi, and she can tap Check answers again. A retry never pays twice.
+5. She taps Done and sees the result of §5.1 step 5: correct answers, Macaronis earned (with the accuracy bonus, and the streak bonus on her first finished assignment of the day) and the grade. A button takes her back to Home.
+6. She can leave with the back control at any time before Check answers. Nothing is recorded and nothing is earned, and the next time she taps Reading she gets the same passage, because she hasn't finished it. After Check answers the result is recorded and leaving changes nothing.
+7. A reading assignment has no left-early result.
 
 ## 6. Domain rules
 
@@ -173,27 +185,28 @@ Problems come from code, not a question bank, so the supply never runs out.
 
 ### 6.2 Assignment
 
-- An assignment is 20 problems: 7 addition, 7 subtraction and 6 multiplication, in shuffled order.
-- Every assignment is generated from a seed. The same seed always gives the same 20 problems, in the same order. The app sends the seed and her answers; the Worker regenerates the problems from the seed and re-scores them.
+- A math assignment is 20 problems: 7 addition, 7 subtraction and 6 multiplication, in shuffled order.
+- A reading assignment (§5.6) is one passage and all of its questions (§6.10). Its size is the number of questions.
+- Every math assignment is generated from a seed. The same seed always gives the same 20 problems, in the same order. The app sends the seed and her answers; the Worker regenerates the problems from the seed and re-scores them. A reading assignment is made from an attempt the Worker hands out (§6.8); the app sends the attempt and her choices, and the Worker marks them against the passage's right answers.
 
 ### 6.3 Scoring
 
-- Each problem has one answer, computed by the generator.
-- Her answer is a whole number. It is correct when its value equals the computed answer.
-- **Accuracy** is correct answers divided by the problem count.
+- Each problem has one answer, computed by the generator. Each reading question has one right choice, stored with the passage.
+- Her answer is a whole number. It is correct when its value equals the computed answer. A reading question is correct when the choice she picked is its right choice.
+- **Accuracy** is correct answers divided by the problem count (a reading assignment's question count).
 
 ### 6.4 Macaroni payout
 
 Finishing an assignment pays:
 
-- **Base:** 1 Macaroni per correct answer.
-- **Accuracy bonus:** 20% of the correct answers, rounded down. A 20-problem assignment pays up to +4.
+- **Base:** the correct answers scaled to a 20-problem assignment: 20 × correct ÷ size, rounded down. A math assignment (size 20) pays 1 Macaroni per correct answer. A perfect reading assignment pays a base of 20 whatever its number of questions.
+- **Accuracy bonus:** 20% of the base, rounded down. A finished assignment pays up to +4.
 - **Streak bonus:** on her first finished assignment of the day only, +1 per streak day, including today, up to +10 (§6.5).
 - **Minimum:** a finished assignment always pays at least 1 Macaroni in total.
 
-An assignment she leaves early (§5.1) pays the base only: 1 Macaroni per correct answer so far. It gets no accuracy bonus, streak bonus, minimum or grade, and doesn't count toward the streak.
+A math assignment she leaves early (§5.1) pays the base only: 1 Macaroni per correct answer so far. It gets no accuracy bonus, streak bonus, minimum or grade, and doesn't count toward the streak.
 
-Payout values live in one config module (CLAUDE.md).
+A reading assignment has no left-early result (§5.6). Payout values live in one config module (CLAUDE.md).
 
 ### 6.5 Streak
 
@@ -232,15 +245,16 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 
 - **Whose numbers:** seeds, results and numbers belong to the child of the device that sends them. A child's balance, streak, last counted day and completed assignments are hers alone.
 - **Seeds:** the Worker hands each iPad up to 20 unused seeds at a time and accepts each seed once. An iPad keeps its unused seeds so assignments work offline.
-- **Recording:** the Worker regenerates the assignment from its seed and re-scores her answers. 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
-- **The same result twice:** sending a result for a seed that's already recorded returns the recorded result and counts nothing again, so a retry after a lost connection is safe.
-- **Day range:** a result's day may be no earlier than the day before its seed was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. A day that had to be moved means the iPad's clock was wrong, so that result doesn't touch the streak: it's paid its base and accuracy bonus and counts as completed, but the streak, last counted day and streak bonus stay as they were. Because of this, her last counted day is never more than a day ahead of the real date, and a clock that's off by more than a day can't reset her streak. (A clock off by only a day looks the same as a time-zone difference, so it counts like any other day.)
+- **Reading:** the Worker chooses her next passage (§6.10) and hands it out with an attempt: a single-use number kept for her device's child, with the day it was handed out. Her choices come back with the attempt. The Worker marks them against the passage's right answers, records the result, with the passage's title and, for each question, its text, its choices, her choice and the right choice as they are at that moment, and pays it by the rules below. Before any reading start or result, the iPad sends the math results it hasn't sent yet, oldest first, so offline work is counted before the streak moves; if they can't be sent, Reading shows the Wi-Fi line of §5.6 and starts nothing. Her day comes with the choices and follows the day range rule below. The right answers stay on the Worker until the result is recorded. An attempt she never checks records nothing.
+- **Recording:** the Worker regenerates a math assignment from its seed and re-scores her answers. 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
+- **The same result twice:** sending a result for a seed or attempt that's already recorded returns the recorded result and counts nothing again, so a retry after a lost connection is safe.
+- **Day range:** a result's day may be no earlier than the day before its seed (or reading attempt) was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. A day that had to be moved means the iPad's clock was wrong, so that result doesn't touch the streak: it's paid its base and accuracy bonus and counts as completed, but the streak, last counted day and streak bonus stay as they were. Because of this, her last counted day is never more than a day ahead of the real date, and a clock that's off by more than a day can't reset her streak. (A clock off by only a day looks the same as a time-zone difference, so it counts like any other day.)
 - **Results that arrive late:** a result whose day is earlier than her last counted day counts as that same last day for the streak (no streak change, no streak bonus) and is still paid.
-- **Completed assignments** counts finished assignments only.
+- **Completed assignments** counts finished assignments only, math and reading.
 - **On the iPad:** a paired iPad keeps its unused seeds, the results it hasn't sent yet, and the Worker's latest state in its own storage, and asks the browser to keep that storage. Each assignment uses the next stored seed, and its result is dated with the iPad's own day. Results go to the Worker one at a time, oldest first, whenever the app opens, Home shows, a result is saved, or the connection comes back; the Worker's numbers replace the iPad's. Home shows the Worker's latest numbers with each result not yet sent applied on top, oldest first, using the engine. Every result adds what it pays to the balance. A finished result also adds 1 to completed assignments, moves the streak (§6.5; a result dated before her last counted day counts as that day) and sets the latest grade. A result she left early adds only its base. Each result is applied with the day the iPad dated it. The Worker's numbers replace these after each sync. A result the Worker refuses as not valid is dropped, so it can't hold up the rest. When the iPad tops up its seeds, it leaves out seeds in its unsent results and the one she's working on. A stored seed she leaves without answering anything goes to the back of the list.
 - **No seeds:** when a paired iPad has no seeds left and can't reach the Worker, Start shows "Connect to Wi-Fi to get more problems!"
 - **Before the iPad has numbers:** a paired iPad that hasn't yet received the Worker's state, and an iPad that isn't paired, show no numbers on Home (not a balance of 0). A finished result leaves out the streak bonus: its total is base plus accuracy bonus, with the minimum applied.
-- **Not paired:** an iPad without a device key still does assignments, each from a random seed, and saves nothing.
+- **Not paired:** an iPad without a device key still does math assignments, each from a random seed, and saves nothing. Its Reading is the sample (§5.5).
 
 ### 6.9 Parent access and pairing
 
@@ -249,6 +263,13 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 - **Pairing rate limit:** at most 10 pairing tries a minute from one network address (an IPv6 address counts by its /64 block, roughly one home or connection). Beyond that the Worker answers 429 without looking at the code. This slows a flood of guesses; it can't stop someone who sends a few wrong guesses a minute from voiding a code, since 5 wrong tries void it. If that ever happens, the parent makes a new code later. The code's own one use, 10 minutes and 5 tries are what keep an iPad from being paired by anyone else. If the Worker has no rate limiter, pairing is refused (503) rather than left unguarded.
 - **Preview pairing:** a PR preview can pair without a parent, so paired screens can be checked on a phone. The preview's own 6-digit code is a secret held in Cloudflare's preview settings, never in the repo. Typing it on the Pair screen pairs the device: the Worker makes a new device named "Preview" for the first child in the preview database and returns its key once. The code can be used any number of times and never expires; the pairing rate limit still applies first, and it is the only guard against guessing. It works only when the Worker is marked as a preview, has no Access settings and holds a valid code; any other code goes through the normal checks. Production never has the preview mark and always has Access settings, so the preview code does nothing there. A preview build also shows the Pair button outside the installed app (§5.4).
 - **Unpairing:** an unpaired iPad's key is refused from then on, including results it hasn't synced yet. The portal warns before unpairing: "Results this device hasn't sent yet won't be saved."
+
+### 6.10 Reading passages
+
+- **A passage** has a title, a number of minutes to read, its text in paragraphs and one or more questions. It may also have a genre (for example "Story"), a hint and a picture; whatever it lacks is left out of the screen. A question has its text and exactly four choices in a fixed order, exactly one of them the right choice. Different passages may have different numbers of questions (the first passages have 10 each).
+- **Her next passage:** the passage with the lowest id that she has no finished result for. When she has finished every passage, the one whose latest finished result is oldest. A passage she started and left is not finished, so it comes again. A repeat pays in full (§6.4).
+- **Where they live:** passages, questions and choices are rows in the database, and pictures are files in Cloudflare R2, named by the passage id and the picture's extension (for example `3.webp`); the passage row holds that name, or nothing. The owner adds them directly to the database and R2; the app has no screen for it and no passage text or picture is in the repository. The Worker serves a picture only to a request with a valid device key. A passage that has a recorded result is never deleted.
+- **What the iPad gets:** the title, genre, minutes, hint, text, picture and, per question, its text and choices. Never which choice is right (§5.6).
 
 ## 7. Worked examples → test cases
 
@@ -428,6 +449,30 @@ The page's helpers (today is the browser's local 2026-10-17; timestamps are loca
 | O10 | Balance 41, 29, 30, 10,000 and unknown | "4 rewards · 1 within reach", "4 rewards", "4 rewards · 1 within reach", "4 rewards · 4 within reach", "4 rewards" (never "of") |
 | O11 | The four shortcut links | "Manage Macaronis →" goes to /parent/points, "Manage streak →" to /parent/streak, the devices row to /parent/devices and the shop row to /parent/shop. Each has a real `href`, opens without a page load and keeps the selected child |
 
+### 7.L Reading assignments (§5.6, §6.2–§6.4, §6.8, §6.10)
+
+Unless stated, her state is balance 0, streak 0, no last counted day, the passage has 4 questions, and "not first of the day" means another assignment was already finished today.
+
+| ID | Given | Expected |
+|---|---|---|
+| L1 | 4 of 4 correct, first of the day, streak 1 | base 20 + bonus 4 + 1 streak → **25**; grade **Excellent** |
+| L2 | 3 of 4 correct (75%), not first of the day | base 15 + bonus 3 → **18**; grade **Improving** |
+| L3 | A 3-question passage, 2 correct, not first of the day | base 20 × 2 ÷ 3 = 13.3, rounded down → 13, bonus 2 → **15**; grade **Improving** |
+| L4 | A 3-question passage, 0 correct, not first of the day | 0 earned, raised to the minimum → **1** |
+| L5 | A 5-question passage, 4 correct, not first of the day | base 16 + bonus 3 → **19**; grade **Good** |
+| L6 | Passages 1, 2 and 3; she has finished 1 and 2 | Her next passage is **3** |
+| L7 | Passages 1, 2 and 3 all finished, latest finishes: 1 on Oct 3, 2 on Oct 1, 3 on Oct 2 | Her next passage is **2** |
+| L8 | She starts passage 1, leaves before Check answers, and starts Reading again | Nothing recorded; her next passage is **1** again |
+| L9 | A reading result sent twice with the same attempt | The recorded result comes back; balance and completed assignments count it **once** |
+| L10 | Math finished earlier today (streak 3, last counted day today); a reading result, 3 of 3 on a 3-question passage | Paid 20 + 4 = **24**; streak stays **3**; completed **+1** |
+| L11 | Her latest assignment was a math "Excellent"; she then finishes a reading assignment with 2 of 3 | Home's grade is **Improving**; completed **+1** |
+| L12 | The Worker hands out any passage | No field of the response says which choice is right |
+| L13 | A start or a result with no device key, or an invalid one | Refused (401); nothing recorded |
+| L14 | A result whose choices miss a question, or name a choice of another question | Refused (400); nothing recorded; the attempt stays usable |
+| L15 | The Worker has no passages | The start response has no passage, and the iPad opens the Reading sample |
+| L16 | Worker's date 2026-10-17; the attempt was handed out that day; a finished result, 3 of 3 on a 3-question passage, dated 2026-10-19 | Recorded on **2026-10-18**, paid 20 + 4 = **24** (no streak bonus); streak and last counted day unchanged; completed **+1** |
+| L17 | Streak 5, last counted day two days ago; a math result from yesterday is unsent; she taps Reading | The math result is sent first, so the streak is **6** before the reading result is recorded, and the reading result (first of the day) takes it to **7** |
+
 ### 7.D Recorded results (§8)
 
 A parent opens a result the Worker recorded.
@@ -435,6 +480,7 @@ A parent opens a result the Worker recorded.
 | ID | Given | Expected |
 |---|---|---|
 | D13 | A parent opens a recorded result | Each problem with its operation, numbers, her answer and the right answer, in order; the same seed always shows the same problems |
+| D14 | A parent opens a recorded reading result, after the owner has since edited the passage's text or a right choice | The passage's title, then each question with its choices, her choice and the right choice, in order, as they were when the result was recorded |
 
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
@@ -443,7 +489,8 @@ The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock an
 - `generateAssignment(seed)`: the 20 problems of §6.2.
 - `checkAnswer(problem, answer)`: §6.3.
 - `nextStreak(state, today)`: the streak after finishing an assignment today, and whether it was the first of the day (§6.5).
-- `payout(result)`: base, accuracy bonus, streak bonus and total for a finished assignment (§6.4).
+- `payout(result)`: base, accuracy bonus, streak bonus and total for a finished assignment of any kind, from its correct answers and its size (§6.4).
+- `scoreReading(rightChoices, picks)`: the questions she got right (§6.3).
 - `leftEarlyPayout({ correct, answered, problemCount })`: the base-only payout for an assignment she leaves early (§6.4).
 - `grade(correct, total)`: §6.6.
 - `addDays(day, n)`: the calendar day `n` days after (or before) `day`.
@@ -452,7 +499,10 @@ The Worker's child API (every route needs the iPad's device key):
 
 - `GET /api/state?pending=…`: the device's child (name, grade and initials, for the practice screens' top bar), balance, streak, last counted day, completed assignments, the latest finished assignment's grade, and which of the listed seeds (up to 100) are already recorded.
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
-- `POST /api/results`: records a result (§6.8) and returns it with the new state.
+- `POST /api/results`: records a math result (§6.8) and returns it with the new state.
+- `POST /api/reading/start`: chooses her next passage (§6.10), makes an attempt and returns both, without the right choices. With no passages it returns `passage: null`.
+- `POST /api/reading/result { attempt, day, picks }`: `day` is the iPad's own day (§6.5). Marks her choices, records the result with the passage's title and each question's text, choices, her choice and the right choice, and returns it with, per question, whether she was right and the right choice, and the new state (§6.8). 400 for choices that miss a question or name a choice of another question; 404 for an attempt that isn't this device's child's.
+- `GET /api/reading/image/:name`: a passage's picture from R2.
 
 Child routes read and write only the device's child: the numbers are hers, and the seeds and results are the device's.
 
@@ -468,9 +518,9 @@ The parent API (every route needs a valid Access token, §6.9). A parent can lis
 - `POST /api/parent/streak { streak, lastDay }`: sets her streak and last counted day (logged).
 - `GET /api/parent/summary`: balance, streak, last counted day, completed assignments and `earnedToday`: the sum of the total paid on the chosen child's results whose day is the parent's calendar day (finished and left-early results count; parent adjustments do not), 0 with none, and `completedToday`: the number of the chosen child's finished results whose day is the parent's calendar day (results she left early do not count), 0 with none. It takes an optional `today` query parameter, the parent's calendar day as `YYYY-MM-DD`. A value that is not a real date, or is more than 1 day from the Worker's UTC date, is 400 `bad_day`. Without it, the Worker's UTC date is used. The `child` check comes first. `POST /api/parent/streak` answers with the same fields, for the Worker's UTC date.
 - `GET /api/parent/days`: for the chosen child, the days among the seven ending on the parent's calendar day on which she has at least one finished result, oldest first, each once: `{ days: ["2026-10-11", ...] }`. It takes the same optional `today` query parameter as `GET /api/parent/summary`, with the same rule (absent: the Worker's date; not a real date, or more than 1 day from the Worker's date: 400 `bad_day`, nothing read).
-- `GET /api/parent/results`: the latest 50 recorded results, newest first: day, answered, correct, finished, grade, total paid and `createdAt` (when the Worker recorded the result, an ISO timestamp).
+- `GET /api/parent/results`: the latest 50 recorded results, newest first: kind (`math` or `reading`), the passage's title for a reading result, day, answered, correct, finished, grade, total paid and `createdAt` (when the Worker recorded the result, an ISO timestamp).
 - `POST /api/parent/balance { amount, note }`: adds (positive) or removes (negative) Macaronis with a note (§5.3). 400 for a bad amount or note, 409 for a removal larger than her balance (logged nothing), 503 when it can't be saved after 3 tries. Returns the new balance (logged).
-- `GET /api/parent/results/:id`: one recorded result with its problems: day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
+- `GET /api/parent/results/:id`: one recorded result with its problems (a reading result: the passage's title and, per question, its text, choices, her choice and the right choice): day, answered, correct, finished, grade, total and, per problem, the operation, both numbers, her answer and the right answer. 404 for an unknown id.
 - `GET /api/parent/log`: the latest 50 admin log entries for the chosen child, newest first: when, which parent, the action and its details.
 
 Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
@@ -481,7 +531,7 @@ Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
 
 Ideas outside the MVP. Each needs a spec section before it is built.
 
-- **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), recorded and paid spelling (words seeded from school lists, replacing the samples in §5.5), recorded and paid reading comprehension (short passages stored in the database, each with a relevant picture, parent-reviewed, replacing the placeholder passage in §5.5), and fractions (the fraction layout in `docs/DESIGN-PRACTICE.md`).
+- **More subjects:** phonics (spoken word via the Web Speech API, pick the word or starting letters), recorded and paid spelling (words seeded from school lists, replacing the samples in §5.5), and fractions (the fraction layout in `docs/DESIGN-PRACTICE.md`).
 - **Spinner:** earned spins that pick the subject or a reward, never "no work".
 - **Loot box:** earned-only surprise rewards.
 - **Carrying and borrowing:** work space on the stacked problem to mark a carried 1 or regroup from the next place.
