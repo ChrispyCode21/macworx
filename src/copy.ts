@@ -99,7 +99,7 @@ export const COPY = {
       ? `Question ${formatNumber(first)} of ${formatNumber(total)}.`
       : `Questions ${formatNumber(first)} and ${formatNumber(last)} of ${formatNumber(total)}.`,
   /** After Check, for a question that has no explanation: names the right choice. */
-  readingRightAnswer: (letter: string, text: string) => `The best answer is ${letter}. ${text}`,
+  readingRightAnswer: (letter: string, text: string) => `${COPY.readingBestAnswer(letter)} ${text}`,
   readingDone: 'You finished the passage and its questions!',
   mathTitle: 'A little practice, a little progress.',
   mathNote: "Take your time. There's no timer.",

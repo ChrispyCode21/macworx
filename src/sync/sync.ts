@@ -55,7 +55,7 @@ export function endSeed(seed: number, answers: number[], now: Date, mix?: Mix): 
 }
 
 /**
- * Before a reading start or result, the math results she hasn't sent go out, oldest first, so offline work is
+ * Before a reading start, the math results she hasn't sent go out, oldest first, so offline work is
  * counted before the streak moves (SPEC §6.8). True once none are left; her seeds or state failing to refresh doesn't matter.
  */
 export async function syncBeforeReading(): Promise<boolean> {
