@@ -31,9 +31,9 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 
 | File | What it does |
 |---|---|
-| `config.ts` | The one config module: payout values, grade cutoffs, assignment shape, number ranges and the reward menu (each reward has an id, a name and a price). |
+| `config.ts` | The one config module: payout values, grade cutoffs, assignment shape, the fixed mix's ranges (`GENERATOR`), the mix ranges by operation and level (`RANGES`, with `LEVELS` and `MAX_PICKS`) and the reward menu (each reward has an id, a name and a price). |
 | `random.ts` | A seeded generator (mulberry32). |
-| `problems.ts` | `generateAssignment(seed)`: 20 shuffled problems; the same seed always gives the same assignment, so the Worker can regenerate and re-score it. `makeProblem` computes an answer. |
+| `problems.ts` | `generateAssignment(seed, mix?)`: 20 shuffled problems; the same seed and mix always give the same assignment, so the Worker can regenerate and re-score it. A `Mix` is 1 to 3 distinct `Pick`s (`{ operation, level }`, `isMix` checks one); with none, the old fixed mix (7 addition, 7 subtraction, 6 multiplication) runs its original code untouched, since saved results are re-scored from the seed (`fixed-mix.snapshot.json` pins 403 seeds of it as hashes). A mix draws each pick's share in pick order (20 split evenly, leftovers to the earliest picks), first number then second from `RANGES`, then shuffles with the same generator; a division draws divisor and answer, and the dividend is their product. Mix problems carry their `level`. `makeProblem` computes an answer. |
 | `score.ts` | `checkAnswer`: a whole number equal to the computed answer. |
 | `streak.ts` | `nextStreak(state, today)`: dates come in as `YYYY-MM-DD` strings and are compared as day numbers, with no `Date` object or clock. |
 | `payout.ts` | `payout`: base (the correct answers scaled to 20 by the result's size, so a math or reading result alike), accuracy bonus from the base, streak bonus and total, all whole-number math. |

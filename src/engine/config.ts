@@ -46,6 +46,45 @@ export const GENERATOR = {
   factorMax: 9,
 } as const
 
+/** The levels of a mix pick (SPEC §6.1). */
+export const LEVELS = ['easy', 'medium', 'hard'] as const
+
+/** A mix has 1 to this many picks (SPEC §6.2). */
+export const MAX_PICKS = 3
+
+type Range = readonly [min: number, max: number]
+interface Ranges {
+  /** The first number drawn: the first addend, the larger-or-smaller subtraction number, the first factor, the divisor. */
+  first: Range
+  /** The second number drawn: the second addend or number, the second factor, the answer (division). */
+  second: Range
+}
+
+/** Number ranges of a mix pick, by operation and level (SPEC §6.1). Both numbers are drawn evenly. */
+export const RANGES = {
+  addition: {
+    easy: { first: [1, 9], second: [1, 9] },
+    medium: { first: [10, 99], second: [10, 99] },
+    hard: { first: [100, 999], second: [100, 999] },
+  },
+  subtraction: {
+    easy: { first: [1, 9], second: [1, 9] },
+    medium: { first: [10, 99], second: [10, 99] },
+    hard: { first: [100, 999], second: [100, 999] },
+  },
+  multiplication: {
+    easy: { first: [0, 5], second: [0, 5] },
+    medium: { first: [0, 9], second: [0, 9] },
+    hard: { first: [10, 99], second: [2, 9] },
+  },
+  // first is the divisor, second the answer; the dividend is their product.
+  division: {
+    easy: { first: [1, 5], second: [1, 5] },
+    medium: { first: [1, 9], second: [1, 9] },
+    hard: { first: [2, 12], second: [2, 12] },
+  },
+} as const satisfies Record<string, Record<(typeof LEVELS)[number], Ranges>>
+
 /** The reward menu: a stable id, a name and a price in Macaronis (SPEC §6.7). */
 export const REWARDS = [
   { id: 'ice-cream', name: 'Ice Cream', price: 30 },

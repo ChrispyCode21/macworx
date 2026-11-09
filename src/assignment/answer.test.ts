@@ -14,8 +14,16 @@ describe('answer boxes (SPEC §5.1)', () => {
     expect(boxCount(makeProblem('subtraction', 4512, 4512))).toBe(4)
   })
 
-  it('has two boxes for multiplication, enough for 9 × 9', () => {
+  it('has one box per digit of both factors for multiplication', () => {
     expect(boxCount(makeProblem('multiplication', 7, 8))).toBe(2)
+    expect(boxCount(makeProblem('multiplication', 24, 6))).toBe(3)
+    expect(boxCount(makeProblem('multiplication', 99, 9))).toBe(3)
+  })
+
+  it('has one box per digit of the dividend for division', () => {
+    expect(boxCount(makeProblem('division', 56, 7))).toBe(2)
+    expect(boxCount(makeProblem('division', 144, 12))).toBe(3)
+    expect(boxCount(makeProblem('division', 3, 1))).toBe(1)
   })
 })
 
@@ -57,6 +65,22 @@ describe('left to right: multiplication', () => {
   it('keeps a one-digit product in the ones box', () => {
     expect(shownDigits(tap(6), entry)).toBe('6')
     expect(nextBox(tap(6), entry, 2)).toBe(1)
+  })
+})
+
+describe('left to right: division', () => {
+  const entry = entryFor('division')
+
+  it('56 ÷ 7: typing 8 gives 8, in the ones box', () => {
+    expect(answerValue(tap(8), entry)).toBe(8)
+    expect(nextBox(tap(8), entry, 2)).toBe(1)
+  })
+
+  it('144 ÷ 12: typing 1, 2 shows the 1 in the tens box and the 2 in the ones box', () => {
+    expect(shownDigits(tap(1), entry)).toBe('1')
+    expect(shownDigits(tap(1, 2), entry)).toBe('12')
+    expect(nextBox('', entry, 3)).toBe(2)
+    expect(nextBox(tap(1, 2), entry, 3)).toBe(2)
   })
 })
 
