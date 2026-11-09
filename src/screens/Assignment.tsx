@@ -11,7 +11,7 @@ import {
 import { NumberPad } from '../components/NumberPad'
 import { StackedProblem } from '../components/StackedProblem'
 import { COPY } from '../copy'
-import { checkAnswer, generateAssignment } from '../engine'
+import { checkAnswer, generateAssignment, type Mix } from '../engine'
 import { CheckIcon } from '../practice/icons'
 import type { HomeNumbers, PracticeChild } from '../sync/projection'
 import { Button } from '../ui/Button'
@@ -22,6 +22,8 @@ import { PracticeFrame } from './practice/PracticeFrame'
 
 interface Props {
   seed: number
+  /** The mix the 20 problems come from (SPEC §6.2); none is the fixed mix (§6.1). */
+  mix?: Mix
   /** The numbers Home showed; the top bar keeps them for the whole assignment. */
   numbers?: HomeNumbers
   /** Her name, grade and initials; the top bar keeps them for the whole assignment too. */
@@ -32,8 +34,8 @@ interface Props {
 }
 
 /** One assignment, a problem at a time (SPEC §5.1). */
-export function Assignment({ seed, numbers, child, onFinish, onLeave }: Props) {
-  const problems = useMemo(() => generateAssignment(seed), [seed])
+export function Assignment({ seed, mix, numbers, child, onFinish, onLeave }: Props) {
+  const problems = useMemo(() => generateAssignment(seed, mix), [seed, mix])
   // Frozen when the assignment opens, so a background sync can't change the top bar mid-assignment.
   const [shownNumbers] = useState(() => numbers)
   const [shownChild] = useState(() => child)

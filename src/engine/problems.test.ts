@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { LEVELS, RANGES } from './config'
 import snapshot from './fixed-mix.snapshot.json'
-import { generateAssignment, isMix, makeProblem, type Level, type Mix, type Operation } from './problems'
+import {
+  generateAssignment,
+  isMix,
+  makeProblem,
+  pickSizes,
+  type Level,
+  type Mix,
+  type Operation,
+} from './problems'
 
 const SEEDS = Array.from({ length: 1000 }, (_, i) => i)
 const OPERATIONS = Object.keys(RANGES) as Operation[]
@@ -270,5 +278,11 @@ describe('generator (SPEC §6.1, §6.2)', () => {
 
   it('makes subtraction non-negative even when given the smaller number first', () => {
     expect(makeProblem('subtraction', 120, 450)).toMatchObject({ a: 450, b: 120, answer: 330 })
+  })
+})
+
+describe('pickSizes', () => {
+  it('splits 20 as the generator does: 1 pick 20, 2 picks 10 and 10, 3 picks 7, 7 and 6', () => {
+    expect([1, 2, 3].map(pickSizes)).toEqual([[20], [10, 10], [7, 7, 6]])
   })
 })
