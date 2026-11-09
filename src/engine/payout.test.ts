@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { grade } from './grade'
 import { leftEarlyPayout, payout } from './payout'
+import { addDays, nextStreak } from './streak'
 
 // SPEC §7.P. "Not first of the day" means no streak bonus applies.
 const notFirst = (correct: number) => payout({ correct, problemCount: 20, firstOfDay: false, streak: 3 })
@@ -55,6 +57,73 @@ describe('payout (SPEC §6.4)', () => {
     expect(() => payout({ correct: 5, problemCount: 20, firstOfDay: true, streak: -1 })).toThrow(RangeError)
     const firstOfDay = 'false' as unknown as boolean
     expect(() => payout({ correct: 5, problemCount: 20, firstOfDay, streak: 3 })).toThrow(RangeError)
+  })
+})
+
+describe('reading payout (SPEC §6.4, §7.L)', () => {
+  const reading = (correct: number, problemCount: number, firstOfDay = false, streak = 0) =>
+    payout({ correct, problemCount, firstOfDay, streak })
+
+  it('L1: 4 of 4, first of the day, streak 1 → 25, Excellent', () => {
+    expect(reading(4, 4, true, 1)).toEqual({ base: 20, accuracyBonus: 4, streakBonus: 1, total: 25 })
+    expect(grade(4, 4)).toBe('Excellent')
+  })
+
+  it('L2: 3 of 4, not first of the day → 18, Improving', () => {
+    expect(reading(3, 4)).toEqual({ base: 15, accuracyBonus: 3, streakBonus: 0, total: 18 })
+    expect(grade(3, 4)).toBe('Improving')
+  })
+
+  it('L3: 2 of 3 → base 13.3 rounds down to 13, bonus 2 → 15, Improving', () => {
+    expect(reading(2, 3)).toEqual({ base: 13, accuracyBonus: 2, streakBonus: 0, total: 15 })
+    expect(grade(2, 3)).toBe('Improving')
+  })
+
+  it('L4: 0 of 3 → raised to the minimum, 1', () => {
+    expect(reading(0, 3)).toEqual({ base: 0, accuracyBonus: 0, streakBonus: 0, total: 1 })
+  })
+
+  it('L5: 4 of 5 → base 16, bonus 3 → 19, Good', () => {
+    expect(reading(4, 5)).toEqual({ base: 16, accuracyBonus: 3, streakBonus: 0, total: 19 })
+    expect(grade(4, 5)).toBe('Good')
+  })
+
+  it('L10: reading after math earlier today, 3 of 3 → 24, streak stays 3', () => {
+    const today = '2026-10-17'
+    const after = nextStreak({ streak: 3, lastDay: today }, today)
+    expect(after).toMatchObject({ streak: 3, firstOfDay: false })
+    expect(reading(3, 3, after.firstOfDay, after.streak).total).toBe(24)
+  })
+
+  it('L11: a reading 2 of 3 grades Improving (payout arithmetic and grade only)', () => {
+    expect(grade(2, 3)).toBe('Improving')
+  })
+
+  it('L16: moved day pays no streak bonus, 3 of 3 → 24 (payout arithmetic only)', () => {
+    expect(reading(3, 3, false, 5)).toEqual({ base: 20, accuracyBonus: 4, streakBonus: 0, total: 24 })
+  })
+
+  it('L17: streak 5 then math from yesterday then reading → 6, then 7 (payout arithmetic only)', () => {
+    const today = '2026-10-17'
+    const yesterday = addDays(today, -1)
+    const afterMath = nextStreak({ streak: 5, lastDay: addDays(today, -2) }, yesterday)
+    expect(afterMath.streak).toBe(6)
+    const afterReading = nextStreak(afterMath, today)
+    expect(afterReading).toMatchObject({ streak: 7, firstOfDay: true })
+    expect(reading(3, 3, afterReading.firstOfDay, afterReading.streak)).toEqual({
+      base: 20,
+      accuracyBonus: 4,
+      streakBonus: 7,
+      total: 31,
+    })
+  })
+
+  it('pays the same base for a perfect result of any size', () => {
+    for (const size of [3, 5, 10, 20]) expect(reading(size, size).base, `size ${size}`).toBe(20)
+  })
+
+  it('rejects a size of 0', () => {
+    expect(() => reading(0, 0)).toThrow(RangeError)
   })
 })
 
