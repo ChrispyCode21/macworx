@@ -30,8 +30,8 @@ async function noSidewaysScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0)
 }
 
-/** Answers every problem right and opens the result. */
-async function finishRight(page: Page) {
+/** Answers every problem right and opens the result: with "See how I did", or by leaving with `lastButton`. */
+async function finishRight(page: Page, lastButton = 'See how I did') {
   for (let n = 1; n <= 20; n++) {
     const problem = page.locator('.stacked')
     await expect(page.getByText(`Problem ${n} of 20`)).toBeVisible()
@@ -49,7 +49,7 @@ async function finishRight(page: Page) {
     await page.getByRole('button', { name: 'Check' }).click()
     // Next ignores taps for a moment after Check.
     await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
-    await page.getByRole('button', { name: n === 20 ? 'See how I did' : 'Next' }).click()
+    await page.getByRole('button', { name: n === 20 ? lastButton : 'Next' }).click()
   }
 }
 
@@ -102,7 +102,11 @@ test('Home shows none of the numbers on an iPad that is not paired', async ({ pa
 })
 
 const FULL = { tag: '@full-assignment' }
+const LANDSCAPE = { tag: '@landscape' }
+const PORTRAIT = { tag: '@portrait' }
 
+// Also the check that leaving with Done for now after the 20th answer counts as finishing (the other flows leave
+// with See how I did).
 test('a paired iPad that has never synced shows no numbers and no streak bonus', FULL, async ({ page }) => {
   test.setTimeout(90_000)
   await openApp(page, true, { 'macworx.seeds': [21] })
@@ -111,12 +115,14 @@ test('a paired iPad that has never synced shows no numbers and no streak bonus',
   await expect(page.getByText(/Macaroni/)).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Math', exact: true }).click()
-  await finishRight(page)
+  await finishRight(page, 'Done for now')
+  await expect(page.getByRole('heading', { name: 'Excellent!' })).toBeVisible()
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
 })
 
-// Runs in both orientations: its result line is the widest one the result screen shows.
-test('the streak bonus shows on the first assignment of the day', async ({ page }) => {
+// Runs in portrait only: its result line is the widest one the result screen shows, and the result screen has no
+// landscape layout of its own, so the upright 820 is the narrower of the two.
+test('the streak bonus shows on the first assignment of the day', PORTRAIT, async ({ page }) => {
   test.setTimeout(90_000)
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
   await page.getByRole('button', { name: 'Math', exact: true }).click()
@@ -215,169 +221,170 @@ test('Check sits at the bottom right of the screen', async ({ page }) => {
   if (view.width > view.height) expect(box.y + box.height / 2).toBeGreaterThan(view.height / 2)
 })
 
-test('in landscape the whole practice screen fits the viewport height', async ({ page }) => {
-  const view = page.viewportSize()!
-  test.skip(view.width <= view.height, 'Portrait scrolls.')
-  await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
-  const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
-  expect(box.y + box.height).toBeLessThanOrEqual(view.height)
-  const scroll = await page.evaluate(() => ({
-    scrollHeight: document.documentElement.scrollHeight,
-    clientHeight: document.documentElement.clientHeight,
-  }))
-  expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
-})
-
 // Tablets other than the one the layout was drawn on (#201): the Math screen shrinks its number pad to fit and the
 // page does not scroll. The keys are 72 in the frame she was drawn on and wherever a landscape row has room, and the
 // response stays inside the pad's panel. (In portrait the two stacked panels share the spare height, so the keys
 // there are only held to their 48 to 72 range.)
-test('the Math screen fits tablets from an iPad mini to an iPad Pro, in both orientations', async ({
-  page,
-}) => {
-  await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
-  await expect(page.locator('.pad[data-ready]')).toBeVisible()
-  // [width, height, whether the keys are the full 72: true, shorter: false, or only within their range: null]
-  const sizes: [number, number, boolean | null][] = [
-    [744, 1133, null],
-    [768, 1024, null],
-    [810, 1080, null],
-    [834, 1194, true],
-    [1133, 744, true],
-    [1024, 768, true],
-    [1080, 810, true],
-    [1194, 834, true],
-    [1366, 1024, true],
-    // Short enough that the keys give some height back.
-    [1024, 706, false],
-  ]
-  const measure = () =>
-    page.evaluate(() => ({
-      overflow: document.documentElement.scrollHeight - innerHeight,
-      key: document.querySelector('.button-key')?.getBoundingClientRect().height ?? 0,
-      inside:
-        document.querySelector('.practice-panel-warm')!.getBoundingClientRect().bottom -
-        parseFloat(getComputedStyle(document.querySelector('.practice-panel-warm')!).paddingBottom) -
-        document.querySelector('.pad, .response')!.getBoundingClientRect().bottom,
-    }))
-  for (const [width, height, room] of sizes) {
-    await page.setViewportSize({ width, height })
-    const m = await measure()
-    const at = `${width}x${height}`
-    // One pixel of rounding is allowed.
-    expect(m.overflow, `${at} scrolls`).toBeLessThanOrEqual(1)
-    expect(m.key, `${at} keys`).toBeGreaterThanOrEqual(48 - 1)
-    expect(m.key, `${at} keys`).toBeLessThanOrEqual(72 + 1)
-    if (room === true) expect(m.key, `${at} keys have room for 72`).toBeGreaterThanOrEqual(71)
-    if (room === false) expect(m.key, `${at} keys shrink`).toBeLessThan(71)
-    expect(m.inside, `${at} pad leaves its panel`).toBeGreaterThanOrEqual(-1)
-  }
+test(
+  'the Math screen fits tablets from an iPad mini to an iPad Pro, in both orientations',
+  LANDSCAPE,
+  async ({ page }) => {
+    await openApp(page, false, { 'macworx.seeds': [31] })
+    await page.getByRole('button', { name: 'Math', exact: true }).click()
+    await expect(page.locator('.pad[data-ready]')).toBeVisible()
+    // In the landscape project's own 1180x820, the whole practice screen fits with no tolerance at all.
+    const own = page.viewportSize()!
+    const check = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
+    expect(check.y + check.height, 'Check is inside the viewport').toBeLessThanOrEqual(own.height)
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+      ),
+      'the page does not scroll',
+    ).toBeLessThanOrEqual(0)
+    // [width, height, whether the keys are the full 72: true, shorter: false, or only within their range: null]
+    const sizes: [number, number, boolean | null][] = [
+      [744, 1133, null],
+      [768, 1024, null],
+      [810, 1080, null],
+      [834, 1194, true],
+      [1133, 744, true],
+      [1024, 768, true],
+      [1080, 810, true],
+      [1194, 834, true],
+      [1366, 1024, true],
+      // Short enough that the keys give some height back.
+      [1024, 706, false],
+    ]
+    const measure = () =>
+      page.evaluate(() => ({
+        overflow: document.documentElement.scrollHeight - innerHeight,
+        key: document.querySelector('.button-key')?.getBoundingClientRect().height ?? 0,
+        inside:
+          document.querySelector('.practice-panel-warm')!.getBoundingClientRect().bottom -
+          parseFloat(getComputedStyle(document.querySelector('.practice-panel-warm')!).paddingBottom) -
+          document.querySelector('.pad, .response')!.getBoundingClientRect().bottom,
+      }))
+    for (const [width, height, room] of sizes) {
+      await page.setViewportSize({ width, height })
+      const m = await measure()
+      const at = `${width}x${height}`
+      // One pixel of rounding is allowed.
+      expect(m.overflow, `${at} scrolls`).toBeLessThanOrEqual(1)
+      expect(m.key, `${at} keys`).toBeGreaterThanOrEqual(48 - 1)
+      expect(m.key, `${at} keys`).toBeLessThanOrEqual(72 + 1)
+      if (room === true) expect(m.key, `${at} keys have room for 72`).toBeGreaterThanOrEqual(71)
+      if (room === false) expect(m.key, `${at} keys shrink`).toBeLessThan(71)
+      expect(m.inside, `${at} pad leaves its panel`).toBeGreaterThanOrEqual(-1)
+    }
 
-  // After Check, the response fits the same panel at the smallest sizes.
-  const problem = page.locator('.stacked')
-  const [a, b, op] = await Promise.all(
-    ['data-a', 'data-b', 'data-operation'].map((name) => problem.getAttribute(name)),
-  )
-  const right =
-    op === 'addition'
-      ? Number(a) + Number(b)
-      : op === 'subtraction'
-        ? Number(a) - Number(b)
-        : Number(a) * Number(b)
-  const digits = op === 'multiplication' ? [...String(right)] : [...String(right)].reverse()
-  for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
-  await page.getByRole('button', { name: 'Check' }).click()
-  await expect(page.locator('.response-lead')).toBeVisible()
-  for (const [width, height] of [
-    [744, 1133],
-    [1133, 744],
-    [1024, 706],
-  ]) {
-    await page.setViewportSize({ width, height })
-    const m = await measure()
-    expect(m.overflow, `${width}x${height} scrolls after Check`).toBeLessThanOrEqual(1)
-    expect(m.inside, `${width}x${height} response leaves its panel`).toBeGreaterThanOrEqual(-1)
-  }
-})
+    // After Check, the response fits the same panel at the smallest sizes.
+    const problem = page.locator('.stacked')
+    const [a, b, op] = await Promise.all(
+      ['data-a', 'data-b', 'data-operation'].map((name) => problem.getAttribute(name)),
+    )
+    const right =
+      op === 'addition'
+        ? Number(a) + Number(b)
+        : op === 'subtraction'
+          ? Number(a) - Number(b)
+          : Number(a) * Number(b)
+    const digits = op === 'multiplication' ? [...String(right)] : [...String(right)].reverse()
+    for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
+    await page.getByRole('button', { name: 'Check' }).click()
+    await expect(page.locator('.response-lead')).toBeVisible()
+    for (const [width, height] of [
+      [744, 1133],
+      [1133, 744],
+      [1024, 706],
+    ]) {
+      await page.setViewportSize({ width, height })
+      const m = await measure()
+      expect(m.overflow, `${width}x${height} scrolls after Check`).toBeLessThanOrEqual(1)
+      expect(m.inside, `${width}x${height} response leaves its panel`).toBeGreaterThanOrEqual(-1)
+    }
+  },
+)
 
 // Spelling and Reading on the same tablets (#201): in landscape they take compact sizes on a short viewport and
 // do not scroll, before and after Check. (Portrait stacks the panels and scrolls by design.)
-test('Spelling and Reading fit landscape tablets from an iPad mini to an iPad Pro, before and after Check', async ({
-  page,
-}) => {
-  // The safe areas of a landscape iPad (status bar 24, home indicator 20); env() is 0 in the browser.
-  await page.route('**/*.css', async (route) => {
-    const response = await route.fetch()
-    const body = (await response.text())
-      .replaceAll('env(safe-area-inset-top)', '24px')
-      .replaceAll('env(safe-area-inset-bottom)', '20px')
-    await route.fulfill({ response, body })
-  })
-  await openApp(page, false)
-  const sizes = [
-    [1133, 744],
-    [1024, 768],
-    [1080, 810],
-    [1180, 820],
-    [1194, 834],
-    [1366, 1024],
-  ]
-  const fits = async (at: string) => {
-    for (const [width, height] of sizes) {
-      await page.setViewportSize({ width, height })
-      const overflow = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
-      // One pixel is allowed: Spelling after Check overflows by 1 at 1133x744.
-      expect(overflow, `${at} at ${width}x${height} scrolls`).toBeLessThanOrEqual(1)
+test(
+  'Spelling and Reading fit landscape tablets from an iPad mini to an iPad Pro, before and after Check',
+  LANDSCAPE,
+  async ({ page }) => {
+    // The safe areas of a landscape iPad (status bar 24, home indicator 20); env() is 0 in the browser.
+    await page.route('**/*.css', async (route) => {
+      const response = await route.fetch()
+      const body = (await response.text())
+        .replaceAll('env(safe-area-inset-top)', '24px')
+        .replaceAll('env(safe-area-inset-bottom)', '20px')
+      await route.fulfill({ response, body })
+    })
+    await openApp(page, false)
+    const sizes = [
+      [1133, 744],
+      [1024, 768],
+      [1080, 810],
+      [1180, 820],
+      [1194, 834],
+      [1366, 1024],
+    ]
+    const fits = async (at: string) => {
+      for (const [width, height] of sizes) {
+        await page.setViewportSize({ width, height })
+        const overflow = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)
+        // One pixel is allowed: Spelling after Check overflows by 1 at 1133x744.
+        expect(overflow, `${at} at ${width}x${height} scrolls`).toBeLessThanOrEqual(1)
+      }
     }
-  }
-  const choice = () =>
-    page
-      .locator('.button-choice')
-      .first()
-      .evaluate((el) => el.getBoundingClientRect().height)
+    const choice = () =>
+      page
+        .locator('.button-choice')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().height)
 
-  await page.getByRole('button', { name: 'Spelling', exact: true }).click()
-  await fits('Spelling')
-  await page.setViewportSize({ width: 1194, height: 834 })
-  expect(await choice(), 'a choice keeps its 78 in the 1194x834 frame').toBeGreaterThanOrEqual(77)
-  await page.setViewportSize({ width: 1133, height: 744 })
-  expect(await choice(), 'a choice gives height back on a short tablet').toBeLessThan(60)
-  await page.getByRole('radio').first().click()
-  await page.getByRole('button', { name: 'Check' }).click()
-  await fits('Spelling after Check')
-  await page.locator('.button-crumb').click()
+    await page.getByRole('button', { name: 'Spelling', exact: true }).click()
+    await fits('Spelling')
+    await page.setViewportSize({ width: 1194, height: 834 })
+    expect(await choice(), 'a choice keeps its 78 in the 1194x834 frame').toBeGreaterThanOrEqual(77)
+    await page.setViewportSize({ width: 1133, height: 744 })
+    expect(await choice(), 'a choice gives height back on a short tablet').toBeLessThan(60)
+    await page.getByRole('radio').first().click()
+    await page.getByRole('button', { name: 'Check' }).click()
+    await fits('Spelling after Check')
+    await page.locator('.button-crumb').click()
 
-  await page.getByRole('button', { name: 'Reading', exact: true }).click()
-  await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
-  await page.getByRole('button', { name: 'Next' }).click()
-  await expect(page.getByRole('progressbar', { name: 'Step 2 of 2 · Questions' })).toBeVisible()
-  await fits('Reading questions')
-  for (const radiogroup of await page.getByRole('radiogroup').all())
-    await radiogroup.getByRole('radio').first().click()
-  await page.getByRole('button', { name: 'Check answers' }).click()
-  await fits('Reading questions after Check')
-})
+    await page.getByRole('button', { name: 'Reading', exact: true }).click()
+    await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
+    await page.getByRole('button', { name: 'Next' }).click()
+    await expect(page.getByRole('progressbar', { name: 'Step 2 of 2 · Questions' })).toBeVisible()
+    await fits('Reading questions')
+    for (const radiogroup of await page.getByRole('radiogroup').all())
+      await radiogroup.getByRole('radio').first().click()
+    await page.getByRole('button', { name: 'Check answers' }).click()
+    await fits('Reading questions after Check')
+  },
+)
 
-test('in landscape the Reading passage and questions fit the viewport height, the passage scrolling inside its panel', async ({
-  page,
-}) => {
-  const view = page.viewportSize()!
-  test.skip(view.width <= view.height, 'Portrait scrolls.')
-  await openApp(page, false)
-  await page.getByRole('button', { name: 'Reading', exact: true }).click()
-  const fits = () =>
-    page.evaluate(() => document.documentElement.scrollHeight <= document.documentElement.clientHeight)
-  expect(await fits()).toBe(true)
-  // Next ignores taps for a moment after the passage opens (SPEC §5.1 step 4).
-  await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
-  await page.getByRole('button', { name: 'Next' }).click()
-  await expect(page.getByRole('progressbar', { name: 'Step 2 of 2 · Questions' })).toBeVisible()
-  const read = (await page.getByRole('button', { name: 'Read again' }).boundingBox())!
-  expect(read.y + read.height).toBeLessThanOrEqual(view.height)
-  expect(await fits()).toBe(true)
-})
+test(
+  'in landscape the Reading passage and questions fit the viewport height, the passage scrolling inside its panel',
+  LANDSCAPE,
+  async ({ page }) => {
+    const view = page.viewportSize()!
+    await openApp(page, false)
+    await page.getByRole('button', { name: 'Reading', exact: true }).click()
+    const fits = () =>
+      page.evaluate(() => document.documentElement.scrollHeight <= document.documentElement.clientHeight)
+    expect(await fits()).toBe(true)
+    // Next ignores taps for a moment after the passage opens (SPEC §5.1 step 4).
+    await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
+    await page.getByRole('button', { name: 'Next' }).click()
+    await expect(page.getByRole('progressbar', { name: 'Step 2 of 2 · Questions' })).toBeVisible()
+    const read = (await page.getByRole('button', { name: 'Read again' }).boundingBox())!
+    expect(read.y + read.height).toBeLessThanOrEqual(view.height)
+    expect(await fits()).toBe(true)
+  },
+)
 
 test('Home shows Math, Spelling and Reading;Spelling and Reading open their practice, and both return to Home without any request', async ({
   page,
