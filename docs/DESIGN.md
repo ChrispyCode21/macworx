@@ -75,9 +75,9 @@ These come from the repo's checks (`scripts/check-conventions.mjs`, CLAUDE.md). 
 
 Font: `system-ui`. Weights: 400 and 600 only. Case: as written unless "upper". "upper" = `text-transform: uppercase`, copy stored in sentence case.
 
-Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-14`, `--text-29`, …); use it for `font-size`, never a literal px. `src/cssTokens.test.ts` fails on a literal px `font-size` and on a size with no token. A new size needs a row here and a token.
+Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-14`, `--text-29`, …); use it for `font-size`, never a literal px. `src/cssTokens.test.ts` fails on a literal `font-size` (px, rem or em) and on a size with no token. A new size needs a row here and a token.
 
-Home, the result and Pair screens (the child base styles, not in Figma) use the same tokens, no rem: the title 58, the primary button and the result lines 40, the Pair Check key 29, Home's numbers 30, and the Pair code digits 58. They were 57.6, 38.4, 28.8, 38.4, 33.6 and 67.2 px (rem at the 24 px root) before, and no contract gave those sizes.
+Home, the result and Pair screens (the child base styles, not in Figma) use the same tokens, no rem: the title 58, the primary button and the result lines 40, the Pair Check key 29, Home's numbers 30, and the Pair code digits 58.
 
 | Token | Phone px | Wide px | Weight | Line height | Case | Color role | Used for |
 |---|---|---|---|---|---|---|---|

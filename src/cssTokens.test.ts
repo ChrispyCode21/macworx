@@ -113,7 +113,7 @@ describe('size tokens', () => {
       } else if (text.endsWith(';') || text.endsWith('}')) group = ''
       const m = line.match(/font-size:\s*(\d*\.?\d+)(px|rem|em)/i)
       if (!m) continue
-      // The 24px on :root is the base for any rem, em or % size inherited from it.
+      // The 24px on :root is the rem base.
       if (selector !== ':root')
         literal.push(`${selector}: ${m[1]}${m[2]} (use a var(--text-N) from the scale)`)
     }

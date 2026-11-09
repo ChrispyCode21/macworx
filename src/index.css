@@ -252,7 +252,7 @@ p {
   gap: var(--gap);
 }
 
-/* The pairing code's six boxes (CodeBoxes): the answer-box look at its own size (67px digits), wider than Math's. */
+/* The pairing code's six boxes (CodeBoxes): the answer-box look at its own size (58px digits), wider than Math's. */
 .code-boxes {
   display: grid;
   grid-template-columns: repeat(6, 1.1em);
