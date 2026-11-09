@@ -528,7 +528,7 @@ All inline SVG, Lucide (ISC). Render with `fill="none" stroke="currentColor" str
 
 ## 17. Screen: Math mix
 
-The screen Math opens (SPEC §5.1 step 2). Behavior, copy and numbers are in SPEC §5.1, §6.1 and §6.2; the frames below are the look. The layout contract (sizes, tokens, states) is not written yet: the slice that builds the screen writes it here from these frames, in the style of sections 8 to 12.
+The screen Math opens (SPEC §5.1 step 2). Behavior, copy and numbers are in SPEC §5.1, §6.1 and §6.2; the frames below are the look, and this section is the layout contract, in the style of sections 8 to 12.
 
 | Frame | Shows |
 |---|---|
@@ -537,3 +537,26 @@ The screen Math opens (SPEC §5.1 step 2). Behavior, copy and numbers are in SPE
 | `docs/design/math-mix-three-picked.png` | 3 of 3 picked: the other cells dimmed, "Tap one of your picks to swap it.", 7, 7 and 6 problems, "A little of everything." |
 
 The frames show a top bar with Home, Shop and Parents (the same bar as the Home frame, `docs/design/home.png`), the crumb "Home / Math", and "Earn up to X Macaronis." where X is a placeholder (SPEC §5.1 step 2, §6.4).
+
+### 17.1 Layout
+
+Built as `src/screens/Mix.tsx` and the `.mix` block of `src/index.css` (px only, the spacing, radius and type tokens). It is a `.home` page: it has Home's top bar (`HomeBar`, whose Home link is a button back to Home) and Home's `--l-*` tokens, plus `--l-primary` and `--l-inset` on `.mix`.
+
+- **Frame:** `.home-main` (padding 32, gap 16), in this order: the crumb, the heading block, the tools row, the columns, the start row.
+- **Crumb:** a `crumb` button (7.4), arrow-left 18 + "Home  /  Math", the same visible name as its accessible name.
+- **Heading block:** h1 (text-40) "Make a math mix of your own." and the line under it (`home-subheading`) "Tap the problems you'd like to try. Pick up to 3."
+- **Tools row** (min-height 48, wrapping, gap 12 by 24): "Same as last time" (a `secondary` button 48 high, rotate-cw 20 + label; left out with no last mix), the swap note "Tap one of your picks to swap it." (text-15, `--l-muted`, centered, shown only at 3 picks) and, at the end, the count "n of 3 picked" (text-16, `--l-muted`, `aria-live="polite"`).
+- **Columns:** one column below 1024 wide (grid, then panel), and from 1024 `minmax(0, 650fr) minmax(0, 440fr)`, gap 24, as the Math screen.
+- **Grid card** (white, 1 px `--l-line`, radius 20, padding 16, gap 8): columns `minmax(96px, 150px)` then three equal ones. The header row has an empty cell, then Easy, Medium and Hard (text-21, weight 600) each over 1, 2 or 3 dots (text-10, `--l-link`, aria-hidden). Each operation row has its sign (18 wide, aria-hidden) and name (text-17) then three cells.
+- **Cell:** `mix-cell` `Button`, min-height 64 (44 is the least target), radius 12, 1 px `--l-line`, fill `--l-surface`, the sample problem in text-23 weight 600. Its accessible name is "{problem}, {Operation}, {Level}" and it has `aria-pressed`.
+
+| State | Fill | Border | Other |
+|---|---|---|---|
+| Not picked | `--l-surface` | 1 px `--l-line` | |
+| Picked | `--l-chip` | 2 px `--l-link` | `aria-pressed="true"` |
+| Dimmed (3 picked, not itself picked) | `--l-inset` | 1 px `--l-line` | opacity 0.55, text `--l-muted`, `aria-disabled="true"`, takes no taps |
+
+- **Side panel** (`aside`, fill `--l-chip`, radius 20, padding 24, column, gap 16): the title (text-26) from the pick count; with none, "Pick something to start" (text-24) and "Tap a problem that looks fun."; with picks, a list, one row for each pick in pick order, its operation over its level (text-15, `--l-muted`) at the left and "{n} problems" at the right (17), the numbers from the engine's `pickSizes`. Under a 1 px `--l-line` rule: "20 problems" (text-24), "Mixed together into one practice." for 2 or 3 picks, and the earn chip (white pill, radius 100, coins 20 + "Earn up to X Macaronis.", text-16).
+- **Start row:** right-aligned, wrapping. The note "Connect to Wi-Fi to get more problems!" (`role="status"`) shows to the left of the button after a start found no seeds. The button is `action` (7.4) "Start 20 problems" with arrow-right 20, disabled with no picks.
+- **Focus:** 2 px outline `--l-link`, 2 px offset on every button.
+- **Portrait (820 x 1180) and landscape (1180 x 820):** the page never scrolls sideways and fits both without scrolling vertically; the cells keep their 64 height.

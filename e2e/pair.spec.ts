@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { startMath } from './mix'
 
 // Pairing her device (SPEC §5.4), with the Worker's /api/pair and /api/state answered by the test.
 // The service worker is blocked (playwright.config.ts), so these routes reach the test, not a cache.
@@ -118,7 +119,7 @@ test('a paired device with no seeds and no connection asks for Wi-Fi', async ({ 
   await page.addInitScript(() => localStorage.setItem('macworx.deviceKey', 'paired-key-0123456789'))
   await page.route('/api/*', (route) => route.abort('internetdisconnected'))
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await expect(page.getByText('Connect to Wi-Fi to get more problems!')).toBeVisible()
 })
 
