@@ -182,8 +182,8 @@ function parseResult(body: unknown): ResultBody | 'bad_result' | 'bad_mix' {
   if (!('mix' in body)) return { seed, day, answers }
   // Present but not 1 to 3 different known picks (null included): refused, nothing recorded (SPEC §6.8, W8, W9).
   if (!isMix(mix)) return 'bad_mix'
-  // Her order, and only the two fields: what is stored is what she picked.
-  return { seed, day, answers, mix: mix.map(({ operation, level }) => ({ operation, level })) }
+  // Her order; isMix has checked each pick is exactly an operation and a level.
+  return { seed, day, answers, mix }
 }
 
 /** The day moved into range: no earlier than the day before the seed was handed out, no later than tomorrow. */

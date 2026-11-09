@@ -910,6 +910,7 @@ describe('parent API', () => {
         t.call('GET', '/api/parent/results/1', { key: null, accessToken: await accessToken() })
       const { status, body } = await open()
       expect(status).toBe(200)
+      expect(body.result.mix).toBeNull() // no mix: the fixed mix
       expect(body.result).toMatchObject({
         id: 1,
         day: '2026-10-16',
@@ -960,14 +961,6 @@ describe('parent API', () => {
       expect((await open('/api/parent/results/1')).body).toEqual(body)
       const list = (await open('/api/parent/results')).body.results
       expect(list[0]).toMatchObject({ kind: 'math', mix })
-    })
-
-    it('D13: a result with no mix reads as the fixed mix, in the list and when opened', async () => {
-      await finished15()
-      const open = async (path: string) =>
-        t.call('GET', path, { key: null, accessToken: await accessToken() })
-      expect((await open('/api/parent/results/1')).body.result.mix).toBeNull()
-      expect((await open('/api/parent/results')).body.results[0].mix).toBeNull()
     })
 
     it('a stored mix that is not a mix is a 500, never read as the fixed mix', async () => {

@@ -190,6 +190,11 @@ describe('sync', () => {
     expect(sync.takeSeed()).toBe(2)
     sync.endSeed(2, [6], new Date(2026, 9, 17))
     await vi.waitFor(() => expect(getQueue()).toEqual([]))
+    // A mix the Worker would refuse is never queued.
+    setSeeds([4])
+    sync.takeSeed()
+    sync.endSeed(4, [1], new Date(2026, 9, 17), [])
+    expect(getQueue()).toEqual([])
     expect(sent).toEqual([
       { seed: 1, day: '2026-10-17', answers: [5], mix },
       { seed: 2, day: '2026-10-17', answers: [6] },

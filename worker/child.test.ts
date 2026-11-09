@@ -313,7 +313,7 @@ describe('saving a result with a mix (SPEC §6.8)', () => {
     expect(await unused(s)).toBe(false)
   })
 
-  it('keeps her pick order and nothing but the two fields', async () => {
+  it('keeps the picks in the order she picked them', async () => {
     const reversed = [two[1], two[0]]
     const s = await seed()
     await t.call('POST', '/api/results', {
