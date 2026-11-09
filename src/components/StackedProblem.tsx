@@ -35,9 +35,19 @@ export function StackedProblem({ problem, boxes, shown, next, outcome = null }: 
       </span>
     ))
 
+  const division = problem.operation === 'division'
+  const boxCells = inColumns(shown, boxes).map((digit, i) => (
+    <span
+      key={`box${i}`}
+      className={`answer-box${i === next ? ' answer-box-next' : ''}${outcome ? OUTCOME_CLASS[outcome] : ''}`}
+    >
+      {digit}
+    </span>
+  ))
+
   return (
     <div
-      className="stacked"
+      className={division ? 'stacked stacked-division' : 'stacked'}
       style={{ '--columns': boxes } as CSSProperties}
       data-a={problem.a}
       data-b={problem.b}
@@ -47,20 +57,34 @@ export function StackedProblem({ problem, boxes, shown, next, outcome = null }: 
       role="img"
       aria-label={`${formatNumber(problem.a)} ${op} ${formatNumber(problem.b)} = ${shown}`}
     >
-      <span />
-      {row(String(problem.a), 'a')}
-      <span className="stacked-op">{op}</span>
-      {row(String(problem.b), 'b')}
-      <span className="stacked-rule" />
-      <span />
-      {inColumns(shown, boxes).map((digit, i) => (
-        <span
-          key={`box${i}`}
-          className={`answer-box${i === next ? ' answer-box-next' : ''}${outcome ? OUTCOME_CLASS[outcome] : ''}`}
-        >
-          {digit}
-        </span>
-      ))}
+      {division ? (
+        // A long-division bracket: one answer box over each digit of the dividend, the divisor to its left.
+        <>
+          <span />
+          {boxCells}
+          <span className="stacked-divisor">{problem.b}</span>
+          {String(problem.a)
+            .split('')
+            .map((digit, i) => (
+              <span
+                key={`d${i}`}
+                className={`stacked-digit stacked-dividend${i === 0 ? ' stacked-dividend-first' : ''}`}
+              >
+                {digit}
+              </span>
+            ))}
+        </>
+      ) : (
+        <>
+          <span />
+          {row(String(problem.a), 'a')}
+          <span className="stacked-op">{op}</span>
+          {row(String(problem.b), 'b')}
+          <span className="stacked-rule" />
+          <span />
+          {boxCells}
+        </>
+      )}
     </div>
   )
 }
