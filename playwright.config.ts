@@ -25,7 +25,11 @@ const PHONE_SPECS = /phone.spec.ts$/
 const runsPortal = (project: string) => project === 'webkit-portrait' || project === 'chromium-landscape'
 // Tapping through a whole assignment checks flow and payout, not orientation, so those tests run once per
 // engine (landscape). Each screen they reach keeps a layout check in portrait from a quicker test.
-const FULL_ASSIGNMENT = /@full-assignment/
+// A test that sets its own viewport (page.setViewportSize) or applies only in landscape is tagged @landscape and
+// runs the same way, once per engine, instead of once per orientation.
+const LANDSCAPE_ONLY = /@(full-assignment|landscape)\b/
+// A test that needs the narrower upright layout, and nothing else, is tagged @portrait: once per engine, in portrait.
+const PORTRAIT_ONLY = /@portrait\b/
 
 export default defineConfig({
   testDir: 'e2e',
@@ -47,7 +51,7 @@ export default defineConfig({
         name,
         use: { ...browser.use, viewport: ipad.viewport, hasTouch: true },
         testIgnore: runsPortal(name) ? PHONE_SPECS : [PORTAL_SPECS, PHONE_SPECS],
-        ...(ipad.name === 'portrait' ? { grepInvert: FULL_ASSIGNMENT } : {}),
+        grepInvert: ipad.name === 'portrait' ? LANDSCAPE_ONLY : PORTRAIT_ONLY,
       }
     }),
     {
