@@ -229,6 +229,40 @@ test('in landscape the whole practice screen fits the viewport height', async ({
   expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
 })
 
+// Tablets other than the one the layout was drawn on (#201): the Math screen shrinks its number pad to fit, with
+// the pad's contents (the keys, then the response) staying inside it and the page not scrolling.
+test('the Math screen fits tablets from an iPad mini to an iPad Pro, in both orientations', async ({
+  page,
+}) => {
+  await openApp(page, false, { 'macworx.seeds': [31] })
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await expect(page.locator('.pad[data-ready]')).toBeVisible()
+  const sizes = [
+    [744, 1133],
+    [768, 1024],
+    [810, 1080],
+    [1133, 744],
+    [1024, 768],
+    [1080, 810],
+    [1194, 834],
+    [1366, 1024],
+  ]
+  for (const [width, height] of sizes) {
+    await page.setViewportSize({ width, height })
+    const m = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollHeight - innerHeight,
+      key: document.querySelector('.button-key')!.getBoundingClientRect().height,
+      pad: document.querySelector('.pad')!.getBoundingClientRect().bottom,
+      panel: document.querySelector('.practice-panel-warm')!.getBoundingClientRect().bottom,
+    }))
+    // One pixel of rounding is allowed.
+    expect(m.overflow, `${width}x${height} scrolls`).toBeLessThanOrEqual(1)
+    expect(m.key, `${width}x${height} keys`).toBeGreaterThanOrEqual(48)
+    expect(m.key, `${width}x${height} keys`).toBeLessThanOrEqual(72)
+    expect(m.pad, `${width}x${height} pad leaves its panel`).toBeLessThanOrEqual(m.panel)
+  }
+})
+
 test('in landscape the Reading passage and questions fit the viewport height, the passage scrolling inside its panel', async ({
   page,
 }) => {

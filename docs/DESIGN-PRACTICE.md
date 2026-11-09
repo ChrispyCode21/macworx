@@ -87,14 +87,13 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
 - **Below 1024 px wide** (a portrait iPad, 834 wide): one column, in DOM order. Each panel's height is its content, and the page scrolls. The heading block and actions row stay as they are; if the title doesn't fit beside the progress, the progress drops below it.
   - DOM order is: problem then pad; listen then choices; passage then companion; question 1 then question 2.
   - This is not in Figma. Today's assignment also stacks in portrait.
-- **Fitting the viewport** (#201). The screens fit a tablet of any size without scrolling, so the sizes that follow the viewport's height are a range: the size given here is the most, and a floor is the least. Number pad keys are 72 down to 48 (`--practice-key-min`), and choices are 78 down to 56. They stay at 72 and 78 whenever the row has room, so the 1194x834 frame is as drawn. If a window is shorter than even the floors allow (Split View), the page scrolls. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
+- **Fitting the viewport** (#201). The screens fit a tablet of any size without scrolling, so the sizes that follow the viewport's height are a range: the size given here is the most, and a floor is the least. Number pad keys are 72 down to 48 (`--practice-key-min`). They stay at 72 whenever the row has room, so the 1194x834 frame is as drawn. If a window is shorter than even the floors allow (Split View), the page scrolls. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
   - The 478 minimum for the activity row that earlier versions of this file gave only reproduced the 834 frame (it was wrong for any shorter tablet) and is gone.
 
 **Values the Figma frames do not give.** These are in the CSS, decided with the owner on 2026-11-08 (issue #191), except the floors (#201, recommended default in #202). Only the pad panel's height and its tokens are pinned by tests:
 
 - Spelling: the listen block's padding is 32 24 (vertical, horizontal); below 1024 the listen block and the choices stack with a gap of 32.
 - Reading: a choice's `padding-block` is 12.
-- A choice is 78 high with room, and 56 at the least (§7.3).
 - Math: the answer box is 68 high, and the stacked digits are 52 in cells 57 wide (`--digit`).
 - The warm number-pad panel is at least 310 high: its padding 24, heading 24 (`--practice-pad-heading`), gap 16, four keys of 48 (`--practice-key-min`), three key gaps of 10, and its padding 24. With room, its keys grow to 72 (`--practice-key`), which makes it 406.
 - `action` and `action-secondary` have 24 of padding-inline.
@@ -251,7 +250,7 @@ Height 48, padding-inline 16, gap 10, radius 12, fill `--l-chip`. Icon 20 `--l-l
 
 A `<Button variant="choice">` in a `role="radiogroup"`. Each choice has `role="radio"` and `aria-checked`.
 
-- **Shape:** height 78 with room, 56 at the least (a reading choice may wrap to 2 lines and grow), padding-inline 18, gap 16, radius 12, flex row centered.
+- **Shape:** height 78 (min-height 78; a reading choice may wrap to 2 lines), padding-inline 18, gap 16, radius 12, flex row centered.
 - **Marker:** circle 32, centered letter (marker).
 - **Text:** `flex: 1`, word-choice or answer-choice.
 
