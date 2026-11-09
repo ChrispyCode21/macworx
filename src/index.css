@@ -614,6 +614,216 @@ p {
   align-items: center;
   gap: var(--space-8);
 }
+/* The mix screen (SPEC §5.1 step 2, docs/DESIGN-PRACTICE.md §17): it is a .home page, so it has Home's bar and tokens. */
+.mix {
+  --l-inset: #fffbee;
+  --l-primary: var(--accent);
+  --l-primary-ink: var(--ink);
+}
+
+.mix-main {
+  gap: var(--space-16);
+}
+
+.mix .button-crumb {
+  align-self: flex-start;
+}
+
+.mix-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12) var(--space-24);
+  min-height: 48px;
+}
+
+.mix-tools .button-secondary {
+  gap: var(--space-10);
+  min-height: 48px;
+}
+
+.mix-swap {
+  flex: 1;
+  min-width: 0;
+  color: var(--l-muted);
+  font-size: var(--text-15);
+  text-align: center;
+}
+
+.mix-count {
+  margin-left: auto;
+  color: var(--l-muted);
+  font-size: var(--text-16);
+}
+
+.mix-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-24);
+}
+
+.mix-grid {
+  display: grid;
+  grid-template-columns: minmax(96px, 150px) repeat(3, minmax(0, 1fr));
+  gap: var(--space-8);
+  align-content: start;
+  padding: var(--space-16);
+  border: 1px solid var(--l-line);
+  border-radius: var(--radius-panel);
+  background: var(--l-surface);
+}
+
+.mix-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.mix-level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--text-21);
+  font-weight: 600;
+}
+
+.mix-dots {
+  color: var(--l-link);
+  font-size: var(--text-10);
+  letter-spacing: 2px;
+}
+
+.mix-operation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  color: var(--l-text);
+  font-size: var(--text-17);
+}
+
+.mix-operation span {
+  width: 18px;
+  text-align: center;
+}
+
+.button-mix-cell {
+  min-height: 64px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--l-line);
+  border-radius: var(--radius-control);
+  background: var(--l-surface);
+  color: var(--l-text);
+  font-size: var(--text-23);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.button-mix-cell[aria-pressed='true'] {
+  border: 2px solid var(--l-link);
+  background: var(--l-chip);
+}
+
+.button-mix-cell[aria-disabled='true'] {
+  border-color: var(--l-line);
+  background: var(--l-inset);
+  color: var(--l-muted);
+  cursor: default;
+  opacity: 0.55;
+}
+
+.mix .button:focus-visible {
+  outline: 2px solid var(--l-link);
+  outline-offset: 2px;
+}
+
+.mix-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-24);
+  border-radius: var(--radius-panel);
+  background: var(--l-chip);
+}
+
+.mix-panel-title {
+  font-size: var(--text-26);
+}
+
+.mix-picks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mix-picks li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+  font-size: var(--text-17);
+}
+
+.mix-picks .mix-muted {
+  display: block;
+}
+
+.mix-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.mix-empty-title {
+  font-size: var(--text-24);
+}
+
+.mix-muted {
+  color: var(--l-muted);
+  font-size: var(--text-15);
+}
+
+.mix-total {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--l-line);
+}
+
+.mix-total-title {
+  font-size: var(--text-24);
+}
+
+.mix-earn {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--space-10);
+  padding: var(--space-10) var(--space-16);
+  border-radius: var(--radius-pill);
+  background: var(--l-surface);
+  font-size: var(--text-16);
+}
+
+.mix-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-12) var(--space-16);
+}
+
+@media (min-width: 1024px) {
+  .mix-columns {
+    grid-template-columns: minmax(0, 650fr) minmax(0, 440fr);
+  }
+}
 /* home: end */
 
 /* parent portal: start */
@@ -2816,6 +3026,34 @@ p {
   color: var(--l-muted);
   font-size: var(--text-44);
   font-weight: 400;
+}
+
+/* Division: the divisor, then the dividend under a bracket (SPEC §5.1 step 3). Its answer boxes sit above the digits. */
+.stacked-division {
+  /* No gap between the dividend's digits, so the bracket's top line is one line; the boxes keep their own. */
+  column-gap: 0;
+}
+
+.stacked-division .answer-box {
+  margin-inline: var(--space-3);
+}
+
+.stacked-divisor {
+  /* The same offset as the dividend's top line, so the divisor shares its baseline. */
+  margin-top: var(--space-8);
+  padding-right: var(--space-10);
+  border-top: 2px solid transparent;
+  text-align: right;
+}
+
+.stacked-dividend {
+  margin-top: var(--space-8);
+  border-top: 2px solid var(--l-text);
+}
+
+.stacked-dividend-first {
+  border-left: 2px solid var(--l-text);
+  border-top-left-radius: var(--radius-control);
 }
 
 .practice .stacked-rule {

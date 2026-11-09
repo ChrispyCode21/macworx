@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { addDays, generateAssignment } from '../src/engine'
 import { fastClock, skipReadyDelay } from './readyDelay'
+import { startMath } from './mix'
 
 // Her numbers on Home and the streak bonus on the result (SPEC §5.1, §6.8). The Worker is never reachable
 // here (every /api call answers 503), so what shows is the stored state plus the results not yet sent.
@@ -120,7 +121,7 @@ test('a paired iPad that has never synced shows no numbers and no streak bonus',
   await expect(page.getByText('Your Macaronis will show up here.')).toBeVisible()
   await expect(page.getByText(/Current streak/)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await finishRight(page, 'Done for now')
   await expect(page.getByRole('heading', { name: 'Excellent!' })).toBeVisible()
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
@@ -132,7 +133,7 @@ test('the streak bonus shows on the first assignment of the day', PORTRAIT, asyn
   test.setTimeout(90_000)
   await fastClock(page)
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus + 4 streak bonus = 28 Macaronis')
   await expect(page.getByText('Macaronis start saving soon!')).toHaveCount(0)
@@ -150,7 +151,7 @@ test('the second assignment of the day gets no streak bonus', FULL, async ({ pag
     'macworx.seeds': [32],
   })
   await expect(page.locator('.home-progress')).toContainText('128')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await finishRight(page)
   await expect(page.locator('.result-macaronis')).toHaveText('20 + 4 bonus = 24 Macaronis')
 
@@ -197,7 +198,7 @@ test('an assignment shows her balance and streak in the top bar, the title and t
   page,
 }) => {
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   const bar = page.locator('.practice-bar')
   await expect(bar).toContainText('macworx')
   await expect(bar).toContainText('100 Macaronis')
@@ -213,14 +214,14 @@ test('an assignment shows her balance and streak in the top bar, the title and t
 
 test('the top bar shows neither number on an iPad that is not paired', async ({ page }) => {
   await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await expect(page.locator('.practice-bar')).toContainText('macworx')
   await expect(page.locator('.practice-chip')).toHaveCount(0)
 })
 
 test('Check sits at the bottom right of the screen', async ({ page }) => {
   await openApp(page, false, { 'macworx.seeds': [31] })
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   const box = (await page.getByRole('button', { name: 'Check' }).boundingBox())!
   const view = page.viewportSize()!
   expect(box.x + box.width / 2).toBeGreaterThan(view.width / 2)
@@ -237,7 +238,7 @@ test(
   LANDSCAPE,
   async ({ page }) => {
     await openApp(page, false, { 'macworx.seeds': [31] })
-    await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+    await startMath(page)
     await expect(page.locator('.pad[data-ready]')).toBeVisible()
     // In the landscape project's own 1180x820, the whole practice screen fits with no tolerance at all.
     const own = page.viewportSize()!

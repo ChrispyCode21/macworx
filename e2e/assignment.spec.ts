@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { fastClock, skipReadyDelay } from './readyDelay'
+import { startMath } from './mix'
 
 // Doing an assignment end to end (SPEC §5.1), in the production build.
 
@@ -52,7 +53,7 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
   test.setTimeout(90_000)
   await fastClock(page)
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
 
   let padHeight = 0
   for (let n = 1; n <= 20; n++) {
@@ -103,7 +104,7 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
 
 test('leaves partway and keeps the Macaronis earned so far', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   for (let n = 1; n <= 2; n++) {
     const problemPanel = page.locator('.practice-panel-problem')
     const padPanel = page.locator('.practice-panel-warm')
@@ -136,7 +137,7 @@ test('leaves partway and keeps the Macaronis earned so far', async ({ page }) =>
 
 test('a tap on the pad right after Next does not type into the next problem', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await padReady(page)
   const key = (await page.getByRole('button', { name: '5', exact: true }).boundingBox())!
   await answer(page, await currentAnswer(page))
@@ -149,7 +150,7 @@ test('a tap on the pad right after Next does not type into the next problem', as
 
 test('a quick double tap on Check leaves her response on screen', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   const right = await currentAnswer(page)
   await padReady(page)
   const onesFirst = (await page.locator('.stacked').getAttribute('data-operation')) !== 'multiplication'
@@ -169,21 +170,21 @@ test('a quick double tap on Check leaves her response on screen', async ({ page 
 
 test('after Check, focus moves to Next', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await answer(page, await currentAnswer(page))
   await expect(page.getByRole('button', { name: 'Next' })).toBeFocused()
 })
 
 test('leaving before answering anything goes straight home', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await page.getByRole('button', { name: 'Done for now' }).click()
   await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
 })
 
 test('the delete key and a lone 0 work on the pad', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await padReady(page)
   await page.getByRole('button', { name: '7', exact: true }).click()
   await page.getByRole('button', { name: 'Delete' }).click()
@@ -195,7 +196,7 @@ test('the delete key and a lone 0 work on the pad', async ({ page }) => {
 
 test('leaving with none right hides the Macaroni line instead of showing 0', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
+  await startMath(page)
   await answer(page, (await currentAnswer(page)) + 1)
   await expect(page.getByText("Here's how that one works:", { exact: true })).toBeVisible()
   await noSidewaysScroll(page)

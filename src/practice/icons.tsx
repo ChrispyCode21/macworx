@@ -125,3 +125,12 @@ export const LockKeyholeIcon = ({ size = 16 }: IconProps) => (
     <path d={LockKeyholePath} />
   </Icon>
 )
+
+const RotateCwPath = 'M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5'
+
+/** Lucide rotate-cw, for "Same as last time" (docs/DESIGN-PRACTICE.md §17). */
+export const RotateCwIcon = ({ size = 20 }: IconProps) => (
+  <Icon box={24} size={size}>
+    <path d={RotateCwPath} />
+  </Icon>
+)

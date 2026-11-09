@@ -1,5 +1,5 @@
 // Every piece of text she sees, in one place (SPEC §4: never-negative wording).
-import { ASSIGNMENT_SIZE, type Grade, type Operation } from './engine'
+import { ASSIGNMENT_SIZE, MAX_PICKS, type Grade, type Level, type Operation } from './engine'
 import { formatCalendarDay, formatNumber } from './ui/format'
 
 const MATH_EYEBROW: Record<Operation, string> = {
@@ -14,6 +14,16 @@ const MATH_INSTRUCTION: Record<Operation, string> = {
   multiplication: 'Multiply the numbers.',
   division: 'Divide the numbers.',
 }
+
+const OPERATION_NAME: Record<Operation, string> = {
+  addition: 'Addition',
+  subtraction: 'Subtraction',
+  multiplication: 'Multiplication',
+  division: 'Division',
+}
+const LEVEL_NAME: Record<Level, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' }
+/** The side panel's title for 0, 1, 2 and 3 picks (SPEC §5.1 step 2). */
+const MIX_TITLE = ['Your next little win.', 'One at a time.', 'A little of both.', 'A little of everything.']
 
 const macaronis = (n: number) => `${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}`
 /** A signed whole number with the real minus sign: +20, −15, +1,000. */
@@ -101,6 +111,26 @@ export const COPY = {
   /** After Check, for a question that has no explanation: names the right choice. */
   readingRightAnswer: (letter: string, text: string) => `${COPY.readingBestAnswer(letter)} ${text}`,
   readingDone: 'You finished the passage and its questions!',
+  mixHeading: 'Make a math mix of your own.',
+  mixLine: "Tap the problems you'd like to try. Pick up to 3.",
+  mixCount: (n: number) => `${n} of ${MAX_PICKS} picked`,
+  mixSwap: 'Tap one of your picks to swap it.',
+  mixSame: 'Same as last time',
+  mixGrid: 'Problems to pick from',
+  mixCrumb: 'Home  /  Math',
+  mixTitle: (picks: number) => MIX_TITLE[picks],
+  mixEmptyTitle: 'Pick something to start',
+  mixEmptyLine: 'Tap a problem that looks fun.',
+  mixProblems: (n: number) => `${formatNumber(n)} problems`,
+  mixTotal: `${ASSIGNMENT_SIZE} problems`,
+  mixTogether: 'Mixed together into one practice.',
+  mixEarn: (n: number) => `Earn up to ${macaronis(n)}.`,
+  mixStart: `Start ${ASSIGNMENT_SIZE} problems`,
+  /** A cell's accessible name: the sample problem, then what it is. */
+  mixCell: (problem: string, operation: Operation, level: Level) =>
+    `${problem}, ${OPERATION_NAME[operation]}, ${LEVEL_NAME[level]}`,
+  operationName: (operation: Operation) => OPERATION_NAME[operation],
+  levelName: (level: Level) => LEVEL_NAME[level],
   mathTitle: 'A little practice, a little progress.',
   mathNote: "Take your time. There's no timer.",
   /** The problem panel's label (docs/DESIGN-PRACTICE.md §8). */

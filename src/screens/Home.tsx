@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { HomeBar } from '../components/HomeBar'
 import { COPY } from '../copy'
 import {
   ArrowRightIcon,
@@ -8,7 +9,6 @@ import {
   LockKeyholeIcon,
   PlusIcon,
   ShoppingBagIcon,
-  SproutIcon,
 } from '../practice/icons'
 import type { HomeNumbers } from '../sync/projection'
 import { Button } from '../ui/Button'
@@ -20,8 +20,6 @@ interface Props {
   onOpen: (subject: 'spelling' | 'reading') => void
   /** Set only while this installed iPad isn't paired (SPEC §5.4). */
   onPair?: () => void
-  /** Start found no seeds and no connection (SPEC §6.8). */
-  noSeeds?: boolean
   /** Reading found no connection for her next story (SPEC §5.6 step 1). */
   readingOffline?: boolean
   /** Her numbers; absent until a paired iPad has the Worker's state (SPEC §6.8). */
@@ -57,29 +55,10 @@ function SubjectCard({
 }
 
 /** The child Home (SPEC §5.1 step 1, docs/DESIGN.md "Home"). */
-export function Home({ onStart, onOpen, onPair, noSeeds, readingOffline, numbers }: Props) {
+export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props) {
   return (
     <div className="home">
-      <header className="home-bar">
-        <div className="home-brand">
-          <SproutIcon />
-          <span>{COPY.title}</span>
-        </div>
-        <nav className="home-nav" aria-label={COPY.homeNavLabel}>
-          <span className="home-nav-item home-nav-current" aria-current="page">
-            {COPY.homeNavHome}
-          </span>
-          {/* The shop screen (SPEC §5.2) doesn't exist yet: shown, and does nothing. */}
-          <Button variant="home-nav" aria-disabled="true">
-            {COPY.homeNavShop}
-          </Button>
-          {/* A plain link, so it is a full page load and Cloudflare Access can ask for a sign-in (SPEC §5.3). */}
-          <a className="home-nav-item" href="/parent/overview">
-            <LockKeyholeIcon />
-            {COPY.parentsLink}
-          </a>
-        </nav>
-      </header>
+      <HomeBar />
       <main className="home-main">
         <div className="home-intro">
           <h1 className="home-heading">{COPY.homeHeading}</h1>
@@ -94,7 +73,7 @@ export function Home({ onStart, onOpen, onPair, noSeeds, readingOffline, numbers
             <ul className="home-subject-list">
               <SubjectCard
                 title={COPY.subjectMath}
-                line={noSeeds ? COPY.connectForProblems : COPY.startHint}
+                line={COPY.startHint}
                 icon={<PlusIcon size={32} />}
                 onStart={onStart}
               />

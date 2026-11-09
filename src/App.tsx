@@ -1,22 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pair } from './screens/Pair'
 import { Portal } from './screens/parent/Portal'
-import { payout, type Mix } from './engine'
+import { payout, type Mix as MixOf } from './engine'
 import {
   canPair,
   getDeviceKey,
+  getLastMix,
   getQueue,
   getWorkerState,
   requestPersistence,
   setLastMix,
 } from './storage/device'
-import { homeNumbers, nextResult, practiceChild } from './sync/projection'
+import { earnUpTo, homeNumbers, nextResult, practiceChild } from './sync/projection'
 import type { HomeNumbers, PracticeChild } from './sync/projection'
 import { startReading, type ReadingPassage } from './sync/reading'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { ReadingAssignment } from './screens/practice/ReadingAssignment'
 import { Assignment } from './screens/Assignment'
 import { Home } from './screens/Home'
+import { Mix } from './screens/Mix'
 import { ReadingPractice } from './screens/practice/ReadingPractice'
 import { SpellingPractice } from './screens/practice/SpellingPractice'
 import { Result, type Outcome } from './screens/Result'
@@ -26,8 +28,9 @@ type Screen =
   | { name: 'pair' }
   | { name: 'practice'; subject: 'spelling' | 'reading'; child: PracticeChild | undefined }
   | { name: 'reading'; attempt: number; passage: ReadingPassage }
-  | { name: 'assignment'; seed: number; mix?: Mix }
-  | { name: 'result'; outcome: Outcome; mix?: Mix; reading?: true }
+  | { name: 'mix'; initial?: MixOf }
+  | { name: 'assignment'; seed: number; mix: MixOf }
+  | { name: 'result'; outcome: Outcome; mix?: MixOf; reading?: true }
 
 /** A seed for an iPad that isn't paired: it practices and saves nothing (SPEC §6.8). */
 function practiceSeed(): number {
@@ -66,7 +69,7 @@ function ChildApp() {
   shown.current = screen
 
   // A paired iPad uses its stored seeds, topping up first when it has none (SPEC §6.8).
-  const start = async (mix?: Mix) => {
+  const start = async (mix: MixOf) => {
     if (starting.current) return
     starting.current = true
     setNoSeeds(false)
@@ -81,10 +84,11 @@ function ChildApp() {
     if (seed === null && !getDeviceKey()) seed = practiceSeed()
     starting.current = false
     if (seed === null) {
+      // The mix screen shows the Wi-Fi line, with her picks kept (SPEC §6.8).
       setNoSeeds(true)
-      setScreen({ name: 'home' })
+      setScreen({ name: 'mix', initial: mix })
     } else {
-      if (mix) setLastMix(mix)
+      setLastMix(mix)
       setScreen({ name: 'assignment', seed, mix })
     }
   }
@@ -112,7 +116,7 @@ function ChildApp() {
     else if (outcome.kind === 'sample') sample()
     else setScreen({ name: 'reading', attempt: outcome.attempt, passage: outcome.passage })
   }
-  const end = (seed: number, answers: number[], now: Date, mix?: Mix) => {
+  const end = (seed: number, answers: number[], now: Date, mix: MixOf) => {
     endSeed(seed, answers, now, mix)
     setNumbers(currentNumbers())
   }
@@ -146,12 +150,26 @@ function ChildApp() {
     case 'home':
       return (
         <Home
-          onStart={() => start()}
+          onStart={() => {
+            setNoSeeds(false)
+            setScreen({ name: 'mix' })
+          }}
           onOpen={open}
-          noSeeds={noSeeds}
           readingOffline={readingOffline}
           numbers={numbers}
           onPair={!paired && canPair() ? () => setScreen({ name: 'pair' }) : undefined}
+        />
+      )
+    case 'mix':
+      return (
+        <Mix
+          initial={screen.initial}
+          lastMix={getLastMix()}
+          earn={earnUpTo(getDeviceKey() ? getWorkerState() : null, getQueue(), localDay(new Date()))}
+          noSeeds={noSeeds}
+          onChange={() => setNoSeeds(false)}
+          onStart={start}
+          onBack={home}
         />
       )
     case 'practice':
@@ -230,7 +248,7 @@ function ChildApp() {
       return (
         <Result
           outcome={screen.outcome}
-          onAnother={screen.reading ? undefined : () => start(screen.mix)}
+          onAnother={screen.reading || !screen.mix ? undefined : () => start(screen.mix!)}
           onHome={home}
         />
       )
