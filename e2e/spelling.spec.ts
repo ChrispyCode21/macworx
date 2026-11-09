@@ -10,7 +10,7 @@ async function open(page: Page, api: string[]) {
   })
   await page.route('/api/**', (route) => route.fulfill({ status: 503, json: { error: 'busy' } }))
   await page.goto('/')
-  await page.getByRole('button', { name: 'Spelling', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Spelling', exact: true }).click()
 }
 
 test('all 8 words check, then Finish and Back to Home, and coming back starts at word 1', async ({
@@ -41,9 +41,9 @@ test('all 8 words check, then Finish and Back to Home, and coming back starts at
   // Back to Home ignores taps for a moment after Finish, like Next (SPEC §5.1 step 4).
   await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
   await page.getByRole('button', { name: 'Back to Home' }).click()
-  await expect(page.getByRole('button', { name: 'Spelling', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Spelling', exact: true })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Spelling', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Spelling', exact: true }).click()
   await expect(page.getByRole('progressbar', { name: 'Word 1 of 8' })).toBeVisible()
   expect(api.length).toBe(before)
 })

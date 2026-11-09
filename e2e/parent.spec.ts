@@ -432,7 +432,7 @@ test('a bad_day on the re-read after a refused removal says something went wrong
 
 test('her app at / never shows the parent page', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
   await expect(page.getByText('Parent space')).toHaveCount(0)
 })
 

@@ -52,7 +52,7 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
   test.setTimeout(90_000)
   await fastClock(page)
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
 
   let padHeight = 0
   for (let n = 1; n <= 20; n++) {
@@ -103,7 +103,7 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
 
 test('leaves partway and keeps the Macaronis earned so far', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   for (let n = 1; n <= 2; n++) {
     const problemPanel = page.locator('.practice-panel-problem')
     const padPanel = page.locator('.practice-panel-warm')
@@ -131,12 +131,12 @@ test('leaves partway and keeps the Macaronis earned so far', async ({ page }) =>
   await expect(page.locator('.result-macaronis')).toHaveText('2 Macaronis')
   await noSidewaysScroll(page)
   await page.getByRole('button', { name: 'Home' }).click()
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
 })
 
 test('a tap on the pad right after Next does not type into the next problem', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await padReady(page)
   const key = (await page.getByRole('button', { name: '5', exact: true }).boundingBox())!
   await answer(page, await currentAnswer(page))
@@ -149,7 +149,7 @@ test('a tap on the pad right after Next does not type into the next problem', as
 
 test('a quick double tap on Check leaves her response on screen', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   const right = await currentAnswer(page)
   await padReady(page)
   const onesFirst = (await page.locator('.stacked').getAttribute('data-operation')) !== 'multiplication'
@@ -169,21 +169,21 @@ test('a quick double tap on Check leaves her response on screen', async ({ page 
 
 test('after Check, focus moves to Next', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await answer(page, await currentAnswer(page))
   await expect(page.getByRole('button', { name: 'Next' })).toBeFocused()
 })
 
 test('leaving before answering anything goes straight home', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await page.getByRole('button', { name: 'Done for now' }).click()
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
 })
 
 test('the delete key and a lone 0 work on the pad', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await padReady(page)
   await page.getByRole('button', { name: '7', exact: true }).click()
   await page.getByRole('button', { name: 'Delete' }).click()
@@ -195,7 +195,7 @@ test('the delete key and a lone 0 work on the pad', async ({ page }) => {
 
 test('leaving with none right hides the Macaroni line instead of showing 0', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await answer(page, (await currentAnswer(page)) + 1)
   await expect(page.getByText("Here's how that one works:", { exact: true })).toBeVisible()
   await noSidewaysScroll(page)
