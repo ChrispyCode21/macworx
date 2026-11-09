@@ -9,7 +9,8 @@ export type Outcome = FinishedOutcome | { kind: 'leftEarly'; answered: number; c
 
 interface Props {
   outcome: Outcome
-  onAnother: () => void
+  /** Absent for a reading assignment, which has no "another one" (SPEC §5.6). */
+  onAnother?: () => void
   onHome: () => void
 }
 
@@ -18,8 +19,8 @@ export function Result({ outcome, onAnother, onHome }: Props) {
     <main className="screen result">
       {outcome.kind === 'finished' ? <Finished {...outcome} /> : <LeftEarly {...outcome} />}
       <div className="result-buttons">
-        <Button onClick={onAnother}>{COPY.anotherOne}</Button>
-        <Button variant="secondary" onClick={onHome}>
+        {onAnother && <Button onClick={onAnother}>{COPY.anotherOne}</Button>}
+        <Button variant={onAnother ? 'secondary' : undefined} onClick={onHome}>
           {COPY.home}
         </Button>
       </div>

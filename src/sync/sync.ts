@@ -54,6 +54,15 @@ export function endSeed(seed: number, answers: number[], now: Date, mix?: Mix): 
   void sync()
 }
 
+/**
+ * Before a reading start or result, the math results she hasn't sent go out, oldest first, so offline work is
+ * counted before the streak moves (SPEC §6.8). True once none are left; her seeds or state failing to refresh doesn't matter.
+ */
+export async function syncBeforeReading(): Promise<boolean> {
+  await sync()
+  return getDeviceKey() !== null && getQueue().length === 0
+}
+
 /** Runs a sync, or joins the one running (which then runs once more, for anything queued meanwhile). */
 export function sync(): Promise<SyncOutcome> {
   if (running) {
@@ -73,7 +82,24 @@ export function sync(): Promise<SyncOutcome> {
   return running
 }
 
-const TIMEOUT_MS = 10_000
+export const TIMEOUT_MS = 10_000
+
+/** Stores the Worker's state: her numbers and name, as the Worker last sent them (SPEC §6.8). */
+export function saveWorkerState(state: unknown): void {
+  if (typeof state !== 'object' || state === null) return
+  const { balance, streak, lastDay, completed, latestGrade, name, grade, initials } = state as WorkerState
+  if (typeof balance !== 'number') return
+  setWorkerState({
+    balance,
+    streak,
+    lastDay,
+    completed,
+    latestGrade,
+    ...(typeof name === 'string' && { name }),
+    ...(typeof grade === 'string' && { grade }),
+    ...(typeof initials === 'string' && { initials }),
+  })
+}
 
 async function syncOnce(): Promise<SyncOutcome> {
   const key = getDeviceKey()
@@ -101,22 +127,6 @@ async function syncOnce(): Promise<SyncOutcome> {
   }
   const readBody = async (response: Response) =>
     (await response.json().catch(() => null)) as Record<string, unknown> | null
-  const saveState = (state: unknown) => {
-    if (typeof state !== 'object' || state === null) return
-    const { balance, streak, lastDay, completed, latestGrade, name, grade, initials } = state as WorkerState
-    if (typeof balance !== 'number') return
-    setWorkerState({
-      balance,
-      streak,
-      lastDay,
-      completed,
-      latestGrade,
-      ...(typeof name === 'string' && { name }),
-      ...(typeof grade === 'string' && { grade }),
-      ...(typeof initials === 'string' && { initials }),
-    })
-  }
-
   // Oldest first. One the Worker can't take right now holds the rest back, but seeds still top up.
   let held = false
   for (let next = getQueue()[0]; next; next = getQueue()[0]) {
@@ -133,7 +143,7 @@ async function syncOnce(): Promise<SyncOutcome> {
       held = true
       break
     }
-    saveState(body.state)
+    saveWorkerState(body.state)
     dropQueued(next.seed)
   }
 
@@ -153,6 +163,6 @@ async function syncOnce(): Promise<SyncOutcome> {
   const stateResponse = await call('GET', '/api/state')
   if (!stateResponse) return 'offline'
   if (unpaired(stateResponse)) return 'unpaired'
-  if (stateResponse.ok) saveState(await readBody(stateResponse))
+  if (stateResponse.ok) saveWorkerState(await readBody(stateResponse))
   return held || !seedsResponse.ok || !stateResponse.ok ? 'offline' : 'done'
 }

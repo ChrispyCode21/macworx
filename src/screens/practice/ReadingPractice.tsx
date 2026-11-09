@@ -1,13 +1,13 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { checkChoice } from '../../engine'
-import { ArrowLeftIcon, BookOpenIcon, CheckIcon } from '../../practice/icons'
+import { ArrowLeftIcon, BookOpenIcon } from '../../practice/icons'
 import { LETTERS, READING_COUNT, READING_PASSAGE } from '../../practice/samples'
 import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { Button } from '../../ui/Button'
-import { READY_AFTER_MS, useReadyAfter, whenReady } from '../../ui/useReadyAfter'
 import { PracticePanel } from '../../ui/PracticePanel'
 import { BackToHomeButton } from './BackToHomeButton'
+import { CheckAnswersButton } from './CheckAnswersButton'
 import { ChoiceGroup, type ChoiceGroupHandle } from './ChoiceGroup'
 import { InlineResponse } from './InlineResponse'
 import { NextButton } from './NextButton'
@@ -22,25 +22,6 @@ interface Props {
 }
 
 const { questions } = READING_PASSAGE
-
-/**
- * Check answers sits where the passage's Next just was. For a moment after the questions open it ignores taps,
- * so a double tap on Next can't also check her answers (SPEC §5.1 step 4).
- */
-function CheckAnswersButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
-  const ready = useReadyAfter(READY_AFTER_MS)
-  return (
-    <Button
-      variant="action"
-      disabled={disabled}
-      data-ready={ready || undefined}
-      onClick={whenReady(ready, onClick)}
-    >
-      {COPY.checkAnswers}
-      <CheckIcon />
-    </Button>
-  )
-}
 
 /** Reading sample practice: one passage and its questions, checked on the iPad. Nothing is recorded, sent or paid (SPEC §5.5). */
 export function ReadingPractice({ numbers, child, onBack }: Props) {

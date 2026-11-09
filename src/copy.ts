@@ -76,6 +76,8 @@ export const COPY = {
   readingProgressRead: 'Step 1 of 2 · Read',
   readingProgressQuestions: 'Step 2 of 2 · Questions',
   readingEyebrow: (kind: string, minutes: number) => `${kind} · ${formatNumber(minutes)} min read`,
+  readingMinutes: (minutes: number) => `${formatNumber(minutes)} min read`,
+  questionNumber: (n: number) => `Question ${formatNumber(n)}`,
   readingGuideTitle: 'Read at your own pace.',
   readingNote: (n: number) => `When you're ready, there are ${formatNumber(n)} questions about this passage.`,
   questionEyebrow: (n: number, skill: string) => `Question ${formatNumber(n)} · ${skill}`,
@@ -88,6 +90,16 @@ export const COPY = {
   checkAnswers: 'Check answers',
   done: 'Done',
   readingBestAnswer: (letter: string) => `The best answer is ${letter}.`,
+  /** Home's Reading line when the iPad can't reach the Worker for her next story (SPEC §5.6 step 1). */
+  readingOffline: 'Connect to Wi-Fi to get your next story!',
+  readingCheckOffline: 'Connect to Wi-Fi, then tap Check answers again.',
+  readingLeft: (k: number) => `Pick an answer for each question: ${formatNumber(k)} to go.`,
+  readingPairNote: (first: number, last: number, total: number) =>
+    first === last
+      ? `Question ${formatNumber(first)} of ${formatNumber(total)}.`
+      : `Questions ${formatNumber(first)} and ${formatNumber(last)} of ${formatNumber(total)}.`,
+  /** After Check, for a question that has no explanation: names the right choice. */
+  readingRightAnswer: (letter: string, text: string) => `The best answer is ${letter}. ${text}`,
   readingDone: 'You finished the passage and its questions!',
   mathTitle: 'A little practice, a little progress.',
   mathNote: "Take your time. There's no timer.",

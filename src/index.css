@@ -3180,6 +3180,11 @@ p {
   }
 }
 
+/* A passage with no hint has no companion: the text takes the whole row. */
+.practice-reading-passage.practice-reading-solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* The passage scrolls inside its panel when it is taller than the panel. */
 .practice-passage {
   gap: var(--space-20);
