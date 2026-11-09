@@ -66,6 +66,8 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(rule('.practice-panel')).toContain('padding: var(--space-32);')
     expect(rule('.practice-panel-warm')).toContain('background: var(--l-warm);')
     expect(rule('.practice-panel-warm')).toContain('padding: var(--space-24);')
+    // The activity row is the rest of the viewport, with no fixed minimum of its own (§3).
+    expect(rule('.practice-activity')).not.toContain('min-height')
     // 24 + 24 + 16 + 4 keys + 3 gaps of 10 + 24, from the smallest key token (310 at 48px; 406 at the full 72px).
     expect(practice).toContain('--practice-key: 72px;')
     expect(practice).toContain('--practice-key-min: 48px;')
@@ -145,6 +147,8 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     ],
     ['.practice-pad-heading', 'height: var(--practice-pad-heading);', '§8 pad heading, from its token'],
     ['.button-support', 'height: 44px;', '§7.4 support hit area'],
+    ['.practice .pad', 'flex: 1;', '§8 the keys share the pad panel'],
+    ['.practice .pad', 'grid-template-rows: repeat(4, 1fr);', '§8 four equal key rows'],
     [
       '.practice .pad',
       'max-height: calc(4 * var(--practice-key) + 3 * var(--space-10));',

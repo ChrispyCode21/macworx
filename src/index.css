@@ -2492,7 +2492,6 @@ p {
 /* The keys fill the room the panel has, from 48 to 72 high. */
 .practice .pad {
   flex: 1;
-  align-self: center;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(4, 1fr);
   gap: var(--space-10);
