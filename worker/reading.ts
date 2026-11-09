@@ -45,6 +45,7 @@ interface Passage {
 interface QuestionRow {
   question_id: number
   qtext: string
+  explanation: string
   choice_id: number
   ctext: string
   correct: number
@@ -52,16 +53,20 @@ interface QuestionRow {
 
 /** The passage's questions with their choices, in order, from one join. */
 const QUESTIONS = `
-  SELECT q.id AS question_id, q.text AS qtext, c.id AS choice_id, c.text AS ctext, c.correct
+  SELECT q.id AS question_id, q.text AS qtext, q.explanation, c.id AS choice_id, c.text AS ctext, c.correct
   FROM questions q JOIN choices c ON c.question_id = q.id
   WHERE q.passage_id = ? ORDER BY q.position, c.position`
 
 function groupQuestions(rows: QuestionRow[]) {
-  const questions: { id: number; text: string; choices: { id: number; text: string; correct: boolean }[] }[] =
-    []
+  const questions: {
+    id: number
+    text: string
+    explanation: string
+    choices: { id: number; text: string; correct: boolean }[]
+  }[] = []
   for (const r of rows) {
     if (questions.at(-1)?.id !== r.question_id)
-      questions.push({ id: r.question_id, text: r.qtext, choices: [] })
+      questions.push({ id: r.question_id, text: r.qtext, explanation: r.explanation, choices: [] })
     questions.at(-1)!.choices.push({ id: r.choice_id, text: r.ctext, correct: r.correct === 1 })
   }
   return questions
@@ -112,7 +117,7 @@ export async function postReadingStart({ db, device, childId, now }: ChildReques
         .map((t) => t.trim())
         .filter(Boolean),
       image: p.image,
-      // `correct` is left out on purpose: the iPad never learns the right choice before Check.
+      // `correct` and `explanation` are left out on purpose: the iPad learns neither before Check.
       questions: groupQuestions(questions.results as unknown as QuestionRow[]).map((q) => ({
         id: q.id,
         text: q.text,
@@ -161,7 +166,9 @@ interface StoredReading {
 
 /** What the result of a reading assignment shows: the totals, and per question whether she was right (SPEC §8). */
 function toReadingResult(attempt: number, row: StoredReading) {
-  const detail = JSON.parse(row.detail) as { questions: { id: number; picked: number; right: number }[] }
+  const detail = JSON.parse(row.detail) as {
+    questions: { id: number; picked: number; right: number; explanation?: string }[]
+  }
   return {
     attempt,
     day: row.day,
@@ -175,7 +182,12 @@ function toReadingResult(attempt: number, row: StoredReading) {
       streakBonus: row.streak_bonus,
       total: row.total,
     },
-    questions: detail.questions.map((q) => ({ id: q.id, right: q.picked === q.right, rightChoice: q.right })),
+    questions: detail.questions.map((q) => ({
+      id: q.id,
+      right: q.picked === q.right,
+      rightChoice: q.right,
+      explanation: q.explanation ?? '',
+    })),
   }
 }
 
@@ -234,6 +246,7 @@ export async function postReadingResult({
     questions: questions.map((q, i) => ({
       id: q.id,
       text: q.text,
+      explanation: q.explanation,
       choices: q.choices.map(({ id, text }) => ({ id, text })),
       picked: pickedChoices[i],
       right: rightChoices[i],

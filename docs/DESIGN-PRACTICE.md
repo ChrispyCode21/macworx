@@ -20,6 +20,7 @@ Read this whole file before building the Math assignment screen or the Spelling 
 14. [Data mapping](#14-data-mapping)
 15. [Sample content](#15-sample-content)
 16. [Icons](#16-icons)
+17. [Screen: Math mix](#17-screen-math-mix)
 
 ## 1. How to use this contract
 
@@ -524,3 +525,15 @@ All inline SVG, Lucide (ISC). Render with `fill="none" stroke="currentColor" str
 - `--l-text`: the after-Check check.
 
 **Not used:** keyboard, cloud-check, Figma's "steadily" mark (the sprout replaces it) and the rain-garden illustration.
+
+## 17. Screen: Math mix
+
+The screen Math opens (SPEC §5.1 step 2). Behavior, copy and numbers are in SPEC §5.1, §6.1 and §6.2; the frames below are the look. The layout contract (sizes, tokens, states) is not written yet: the slice that builds the screen writes it here from these frames, in the style of sections 8 to 12.
+
+| Frame | Shows |
+|---|---|
+| `docs/design/math-mix-empty.png` | 0 of 3 picked: the grid, "Your next little win." in the side panel, Start 20 problems disabled, no "Same as last time" button. |
+| `docs/design/math-mix-two-picked.png` | 2 of 3 picked (Multiplication Medium, Division Easy): "A little of both.", 10 problems each, "Same as last time" shown, Start enabled. |
+| `docs/design/math-mix-three-picked.png` | 3 of 3 picked: the other cells dimmed, "Tap one of your picks to swap it.", 7, 7 and 6 problems, "A little of everything." |
+
+The frames show a top bar with Home, Shop and Parents (the same bar as the Home frame, `docs/design/home.png`), the crumb "Home / Math", and "Earn up to X Macaronis." where X is a placeholder (SPEC §5.1 step 2, §6.4).
