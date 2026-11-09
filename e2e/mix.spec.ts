@@ -117,12 +117,24 @@ test(
 )
 
 test(
-  'with no seeds and no connection, Start shows the Wi-Fi line and keeps her picks',
+  'Do another one with no seeds opens the mix screen with her picks and the Wi-Fi line',
   ONCE,
   async ({ page }) => {
-    await openApp(page, {}, true)
-    await startMath(page)
+    await openApp(page, { 'macworx.seeds': [41] }, true)
+    await startMath(page, 'Multiplication', 'Easy')
+    await expect(page.locator('.pad[data-ready]')).toBeVisible()
+    await page.getByRole('button', { name: '1', exact: true }).click()
+    await page.getByRole('button', { name: 'Check' }).click()
+    await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
+    await page.getByRole('button', { name: 'Done for now' }).click()
+    await page.getByRole('button', { name: 'Do another one' }).click()
     await expect(page.getByText('Connect to Wi-Fi to get more problems!')).toBeVisible()
-    await expect(page.getByText('1 of 3 picked')).toBeVisible()
+    await expect(page.getByRole('button', { name: /, Multiplication, Easy$/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    // A new pick ends the line, which belonged to the Start before it.
+    await pickCell(page, 'Addition', 'Easy')
+    await expect(page.getByText('Connect to Wi-Fi to get more problems!')).toHaveCount(0)
   },
 )

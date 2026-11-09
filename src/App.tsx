@@ -138,6 +138,7 @@ function ChildApp() {
           lastMix={getLastMix()}
           earn={earnUpTo(getDeviceKey() ? getWorkerState() : null, getQueue(), localDay(new Date()))}
           noSeeds={noSeeds}
+          onChange={() => setNoSeeds(false)}
           onStart={start}
           onBack={home}
         />

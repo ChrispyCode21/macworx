@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { HomeBar } from '../components/HomeBar'
 import { COPY } from '../copy'
 import { pickSizes, type Mix as MixOf, type Pick } from '../engine'
-import { isPicked, LEVELS, MAX_PICKS, OPERATIONS, SAMPLES, togglePick } from '../mix/picks'
+import { LEVELS, MAX_PICKS } from '../engine'
+import { isPicked, OPERATIONS, SAMPLES, togglePick } from '../mix/picks'
 import { ArrowLeftIcon, ArrowRightIcon, CoinsIcon, RotateCwIcon } from '../practice/icons'
 import { Button } from '../ui/Button'
 import { formatNumber, operatorSymbol } from '../ui/format'
@@ -16,14 +17,20 @@ interface Props {
   earn: number
   /** Start found no seeds and no connection (SPEC §6.8). */
   noSeeds: boolean
+  /** Her picks changed, so a Wi-Fi line from an earlier Start no longer applies. */
+  onChange: () => void
   onStart: (mix: MixOf) => void
   onBack: () => void
 }
 
 /** The mix screen (SPEC §5.1 step 2, docs/DESIGN-PRACTICE.md §17): pick up to 3 problems to mix. */
-export function Mix({ initial = [], lastMix, earn, noSeeds, onStart, onBack }: Props) {
+export function Mix({ initial = [], lastMix, earn, noSeeds, onChange, onStart, onBack }: Props) {
   const [picks, setPicks] = useState<MixOf>(initial)
   const full = picks.length >= MAX_PICKS
+  const change = (next: MixOf) => {
+    setPicks(next)
+    onChange()
+  }
   const sizes = pickSizes(Math.max(picks.length, 1))
 
   return (
@@ -40,12 +47,14 @@ export function Mix({ initial = [], lastMix, earn, noSeeds, onStart, onBack }: P
         </div>
         <div className="mix-tools">
           {lastMix && (
-            <Button variant="secondary" onClick={() => setPicks(lastMix)}>
+            <Button variant="secondary" onClick={() => change(lastMix)}>
               <RotateCwIcon />
               {COPY.mixSame}
             </Button>
           )}
-          <p className="mix-swap">{full && COPY.mixSwap}</p>
+          <p className="mix-swap" aria-live="polite">
+            {full && COPY.mixSwap}
+          </p>
           <p className="mix-count" aria-live="polite">
             {COPY.mixCount(picks.length)}
           </p>
@@ -79,7 +88,7 @@ export function Mix({ initial = [], lastMix, earn, noSeeds, onStart, onBack }: P
                       aria-pressed={picked}
                       aria-disabled={full && !picked ? 'true' : undefined}
                       aria-label={COPY.mixCell(problem, operation, level)}
-                      onClick={() => setPicks(togglePick(picks, pick))}
+                      onClick={() => change(togglePick(picks, pick))}
                     >
                       {problem}
                     </Button>

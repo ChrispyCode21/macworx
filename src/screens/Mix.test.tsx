@@ -12,7 +12,15 @@ const THREE: MixOf = [
 ]
 const render = (props: Partial<Parameters<typeof Mix>[0]> = {}) =>
   renderToStaticMarkup(
-    <Mix lastMix={null} earn={24} noSeeds={false} onStart={() => {}} onBack={() => {}} {...props} />,
+    <Mix
+      lastMix={null}
+      earn={24}
+      noSeeds={false}
+      onChange={() => {}}
+      onStart={() => {}}
+      onBack={() => {}}
+      {...props}
+    />,
   )
 
 describe('the mix screen', () => {
@@ -39,7 +47,8 @@ describe('the mix screen', () => {
     expect(html).toContain(COPY.mixSame)
     expect(html).toContain('Mixed together into one practice.')
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(3)
-    expect(html.match(/aria-disabled="true"/g)).toHaveLength(9 + 1) // the other cells, and Shop
+    const grid = html.slice(html.indexOf('mix-grid'), html.indexOf('mix-panel'))
+    expect(grid.match(/aria-disabled="true"/g)).toHaveLength(9)
     expect(html.match(/>(\d+) problems</g)).toEqual([
       '>7 problems<',
       '>7 problems<',

@@ -1,8 +1,7 @@
 // The mix screen's pure rules (SPEC §5.1 step 2): which cells she has picked, in pick order.
-import { LEVELS, MAX_PICKS, type Level, type Mix, type Operation, type Pick } from '../engine'
+import { MAX_PICKS, type Mix, type Operation, type Pick } from '../engine'
 
 export const OPERATIONS: readonly Operation[] = ['addition', 'subtraction', 'multiplication', 'division']
-export { LEVELS, MAX_PICKS }
 
 /** The sample problem on each cell, easy to hard (SPEC §5.1 step 2): the numbers as written, `a` first. */
 export const SAMPLES: Record<Operation, readonly [number, number][]> = {
@@ -40,5 +39,3 @@ export function togglePick(picks: Mix, pick: Pick): Mix {
   if (isPicked(picks, pick)) return picks.filter((p) => !samePick(p, pick))
   return picks.length >= MAX_PICKS ? picks : [...picks, pick]
 }
-
-export type { Level }
