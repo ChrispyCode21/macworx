@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { fastClock, skipReadyDelay } from './readyDelay'
 
 // Doing an assignment end to end (SPEC §5.1), in the production build.
 
@@ -27,13 +28,15 @@ async function padReady(page: Page) {
 }
 
 /** Types a number the way she would (SPEC §5.1) and taps Check: ones place first, except multiplication. */
-async function answer(page: Page, value: number) {
+async function answer(page: Page, value: number, fast = false) {
+  if (fast) await skipReadyDelay(page)
   await padReady(page)
   const onesFirst = (await page.locator('.stacked').getAttribute('data-operation')) !== 'multiplication'
   const digits = onesFirst ? [...String(value)].reverse() : [...String(value)]
   for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
   await expect(page.locator('.stacked')).toHaveAttribute('data-shown', String(value))
   await page.getByRole('button', { name: 'Check' }).click()
+  if (fast) await skipReadyDelay(page)
   await nextReady(page)
 }
 
@@ -47,6 +50,7 @@ const FULL = { tag: '@full-assignment' }
 test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ page }) => {
   // About 100 taps; WebKit needs over 20 s for them, past the 30 s default once tests run in parallel.
   test.setTimeout(90_000)
+  await fastClock(page)
   await page.goto('/')
   await page.getByRole('button', { name: 'Math', exact: true }).click()
 
@@ -64,7 +68,7 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
     }
     if (n === 3) {
       // One not right: her answer stays in her boxes, tinted coral; the right one is only in the response.
-      await answer(page, right + 1)
+      await answer(page, right + 1, true)
       await expect(page.getByText("Here's how that one works:", { exact: true })).toBeVisible()
       await expect(page.getByText('Keep going!', { exact: true })).toBeVisible()
       await expect(problem).toHaveAttribute('data-shown', String(right + 1))
@@ -72,7 +76,7 @@ test('finishes an assignment and sees the grade and Macaronis', FULL, async ({ p
       await expect(page.locator('.answer-box-not-right').first()).toBeVisible()
       expect(Math.abs(((await padPanel.boundingBox())?.height ?? 0) - padHeight)).toBeLessThanOrEqual(1)
     } else {
-      await answer(page, right)
+      await answer(page, right, true)
       await expect(page.locator('.response-lead')).toHaveText(CHEERS)
       await expect(problem).toHaveAttribute('data-shown', String(right))
       await expect(problem).toHaveAttribute('data-outcome', 'right')
