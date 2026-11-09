@@ -267,7 +267,7 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 ### 6.10 Reading passages
 
 - **A passage** has a title, a number of minutes to read, its text in paragraphs and one or more questions. It may also have a genre (for example "Story"), a hint and a picture; whatever it lacks is left out of the screen. A question has its text and exactly four choices in a fixed order, exactly one of them the right choice. Different passages may have different numbers of questions (the first passages have 10 each).
-- **Her next passage:** the passage with the lowest id that she has no finished result for. When she has finished every passage, the one whose latest finished result is oldest. A passage she started and left is not finished, so it comes again. A repeat pays in full (§6.4).
+- **Her next passage:** the passage with the lowest id that she has no finished result for. When she has finished every passage, the one whose latest finished result the Worker recorded longest ago (the order the Worker saved them, not the day on the result, so a wrong iPad clock can't reorder her stories). A passage she started and left is not finished, so it comes again, with the attempt she left unchecked handed out again and its day set to the day it is handed out again. A passage that isn't complete (a question without exactly four choices and exactly one right one, or no questions) is never handed out; with no complete passage left, there are no passages (§5.6). A repeat pays in full (§6.4).
 - **Where they live:** passages, questions and choices are rows in the database, and pictures are files in Cloudflare R2, named by the passage id and the picture's extension (for example `3.webp`); the passage row holds that name, or nothing. The owner adds them directly to the database and R2; the app has no screen for it and no passage text or picture is in the repository. The Worker serves a picture only to a request with a valid device key. A passage that has a recorded result is never deleted.
 - **What the iPad gets:** the title, genre, minutes, hint, text, picture and, per question, its text and choices. Never which choice is right (§5.6).
 
@@ -461,7 +461,7 @@ Unless stated, her state is balance 0, streak 0, no last counted day, the passag
 | L4 | A 3-question passage, 0 correct, not first of the day | 0 earned, raised to the minimum → **1** |
 | L5 | A 5-question passage, 4 correct, not first of the day | base 16 + bonus 3 → **19**; grade **Good** |
 | L6 | Passages 1, 2 and 3; she has finished 1 and 2 | Her next passage is **3** |
-| L7 | Passages 1, 2 and 3 all finished, latest finishes: 1 on Oct 3, 2 on Oct 1, 3 on Oct 2 | Her next passage is **2** |
+| L7 | Passages 1, 2 and 3 all finished, their latest finished results recorded in the order 2, 3, 1 | Her next passage is **2** |
 | L8 | She starts passage 1, leaves before Check answers, and starts Reading again | Nothing recorded; her next passage is **1** again |
 | L9 | A reading result sent twice with the same attempt | The recorded result comes back; balance and completed assignments count it **once** |
 | L10 | Math finished earlier today (streak 3, last counted day today); a reading result, 3 of 3 on a 3-question passage | Paid 20 + 4 = **24**; streak stays **3**; completed **+1** |
