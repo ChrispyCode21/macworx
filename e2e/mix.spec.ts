@@ -131,12 +131,13 @@ test(
     const divisor = (await page.locator('.stacked-divisor').boundingBox())!
     const first = (await digits.first().boundingBox())!
     expect(divisor.x + divisor.width).toBeLessThanOrEqual(first.x + 1)
-    const lastBox = (await boxes.last().boundingBox())!
-    const lastDigit = (await digits.last().boundingBox())!
-    expect(Math.abs(lastBox.x + lastBox.width / 2 - (lastDigit.x + lastDigit.width / 2))).toBeLessThanOrEqual(
-      4,
-    )
-    expect(lastBox.y + lastBox.height).toBeLessThanOrEqual(lastDigit.y + 1)
+    // The divisor is on the dividend's row, and each box is over its own digit.
+    expect(Math.abs(divisor.y - first.y)).toBeLessThanOrEqual(4)
+    for (let i = 0; i < (await digits.count()); i++) {
+      const [box, digit] = [(await boxes.nth(i).boundingBox())!, (await digits.nth(i).boundingBox())!]
+      expect(Math.abs(box.x + box.width / 2 - (digit.x + digit.width / 2))).toBeLessThanOrEqual(4)
+      expect(box.y + box.height).toBeLessThanOrEqual(digit.y + 1)
+    }
     await expect(page.locator('.pad[data-ready]')).toBeVisible()
     await page.getByRole('button', { name: '1', exact: true }).click()
     await page.getByRole('button', { name: 'Check' }).click()
