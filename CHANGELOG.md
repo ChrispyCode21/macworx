@@ -12,6 +12,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Changed
 
+- **Text on Home, the result and the pairing screen follows the type scale (children):** the page titles are 58 (was 57.6), the main buttons and the Macaronis lines on the result are 40 (was 38.4), the Check key on the pairing pad is 29 (was 28.8), the numbers on Home are 30 (was 33.6) and the pairing code digits are 58 (were 67). A tablet of any size now shows the same sizes, and the pairing code fits a little more easily.
 - **The child switcher's list (parents):** the rows in the list are 48 high, and the plus beside "Add a child" is full size (18). They took on the sizes meant for the switcher button, so they were taller and the plus was smaller.
 - **Wide panels spaced as the design says (parents):** on a wide screen, the Children panel and the results panel on Overview keep 16 between their parts (it was 14).
 - **The support button's focus outline (children):** the outline on "Hear it in a sentence" now has square corners, matching the back button.

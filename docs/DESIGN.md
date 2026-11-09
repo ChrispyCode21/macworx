@@ -54,7 +54,7 @@ These come from the repo's checks (`scripts/check-conventions.mjs`, CLAUDE.md). 
 - No new dependencies. Icons are inline SVG (like `RewardIcon`). Font is `system-ui` (Figma used Inter; do not load a webfont).
 - No status bar, no home indicator, no iOS chrome.
 - **Existing parent CSS superseded** (in `src/index.css`): `.parent` (max-width 1200, 0.8rem font), `.parent h1/h2/h3` sizes, `.parent-summary*`, `.parent-columns`, `.parent-side` and the 900 px media query. Replace them with the shell in section 6 and 8. Parent screens must not use `--size-*`, rem or em.
-- **Parent buttons are 48 px tall.** Do not reuse `.button-primary` (88 px tall, 280 px min-width, 1.6rem) or `.button-secondary`. Child-app styles stay unchanged.
+- **Parent buttons are 48 px tall.** Do not reuse `.button-primary` (88 px tall, 280 px min-width, 40 px text) or `.button-secondary`. Child-app styles stay unchanged.
 - Reachable by a visible link: the child app Home gets a visible link to `/parent/overview` (owner decision 2), in addition to typing the URL.
 
 ## 3. Units, spacing and radius scale
@@ -76,6 +76,8 @@ These come from the repo's checks (`scripts/check-conventions.mjs`, CLAUDE.md). 
 Font: `system-ui`. Weights: 400 and 600 only. Case: as written unless "upper". "upper" = `text-transform: uppercase`, copy stored in sentence case.
 
 Each px size here is a custom property in `:root`, `--text-N` for N px (`--text-14`, `--text-29`, …); use it for `font-size`, never a literal px. `src/cssTokens.test.ts` fails on a literal px `font-size` and on a size with no token. A new size needs a row here and a token.
+
+Home, the result and Pair screens (the child base styles, not in Figma) use the same tokens, no rem: the title 58, the primary button and the result lines 40, the Pair Check key 29, Home's numbers 30, and the Pair code digits 58. They were 57.6, 38.4, 28.8, 38.4, 33.6 and 67.2 px (rem at the 24 px root) before, and no contract gave those sizes.
 
 | Token | Phone px | Wide px | Weight | Line height | Case | Color role | Used for |
 |---|---|---|---|---|---|---|---|

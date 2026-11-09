@@ -23,16 +23,6 @@ const SPACING = [2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 28, 32
 const TEXT = [
   10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 28, 29, 30, 40, 42, 44, 48, 52, 58,
 ]
-// The child app's base styles size some text in rem, which scales with the 24px root and is not on the scale.
-// Each is listed here (selector and value), so a new one fails until it is added.
-const REM_SIZES = [
-  'h1 2.4rem',
-  '.button-primary 1.6rem',
-  '.button-check 1.2rem',
-  '.result-count, .result-macaronis 1.6rem',
-  '.home-numbers li 1.4rem',
-  '.code-boxes 2.8rem',
-]
 
 // The first :root block: where the tokens are defined.
 const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
@@ -111,7 +101,6 @@ describe('size tokens', () => {
 
   it('uses a text token, not a literal size, for every font-size', () => {
     const literal: string[] = []
-    const rem: string[] = []
     let selector = ''
     // The lines of a selector list so far (`.a,` then `.b {`), so every selector of a group is named.
     let group = ''
@@ -124,10 +113,9 @@ describe('size tokens', () => {
       } else if (text.endsWith(';') || text.endsWith('}')) group = ''
       const m = line.match(/font-size:\s*(\d*\.?\d+)(px|rem|em)/i)
       if (!m) continue
-      if (m[2] === 'px') {
-        // The 24px on :root is the rem base.
-        if (selector !== ':root') literal.push(`${selector}: ${m[1]}px (use var(--text-${m[1]}))`)
-      } else rem.push(`${selector} ${m[1]}${m[2]}`)
+      // The 24px on :root is the base for any rem, em or % size inherited from it.
+      if (selector !== ':root')
+        literal.push(`${selector}: ${m[1]}${m[2]} (use a var(--text-N) from the scale)`)
     }
     const used = [...css.matchAll(/var\(--text-([a-z0-9-]+)\)/g)].map((m) => m[1])
     expect(
@@ -139,6 +127,5 @@ describe('size tokens', () => {
       'a text token is never used',
     ).toEqual(TEXT)
     expect(literal, 'src/index.css uses a literal font size').toEqual([])
-    expect(rem, 'the rem sizes in the base styles changed; update REM_SIZES').toEqual(REM_SIZES)
   })
 })
