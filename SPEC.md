@@ -11,7 +11,7 @@ Her homework is limited to what school assigns, and doing it needs home, a penci
 macworx gives her:
 
 - **Access:** extra practice, math and reading, she can open anywhere on her iPad, on top of her assigned homework, never in place of it.
-- **Motivation:** Macaronis, a currency she earns by finishing assignments and spends on real-world rewards her parents grant.
+- **Motivation:** Macaronis, a currency she earns by doing assignments and spends on real-world rewards her parents grant.
 
 ## 2. Platform & architecture
 
@@ -185,7 +185,7 @@ Problems come from code, not a question bank, so the supply never runs out.
 
 ### 6.2 Assignment
 
-- An assignment is 20 problems: 7 addition, 7 subtraction and 6 multiplication, in shuffled order.
+- A math assignment is 20 problems: 7 addition, 7 subtraction and 6 multiplication, in shuffled order.
 - A reading assignment (§5.6) is one passage and all of its questions (§6.10). Its size is the number of questions.
 - Every math assignment is generated from a seed. The same seed always gives the same 20 problems, in the same order. The app sends the seed and her answers; the Worker regenerates the problems from the seed and re-scores them. A reading assignment is made from an attempt the Worker hands out (§6.8); the app sends the attempt and her choices, and the Worker marks them against the passage's right answers.
 
@@ -245,7 +245,7 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 
 - **Whose numbers:** seeds, results and numbers belong to the child of the device that sends them. A child's balance, streak, last counted day and completed assignments are hers alone.
 - **Seeds:** the Worker hands each iPad up to 20 unused seeds at a time and accepts each seed once. An iPad keeps its unused seeds so assignments work offline.
-- **Reading:** the Worker chooses her next passage (§6.10) and hands it out with an attempt: a single-use number kept for her device's child, with the day it was handed out. Her choices come back with the attempt. The Worker marks them against the passage's right answers, records the result, with her choice and the right choice of each question as they are at that moment, and pays it by the rules below. Her day comes with the choices and follows the day range rule below. The right answers stay on the Worker until the result is recorded. An attempt she never checks records nothing.
+- **Reading:** the Worker chooses her next passage (§6.10) and hands it out with an attempt: a single-use number kept for her device's child, with the day it was handed out. Her choices come back with the attempt. The Worker marks them against the passage's right answers, records the result, with the passage's title and, for each question, its text, its choices, her choice and the right choice as they are at that moment, and pays it by the rules below. Before any reading start or result, the iPad sends the math results it hasn't sent yet, oldest first, so offline work is counted before the streak moves; if they can't be sent, Reading shows the Wi-Fi line of §5.6 and starts nothing. Her day comes with the choices and follows the day range rule below. The right answers stay on the Worker until the result is recorded. An attempt she never checks records nothing.
 - **Recording:** the Worker regenerates a math assignment from its seed and re-scores her answers. 20 answers is a finished assignment (§6.4 payout, §6.5 streak, §6.6 grade); fewer is one she left early (base only, no streak change, no grade).
 - **The same result twice:** sending a result for a seed or attempt that's already recorded returns the recorded result and counts nothing again, so a retry after a lost connection is safe.
 - **Day range:** a result's day may be no earlier than the day before its seed (or reading attempt) was handed out and no later than the day after the Worker's date (UTC), allowing for time zones. A day outside that range is recorded on the nearest day inside it rather than refused, so finished work is never lost. A day that had to be moved means the iPad's clock was wrong, so that result doesn't touch the streak: it's paid its base and accuracy bonus and counts as completed, but the streak, last counted day and streak bonus stay as they were. Because of this, her last counted day is never more than a day ahead of the real date, and a clock that's off by more than a day can't reset her streak. (A clock off by only a day looks the same as a time-zone difference, so it counts like any other day.)
@@ -471,6 +471,7 @@ Unless stated, her state is balance 0, streak 0, no last counted day, the passag
 | L14 | A result whose choices miss a question, or name a choice of another question | Refused (400); nothing recorded; the attempt stays usable |
 | L15 | The Worker has no passages | The start response has no passage, and the iPad opens the Reading sample |
 | L16 | Worker's date 2026-10-17; the attempt was handed out that day; a finished result, 3 of 3 on a 3-question passage, dated 2026-10-19 | Recorded on **2026-10-18**, paid 20 + 4 = **24** (no streak bonus); streak and last counted day unchanged; completed **+1** |
+| L17 | Streak 5, last counted day two days ago; a math result from yesterday is unsent; she taps Reading | The math result is sent first, so the streak is **6** before the reading result is recorded, and the reading result (first of the day) takes it to **7** |
 
 ### 7.D Recorded results (§8)
 
@@ -500,7 +501,7 @@ The Worker's child API (every route needs the iPad's device key):
 - `POST /api/seeds`: tops the iPad up to 20 unused seeds and returns them.
 - `POST /api/results`: records a math result (§6.8) and returns it with the new state.
 - `POST /api/reading/start`: chooses her next passage (§6.10), makes an attempt and returns both, without the right choices. With no passages it returns `passage: null`.
-- `POST /api/reading/result { attempt, day, picks }`: `day` is the iPad's own day (§6.5). Marks her choices, records the result with her choice and the right choice of each question, and returns it with, per question, whether she was right and the right choice, and the new state (§6.8). 400 for choices that miss a question or name a choice of another question; 404 for an attempt that isn't this device's child's.
+- `POST /api/reading/result { attempt, day, picks }`: `day` is the iPad's own day (§6.5). Marks her choices, records the result with the passage's title and each question's text, choices, her choice and the right choice, and returns it with, per question, whether she was right and the right choice, and the new state (§6.8). 400 for choices that miss a question or name a choice of another question; 404 for an attempt that isn't this device's child's.
 - `GET /api/reading/image/:name`: a passage's picture from R2.
 
 Child routes read and write only the device's child: the numbers are hers, and the seeds and results are the device's.

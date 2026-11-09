@@ -10,8 +10,8 @@ CREATE TABLE passages (
   hint TEXT NOT NULL DEFAULT '',
   -- The text; paragraphs are separated by a blank line.
   body TEXT NOT NULL CHECK (length(body) > 0),
-  -- The picture's name in R2 (the passage id plus an extension, for example '3.webp'), or NULL for none.
-  image TEXT CHECK (image IS NULL OR length(image) > 0)
+  -- The picture's name in R2 (the passage id, a dot and an extension, for example '3.webp'), or NULL for none.
+  image TEXT CHECK (image IS NULL OR image GLOB CAST(id AS TEXT) || '.*')
 ) STRICT;
 
 CREATE TABLE questions (
@@ -32,5 +32,5 @@ CREATE TABLE choices (
 ) STRICT;
 
 -- At most one right choice per question. "Exactly four choices and exactly one right" can't be a CHECK
--- (it needs a trigger, and D1 counts a trigger's writes in `meta.changes`), so the seed script checks it.
+-- (it needs a trigger, and D1 counts a trigger's writes in `meta.changes`), so the seed script checks it (issue #213), and what the Worker does with a passage that fails it is issue #214.
 CREATE UNIQUE INDEX choices_one_correct ON choices (question_id) WHERE correct = 1;
