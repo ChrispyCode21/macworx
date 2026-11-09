@@ -79,7 +79,7 @@ test(
     await check.click()
 
     await expect(page.locator('[data-result="right"]')).toHaveCount(1)
-    await expect(page.getByText('The best answer is A. One')).toBeVisible()
+    await expect(page.locator('.response-lead')).toHaveText('The best answer is A. One')
     expect(posted).toEqual([
       {
         attempt: 9,

@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Reading is a real assignment on a paired iPad (children):** tapping Reading first sends any math she hasn't sent yet, then gets her next story from the Worker. She reads it, answers its questions two at a time (four choices each, her picks kept when she goes Back or reads again), and taps Check answers once every question has a pick. Each question then turns green or coral with its explanation, and the result shows right answers, Macaronis (with the bonuses) and the grade like Math. Without Wi-Fi Home says "Connect to Wi-Fi to get your next story!" and nothing starts, and a Check without Wi-Fi keeps her picks so she can tap it again. An iPad that isn't paired still opens the Reading sample.
 - **Results show what she practiced (parents):** the Results list has a Practice column. A math result reads the problems she picked, in her order ("Multiplication, medium · Division, easy"); work from before she could pick reads "Mixed"; a reading result shows its passage. Nothing changes on her iPad yet.
 
 ### Fixed

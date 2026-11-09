@@ -57,6 +57,13 @@ describe('Home (SPEC §5.1 step 1)', () => {
     expect(html).not.toContain('20 problems. Take your time.')
   })
 
+  it('shows the story Wi-Fi line on Reading only when its start found no connection', () => {
+    expect(render()).toContain('Read a passage, then answer a few questions.')
+    const html = render({ readingOffline: true })
+    expect(html).toContain('Connect to Wi-Fi to get your next story!')
+    expect(html).not.toContain('Read a passage, then answer a few questions.')
+  })
+
   it('shows the two Shop controls but they do nothing yet', () => {
     const html = render()
     expect(html.match(/aria-disabled="true"/g)).toHaveLength(2)
