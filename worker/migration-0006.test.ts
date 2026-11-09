@@ -141,14 +141,16 @@ describe('migration 0006', () => {
           .all()
       ).results as { name: string; sql: string }[]
     const { m, d } = await open('0005_children_state.sql')
+    const { m: m6, d: d6 } = await open('0006_reading_passages.sql')
     try {
       const before = await schema(d)
       const added = new Set(['passages', 'questions', 'choices', 'choices_one_correct'])
-      const after = (await schema(db)).filter((r) => !added.has(r.name))
+      const after = (await schema(d6)).filter((r) => !added.has(r.name))
       expect(after).toEqual(before)
-      expect((await schema(db)).filter((r) => added.has(r.name))).toHaveLength(4)
+      expect((await schema(d6)).filter((r) => added.has(r.name))).toHaveLength(4)
     } finally {
       await m.dispose()
+      await m6.dispose()
     }
   })
 })
