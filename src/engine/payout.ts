@@ -3,6 +3,7 @@ import { PAYOUT } from './config'
 
 export interface PayoutInput {
   correct: number
+  /** The size of the assignment: 20 problems, or a passage's question count. */
   problemCount: number
   /** From nextStreak: whether this is her first finished assignment of the day. */
   firstOfDay: boolean
@@ -29,9 +30,10 @@ export function payout({ correct, problemCount, firstOfDay, streak }: PayoutInpu
     typeof firstOfDay === 'boolean'
   if (!valid) throw new RangeError(`Invalid result: ${correct} of ${problemCount}, streak ${streak}`)
 
-  const base = correct * PAYOUT.perCorrect
-  // Whole numbers only, so no rounding error: 20% of 17 is floor(340 / 100) = 3.
-  const accuracyBonus = Math.floor((correct * PAYOUT.accuracyBonusPercent) / 100)
+  // The correct answers scaled to a 20-problem assignment, rounded down (§6.4).
+  const base = Math.floor((correct * PAYOUT.perCorrect * PAYOUT.baseScale) / problemCount)
+  // 20% of the base, rounded down: 20% of 17 is floor(340 / 100) = 3.
+  const accuracyBonus = Math.floor((base * PAYOUT.accuracyBonusPercent) / 100)
   const streakBonus = firstOfDay ? Math.min(streak * PAYOUT.streakPerDay, PAYOUT.streakCap) : 0
   const total = Math.max(PAYOUT.minimum, base + accuracyBonus + streakBonus)
   return { base, accuracyBonus, streakBonus, total }

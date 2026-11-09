@@ -4,7 +4,9 @@
 /** Macaroni payout (SPEC §6.4). */
 export const PAYOUT = {
   perCorrect: 1,
-  /** Accuracy bonus: this percent of the correct answers, rounded down. */
+  /** The base scales a result to an assignment of this many problems (SPEC §6.4). */
+  baseScale: 20,
+  /** Accuracy bonus: this percent of the base, rounded down. */
   accuracyBonusPercent: 20,
   /** Streak bonus per streak day, on the first finished assignment of the day only. */
   streakPerDay: 1,
