@@ -87,7 +87,7 @@ These come from `scripts/check-conventions.mjs` and CLAUDE.md.
 - **Below 1024 px wide** (a portrait iPad, 834 wide): one column, in DOM order. The free height is shared between the two rows, so the panels fill the viewport; the page scrolls only when the floors don't fit ("Fitting the viewport", below). The heading block and actions row stay as they are; if the title doesn't fit beside the progress, the progress drops below it.
   - DOM order is: problem then pad; listen then choices; passage then companion; question 1 then question 2.
   - This is not in Figma. Today's assignment also stacks in portrait.
-- **Fitting the viewport.** The Math screen fits a tablet of any size without scrolling, so the sizes that follow the viewport's height are a range: the size given here is the most, and a floor is the least. Number pad keys are 72 down to 48 (`--key-min`). They stay at 72 in the 1194x834 frame as drawn and wherever a landscape row has room; in portrait the two stacked panels share the spare height, so the keys give some back sooner (52 at 768x1024). The Pair screen's pad does the same, from 96 (`--key`) down to 48. If a window is shorter than even the floors allow (Split View), the page scrolls. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
+- **Fitting the viewport.** The Math and Pair screens fit a tablet of any size without scrolling, and Spelling and Reading fit a landscape one, so the sizes that follow the viewport's height are a range: the size given here is the most, and a floor is the least. Number pad keys are 72 down to 48 (`--key-min`). They stay at 72 in the 1194x834 frame as drawn and wherever a landscape row has room; in portrait the two stacked panels share the spare height, so the keys give some back sooner (52 at 768x1024). The Pair screen's pad does the same, from 96 (`--key`) down to 48. Spelling and Reading change in one step: on a viewport 833 px high or less, a choice is 56 high (it is 78 above that), the play button is a 96 circle (112), the listen parts are 12 apart (20), a question card has 24 of padding (28) and 12 between its parts (16), and the Spelling panel has 24 of padding (32). In portrait the Spelling screen and the Reading questions stack and scroll. If a window is shorter than even the floors allow (Split View), the page scrolls. The passage text scrolls inside its panel (`overflow-y: auto`) when it is taller than the panel.
 
 **Values the Figma frames do not give.** These are in the CSS, decided with the owner on 2026-11-08 (issue #191), except the key floor of 48. Only the pad panel's height and its tokens are pinned by tests:
 
@@ -249,7 +249,7 @@ Height 48, padding-inline 16, gap 10, radius 12, fill `--l-chip`. Icon 20 `--l-l
 
 A `<Button variant="choice">` in a `role="radiogroup"`. Each choice has `role="radio"` and `aria-checked`.
 
-- **Shape:** height 78 (min-height 78; a reading choice may wrap to 2 lines), padding-inline 18, gap 16, radius 12, flex row centered.
+- **Shape:** height 78 (min-height 78, 56 on a short tablet, §3; a reading choice may wrap to 2 lines), padding-inline 18, gap 16, radius 12, flex row centered.
 - **Marker:** circle 32, centered letter (marker).
 - **Text:** `flex: 1`, word-choice or answer-choice.
 
@@ -273,7 +273,7 @@ A `<Button variant="choice">` in a `role="radiogroup"`. Each choice has `role="r
 | `action-secondary` | height 56, min-width 170, same | `--l-surface` | 1 px `--l-line` | `--l-link`, action | Read again |
 | `crumb` | min-height 44 (hit area; the row is 24), gap 8, no padding, no fill | none | none | `--l-link`, crumb | back control |
 | `key` (practice size) | height 72 with room, 48 at the least, radius 12 | `--l-surface` | none | `--l-text`, key; delete icon 27 `--l-link` | number pad |
-| `play` | circle 112 | `--l-primary` | none | play icon 40, `--l-primary-ink` | Play word |
+| `play` | circle 112 (96 on a short tablet, §3) | `--l-primary` | none | play icon 40, `--l-primary-ink` | Play word |
 | `support` | height 44, gap 8 | none | none | `--l-link`, support; volume-2 18 | Hear it in a sentence |
 | `choice` | 7.3 | | | | |
 
@@ -337,7 +337,7 @@ Frame `practice-spelling.png`. Crumb "Practice  /  Spelling". Title "Listen clos
 
 **Activity row:** one panel (7.1, padding 32) holding two columns (section 3):
 
-1. **Listen** (fill `--l-inset`, radius 12, no border, column, centered both ways, gap 20, height 100%):
+1. **Listen** (fill `--l-inset`, radius 12, no border, column, centered both ways, gap 20 (12 on a short tablet, §3), height 100%):
    - eyebrow "Listen and spell"
    - `play` button (accessible name "Play word"). It speaks the word with `speechSynthesis` (`lang` `en-US`, `rate` 0.8). Tapping again stops and replays.
    - Text block (width 360, max 100%, gap 8, centered): listen-title "Play word", listen-sub "Listen to the word, then choose its spelling."
