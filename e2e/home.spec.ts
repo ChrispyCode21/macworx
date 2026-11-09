@@ -456,6 +456,8 @@ test(
     const [a, b] = [(await subjects.boundingBox())!, (await side.boundingBox())!]
     expect(b.y + b.height).toBeLessThanOrEqual(a.y + 1)
     await noSidewaysScroll(page)
+    await page.setViewportSize({ width: 320, height: 640 })
+    await noSidewaysScroll(page)
     await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
   },
 )
