@@ -150,3 +150,13 @@ gh api -X POST repos/ChrispyCode21/macworx/rulesets --input .github/rulesets/mai
 Releases: when CI passes on a push to `main` that carries a new `package.json` version, `release.yml` tags that commit and creates a GitHub Release from that version's CHANGELOG.md section.
 
 Milestones are named after versions (`v0.2.0`), and each issue goes in the milestone of the release it's planned for. Releasing a version closes its milestone. Before 1.0, a feature set bumps the middle number and fixes between feature sets bump the last (`v0.1.1`).
+
+### Writing and trimming tests
+
+Tests are a running cost, and the Playwright job is the biggest part of it: the whole-assignment flows, which tap through every problem, take most of its time. Keep the suite small by reading before writing.
+
+- **Read the existing tests first.** Before adding a test, read the ones for that screen or behavior (`grep` the spec for it). Extend or reuse one if it can cover the new case.
+- **Delete or merge what is redundant.** If an existing test is redundant, overlaps a stronger one, or covers behavior that is gone, delete or merge it in the same PR. Say in the PR description what still covers each behavior you removed.
+- **Run a test once when it can be.** A test that sets its own viewport, or does not depend on the engine or orientation, should run once per engine, not on every Playwright project. Tag it as the `test:e2e` row above and `playwright.config.ts` describe.
+- **Never trade coverage for speed.** Don't delete, skip or loosen a test or an assertion just to make CI pass or run faster. A removed run needs a named test that still covers it.
+- **Find the slow ones.** The Playwright job's log lists every test with its time (`npx playwright test --reporter=list` prints the same locally). Look at the slowest few before anything else. The job took 6 to 8 minutes in November 2026; check the latest run rather than trusting that figure.
