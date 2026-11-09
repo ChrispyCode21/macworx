@@ -628,7 +628,7 @@ p {
 /* The bar: 80 high, with the frame's sizes. */
 .mix .home-bar {
   min-height: 80px;
-  padding: 0 max(var(--space-40), env(safe-area-inset-right)) 0
+  padding: env(safe-area-inset-top) max(var(--space-40), env(safe-area-inset-right)) 0
     max(var(--space-40), env(safe-area-inset-left));
 }
 
@@ -663,6 +663,7 @@ p {
 }
 
 .mix .button-crumb {
+  position: relative;
   align-self: flex-start;
   min-height: 44px;
   margin-block: -12px;
@@ -690,6 +691,7 @@ p {
 
 .mix-tools {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-24);
   min-height: 44px;
@@ -906,6 +908,7 @@ p {
 
 .mix .button-action {
   gap: var(--space-12);
+  font-size: var(--text-16);
   min-width: 240px;
   height: 52px;
   border-radius: 10px;

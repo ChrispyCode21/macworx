@@ -118,7 +118,7 @@ export const COPY = {
   mixSame: 'Same as last time',
   mixGrid: 'Problems to pick from',
   mixCrumbHome: 'Home',
-  mixCrumbHere: '/  Math',
+  mixCrumbHere: ' /  Math',
   mixTitle: (picks: number) => MIX_TITLE[picks],
   mixEmptyTitle: 'Pick something to start',
   mixEmptyLine: 'Tap a problem that looks fun.',
