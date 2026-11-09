@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pair } from './screens/Pair'
 import { Portal } from './screens/parent/Portal'
-import { payout } from './engine'
-import { canPair, getDeviceKey, getQueue, getWorkerState, requestPersistence } from './storage/device'
+import { payout, type Mix } from './engine'
+import {
+  canPair,
+  getDeviceKey,
+  getQueue,
+  getWorkerState,
+  requestPersistence,
+  setLastMix,
+} from './storage/device'
 import { homeNumbers, nextResult, practiceChild } from './sync/projection'
 import type { HomeNumbers, PracticeChild } from './sync/projection'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
@@ -16,8 +23,8 @@ type Screen =
   | { name: 'home' }
   | { name: 'pair' }
   | { name: 'practice'; subject: 'spelling' | 'reading'; child: PracticeChild | undefined }
-  | { name: 'assignment'; seed: number }
-  | { name: 'result'; outcome: Outcome }
+  | { name: 'assignment'; seed: number; mix?: Mix }
+  | { name: 'result'; outcome: Outcome; mix?: Mix }
 
 /** A seed for an iPad that isn't paired: it practices and saves nothing (SPEC §6.8). */
 function practiceSeed(): number {
@@ -55,7 +62,7 @@ function ChildApp() {
   shown.current = screen
 
   // A paired iPad uses its stored seeds, topping up first when it has none (SPEC §6.8).
-  const start = async () => {
+  const start = async (mix?: Mix) => {
     if (starting.current) return
     starting.current = true
     setNoSeeds(false)
@@ -72,10 +79,13 @@ function ChildApp() {
     if (seed === null) {
       setNoSeeds(true)
       setScreen({ name: 'home' })
-    } else setScreen({ name: 'assignment', seed })
+    } else {
+      if (mix) setLastMix(mix)
+      setScreen({ name: 'assignment', seed, mix })
+    }
   }
-  const end = (seed: number, answers: number[], now: Date) => {
-    endSeed(seed, answers, now)
+  const end = (seed: number, answers: number[], now: Date, mix?: Mix) => {
+    endSeed(seed, answers, now, mix)
     setNumbers(currentNumbers())
   }
 
@@ -107,7 +117,7 @@ function ChildApp() {
     case 'home':
       return (
         <Home
-          onStart={start}
+          onStart={() => start()}
           // Nothing is stored or sent: the child is read once, as the Math screen does.
           onOpen={(subject) => setScreen({ name: 'practice', subject, child: currentChild() })}
           noSeeds={noSeeds}
@@ -128,6 +138,7 @@ function ChildApp() {
         <Assignment
           key={screen.seed}
           seed={screen.seed}
+          mix={screen.mix}
           numbers={numbers}
           // Read when the assignment opens; Assignment keeps it for the whole assignment.
           child={currentChild()}
@@ -140,19 +151,27 @@ function ChildApp() {
               getDeviceKey() && state
                 ? nextResult(state, getQueue(), correct, localDay(now))
                 : payout({ correct, problemCount, firstOfDay: false, streak: 0 })
-            end(screen.seed, answers, now)
-            setScreen({ name: 'result', outcome: { kind: 'finished', correct, problemCount, earned } })
+            end(screen.seed, answers, now, screen.mix)
+            setScreen({
+              name: 'result',
+              outcome: { kind: 'finished', correct, problemCount, earned },
+              mix: screen.mix,
+            })
           }}
           // Leaving before answering anything records nothing (SPEC §5.1).
           onLeave={(answers, correct) => {
-            end(screen.seed, answers, new Date())
+            end(screen.seed, answers, new Date(), screen.mix)
             if (answers.length === 0) home()
             else
-              setScreen({ name: 'result', outcome: { kind: 'leftEarly', answered: answers.length, correct } })
+              setScreen({
+                name: 'result',
+                outcome: { kind: 'leftEarly', answered: answers.length, correct },
+                mix: screen.mix,
+              })
           }}
         />
       )
     case 'result':
-      return <Result outcome={screen.outcome} onAnother={start} onHome={home} />
+      return <Result outcome={screen.outcome} onAnother={() => start(screen.mix)} onHome={home} />
   }
 }

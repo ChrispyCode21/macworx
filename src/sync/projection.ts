@@ -83,6 +83,18 @@ export function nextResult(
   return finishedPayout(project(state, queue), today, correct).earned
 }
 
+/**
+ * The most a finished assignment could pay today (SPEC §6.4): 20 correct, so the base and the accuracy bonus,
+ * plus the streak bonus when it would be her first finished assignment of the day, with the unsent results
+ * applied. Without the Worker's numbers (`null`) there is no streak bonus (§6.8). Every mix pays the same.
+ */
+export function earnUpTo(state: WorkerState | null, queue: QueuedResult[], today: string): number {
+  if (!state)
+    return payout({ correct: ASSIGNMENT_SIZE, problemCount: ASSIGNMENT_SIZE, firstOfDay: false, streak: 0 })
+      .total
+  return nextResult(state, queue, ASSIGNMENT_SIZE, today).total
+}
+
 export interface PracticeChild {
   name: string
   /** Her school grade ("4"); empty when a parent hasn't set one. */

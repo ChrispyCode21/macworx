@@ -20,6 +20,7 @@ export {
   generateAssignment,
   isMix,
   makeProblem,
+  pickSizes,
   type Level,
   type Mix,
   type Operation,
