@@ -2942,7 +2942,7 @@ p {
   font-size: var(--text-17);
 }
 
-/* Short tablets (docs/DESIGN-PRACTICE.md §3): Spelling and Reading take their compact sizes, a choice 56 high, the play button 96 and 12 between the listen parts. Spelling after Check needs 489 px of row at its full sizes; the row is the viewport less 344 with safe areas, so 833 px high and under. */
+/* Short tablets (docs/DESIGN-PRACTICE.md §3): Spelling and Reading take their compact sizes, a choice 56 high, the play button 96, 12 between the listen parts, a question card with 24 of padding and 12 between its parts, and 24 of padding on the Spelling panel. Spelling after Check needs 489 px of row at its full sizes; the row is the viewport less 344 with safe areas, so 833 px high and under. */
 @media (max-height: 833px) {
   .button-choice {
     min-height: 56px;
@@ -2955,6 +2955,15 @@ p {
   .button-play {
     width: 96px;
     height: 96px;
+  }
+
+  .practice-question-card {
+    gap: var(--space-12);
+    padding: var(--space-24);
+  }
+
+  .practice-spelling {
+    padding: var(--space-24);
   }
 }
 /* practice: end */

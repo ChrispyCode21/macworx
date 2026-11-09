@@ -102,9 +102,19 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
     expect(block).toMatch(/\.button-choice \{\s*min-height: 56px;/)
     expect(block).toMatch(/\.practice-listen \{\s*gap: var\(--space-12\);/)
     expect(block).toMatch(/\.button-play \{\s*width: 96px;\s*height: 96px;/)
+    expect(block).toMatch(
+      /\.practice-question-card \{\s*gap: var\(--space-12\);\s*padding: var\(--space-24\);/,
+    )
+    expect(block).toMatch(/\.practice-spelling \{\s*padding: var\(--space-24\);/)
     // It comes after the rules it overrides, which keep the full sizes (78, gap 20, 112).
     const media = practice.indexOf('@media (max-height: 833px)')
-    for (const base of ['\n.button-choice {', '\n.practice-listen {', '\n.button-play {'])
+    for (const base of [
+      '\n.button-choice {',
+      '\n.practice-listen {',
+      '\n.button-play {',
+      '\n.practice-question-card {',
+      '\n.practice-spelling {',
+    ])
       expect(media, base).toBeGreaterThan(practice.indexOf(base))
   })
 
