@@ -4,7 +4,7 @@
 // The choices are shuffled when the SQL is written, so run the SAME file on preview and production and
 // don't run this script again in between, or the two databases won't match.
 import { randomInt } from 'node:crypto'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 
@@ -34,15 +34,21 @@ function correctIndexes(q) {
   return letter >= 0 ? [letter] : []
 }
 
+/** The problems with --id and --image. Ids stay below 10^12 so id * 1000 + 504 is an exact integer. */
+export function checkArgs({ id, image }) {
+  const errors = []
+  if (!/^[1-9]\d{0,11}$/.test(String(id))) errors.push('--id must be a whole number from 1 to 999999999999.')
+  if (image !== undefined && !/^[a-z0-9]+$/i.test(image))
+    errors.push('--image must be a file extension such as webp.')
+  return errors
+}
+
 /**
  * Checks a passage and builds its SQL. Returns { errors, sql, summary }; sql and summary are null when
  * there are errors. Messages name questions by number and never quote passage text.
  */
 export function buildPassageSql(data, { id, image }) {
   const errors = []
-  if (!/^[1-9]\d*$/.test(String(id))) errors.push('--id must be a positive whole number.')
-  if (image !== undefined && !/^[a-z0-9]+$/i.test(image))
-    errors.push('--image must be a file extension such as webp.')
   if (data === null || typeof data !== 'object' || Array.isArray(data)) {
     return { errors: [...errors, 'The file must hold one JSON object.'], sql: null, summary: null }
   }
@@ -112,47 +118,47 @@ export function buildPassageSql(data, { id, image }) {
 }
 
 function main() {
+  const usage = 'Usage: node scripts/passage-sql.mjs <passage.json> --id <N> [--image <ext>] --out <file.sql>'
+  const options = { id: { type: 'string' }, image: { type: 'string' }, out: { type: 'string' } }
+  const problems = []
   let parsed
   try {
-    parsed = parseArgs({
-      allowPositionals: true,
-      options: { id: { type: 'string' }, image: { type: 'string' }, out: { type: 'string' } },
-    })
+    parsed = parseArgs({ allowPositionals: true, options })
   } catch (e) {
-    parsed = { values: {}, positionals: [], error: e.message }
+    problems.push(e.message)
+    // Recover what was given, so only real problems are reported.
+    parsed = parseArgs({ allowPositionals: true, options, strict: false })
   }
   const { values, positionals } = parsed
-  const usage = 'Usage: node scripts/passage-sql.mjs <passage.json> --id <N> [--image <ext>] --out <file.sql>'
-  const problems = []
-  if (parsed.error) problems.push(parsed.error)
   if (positionals.length !== 1) problems.push('Give exactly one passage file.')
-  if (!values.out) problems.push('--out <file.sql> is required.')
-  if (values.id === undefined) problems.push('--id <N> is required.')
+  if (typeof values.out !== 'string' || !values.out) problems.push('--out <file.sql> is required.')
+  if (typeof values.id !== 'string') problems.push('--id <N> is required.')
+  else problems.push(...checkArgs({ id: values.id, image: values.image }))
 
-  let data = null
+  let built = null
   if (positionals.length === 1) {
     try {
-      data = JSON.parse(readFileSync(positionals[0], 'utf8'))
+      const data = JSON.parse(readFileSync(positionals[0], 'utf8'))
+      built = { ...buildPassageSql(data, { id: Number(values.id), image: values.image }), title: data?.title }
+      problems.push(...built.errors)
     } catch (e) {
       // Only the reason, never the file's text.
       problems.push(`Can't read ${positionals[0]} as JSON (${e.code ?? 'invalid JSON'}).`)
     }
   }
-  const built =
-    data !== null && values.id !== undefined
-      ? buildPassageSql(data, { id: values.id, image: values.image })
-      : { errors: [], sql: null, summary: null }
-  problems.push(...built.errors)
-  if (problems.length > 0 || built.sql === null) {
+  // The SQL holds one shuffle: never overwrite a file that may already have been run on a database.
+  if (typeof values.out === 'string' && existsSync(values.out)) {
+    problems.push(`${values.out} already exists; delete it first if you really want a new shuffle.`)
+  }
+  if (problems.length > 0 || !built?.sql) {
     console.error(`${problems.length} problem(s), nothing written:`)
     for (const p of problems) console.error(`- ${p}`)
     console.error(usage)
     process.exit(1)
   }
-  const id = Number(values.id)
-  writeFileSync(values.out, built.sql)
+  writeFileSync(values.out, built.sql, { flag: 'wx' })
   const { words, minutes, questions, image } = built.summary
-  console.log(`Passage ${id}: ${data.title}`)
+  console.log(`Passage ${values.id}: ${built.title}`)
   console.log(`Words: ${words}, minutes: ${minutes}, questions: ${questions}`)
   console.log(`Picture: ${image ?? 'no picture'}${image ? ' (upload it to R2 with this name)' : ''}`)
   console.log(`Wrote ${values.out}`)

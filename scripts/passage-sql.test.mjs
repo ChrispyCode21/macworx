@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildPassageSql } from './passage-sql.mjs'
+import { buildPassageSql, checkArgs } from './passage-sql.mjs'
 
 // An invented fixture: nonsense words only, no real passage.
 const fixture = () => ({
@@ -93,8 +93,16 @@ describe('buildPassageSql', () => {
     delete data.title
     data.questions[0].options.pop()
     data.questions[1].correct_answer = 'zzz'
-    const { errors } = buildPassageSql(data, { id: 'x' })
-    expect(errors).toHaveLength(4)
+    const { errors } = buildPassageSql(data, { id: 7 })
+    expect(errors).toHaveLength(3)
     expect(errors.join('\n')).not.toMatch(/tamu|blorp|zzz/i)
+  })
+
+  it('refuses a bad id or picture extension', () => {
+    expect(checkArgs({ id: '3', image: 'webp' })).toEqual([])
+    for (const id of ['0', '-1', '1.5', 'x', '9007199254740993', '1000000000000']) {
+      expect(checkArgs({ id })).toHaveLength(1)
+    }
+    expect(checkArgs({ id: '3', image: '.webp' })).toHaveLength(1)
   })
 })
