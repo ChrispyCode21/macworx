@@ -95,7 +95,7 @@ button {
 }
 
 h1 {
-  font-size: 2.4rem;
+  font-size: var(--text-58);
   margin: 0;
 }
 
@@ -135,7 +135,7 @@ p {
   padding: 0 var(--space);
   background: var(--accent);
   color: var(--accent-ink);
-  font-size: 1.6rem;
+  font-size: var(--text-40);
 }
 
 .button-secondary {
@@ -155,7 +155,7 @@ p {
 
 .button-check {
   background: var(--accent);
-  font-size: 1.2rem;
+  font-size: var(--text-29);
 }
 
 .stacked {
@@ -217,7 +217,7 @@ p {
 
 .result-count,
 .result-macaronis {
-  font-size: 1.6rem;
+  font-size: var(--text-40);
 }
 
 /* Her numbers on Home (SPEC §5.1): a wrapping row of soft rounded boxes. */
@@ -242,7 +242,7 @@ p {
   padding: var(--space-12) var(--space-20);
   border-radius: var(--radius);
   background: var(--soft);
-  font-size: 1.4rem;
+  font-size: var(--text-30);
 }
 
 .result-buttons {
@@ -252,12 +252,12 @@ p {
   gap: var(--gap);
 }
 
-/* The pairing code's six boxes (CodeBoxes): the answer-box look at its own size (67px digits), wider than Math's. */
+/* The pairing code's six boxes (CodeBoxes): the answer-box look at its own size (58px digits), wider than Math's. */
 .code-boxes {
   display: grid;
   grid-template-columns: repeat(6, 1.1em);
   gap: var(--space-6);
-  font-size: 2.8rem;
+  font-size: var(--text-58);
   font-weight: 700;
 }
 
