@@ -326,7 +326,9 @@ export async function postBalance(req: ParentRequest): Promise<Response> {
 
 interface StoredResult {
   id: number
-  seed: number
+  kind: 'math' | 'reading'
+  seed: number | null
+  detail: string | null
   day: string
   answers: string
   answered: number
@@ -337,7 +339,8 @@ interface StoredResult {
   total: number
 }
 
-const RESULT_COLUMNS = 'id, seed, day, answers, answered, correct, finished, grade, streak_bonus, total'
+const RESULT_COLUMNS =
+  'id, kind, seed, detail, day, answers, answered, correct, finished, grade, streak_bonus, total'
 
 /** A stored result's answers, or null when they don't match its answered count. */
 function storedAnswers(row: StoredResult): number[] | null {
@@ -352,10 +355,11 @@ function storedAnswers(row: StoredResult): number[] | null {
 }
 
 /** One result with its problems, her answers and the right answers (SPEC §8). */
-function resultView(row: StoredResult, answers: number[]) {
+function resultView(row: StoredResult & { seed: number }, answers: number[]) {
   const problems = generateAssignment(row.seed)
   return {
     id: row.id,
+    kind: 'math' as const,
     day: row.day,
     answered: row.answered,
     correct: row.correct,
@@ -372,6 +376,26 @@ function resultView(row: StoredResult, answers: number[]) {
   }
 }
 
+/** A reading result: the passage's title and each question as it was when recorded (SPEC §6.8, D14). */
+function readingView(row: StoredResult) {
+  const detail = JSON.parse(row.detail ?? '{}') as {
+    title: string
+    questions: { text: string; choices: { id: number; text: string }[]; picked: number; right: number }[]
+  }
+  return {
+    id: row.id,
+    kind: 'reading' as const,
+    day: row.day,
+    answered: row.answered,
+    correct: row.correct,
+    finished: row.finished === 1,
+    grade: row.grade,
+    total: row.total,
+    title: detail.title,
+    questions: detail.questions,
+  }
+}
+
 /** GET /api/parent/results/:id: one recorded result with its problems. */
 export async function getResult(req: ParentRequest): Promise<Response> {
   const { db, params } = req
@@ -384,9 +408,10 @@ export async function getResult(req: ParentRequest): Promise<Response> {
     .bind(id, childId)
     .first<StoredResult>()
   if (!row) return error(404, 'unknown_result')
+  if (row.kind === 'reading') return json(200, { result: readingView(row) })
   const answers = storedAnswers(row)
-  if (!answers) return error(500, 'server')
-  return json(200, { result: resultView(row, answers) })
+  if (!answers || row.seed === null) return error(500, 'server')
+  return json(200, { result: resultView({ ...row, seed: row.seed }, answers) })
 }
 
 /** Parent routes, matched on method and path pattern. */

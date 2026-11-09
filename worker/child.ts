@@ -26,9 +26,9 @@ export interface ChildRequest {
 
 const MAX_UNUSED_SEEDS = 20
 const MAX_PENDING = 100
-const WRITE_ATTEMPTS = 3
+export const WRITE_ATTEMPTS = 3
 
-interface ChildRow {
+export interface ChildRow {
   balance: number
   streak: number
   last_day: string | null
@@ -74,7 +74,7 @@ function toResult(row: ResultRow) {
   }
 }
 
-async function readState(db: D1Database, device: number, childId: number, pending: number[] = []) {
+export async function readState(db: D1Database, device: number, childId: number, pending: number[] = []) {
   const child = await db
     .prepare('SELECT name, grade, initials, balance, streak, last_day, completed FROM children WHERE id = ?')
     .bind(childId)
@@ -169,12 +169,41 @@ function parseResult(body: unknown): ResultBody | null {
 }
 
 /** The day moved into range: no earlier than the day before the seed was handed out, no later than tomorrow. */
-function clampDay(day: string, issuedDay: string, now: Date): string {
+export function clampDay(day: string, issuedDay: string, now: Date): string {
   const earliest = addDays(issuedDay, -1)
   const latest = addDays(utcDay(now), 1)
   if (dayNumber(day) < dayNumber(earliest)) return earliest
   if (dayNumber(day) > dayNumber(latest)) return latest
   return day
+}
+
+/**
+ * What a finished assignment of any kind earns, and her streak after it (SPEC §6.4, §6.5, §6.8). A day that had
+ * to be moved came from a wrong clock, so it pays no streak bonus and leaves the streak alone (W7); a result
+ * that arrives with a day before her last counted day counts as that day.
+ */
+export function settleFinished({
+  child,
+  day,
+  clockWrong,
+  correct,
+  size,
+}: {
+  child: Pick<ChildRow, 'streak' | 'last_day'>
+  day: string
+  clockWrong: boolean
+  correct: number
+  size: number
+}) {
+  const gradeLabel = grade(correct, size)
+  if (clockWrong) {
+    const earned = payout({ correct, problemCount: size, firstOfDay: false, streak: child.streak })
+    return { earned, streak: child.streak, lastDay: child.last_day, gradeLabel }
+  }
+  const streakDay = child.last_day && dayNumber(day) < dayNumber(child.last_day) ? child.last_day : day
+  const next = nextStreak({ streak: child.streak, lastDay: child.last_day }, streakDay)
+  const earned = payout({ correct, problemCount: size, firstOfDay: next.firstOfDay, streak: next.streak })
+  return { earned, streak: next.streak, lastDay: next.lastDay, gradeLabel }
 }
 
 const findResult = (db: D1Database, seed: number) =>
@@ -215,19 +244,15 @@ export async function postResult({ request, db, device, childId, now }: ChildReq
     let streak = child.streak
     let lastDay = child.last_day
     let gradeLabel: string | null = null
-    if (finished && clockWrong) {
-      earned = payout({ correct, problemCount: answered, firstOfDay: false, streak })
-      gradeLabel = grade(correct, answered)
-    } else if (finished) {
-      // A result that arrives with a day before her last counted day counts as that day (§6.8).
-      const streakDay = lastDay && dayNumber(day) < dayNumber(lastDay) ? lastDay : day
-      const next = nextStreak({ streak, lastDay }, streakDay)
-      earned = payout({ correct, problemCount: answered, firstOfDay: next.firstOfDay, streak: next.streak })
-      ;({ streak, lastDay } = next)
-      gradeLabel = grade(correct, answered)
-    } else {
-      earned = leftEarlyPayout({ correct, answered, problemCount: ASSIGNMENT_SIZE })
-    }
+    if (finished)
+      ({ earned, streak, lastDay, gradeLabel } = settleFinished({
+        child,
+        day,
+        clockWrong,
+        correct,
+        size: answered,
+      }))
+    else earned = leftEarlyPayout({ correct, answered, problemCount: ASSIGNMENT_SIZE })
 
     // One transaction: the child update applies only if nobody wrote since we read, and the other two
     // statements apply only if it did (they check for this write's new revision).

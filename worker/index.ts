@@ -5,6 +5,7 @@ import { getState, postResult, postSeeds, type ChildRequest } from './child'
 import { error, json } from './http'
 import { postPair, previewPairCode } from './pair'
 import { PARENT_ROUTES } from './parent'
+import { postReadingResult, postReadingStart } from './reading'
 
 export interface Env extends AccessEnv {
   ASSETS: Fetcher
@@ -22,6 +23,8 @@ const CHILD_ROUTES: Record<string, (req: ChildRequest) => Promise<Response>> = {
   'GET /api/state': getState,
   'POST /api/seeds': postSeeds,
   'POST /api/results': postResult,
+  'POST /api/reading/start': postReadingStart,
+  'POST /api/reading/result': postReadingResult,
 }
 
 const isParentPath = (pathname: string) => pathname === '/api/parent' || pathname.startsWith('/api/parent/')
