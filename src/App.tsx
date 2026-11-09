@@ -97,8 +97,14 @@ function ChildApp() {
     starting.current = true
     setReadingOffline(false)
     const from = shown.current
-    const outcome = await startReading()
-    starting.current = false
+    let outcome: Awaited<ReturnType<typeof startReading>>
+    try {
+      outcome = await startReading()
+    } catch {
+      outcome = { kind: 'offline' }
+    } finally {
+      starting.current = false
+    }
     // She went somewhere else meanwhile: don't pull her into a story.
     if (shown.current !== from) return
     setPaired(getDeviceKey() !== null)
@@ -124,6 +130,7 @@ function ChildApp() {
     })
   }
   const home = () => {
+    setReadingOffline(false)
     refresh()
     setScreen({ name: 'home' })
   }

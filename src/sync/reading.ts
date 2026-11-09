@@ -72,16 +72,47 @@ export async function startReading(): Promise<StartOutcome> {
   return { kind: 'passage', attempt: body.attempt, passage: body.passage }
 }
 
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
 function isPassage(value: unknown): value is ReadingPassage {
-  const p = value as ReadingPassage | null
+  if (!isObject(value)) return false
+  const { title, minutes, paragraphs, questions } = value
   return (
-    typeof p === 'object' &&
-    p !== null &&
-    typeof p.title === 'string' &&
-    Array.isArray(p.paragraphs) &&
-    Array.isArray(p.questions) &&
-    p.questions.length > 0 &&
-    p.questions.every((q) => Array.isArray(q.choices) && q.choices.length > 0)
+    typeof title === 'string' &&
+    typeof minutes === 'number' &&
+    Array.isArray(paragraphs) &&
+    paragraphs.every((s) => typeof s === 'string') &&
+    Array.isArray(questions) &&
+    questions.length > 0 &&
+    questions.every(
+      (q) =>
+        isObject(q) &&
+        typeof q.id === 'number' &&
+        typeof q.text === 'string' &&
+        Array.isArray(q.choices) &&
+        q.choices.length > 0 &&
+        q.choices.every((c) => isObject(c) && typeof c.id === 'number' && typeof c.text === 'string'),
+    )
+  )
+}
+
+function isResult(value: unknown): value is ReadingResult {
+  if (!isObject(value) || !isObject(value.payout)) return false
+  const { correct, answered, payout, questions } = value
+  const p = payout as Record<string, unknown>
+  return (
+    typeof correct === 'number' &&
+    typeof answered === 'number' &&
+    ['base', 'accuracyBonus', 'streakBonus', 'total'].every((k) => typeof p[k] === 'number') &&
+    Array.isArray(questions) &&
+    questions.every(
+      (q) =>
+        isObject(q) &&
+        typeof q.id === 'number' &&
+        typeof q.right === 'boolean' &&
+        typeof q.rightChoice === 'number',
+    )
   )
 }
 
@@ -95,10 +126,8 @@ export async function checkReading(attempt: number, picks: Pick[], now: Date): P
   const response = await post(key, '/api/reading/result', { attempt, day: localDay(now), picks })
   if (!response || unpaired(response, key) || !response.ok) return { kind: 'offline' }
   const body = await readBody(response)
-  const result = body?.result as ReadingResult | undefined
-  if (!result || !Array.isArray(result.questions) || typeof result.payout?.total !== 'number') {
-    return { kind: 'offline' }
-  }
+  const result = body?.result
+  if (!isResult(result)) return { kind: 'offline' }
   saveWorkerState(body?.state)
   return { kind: 'checked', result }
 }

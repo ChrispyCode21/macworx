@@ -95,6 +95,12 @@ describe('starting a reading assignment', () => {
     expect((await reading.startReading()).kind).toBe('offline')
   })
 
+  it('is offline when a question in the passage is null', async () => {
+    routes['POST /api/reading/start'] = () =>
+      json(200, { attempt: 5, passage: { ...passage, questions: [null] } })
+    expect((await reading.startReading()).kind).toBe('offline')
+  })
+
   it('opens the sample for an iPad that is not paired, without any call', async () => {
     localStorage.clear()
     expect((await reading.startReading()).kind).toBe('sample')
@@ -136,6 +142,13 @@ describe('checking answers', () => {
     expect(again.kind).toBe('checked')
     expect(calls.filter((c) => c === 'POST /api/reading/result')).toHaveLength(2)
     expect(calls).not.toContain('POST /api/reading/start')
+  })
+
+  it('is offline when the result body lacks a number the screen needs', async () => {
+    const { correct: _correct, ...withoutCorrect } = resultBody.result
+    routes['POST /api/reading/result'] = () => json(201, { ...resultBody, result: withoutCorrect })
+    expect((await reading.checkReading(5, picks, now)).kind).toBe('offline')
+    expect(getWorkerState()).toBeNull()
   })
 
   it('a repeated 200 carries the same recorded numbers', async () => {

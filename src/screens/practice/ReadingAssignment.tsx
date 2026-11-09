@@ -68,14 +68,19 @@ export function ReadingAssignment({ attempt, passage, numbers, child, onBack, on
     if (checking || left > 0) return
     setChecking(true)
     setOffline(false)
-    const outcome = await checkReading(
-      attempt,
-      questions.map((q) => ({ question: q.id, choice: picks[q.id] })),
-      new Date(),
-    )
-    if (outcome.kind === 'checked') setResult(outcome.result)
-    else setOffline(true)
-    setChecking(false)
+    try {
+      const outcome = await checkReading(
+        attempt,
+        questions.map((q) => ({ question: q.id, choice: picks[q.id] })),
+        new Date(),
+      )
+      if (outcome.kind === 'checked') setResult(outcome.result)
+      else setOffline(true)
+    } catch {
+      setOffline(true)
+    } finally {
+      setChecking(false)
+    }
   }
 
   const marked = (id: number) => result?.questions.find((q) => q.id === id)
