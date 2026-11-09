@@ -230,6 +230,8 @@ export const COPY = {
   parentResultsHeading: 'Results',
   parentNoResults: 'No results yet. They show up here after she finishes an assignment.',
   parentColDate: 'Date',
+  parentColPractice: 'Practice',
+  parentFixedMix: 'Mixed',
   parentColRight: 'Right',
   parentColGrade: 'Grade',
   parentColEarned: 'Macaronis earned',

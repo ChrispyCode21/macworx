@@ -1,6 +1,7 @@
 // The iPad's own storage (SPEC §2, §5.4, §6.8): its device key, unused seeds, the results it hasn't sent
 // yet, and the Worker's latest state. Storage can be missing or refuse writes (private mode, quota); the key
 // then reads as "not paired", and a list that can't be read reads as empty.
+import { isMix, type Mix } from '../engine'
 
 const KEY = 'macworx.deviceKey'
 const SEEDS = 'macworx.seeds'
@@ -12,6 +13,8 @@ export interface QueuedResult {
   seed: number
   day: string
   answers: number[]
+  /** The mix she played; absent is the fixed mix (SPEC §6.8). Sent with the result. */
+  mix?: Mix
 }
 
 /** Her numbers as the Worker last returned them (`GET /api/state`, SPEC §8). */
@@ -55,8 +58,14 @@ function write(key: string, value: unknown): void {
 
 const isSeed = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0
 const isQueued = (r: unknown): r is QueuedResult => {
-  const { seed, day, answers } = (r ?? {}) as Partial<QueuedResult>
-  return isSeed(seed) && typeof day === 'string' && Array.isArray(answers) && answers.every(Number.isInteger)
+  const { seed, day, answers, mix } = (r ?? {}) as Partial<QueuedResult>
+  return (
+    isSeed(seed) &&
+    typeof day === 'string' &&
+    Array.isArray(answers) &&
+    answers.every(Number.isInteger) &&
+    (mix === undefined || isMix(mix))
+  )
 }
 /** Keeps the items it can read, so one it can't never takes the rest with it. */
 const readList = <T>(key: string, item: (v: unknown) => v is T): T[] =>

@@ -46,7 +46,9 @@ describe('migration 0007', () => {
       `INSERT INTO results (seed, ${columns}) VALUES (102, 2, 2, 'e', '[5]', 8, 7, 0, NULL, 6, 1, 0, 9, 'u')`,
     )
     const before = await rows('SELECT * FROM results ORDER BY id')
-    const statements = migrationStatements().slice(migrationStatements('0006_reading_passages.sql').length)
+    const statements = migrationStatements('0007_reading_results.sql').slice(
+      migrationStatements('0006_reading_passages.sql').length,
+    )
     await db.batch(statements.map((sql) => db.prepare(sql)))
     expect(await rows('SELECT * FROM results ORDER BY id')).toEqual(
       before.map((row) => ({ ...row, kind: 'math', attempt: null, detail: null })),
@@ -56,7 +58,9 @@ describe('migration 0007', () => {
   })
 
   it("still takes the old Worker's INSERT, as kind math, and keeps one result per seed", async () => {
-    for (const sql of migrationStatements().slice(migrationStatements('0006_reading_passages.sql').length))
+    for (const sql of migrationStatements('0007_reading_results.sql').slice(
+      migrationStatements('0006_reading_passages.sql').length,
+    ))
       await db.prepare(sql).run()
     await oldInsert(200)
     expect(await rows('SELECT kind, attempt, detail FROM results WHERE seed = 200')).toEqual([
@@ -67,7 +71,9 @@ describe('migration 0007', () => {
 
   describe('after the upgrade', () => {
     beforeEach(async () => {
-      for (const sql of migrationStatements().slice(migrationStatements('0006_reading_passages.sql').length))
+      for (const sql of migrationStatements('0007_reading_results.sql').slice(
+        migrationStatements('0006_reading_passages.sql').length,
+      ))
         await db.prepare(sql).run()
       await run("INSERT INTO passages (id, title, minutes, body) VALUES (1, 'A', 1, 'Text.')")
       await run(

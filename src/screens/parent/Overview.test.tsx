@@ -19,6 +19,9 @@ const summary = (over: Partial<Summary> = {}): Summary => ({
 
 const row = (over: Partial<ResultRow> = {}): ResultRow => ({
   id: 1,
+  kind: 'math',
+  title: null,
+  mix: null,
   day: TODAY,
   answered: 20,
   correct: 20,
@@ -87,6 +90,15 @@ describe('Overview', () => {
   it('shows the earned line only when she earned something today', () => {
     expect(render()).not.toContain('earned today')
     expect(render({ summary: summary({ earnedToday: 54 }) })).toContain('54 Macaronis earned today.')
+  })
+
+  it('lists what she practiced in the Results table, after the date', () => {
+    const html = render({
+      results: [row({ id: 1, mix: [{ operation: 'division', level: 'easy' }] }), row({ id: 2 })],
+    })
+    expect(html).toMatch(/<th[^>]*>Date<\/th><th[^>]*>Practice<\/th>/)
+    expect(html).toContain('<td>Division, easy</td>')
+    expect(html).toContain('<td>Mixed</td>')
   })
 
   it('O8: lists the assignments she finished today, or says there are none', () => {

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { Device, ResultRow } from './api'
-import { connectedDevices, lastSyncedLine, OVERVIEW_LINKS, todaysAssignments } from './overview'
+import {
+  connectedDevices,
+  lastSyncedLine,
+  mixWords,
+  OVERVIEW_LINKS,
+  practiceWords,
+  todaysAssignments,
+} from './overview'
 
 // Today is the browser's local 2026-10-17 (SPEC §7.O); timestamps are local times.
 const NOW = new Date(2026, 9, 17, 18, 0)
@@ -8,6 +15,9 @@ const at = (m: number, d: number, h: number, min: number) => new Date(2026, m, d
 
 const result = (over: Partial<ResultRow>): ResultRow => ({
   id: 1,
+  kind: 'math',
+  title: null,
+  mix: null,
   day: '2026-10-17',
   answered: 20,
   correct: 20,
@@ -64,5 +74,21 @@ describe('Overview helpers (SPEC §7.O)', () => {
       devices: 'devices',
       shop: 'shop',
     })
+  })
+})
+
+describe('the Practice column (SPEC §5.3 Results)', () => {
+  it('words a mix in her order, and the fixed mix as Mixed', () => {
+    const mix = [
+      { operation: 'division', level: 'easy' },
+      { operation: 'multiplication', level: 'medium' },
+    ] as const
+    expect(mixWords(mix)).toBe('Division, easy · Multiplication, medium')
+    expect(practiceWords(result({ mix }))).toBe('Division, easy · Multiplication, medium')
+    expect(practiceWords(result({ mix: null }))).toBe('Mixed')
+  })
+
+  it("shows a reading result's title, never Mixed", () => {
+    expect(practiceWords(result({ kind: 'reading', title: 'The Fox' }))).toBe('The Fox')
   })
 })

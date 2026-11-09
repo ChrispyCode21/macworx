@@ -108,6 +108,18 @@ describe('seeds, queue and state', () => {
     expect(getQueue()).toEqual([good])
   })
 
+  it('keeps a queued result with a valid mix, and drops one whose mix is not a mix', () => {
+    globalThis.localStorage = fakeStorage()
+    const base = { seed: 7, day: '2026-10-17', answers: [1] }
+    const withMix = { ...base, mix: [{ operation: 'division', level: 'easy' }] }
+    const repeated = { ...base, seed: 8, mix: [withMix.mix[0], withMix.mix[0]] }
+    localStorage.setItem(
+      'macworx.queue',
+      JSON.stringify([withMix, repeated, { ...base, seed: 9, mix: null }, base]),
+    )
+    expect(getQueue()).toEqual([withMix, base])
+  })
+
   it('works without storage at all', () => {
     expect(() => setSeeds([1])).not.toThrow()
     expect(getSeeds()).toEqual([])

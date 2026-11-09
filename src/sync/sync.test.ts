@@ -28,7 +28,9 @@ const state = { balance: 25, streak: 1, lastDay: '2026-10-17', completed: 1, lat
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status })
 const result = (seed: number) => ({ seed, day: '2026-10-17', answers: [1, 2, 3] })
 
-type Handler = (body: { seed?: number } | undefined) => Response | Promise<Response> | 'offline'
+type Handler = (
+  body: { seed?: number; mix?: unknown } | undefined,
+) => Response | Promise<Response> | 'offline'
 let calls: string[]
 let routes: Record<string, Handler>
 
@@ -159,6 +161,7 @@ describe('sync', () => {
 
   it.each([
     [400, 'bad_result'],
+    [400, 'bad_mix'],
     [404, 'unknown_seed'],
   ])('drops a result refused with %i %s and carries on', async (status, code) => {
     queueResult(result(1))
@@ -170,6 +173,27 @@ describe('sync', () => {
     expect(await sync.sync()).toBe('done')
     expect(calls.slice(0, 2)).toEqual(['POST /api/results 1', 'POST /api/results 2'])
     expect(getQueue()).toEqual([])
+  })
+
+  it('queues the mix she played and sends it with the result; no mix is sent as none', async () => {
+    const mix = [{ operation: 'division', level: 'easy' }] as const
+    const sent: unknown[] = []
+    setSeeds([1, 2])
+    worker([], {
+      'POST /api/results': (b) => {
+        sent.push(b)
+        return json(201, { result: {}, state })
+      },
+    })
+    expect(sync.takeSeed()).toBe(1)
+    sync.endSeed(1, [5], new Date(2026, 9, 17), mix)
+    expect(sync.takeSeed()).toBe(2)
+    sync.endSeed(2, [6], new Date(2026, 9, 17))
+    await vi.waitFor(() => expect(getQueue()).toEqual([]))
+    expect(sent).toEqual([
+      { seed: 1, day: '2026-10-17', answers: [5], mix },
+      { seed: 2, day: '2026-10-17', answers: [6] },
+    ])
   })
 
   it('forgets the key and everything stored for it on a 401', async () => {

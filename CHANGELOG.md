@@ -6,6 +6,10 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ## [Unreleased]
 
+### Added
+
+- **Results show what she practiced (parents):** the Results list has a Practice column. A math result reads the problems she picked, in her order ("Multiplication, medium · Division, easy"); work from before she could pick reads "Mixed"; a reading result shows its passage. Nothing changes on her iPad yet.
+
 ### Fixed
 
 - **Spelling and Reading fit smaller landscape iPads without scrolling (children):** on an iPad mini, a 10.2-inch iPad or an 11-inch iPad held sideways, the choices are a little shorter (56 high, from 78), the play button is a little smaller (96, from 112) the listen parts sit a little closer and the panels have a little less padding, so the whole screen stays in view, also after Check. On a bigger iPad they look as they did. Held upright, these two still scroll.

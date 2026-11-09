@@ -581,6 +581,7 @@ describe('parent API', () => {
         id: 2,
         kind: 'math',
         title: null,
+        mix: null,
         day: '2026-10-17',
         answered: 8,
         correct: 7,
@@ -931,6 +932,51 @@ describe('parent API', () => {
         (await t.call('GET', '/api/parent/results/99', { key: null, accessToken: await accessToken() }))
           .status,
       ).toBe(404)
+    })
+
+    it('D13: a result with a mix opens with its mix and the same problems every time; division shows dividend then divisor', async () => {
+      const mix = [
+        { operation: 'division', level: 'easy' },
+        { operation: 'addition', level: 'medium' },
+      ]
+      const { body: seeds } = await t.call('POST', '/api/seeds')
+      const seed = seeds.seeds[0] as number
+      const problems = generateAssignment(seed, mix as never)
+      const sent = await t.call('POST', '/api/results', {
+        body: { seed, day: '2026-10-17', answers: problems.map((p) => p.answer), mix },
+      })
+      expect(sent.status).toBe(201)
+      const open = async (path: string) =>
+        t.call('GET', path, { key: null, accessToken: await accessToken() })
+      const { body } = await open('/api/parent/results/1')
+      expect(body.result.mix).toEqual(mix)
+      expect(
+        body.result.problems.map((p: { operation: string; a: number; b: number }) => [p.operation, p.a, p.b]),
+      ).toEqual(problems.map((p) => [p.operation, p.a, p.b]))
+      const division = body.result.problems.find((p: { operation: string }) => p.operation === 'division')
+      // The dividend comes first, so the right answer is the first number over the second.
+      expect(division.a / division.b).toBe(division.rightAnswer)
+      expect(division.a).toBeGreaterThanOrEqual(division.b)
+      expect((await open('/api/parent/results/1')).body).toEqual(body)
+      const list = (await open('/api/parent/results')).body.results
+      expect(list[0]).toMatchObject({ kind: 'math', mix })
+    })
+
+    it('D13: a result with no mix reads as the fixed mix, in the list and when opened', async () => {
+      await finished15()
+      const open = async (path: string) =>
+        t.call('GET', path, { key: null, accessToken: await accessToken() })
+      expect((await open('/api/parent/results/1')).body.result.mix).toBeNull()
+      expect((await open('/api/parent/results')).body.results[0].mix).toBeNull()
+    })
+
+    it('a stored mix that is not a mix is a 500, never read as the fixed mix', async () => {
+      await finished15()
+      await t.db.prepare("UPDATE results SET mix = '[1]'").run()
+      const open = async (path: string) =>
+        t.call('GET', path, { key: null, accessToken: await accessToken() })
+      expect((await open('/api/parent/results/1')).status).toBe(500)
+      expect((await open('/api/parent/results')).status).toBe(500)
     })
 
     it('D13: results the Worker recorded itself, left early and finished, open', async () => {
