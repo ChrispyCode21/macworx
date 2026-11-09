@@ -50,11 +50,10 @@ describe('Home (SPEC §5.1 step 1)', () => {
     expect(html).not.toContain('Current streak')
   })
 
-  it('shows the Wi-Fi line on Math only when there are no seeds', () => {
-    expect(render()).toContain('20 problems. Take your time.')
-    const html = render({ noSeeds: true })
-    expect(html).toContain('Connect to Wi-Fi to get more problems!')
-    expect(html).not.toContain('20 problems. Take your time.')
+  it('shows Math with its hint and no Wi-Fi line (that line lives on the mix screen)', () => {
+    const html = render()
+    expect(html).toContain('20 problems. Take your time.')
+    expect(html).not.toContain('Connect to Wi-Fi')
   })
 
   it('shows the two Shop controls but they do nothing yet', () => {

@@ -16,6 +16,7 @@ import type { ComponentProps } from 'react'
  * - play: the round Play button
  * - support: a quiet text button with an icon
  * - choice: one answer in a radio group
+ * The mix screen's mix-cell: one problem to pick (SPEC §5.1 step 2).
  * Home's variants (SPEC §5.1): home-start (a subject card's Start), home-nav (a top bar link), home-link (a text link
  * with an arrow)
  */
@@ -36,6 +37,7 @@ export type ButtonVariant =
   | 'home-start'
   | 'home-nav'
   | 'home-link'
+  | 'mix-cell'
 
 interface Props extends Omit<ComponentProps<'button'>, 'type' | 'className'> {
   variant?: ButtonVariant
