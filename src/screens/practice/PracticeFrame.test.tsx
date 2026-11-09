@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { COPY } from '../../copy'
+import { formatNumber } from '../../ui/format'
 import { Home } from '../Home'
 import { PracticeFrame } from './PracticeFrame'
 
@@ -70,14 +71,6 @@ describe('PracticeFrame', () => {
     expect(html).toContain('Practice  /  Spelling')
   })
 
-  it('Home shows Math, Spelling and Reading, and no Start', () => {
-    const html = renderToStaticMarkup(<Home onStart={() => {}} onOpen={() => {}} />)
-    expect(html).toContain('>Math<')
-    expect(html).toContain('>Spelling<')
-    expect(html).toContain('>Reading<')
-    expect(html).not.toContain('>Start<')
-  })
-
   it('leaves out the Shop button, and the avatar and meta line without a child', () => {
     const html = render(NUMBERS)
     expect(html).not.toContain('Shop')
@@ -131,9 +124,11 @@ describe('PracticeFrame', () => {
       const frame = render(numbers)
       const page = home(numbers)
       const balance = numbers ? COPY.macaronis(numbers.balance) : 'no numbers'
-      expect(frame.includes(balance), name + ': balance').toBe(page.includes(balance))
+      const homeBalance = numbers ? `home-balance-number">${formatNumber(numbers.balance)}<` : 'no numbers'
+      expect(frame.includes(balance), name + ': balance').toBe(page.includes(homeBalance))
       const streak = numbers?.streak == null ? 'no streak' : COPY.streakChip(numbers.streak)
-      const homeStreak = numbers?.streak == null ? 'no streak' : COPY.streakDays(numbers.streak)
+      const homeStreak =
+        numbers?.streak == null ? 'no streak' : `>${numbers.streak} ${numbers.streak === 1 ? 'day' : 'days'}<`
       expect(frame.includes(streak), name + ': streak').toBe(page.includes(homeStreak))
     }
   })

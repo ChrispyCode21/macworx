@@ -30,7 +30,7 @@ test('pairs the installed app with a code, and the button goes away', async ({ p
   await expect(page.getByRole('heading', { name: 'This device is paired!' })).toBeVisible()
   expect(sent).toEqual({ code: '012345' })
   await page.getByRole('button', { name: 'Done' }).click()
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Pair this device' })).toHaveCount(0)
 })
 
@@ -68,12 +68,12 @@ test('Pair stays off until all six digits are in', async ({ page }) => {
   await typeCode(page, '12345')
   await expect(page.getByRole('button', { name: 'Pair', exact: true })).toBeDisabled()
   await page.getByRole('button', { name: 'Back' }).click()
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
 })
 
 test('a Safari tab never offers pairing', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Pair this device' })).toHaveCount(0)
 })
 
@@ -94,7 +94,7 @@ test('a key that still works keeps the button hidden', async ({ page }) => {
   await page.route('/api/state', (route) => route.fulfill({ status: 200, json: {} }))
   await page.goto('/')
   expect((await checked).headers().authorization).toBe('Bearer paired-key-0123456789')
-  await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start Math', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Pair this device' })).toHaveCount(0)
 })
 
@@ -118,7 +118,7 @@ test('a paired device with no seeds and no connection asks for Wi-Fi', async ({ 
   await page.addInitScript(() => localStorage.setItem('macworx.deviceKey', 'paired-key-0123456789'))
   await page.route('/api/*', (route) => route.abort('internetdisconnected'))
   await page.goto('/')
-  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await page.getByRole('button', { name: 'Start Math', exact: true }).click()
   await expect(page.getByText('Connect to Wi-Fi to get more problems!')).toBeVisible()
 })
 
