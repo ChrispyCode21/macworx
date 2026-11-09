@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { addDays, generateAssignment } from '../src/engine'
+import { fastClock, skipReadyDelay } from './readyDelay'
 
 // Her numbers on Home and the streak bonus on the result (SPEC §5.1, §6.8). The Worker is never reachable
 // here (every /api call answers 503), so what shows is the stored state plus the results not yet sent.
@@ -42,12 +43,14 @@ async function finishRight(page: Page, lastButton = 'See how I did') {
     ])
     const [x, y] = [Number(a), Number(b)]
     const value = op === 'addition' ? x + y : op === 'subtraction' ? x - y : x * y
+    await skipReadyDelay(page)
     await expect(page.locator('.pad[data-ready]')).toBeVisible()
     const digits = op === 'multiplication' ? [...String(value)] : [...String(value)].reverse()
     for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
     await expect(problem).toHaveAttribute('data-shown', String(value))
     await page.getByRole('button', { name: 'Check' }).click()
     // Next ignores taps for a moment after Check.
+    await skipReadyDelay(page)
     await expect(page.locator('.practice-buttons button[data-ready]')).toBeVisible()
     await page.getByRole('button', { name: n === 20 ? lastButton : 'Next' }).click()
   }
@@ -109,6 +112,7 @@ const PORTRAIT = { tag: '@portrait' }
 // with See how I did).
 test('a paired iPad that has never synced shows no numbers and no streak bonus', FULL, async ({ page }) => {
   test.setTimeout(90_000)
+  await fastClock(page)
   await openApp(page, true, { 'macworx.seeds': [21] })
   await expect(page.getByRole('button', { name: 'Math', exact: true })).toBeVisible()
   await expect(page.locator('.home-numbers')).toHaveCount(0)
@@ -124,6 +128,7 @@ test('a paired iPad that has never synced shows no numbers and no streak bonus',
 // landscape layout of its own, so the upright 820 is the narrower of the two.
 test('the streak bonus shows on the first assignment of the day', PORTRAIT, async ({ page }) => {
   test.setTimeout(90_000)
+  await fastClock(page)
   await openApp(page, true, { 'macworx.state': state(), 'macworx.seeds': [31] })
   await page.getByRole('button', { name: 'Math', exact: true }).click()
   await finishRight(page)
@@ -136,6 +141,7 @@ test('the second assignment of the day gets no streak bonus', FULL, async ({ pag
   test.setTimeout(90_000)
   // The first of the day is done and not yet sent: 28 Macaronis, as in the test above.
   const answers = generateAssignment(31).map((p) => p.answer)
+  await fastClock(page)
   await openApp(page, true, {
     'macworx.state': state(),
     'macworx.queue': [{ seed: 31, day: today(), answers }],
