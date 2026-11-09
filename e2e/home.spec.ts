@@ -229,6 +229,79 @@ test('in landscape the whole practice screen fits the viewport height', async ({
   expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight)
 })
 
+// Tablets other than the one the layout was drawn on (#201): the Math screen shrinks its number pad to fit and the
+// page does not scroll. The keys are 72 in the frame she was drawn on and wherever a landscape row has room, and the
+// response stays inside the pad's panel. (In portrait the two stacked panels share the spare height, so the keys
+// there are only held to their 48 to 72 range.)
+test('the Math screen fits tablets from an iPad mini to an iPad Pro, in both orientations', async ({
+  page,
+}) => {
+  await openApp(page, false, { 'macworx.seeds': [31] })
+  await page.getByRole('button', { name: 'Math', exact: true }).click()
+  await expect(page.locator('.pad[data-ready]')).toBeVisible()
+  // [width, height, whether the keys are the full 72: true, shorter: false, or only within their range: null]
+  const sizes: [number, number, boolean | null][] = [
+    [744, 1133, null],
+    [768, 1024, null],
+    [810, 1080, null],
+    [834, 1194, true],
+    [1133, 744, true],
+    [1024, 768, true],
+    [1080, 810, true],
+    [1194, 834, true],
+    [1366, 1024, true],
+    // Short enough that the keys give some height back.
+    [1024, 706, false],
+  ]
+  const measure = () =>
+    page.evaluate(() => ({
+      overflow: document.documentElement.scrollHeight - innerHeight,
+      key: document.querySelector('.button-key')?.getBoundingClientRect().height ?? 0,
+      inside:
+        document.querySelector('.practice-panel-warm')!.getBoundingClientRect().bottom -
+        parseFloat(getComputedStyle(document.querySelector('.practice-panel-warm')!).paddingBottom) -
+        document.querySelector('.pad, .response')!.getBoundingClientRect().bottom,
+    }))
+  for (const [width, height, room] of sizes) {
+    await page.setViewportSize({ width, height })
+    const m = await measure()
+    const at = `${width}x${height}`
+    // One pixel of rounding is allowed.
+    expect(m.overflow, `${at} scrolls`).toBeLessThanOrEqual(1)
+    expect(m.key, `${at} keys`).toBeGreaterThanOrEqual(48 - 1)
+    expect(m.key, `${at} keys`).toBeLessThanOrEqual(72 + 1)
+    if (room === true) expect(m.key, `${at} keys have room for 72`).toBeGreaterThanOrEqual(71)
+    if (room === false) expect(m.key, `${at} keys shrink`).toBeLessThan(71)
+    expect(m.inside, `${at} pad leaves its panel`).toBeGreaterThanOrEqual(-1)
+  }
+
+  // After Check, the response fits the same panel at the smallest sizes.
+  const problem = page.locator('.stacked')
+  const [a, b, op] = await Promise.all(
+    ['data-a', 'data-b', 'data-operation'].map((name) => problem.getAttribute(name)),
+  )
+  const right =
+    op === 'addition'
+      ? Number(a) + Number(b)
+      : op === 'subtraction'
+        ? Number(a) - Number(b)
+        : Number(a) * Number(b)
+  const digits = op === 'multiplication' ? [...String(right)] : [...String(right)].reverse()
+  for (const digit of digits) await page.getByRole('button', { name: digit, exact: true }).click()
+  await page.getByRole('button', { name: 'Check' }).click()
+  await expect(page.locator('.response-lead')).toBeVisible()
+  for (const [width, height] of [
+    [744, 1133],
+    [1133, 744],
+    [1024, 706],
+  ]) {
+    await page.setViewportSize({ width, height })
+    const m = await measure()
+    expect(m.overflow, `${width}x${height} scrolls after Check`).toBeLessThanOrEqual(1)
+    expect(m.inside, `${width}x${height} response leaves its panel`).toBeGreaterThanOrEqual(-1)
+  }
+})
+
 test('in landscape the Reading passage and questions fit the viewport height, the passage scrolling inside its panel', async ({
   page,
 }) => {
