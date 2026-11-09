@@ -40,7 +40,11 @@ macworx gives her:
 
 ### 5.1 Do a math assignment (child)
 
-1. She opens the app and sees home: completed assignments, her Macaroni balance, her streak, and the grade of her latest assignment. Each includes the assignments the Worker hasn't re-scored yet (§6.8). Her streak is left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, Home shows none of these. Home has three buttons: Math starts a math assignment (below), Reading starts a reading assignment (§5.6) and Spelling opens its sample (§5.5). Every kind of assignment counts the same: none takes precedence over another in her totals, streak or grade.
+1. She opens the app and sees home. Its top bar has the macworx mark and name on the left and three links on the right: Home (the current page), Shop and Parents (with a lock icon). Under it are the heading "Ready for a little progress?", the line "Choose a subject and make it your own. One small step at a time.", the two columns below, and a footer line: "Take your time. You've got this." on the left and, with a lock icon, "Grown-up settings live in Parents." on the right.
+   - **Subjects:** the column "What would you like to practice?", with "3 subjects" at its right, has one card for each. Each card has an icon, its title, one line and a Start button with an arrow. Math ("20 problems. Take your time.") starts a math assignment (below), Spelling ("Listen to a word, then choose its spelling.") opens its sample (§5.5) and Reading ("Read a passage, then answer a few questions.") starts a reading assignment (§5.6). When a paired iPad has no seeds and no connection, Math's line reads "Connect to Wi-Fi to get more problems!" (§6.8). Every kind of assignment counts the same: none takes precedence over another in her totals, streak or grade.
+   - **Your progress:** the column "Your progress" has a card with her Macaroni balance ("{n} available to spend") and, below a divider, her streak ("{n} day" or "{n} days", with "Current streak"). Both include the assignments the Worker hasn't re-scored yet (§6.8). The streak and its divider are left out when her last counted day isn't today, yesterday or tomorrow (§6.5), and when she has no streak yet. Until a paired iPad has the Worker's numbers once, and on an iPad that isn't paired, the card shows no number and no streak, and says "Your Macaronis will show up here." (never a balance of 0, §6.8). Home does not show her completed assignments or the grade of her latest assignment; her results do (§5.1 step 5, §5.3).
+   - **Shop card:** under the progress card, a card says "A little effort. A little reward." and "Put your Macaronis toward something you love." with a link "Explore the shop". It and the top bar's Shop link open the reward shop (§5.2) once its screen exists; until then they show and do nothing.
+   - **Layout:** at 768 px wide and up (an iPad in either orientation) the subjects are the left column and her progress and the shop card the right column. Below 768 px (a phone) there is one column: the progress card, the shop card, then the subjects. Home never scrolls sideways.
 2. She starts an assignment: 20 math problems (§6.2). The screen has a top bar with her Macaroni balance and her streak, shown and hidden by the same rules as on home, then a heading with the "Practice / Math" crumb and "Problem n of 20" with a progress bar, then two panels, the problem in its own panel under an "{Operation} practice" label (for example "Addition practice") with a one-line instruction, and the number pad in a panel headed "Tap to enter your answer", then a row of actions with a note on the left and the buttons on the right.
 3. Each problem is stacked like on paper: the numbers lined up by place value, one digit per column, the operator beside the second number, and a line. Below the line is one answer box per column: one more column than the numbers have for addition (room for a carry), as many as the numbers have for subtraction, and two for multiplication. No thousands separators appear in the stacked problem, so the columns stay lined up.
 4. She enters her answer on an on-screen number pad (digits 0–9 and a delete key) and submits it with the Check button in the actions row at the bottom right of the screen. The iPad keyboard never opens. After Check, her response replaces the number pad in that same panel. She answers each problem once.
@@ -58,7 +62,7 @@ macworx gives her:
 
 ### 5.2 Buy a reward (child)
 
-1. Home links to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7). The practice screens' top bar also has a Shop button. During a math or reading assignment it doesn't leave: it shows "Finish this assignment first, then visit the Shop." On the Spelling and Reading samples (§5.5) it opens the shop.
+1. Home's top bar and its shop card (§5.1 step 1) link to the reward shop: each reward has an icon, a name and a price in Macaronis (§6.7). The practice screens' top bar also has a Shop button. During a math or reading assignment it doesn't leave: it shows "Finish this assignment first, then visit the Shop." On the Spelling and Reading samples (§5.5) it opens the shop.
 2. She can buy any reward whose price is at most her balance, but only while the iPad can reach the Worker. The Worker checks the price against its own balance, deducts it and records the purchase, so the Worker's balance is always the one spent.
 3. A parent sees the purchase on the portal's Shop screen (§5.3) and grants the reward in real life.
 
@@ -66,7 +70,7 @@ macworx gives her:
 
 The parent portal is admin mode: it shows everything and can change anything, for each child. It is a multi-screen app on the same origin, for a parent's phone, tablet or computer, in the app's colors and the system font but not her playful look. It never frames a result as a failure (§4).
 
-**Getting there:** Home shows a visible **Parents** link. A parent never has to type an address. The link is a full page load, not a route inside her app, so Cloudflare Access can ask for a sign-in (§6.9). The portal works on a phone.
+**Getting there:** Home's top bar shows a visible **Parents** link with a lock icon, and its footer says grown-up settings live in Parents. A parent never has to type an address. The link is a full page load, not a route inside her app, so Cloudflare Access can ask for a sign-in (§6.9). The portal works on a phone.
 
 **Screens and routes:** five screens, each at its own address. `/parent` and any unknown `/parent/…` address show Overview.
 
@@ -228,7 +232,7 @@ Each finished assignment gets one grade, from its accuracy:
 | Good | 80% or more |
 | Improving | Below 80% |
 
-Home shows the grade of her latest assignment. Grade cutoffs live in the same config module as the payout values.
+Her result shows the grade (§5.1 step 5). Grade cutoffs live in the same config module as the payout values.
 
 ### 6.7 Rewards
 
@@ -253,7 +257,7 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 - **Completed assignments** counts finished assignments only, math and reading.
 - **On the iPad:** a paired iPad keeps its unused seeds, the results it hasn't sent yet, and the Worker's latest state in its own storage, and asks the browser to keep that storage. Each assignment uses the next stored seed, and its result is dated with the iPad's own day. Results go to the Worker one at a time, oldest first, whenever the app opens, Home shows, a result is saved, or the connection comes back; the Worker's numbers replace the iPad's. Home shows the Worker's latest numbers with each result not yet sent applied on top, oldest first, using the engine. Every result adds what it pays to the balance. A finished result also adds 1 to completed assignments, moves the streak (§6.5; a result dated before her last counted day counts as that day) and sets the latest grade. A result she left early adds only its base. Each result is applied with the day the iPad dated it. The Worker's numbers replace these after each sync. A result the Worker refuses as not valid is dropped, so it can't hold up the rest. When the iPad tops up its seeds, it leaves out seeds in its unsent results and the one she's working on. A stored seed she leaves without answering anything goes to the back of the list.
 - **No seeds:** when a paired iPad has no seeds left and can't reach the Worker, Start shows "Connect to Wi-Fi to get more problems!"
-- **Before the iPad has numbers:** a paired iPad that hasn't yet received the Worker's state, and an iPad that isn't paired, show no numbers on Home (not a balance of 0). A finished result leaves out the streak bonus: its total is base plus accuracy bonus, with the minimum applied.
+- **Before the iPad has numbers:** a paired iPad that hasn't yet received the Worker's state, and an iPad that isn't paired, show no numbers in Home's progress card (not a balance of 0). A finished result leaves out the streak bonus: its total is base plus accuracy bonus, with the minimum applied.
 - **Not paired:** an iPad without a device key still does math assignments, each from a random seed, and saves nothing. Its Reading is the sample (§5.5).
 
 ### 6.9 Parent access and pairing
@@ -465,7 +469,7 @@ Unless stated, her state is balance 0, streak 0, no last counted day, the passag
 | L8 | She starts passage 1, leaves before Check answers, and starts Reading again | Nothing recorded; her next passage is **1** again |
 | L9 | A reading result sent twice with the same attempt | The recorded result comes back; balance and completed assignments count it **once** |
 | L10 | Math finished earlier today (streak 3, last counted day today); a reading result, 3 of 3 on a 3-question passage | Paid 20 + 4 = **24**; streak stays **3**; completed **+1** |
-| L11 | Her latest assignment was a math "Excellent"; she then finishes a reading assignment with 2 of 3 | Home's grade is **Improving**; completed **+1** |
+| L11 | Her latest assignment was a math "Excellent"; she then finishes a reading assignment with 2 of 3 | The latest grade is **Improving**; completed **+1** |
 | L12 | The Worker hands out any passage | No field of the response says which choice is right |
 | L13 | A start or a result with no device key, or an invalid one | Refused (401); nothing recorded |
 | L14 | A result whose choices miss a question, or name a choice of another question | Refused (400); nothing recorded; the attempt stays usable |
