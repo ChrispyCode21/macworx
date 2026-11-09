@@ -9,6 +9,12 @@ describe('scoring (SPEC §6.3)', () => {
     expect(checkAnswer(problem, 54)).toBe(false)
   })
 
+  it('M12: 144 ÷ 12 answered 12 is correct; answered 11 is not', () => {
+    const problem = makeProblem('division', 144, 12)
+    expect(checkAnswer(problem, 12)).toBe(true)
+    expect(checkAnswer(problem, 11)).toBe(false)
+  })
+
   it('only whole numbers can be correct', () => {
     const problem = makeProblem('addition', 100, 200)
     expect(checkAnswer(problem, 300.5)).toBe(false)

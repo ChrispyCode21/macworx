@@ -6,11 +6,13 @@ const MATH_EYEBROW: Record<Operation, string> = {
   addition: 'Addition practice',
   subtraction: 'Subtraction practice',
   multiplication: 'Multiplication practice',
+  division: 'Division practice',
 }
 const MATH_INSTRUCTION: Record<Operation, string> = {
   addition: 'Add the numbers.',
   subtraction: 'Subtract the bottom number from the top number.',
   multiplication: 'Multiply the numbers.',
+  division: 'Divide the numbers.',
 }
 
 const macaronis = (n: number) => `${formatNumber(n)} ${n === 1 ? 'Macaroni' : 'Macaronis'}`

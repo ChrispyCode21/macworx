@@ -576,7 +576,7 @@ Notes: `info`, `coins`, `lock-keyhole`, `pencil`, `unlink` and `sun` were export
 
 ## Home (child app)
 
-From the owner's Figma frame "Home" (macworx-parent-portal), SPEC §5.1 step 1. Colors are the practice screens' (`--l-*`), type uses the `--text-N` tokens, px only.
+From the owner's Figma frame "Home" (macworx-parent-portal), SPEC §5.1 step 1. The frame is `docs/design/home.png`. Colors are the practice screens' (`--l-*`), type uses the `--text-N` tokens, px only.
 
 - **Top bar:** white, 1 px `--l-line` bottom border, padding 8 32, wraps on a phone. Left: sprout icon and "macworx" (28). Right: Home (the current page: `--l-chip` pill, weight 600, `aria-current="page"`), Shop, and Parents with a lock icon (a plain `<a>` to `/parent/overview`). Items 44 high, radius 12, text 18. Shop is an `aria-disabled` button with no handler until the §5.2 screen exists.
 - **Page:** `--l-bg`, padding 32, gap 28. Heading 48 (40 below 768), subline 18 in `--l-muted`.
