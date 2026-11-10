@@ -10,7 +10,7 @@ export function HomeBar({ onHome }: { onHome?: () => void }) {
   return (
     <header className="home-bar">
       <div className="home-brand">
-        <SproutIcon />
+        <SproutIcon size={26} />
         <span>{COPY.title}</span>
       </div>
       <nav className="home-nav" aria-label={COPY.homeNavLabel}>

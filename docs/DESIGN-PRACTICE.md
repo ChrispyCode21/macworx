@@ -110,6 +110,7 @@ Sizes are the shared `--text-N` custom properties (docs/DESIGN.md §4); a litera
 | crumb | 14 | 400 | normal | 0 | as is | `--l-link` | "Practice  /  Math" |
 | crumb-meta | 14 | 400 | normal | 0 | as is | `--l-muted` | "{name} · {grade}" |
 | mix-title | 36 | 400 | 1.4 | 0 | as is | `--l-text` | the mix screen's heading |
+| home-section | 20 | 500 | 1.4 | 0 | as is | `--l-text` | Home's section headings (docs/DESIGN.md "Home") |
 | task-title | 30 | 400 | normal | −0.6 | as is | `--l-text` | screen title |
 | progress | 14 | 500 | normal | 0 | as is | `--l-link` | "Problem 4 of 20" |
 | eyebrow | 12 | 600 | normal | 1 (0.7 on question cards) | upper | `--l-link` | panel labels |
@@ -144,18 +145,18 @@ The green and beige Figma palette becomes the macworx mustards. The tokens sit u
 
 | Role | Figma hex (reference only) | Token | macworx value |
 |---|---|---|---|
-| Page background | `#f6f5f0` | `--l-bg` | `var(--paper)` (`#fff6dc`) |
+| Page background | `#f6f5f0` | `--l-bg` | `var(--paper)` (`#fff7dc`) |
 | Surface (top bar, panels, keys, choices) | `#ffffff` | `--l-surface` | `#ffffff` |
 | Inset (listen panel) | `#fafaf7` | `--l-inset` | `#fffbee` (new) |
-| Divider and border | `#e0e5dd` | `--l-line` | `#efdba5` |
-| Primary fill (action button, play button, chosen marker) | `#275d48` | `--l-primary` | `var(--accent)` (`#f2a516`) |
+| Divider and border | `#e0e5dd` | `--l-line` | `#efdfb4` |
+| Primary fill (action button, play button, chosen marker) | `#275d48` | `--l-primary` | `var(--accent)` (`#efa900`) |
 | On primary | `#ffffff` | `--l-primary-ink` | `var(--ink)` |
-| Link ink (links, status, eyebrows, progress fill, chosen border, icons on light) | `#275d48` as text | `--l-link` | `var(--answer-ink)` (`#8a5a00`) |
-| Soft fill (status chips, chosen choice, reading companion) | `#e7eee6` | `--l-chip` | `var(--soft)` (`#fde9b8`) |
+| Link ink (links, status, eyebrows, progress fill, chosen border, icons on light) | `#275d48` as text | `--l-link` | `var(--answer-ink)` (`#946700`) |
+| Soft fill (status chips, chosen choice, reading companion) | `#e7eee6` | `--l-chip` | `var(--soft)` (`#fff0bd`) |
 | Warm (number pad panel) | `#efe7d8` | `--l-warm` | `#f6dc9e` |
 | Avatar | `#eac9ac` | `--l-avatar` | `#f2c46b` |
 | Text | `#243c32` | `--l-text` | `var(--ink)` |
-| Muted text | `#748078` | `--l-muted` | `#6b5420` |
+| Muted text | `#748078` | `--l-muted` | `#796638` |
 | Marker (not chosen) | `#f6f5f0` | (uses `--l-bg`) | |
 | After Check: right | not in Figma | (existing) | `--right-soft` fill, `--right-edge` border |
 | After Check: not right | not in Figma | (existing) | `--not-right-soft` fill, `--not-right-edge` border |
@@ -165,7 +166,7 @@ The green and beige Figma palette becomes the macworx mustards. The tokens sit u
   --l-bg: var(--paper);
   --l-surface: #ffffff;
   --l-inset: #fffbee;
-  --l-line: #efdba5;
+  --l-line: #efdfb4;
   --l-primary: var(--accent);
   --l-primary-ink: var(--ink);
   --l-link: var(--answer-ink);
@@ -173,7 +174,7 @@ The green and beige Figma palette becomes the macworx mustards. The tokens sit u
   --l-warm: #f6dc9e;
   --l-avatar: #f2c46b;
   --l-text: var(--ink);
-  --l-muted: #6b5420;
+  --l-muted: #796638;
 }
 ```
 
@@ -555,7 +556,7 @@ The frames show a top bar with Home, Shop and Parents (the same bar as the Home 
 
 ### 17.1 Layout
 
-Built as `src/screens/Mix.tsx` and the `.mix` block of `src/index.css` (the spacing, radius and type tokens, px only), from the Figma frame (1194 x 834). It is a `.home` page: Home's `--l-*` tokens and `HomeBar` (its Home link is a button back to Home), with the sizes below on `.mix`. Colors without a Home token are `--l-pick` (picked cells, the earn chip), `--l-summary` (the side panel), `--l-rule` (its divider) and `--l-inset` (dimmed cells), defined on `.mix`.
+Built as `src/screens/Mix.tsx` and the `.mix` block of `src/index.css` (the spacing, radius and type tokens, px only), from the Figma frame (1194 x 834). It is a `.home` page: Home's `--l-*` tokens (the frame's colors, docs/DESIGN.md "Home"; not the practice screens') and `HomeBar` (its Home link is a button back to Home), with the sizes below on `.mix`. Colors without a Home token are `--l-pick` (picked cells, the earn chip), `--l-summary` (the side panel), `--l-rule` (its divider) and `--l-inset` (dimmed cells), defined on `.mix`.
 
 - **Bar:** 80 high, padding-inline 40; brand 26 / 500; links 15 / 500, padding 10 20, gap 12 (Parents `--l-muted`).
 - **Workspace** (padding 24 40, gap 16), in this order:

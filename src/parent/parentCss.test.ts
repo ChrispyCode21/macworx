@@ -9,22 +9,22 @@ const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8')
 
 // docs/DESIGN.md §5.2: the parent portal's colour tokens.
 const TOKENS: Record<string, string> = {
-  '--p-bg': '#fff6dc',
+  '--p-bg': 'var(--paper)',
   '--p-surface': '#ffffff',
-  '--p-divider': '#efdba5',
-  '--p-primary': '#f2a516',
-  '--p-primary-ink': '#3b2a05',
+  '--p-divider': 'var(--line)',
+  '--p-primary': 'var(--accent)',
+  '--p-primary-ink': 'var(--accent-ink)',
   '--p-hero-muted': '#5a3f08',
-  '--p-accent-ink': '#8a5a00',
-  '--p-chip': '#fde9b8',
-  '--p-warm': '#f6dc9e',
+  '--p-accent-ink': '#926500',
+  '--p-chip': 'var(--soft)',
+  '--p-warm': 'var(--pick)',
   '--p-avatar': '#f2c46b',
   '--p-warn-soft': '#f6e7cf',
   '--p-warn-ink': '#7a4a00',
   '--p-danger-soft': '#ffe0d6',
   '--p-danger-ink': '#8a3b22',
-  '--p-text': '#3b2a05',
-  '--p-muted': '#6b5420',
+  '--p-text': 'var(--ink)',
+  '--p-muted': 'var(--muted)',
 }
 
 const START = '/* parent portal: start */'

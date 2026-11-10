@@ -8,6 +8,7 @@ import {
   CoinsIcon,
   DeleteIcon,
   FlameIcon,
+  MacaroniIcon,
   PlayIcon,
   ShoppingBagIcon,
   SproutIcon,
@@ -46,5 +47,15 @@ describe('the practice icons', () => {
     const html = renderToStaticMarkup(<CheckIcon size={22} />)
     expect(html).toContain('width="22"')
     expect(html).toContain('viewBox="0 0 17 17"')
+  })
+
+  it('draws the Macaronis mark at the frame size, two noodles in the text color', () => {
+    const html = renderToStaticMarkup(<MacaroniIcon />)
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).toContain('viewBox="0 0 22 20.622"')
+    expect(html).toContain('width="22"')
+    expect(html).toContain('stroke="currentColor"')
+    expect(html.match(/<path/g)).toHaveLength(8)
+    expect(renderToStaticMarkup(<MacaroniIcon size={44} />)).toContain('width="44"')
   })
 })

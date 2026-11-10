@@ -64,11 +64,11 @@ These come from the repo's checks (`scripts/check-conventions.mjs`, CLAUDE.md). 
 | Scale | Values (px) |
 |---|---|
 | Spacing | 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 28, 32 (use the exact value a frame gives; do not round) |
-| Radius | 9 (segment option), 11 (completion tile), 12 (controls, soft panels, chips-in-rows, nav items, tiles), 14 (reward tile), 20 (panels and cards), 100 (pills, avatars) |
+| Radius | 9 (segment option), 10 (buttons and links on Home and the mix screen), 11 (completion tile), 12 (controls, soft panels, chips-in-rows, nav items, tiles), 14 (reward tile), 16 (Home and mix cards), 20 (panels and cards), 100 (pills, avatars) |
 | Borders | 1 px `--p-divider` on panels, cards, inputs, dividers, bottom nav top edge, sidebar right edge. Hero panel: 1 px `--p-primary` |
 | Shadows | none anywhere. Do not add shadows |
 | Stroke | icons 1.7 (in each icon's own viewBox units) |
-| Tokens | The two scales above are CSS custom properties in `:root` (`src/index.css`), in px, named for the scale: radius `--radius-segment` (9), `--radius-completion` (11), `--radius-control` (12), `--radius-reward` (14), `--radius-panel` (20), `--radius-pill` (100); spacing `--space-2` … `--space-32`, plus `--space-40` and `--space-48`, which the practice layout uses (DESIGN-PRACTICE.md §3). Use a token, not a literal value; `src/cssTokens.test.ts` fails on a literal radius from the scale and on a literal padding, margin or gap from the scale anywhere in the stylesheet (inside `calc()` and `env()` safe-area expressions values stay literal; beside them, and inside `max()`, they use tokens). |
+| Tokens | The two scales above are CSS custom properties in `:root` (`src/index.css`), in px, named for the scale: radius `--radius-segment` (9), `--radius-button` (10), `--radius-completion` (11), `--radius-control` (12), `--radius-reward` (14), `--radius-card` (16), `--radius-panel` (20), `--radius-pill` (100); spacing `--space-2` … `--space-32`, plus `--space-40` and `--space-48`, which the practice layout uses (DESIGN-PRACTICE.md §3). Use a token, not a literal value; `src/cssTokens.test.ts` fails on a literal radius from the scale and on a literal padding, margin or gap from the scale anywhere in the stylesheet (inside `calc()` and `env()` safe-area expressions values stay literal; beside them, and inside `max()`, they use tokens). |
 | Tap targets | buttons 48 high; icon buttons 44x44 (wide) / glyph only with 44 min hit area (phone); nav items 52 high |
 
 ## 4. Type scale
@@ -126,26 +126,28 @@ Home, the result and Pair screens (the child base styles, not in Figma) use the 
 
 Figma's palette (greens, beige) is replaced by macworx mustards, yellows and whites. Every Figma role keeps its own token even where two values are close.
 
+The palette is the Figma file's own (frames "Home · macworx · iPad" and the Custom mix frames), set once in `:root`: `--ink` `#3d2f0a`, `--paper` `#fff7dc`, `--accent` `#efa900`, `--soft` `#fff0bd`, `--answer-ink` `#946700`, `--line` `#efdfb4`, `--muted` `#796638`, `--tile` `#fff5d6`, `--pick` `#ffe6a0`, `--rule` `#e3ca83`, and for a disabled control `--disabled` `#f5f1e7`, `--disabled-fill` `#e4ddc5`, `--disabled-ink` `#8b8061`. Home, the mix screen, the practice screens (`--l-*`) and the portal (`--p-*`) all read these; do not write one of these values again as a literal.
+
 ### 5.1 Role table
 
 | Role | Figma hex (reference only) | Token | macworx value | Notes |
 |---|---|---|---|---|
-| Page background | `#f6f5f0` | `--p-bg` | `#fff6dc` (= `--paper`) | also input fill, segment track |
+| Page background | `#f6f5f0` | `--p-bg` | `#fff7dc` (= `--paper`) | also input fill, segment track |
 | Surface | `#ffffff` | `--p-surface` | `#ffffff` | panels, cards, sidebar, bottom nav |
-| Divider and border | `#e0e5dd` | `--p-divider` | `#efdba5` | 1 px lines, panel and input borders |
-| Primary (fill) | `#275d48` | `--p-primary` | `#f2a516` (= `--accent`) | hero panel, primary button, today tile |
-| Primary ink (on primary) | `#ffffff` | `--p-primary-ink` | `#3b2a05` (= `--ink`) | text and icons on primary |
+| Divider and border | `#e0e5dd` | `--p-divider` | `#efdfb4` | 1 px lines, panel and input borders |
+| Primary (fill) | `#275d48` | `--p-primary` | `#efa900` (= `--accent`) | hero panel, primary button, today tile |
+| Primary ink (on primary) | `#ffffff` | `--p-primary-ink` | `#3d2f0a` (= `--ink`) | text and icons on primary |
 | Hero muted text | `#c8dbce` | `--p-hero-muted` | `#5a3f08` | muted text on primary |
-| Accent ink | `#275d48` as text | `--p-accent-ink` | `#8a5a00` (= `--answer-ink`) | links, active nav, values, icons on light |
-| Chip and soft fill | `#e7eee6` | `--p-chip` | `#fde9b8` (= `--soft`) | chips, active nav, soft buttons, completion tile, info safeguard, streak day, segment active |
-| Warm surface | `#efe7d8` | `--p-warm` | `#f6dc9e` | child switcher, reward tile, Access card |
+| Accent ink | `#275d48` as text | `--p-accent-ink` | `#926500` (`--answer-ink` is `#946700`; two steps darker so it stays AA on `--p-chip`) | links, active nav, values, icons on light |
+| Chip and soft fill | `#e7eee6` | `--p-chip` | `#fff0bd` (= `--soft`) | chips, active nav, soft buttons, completion tile, info safeguard, streak day, segment active |
+| Warm surface | `#efe7d8` | `--p-warm` | `#ffe6a0` (= `--pick`) | child switcher, reward tile, Access card |
 | Avatar | `#eac9ac` | `--p-avatar` | `#f2c46b` | initials circle |
 | Warn soft | `#f5eddd` | `--p-warn-soft` | `#f6e7cf` | Offline chip, caution notice |
 | Warn ink | `#916a31` | `--p-warn-ink` | `#7a4a00` | text and icon on warn soft |
 | Danger soft | `#faeee9` | `--p-danger-soft` | `#ffe0d6` (= `--not-right-soft`) | unlink button, Remove reward |
 | Danger ink | `#a14f42` | `--p-danger-ink` | `#8a3b22` | text and icon on danger soft |
-| Text strong | `#243c32` | `--p-text` | `#3b2a05` (= `--ink`) | |
-| Text muted | `#748078` | `--p-muted` | `#6b5420` | |
+| Text strong | `#243c32` | `--p-text` | `#3d2f0a` (= `--ink`) | |
+| Text muted | `#748078` | `--p-muted` | `#796638` | |
 
 No greens, no reds. Danger is coral (an existing macworx token), never bright red.
 
@@ -155,22 +157,22 @@ Add to `src/index.css` next to the other tokens. All values are hex on `--name:`
 
 ```css
 .parent {
-  --p-bg: #fff6dc;
+  --p-bg: #fff7dc;
   --p-surface: #ffffff;
-  --p-divider: #efdba5;
-  --p-primary: #f2a516;
-  --p-primary-ink: #3b2a05;
+  --p-divider: #efdfb4;
+  --p-primary: #efa900;
+  --p-primary-ink: #3d2f0a;
   --p-hero-muted: #5a3f08;
-  --p-accent-ink: #8a5a00;
-  --p-chip: #fde9b8;
-  --p-warm: #f6dc9e;
+  --p-accent-ink: #926500;
+  --p-chip: #fff0bd;
+  --p-warm: var(--pick);
   --p-avatar: #f2c46b;
   --p-warn-soft: #f6e7cf;
   --p-warn-ink: #7a4a00;
   --p-danger-soft: #ffe0d6;
   --p-danger-ink: #8a3b22;
-  --p-text: #3b2a05;
-  --p-muted: #6b5420;
+  --p-text: #3d2f0a;
+  --p-muted: #796638;
 }
 ```
 
@@ -180,28 +182,28 @@ Computed with the relative-luminance formula. Every text/background pair the por
 
 | Text | On | Ratio |
 |---|---|---|
-| `--p-text` | `--p-bg` | 12.81 |
-| `--p-text` | `--p-primary` | 6.69 |
-| `--p-text` | `--p-chip` | 11.53 |
-| `--p-text` | `--p-warm` | 10.30 |
-| `--p-text` | `--p-avatar` | 8.85 |
-| `--p-hero-muted` | `--p-primary` | 4.73 |
-| `--p-accent-ink` | `--p-surface` | 5.93 |
-| `--p-accent-ink` | `--p-bg` | 5.49 |
-| `--p-accent-ink` | `--p-chip` | 4.95 |
-| `--p-muted` | `--p-surface` | 7.21 |
-| `--p-muted` | `--p-bg` | 6.68 |
-| `--p-muted` | `--p-chip` | 6.01 |
-| `--p-muted` | `--p-warm` | 5.37 |
-| `--p-muted` | `--p-warn-soft` | 5.92 |
-| `--p-text` | `--p-surface` | 13.82 |
+| `--p-text` | `--p-bg` | 12.17 |
+| `--p-text` | `--p-primary` | 6.43 |
+| `--p-text` | `--p-chip` | 11.46 |
+| `--p-text` | `--p-warm` | 10.61 |
+| `--p-text` | `--p-avatar` | 8.01 |
+| `--p-hero-muted` | `--p-primary` | 4.81 |
+| `--p-accent-ink` | `--p-surface` | 5.14 |
+| `--p-accent-ink` | `--p-bg` | 4.80 |
+| `--p-accent-ink` | `--p-chip` | 4.52 |
+| `--p-muted` | `--p-surface` | 5.57 |
+| `--p-muted` | `--p-bg` | 5.20 |
+| `--p-muted` | `--p-chip` | 4.89 |
+| `--p-muted` | `--p-warm` | 4.53 |
+| `--p-muted` | `--p-warn-soft` | 4.57 |
+| `--p-text` | `--p-surface` | 13.05 |
 | `--p-warn-ink` | `--p-surface` | 7.48 |
 | `--p-warn-ink` | `--p-warn-soft` | 6.15 |
 | `--p-danger-ink` | `--p-danger-soft` | 6.19 |
-| `--p-accent-ink` | `--p-warm` | 4.42: icons only (3:1 non-text), never text on warm |
-| `--p-muted` | `--p-avatar` | 4.42: not used; avatar text is `--p-text` |
+| `--p-accent-ink` | `--p-warm` | 4.18: icons only (3:1 non-text), never text on warm |
+| `--p-muted` | `--p-avatar` | 3.42: not used; avatar text is `--p-text` |
 
-The builder must re-run the ratios (a ten-line script) if any token value changes. `--p-primary` (`#f2a516`) is 2.07:1 on white: **never use it as text or a thin icon on a light surface**; use `--p-accent-ink`.
+The builder must re-run the ratios (a ten-line script) if any token value changes. `--p-primary` (`#efa900`) is under 2.2:1 on white: **never use it as text or a thin icon on a light surface**; use `--p-accent-ink`.
 
 ## 6. Shared chrome
 
@@ -576,13 +578,15 @@ Notes: `info`, `coins`, `lock-keyhole`, `pencil`, `unlink` and `sun` were export
 
 ## Home (child app)
 
-From the owner's Figma frame "Home" (macworx-parent-portal), SPEC §5.1 step 1. The frame is `docs/design/home.png`. Colors are the practice screens' (`--l-*`), type uses the `--text-N` tokens, px only.
+From the owner's Figma frame "Home · macworx · iPad" (macworx-parent-portal, 1194 x 834), SPEC §5.1 step 1; it is also what the mix screen's bar and tokens follow (docs/DESIGN-PRACTICE.md §17). The frame is `docs/design/home.png`. Type uses the `--text-N` tokens, px only; the sizes below are the frame's and are the same at every width unless a line says otherwise. Weights are 400, 500 and 600 (Figma's Regular, Medium and Semi Bold). Line height is 1.4. Corners are `--radius-card` (16) and `--radius-button` (10).
 
-- **Top bar:** white, 1 px `--l-line` bottom border, padding 8 32, wraps on a phone. Left: sprout icon and "macworx" (28). Right: Home (the current page: `--l-chip` pill, weight 600, `aria-current="page"`), Shop, and Parents with a lock icon (a plain `<a>` to `/parent/overview`). Items 44 high, radius 12, text 18. Shop is an `aria-disabled` button with no handler until the §5.2 screen exists.
-- **Page:** `--l-bg`, padding 32, gap 28. Heading 48 (40 below 768), subline 18 in `--l-muted`.
-- **Layout:** from 768 px wide (an iPad in either orientation) two columns: subjects on the left, a column of 0.4 width (at least 240) on the right with the progress card, then the shop card, gap 40. Below 768 px one column: the progress card, the shop card, then the subjects. The DOM order is subjects then progress; CSS `order` lifts the progress column first on a phone, so a screen reader reads the subjects first at every width (a deliberate choice: Start buttons are what she needs).
-- **Subject cards:** white, 1 px border, radius 20, padding 20, gap 20. Icon tile 56 square (radius 14, `--l-chip`), title 26 and a 16 line in `--l-muted`, then a Start button (48 high, radius 12, `--accent`, text 18 / 600, arrow icon 20), named "Start Math", "Start Spelling" and "Start Reading". On a narrow card the button wraps below the text.
-- **Progress card:** white, 1 px border, radius 20, padding 20. "Macaronis" with the coins icon (16); the balance at 52 with "available to spend" (16); with a streak, a 1 px divider, then a 56 tile with the flame icon, "{n} day(s)" at 26 and "Current streak". With no numbers: "Your Macaronis will show up here." (18) and nothing else. The streak and divider are left out when there is no streak to show.
-- **Shop card:** `--l-chip`, radius 20, padding 20: shopping-bag icon with "A little effort. A little reward." (19), a 16 line, and "Explore the shop" with an arrow (an `aria-disabled` button until the shop exists).
-- **Footer:** two 16 `--l-muted` lines, space-between, wrapping: "Take your time. You've got this." and, with a lock icon, "Grown-up settings live in Parents.".
+- **Colors:** the shared tokens (§5), through the practice screens' `--l-*` names: page `--l-bg`, lines `--l-line`, text `--l-text`, secondary text `--l-muted`, the current-page pill, the streak tile and the shop card `--l-chip`, a subject's icon tile `--tile`, Start `--l-primary`, dots and focus `--l-link`.
+- **Top bar:** white, 1 px `--l-line` bottom border, 80 high, padding-inline 40 (32 below 768), wraps on a phone. Left: the sprout icon (26) and "macworx" (26 / 500), gap 10. Right, gap 12 (15 / 500, a 44 high target): Home (the current page: `--l-chip` pill 10 20, weight 600, `aria-current="page"`), Shop (0 16) and Parents (0 0 0 20, `--l-muted`) with a lock icon (16, gap 8), a plain `<a>` to `/parent/overview`. Shop is an `aria-disabled` button with no handler until the §5.2 screen exists.
+- **Page:** `--l-bg`, padding 32 40 24 (32 sides below 768), gap 24. Heading 36 / 400 over the subline 16 in `--l-muted`, gap 6; the block is 86 high.
+- **Layout:** from 768 px wide (an iPad in either orientation) two columns: subjects on the left, a 330 wide column on the right with the progress card, then the shop card, gap 24. Below 768 px one column: the progress card, the shop card, then the subjects. The DOM order is subjects then progress; CSS `order` lifts the progress column first on a phone, so a screen reader reads the subjects first at every width (a deliberate choice: Start buttons are what she needs).
+- **Section headings:** 20 / 500 (28 high row); "3 subjects" at the right, 13 `--l-muted`. Cards below are 12 apart under the subjects heading, and 16 apart in the progress column.
+- **Subject cards:** white, 1 px border, radius 16, 124 high, padding 24, gap 20. Icon tile 56 square (radius 14, `--l-tile`; plus 28, "Aa" 24 / 500 or book 28), title 24 / 500 over a 14 line in `--l-muted` (gap 3), then a Start button (110 x 48, radius 10, `--l-primary`, 15 / 600, gap 10, arrow icon 18), named "Start Math", "Start Spelling" and "Start Reading". On a narrow card the button wraps below the text.
+- **Progress card:** white, 330 x 228, 1 px border drawn inside the padding (21 23 19 25, so the content is 282 wide, as in the frame), radius 16, gap 14. "Macaronis" (14 / 500) with the Macaronis mark (22), then the balance at 44 / 500 with "available to spend" (13), the two in a 101 high block (gap 8, the balance row 65 high); with a streak, a 1 px divider with 14 above and below, then a 44 tile (radius 12, `--l-chip`) with the flame icon (24), "{n} day(s)" at 22 / 500 and "Current streak" (13), 58 high. With no numbers: "Your Macaronis will show up here." (14) and nothing else. The streak and divider are left out when there is no streak to show.
+- **Shop card:** `--l-chip`, radius 16, 152 high, padding 20 24, gap 8: shopping-bag icon (20) with "A little effort. A little reward." (16 / 500), a 14 line in `--l-muted`, and "Explore the shop" (14 / 600) with an arrow (16; an `aria-disabled` button until the shop exists, 44 high around the frame's 22 high link).
+- **Footer:** "Take your time. You've got this." (14) at the left and, with a lock icon (14, gap 8), "Grown-up settings live in Parents." (13) at the right, both `--l-muted`, space-between, wrapping.
 - **Pair this device** (SPEC §5.4) is the secondary button under the subject cards, owner's decision.

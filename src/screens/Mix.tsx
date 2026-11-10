@@ -4,7 +4,7 @@ import { COPY } from '../copy'
 import { pickSizes, type Mix as MixOf, type Pick } from '../engine'
 import { LEVELS, MAX_PICKS } from '../engine'
 import { isPicked, OPERATIONS, SAMPLES, togglePick } from '../mix/picks'
-import { ArrowLeftIcon, ArrowRightIcon, CoinsIcon, RotateCwIcon } from '../practice/icons'
+import { ArrowLeftIcon, ArrowRightIcon, MacaroniIcon, RotateCwIcon } from '../practice/icons'
 import { Button } from '../ui/Button'
 import { formatNumber, operatorSymbol } from '../ui/format'
 
@@ -124,7 +124,7 @@ export function Mix({ initial = [], lastMix, earn, noSeeds, onChange, onStart, o
               <p className="mix-total-title">{COPY.mixTotal}</p>
               {picks.length >= 2 && <p className="mix-muted">{COPY.mixTogether}</p>}
               <p className="mix-earn">
-                <CoinsIcon size={22} />
+                <MacaroniIcon />
                 {COPY.mixEarn(earn)}
               </p>
             </div>

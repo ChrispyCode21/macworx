@@ -1,10 +1,19 @@
 :root {
-  --ink: #3b2a05;
-  --paper: #fff6dc;
-  --accent: #f2a516;
-  --accent-ink: #3b2a05;
-  --soft: #fde9b8;
-  --answer-ink: #8a5a00;
+  --ink: #3d2f0a;
+  --paper: #fff7dc;
+  --accent: #efa900;
+  --accent-ink: #3d2f0a;
+  --soft: #fff0bd;
+  --answer-ink: #946700;
+  /* The rest of the palette, shared by Home, the mix screen, the practice screens and the portal. */
+  --line: #efdfb4;
+  --muted: #796638;
+  --tile: #fff5d6;
+  --pick: #ffe6a0;
+  --rule: #e3ca83;
+  --disabled: #f5f1e7;
+  --disabled-fill: #e4ddc5;
+  --disabled-ink: #8b8061;
   /* After Check (SPEC §5.1): soft green when right, soft coral when not. Never bright red. */
   --right-soft: #dcf3d4;
   --right-edge: #6cbf5a;
@@ -20,8 +29,10 @@
   --radius: var(--radius-panel);
   --radius-segment: 9px;
   --radius-completion: 11px;
+  --radius-button: 10px;
   --radius-control: 12px;
   --radius-reward: 14px;
+  --radius-card: 16px;
   --radius-panel: 20px;
   --radius-pill: 100px;
   --space-2: 2px;
@@ -54,6 +65,7 @@
   --text-17: 17px;
   --text-18: 18px;
   --text-19: 19px;
+  --text-20: 20px;
   --text-21: 21px;
   --text-22: 22px;
   --text-23: 23px;
@@ -189,7 +201,7 @@ p {
   height: 1.3em;
   margin-top: var(--space-6);
   border: 3px solid var(--soft);
-  border-radius: 10px;
+  border-radius: var(--radius-button);
   color: var(--answer-ink);
   text-align: center;
 }
@@ -254,21 +266,15 @@ p {
 }
 
 /* home: start */
-/* The child Home (SPEC §5.1 step 1, docs/DESIGN.md "Home"): px only, the practice screens' colors. */
+/* The child Home (SPEC §5.1 step 1, docs/DESIGN.md "Home"): px only. Its sizes are the Figma frames' (1194 x 834); its colors are the shared --l-* tokens (see .practice). The mix screen is a .home page too. */
 .home {
-  --l-bg: var(--paper);
-  --l-surface: #ffffff;
-  --l-line: #efdba5;
-  --l-link: var(--answer-ink);
-  --l-chip: var(--soft);
-  --l-text: var(--ink);
-  --l-muted: #6b5420;
   box-sizing: border-box;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--l-bg);
   color: var(--l-text);
+  line-height: 1.4;
   text-align: left;
 }
 
@@ -278,10 +284,8 @@ p {
   box-sizing: border-box;
 }
 
-.home h1,
-.home h2,
-.home h3,
-.home p {
+/* :where keeps this reset below every single-class rule, so a class can set its own weight and margin. */
+:where(.home) :is(h1, h2, h3, p) {
   margin: 0;
   font-weight: 400;
 }
@@ -292,9 +296,9 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-8) var(--space-16);
-  min-height: 66px;
-  padding: max(var(--space-8), env(safe-area-inset-top)) max(var(--space-32), env(safe-area-inset-right))
-    var(--space-8) max(var(--space-32), env(safe-area-inset-left));
+  min-height: 80px;
+  padding: env(safe-area-inset-top) max(var(--space-32), env(safe-area-inset-right)) 0
+    max(var(--space-32), env(safe-area-inset-left));
   background: var(--l-surface);
   border-bottom: 1px solid var(--l-line);
 }
@@ -303,21 +307,19 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-10);
-  color: var(--l-link);
-  font-size: var(--text-28);
-}
-
-.home-brand span {
   color: var(--l-text);
+  font-size: var(--text-26);
+  font-weight: 500;
 }
 
 .home-nav {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-12);
 }
 
+/* Home 10 20, Shop 0 16, Parents 0 0 0 20 (the frame); every link keeps a 44 high target. */
 .home-nav-item,
 .button-home-nav {
   display: inline-flex;
@@ -326,17 +328,27 @@ p {
   min-height: 44px;
   padding: 0 var(--space-16);
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-button);
   background: transparent;
-  color: var(--l-muted);
-  font-size: var(--text-18);
-  font-weight: 400;
+  color: var(--l-text);
+  font-size: var(--text-15);
+  font-weight: 500;
   text-decoration: none;
 }
 
-.home-nav-current {
+.home-nav > :first-child {
+  padding: 0 var(--space-20);
+}
+
+.home-nav > a.home-nav-item {
+  padding: 0 0 0 var(--space-20);
+  color: var(--l-muted);
+}
+
+.home-nav > .home-nav-current {
+  min-height: 0;
+  padding: var(--space-10) var(--space-20);
   background: var(--l-chip);
-  color: var(--l-text);
   font-weight: 600;
 }
 
@@ -344,31 +356,32 @@ p {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-28);
+  gap: var(--space-24);
   padding: var(--space-32) max(var(--space-32), env(safe-area-inset-right))
-    max(var(--space-32), env(safe-area-inset-bottom)) max(var(--space-32), env(safe-area-inset-left));
+    max(var(--space-24), env(safe-area-inset-bottom)) max(var(--space-32), env(safe-area-inset-left));
 }
 
 .home-intro {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-6);
+  min-height: 86px;
 }
 
 .home-heading {
-  font-size: var(--text-40);
+  font-size: var(--text-36);
 }
 
 .home-subheading {
   color: var(--l-muted);
-  font-size: var(--text-18);
+  font-size: var(--text-16);
 }
 
 /* One column on a phone: her progress and the shop card come first. Two columns from 768 (an iPad, either way up). */
 .home-columns {
   display: flex;
   flex-direction: column;
-  gap: var(--space-28);
+  gap: var(--space-24);
 }
 
 .home-subjects {
@@ -388,15 +401,20 @@ p {
 }
 
 @media (min-width: 768px) {
-  .home-heading {
-    font-size: var(--text-48);
+  .home-bar {
+    padding-inline: max(var(--space-40), env(safe-area-inset-left))
+      max(var(--space-40), env(safe-area-inset-right));
+  }
+
+  .home-main {
+    padding-inline: max(var(--space-40), env(safe-area-inset-left))
+      max(var(--space-40), env(safe-area-inset-right));
   }
 
   .home-columns {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.4fr);
+    grid-template-columns: minmax(0, 1fr) 330px;
     align-items: start;
-    gap: var(--space-40);
   }
 
   .home-subjects {
@@ -414,22 +432,24 @@ p {
 
 .home-section-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-12);
+  min-height: 28px;
   color: var(--l-muted);
-  font-size: var(--text-16);
+  font-size: var(--text-13);
 }
 
 .home-section-head h2 {
   color: var(--l-text);
-  font-size: var(--text-24);
+  font-size: var(--text-20);
+  font-weight: 500;
 }
 
 .home-subject-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
+  gap: var(--space-12);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -440,9 +460,10 @@ p {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-20);
-  padding: var(--space-20);
+  min-height: 124px;
+  padding: var(--space-24);
   border: 1px solid var(--l-line);
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-card);
   background: var(--l-surface);
 }
 
@@ -454,12 +475,13 @@ p {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-reward);
-  background: var(--l-chip);
+  background: var(--tile);
   color: var(--l-text);
 }
 
 .home-aa {
-  font-size: var(--text-28);
+  font-size: var(--text-24);
+  font-weight: 500;
 }
 
 .home-subject-text {
@@ -467,28 +489,31 @@ p {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .home-subject-title {
-  font-size: var(--text-26);
+  font-size: var(--text-24);
+  font-weight: 500;
 }
 
 .home-subject-line {
   color: var(--l-muted);
-  font-size: var(--text-16);
+  font-size: var(--text-14);
 }
 
 .button-home-start {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-8);
+  justify-content: center;
+  gap: var(--space-10);
+  min-width: 110px;
   min-height: 48px;
   padding: 0 var(--space-20);
-  border-radius: var(--radius-control);
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: var(--text-18);
+  border-radius: var(--radius-button);
+  background: var(--l-primary);
+  color: var(--l-primary-ink);
+  font-size: var(--text-15);
   font-weight: 600;
 }
 
@@ -496,35 +521,42 @@ p {
 .home-shop {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
-  padding: var(--space-20);
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-card);
 }
 
 .home-progress {
-  border: 1px solid var(--l-line);
+  gap: var(--space-14);
+  min-width: 0;
+  /* As the mix grid: the frame's card is 228 high with its content 25 in and 282 wide; the 1 px line sits in the padding. */
+  padding: 21px 23px 19px 25px;
   background: var(--l-surface);
+  box-shadow: inset 0 0 0 1px var(--l-line);
+}
+
+.home-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-height: 101px;
 }
 
 .home-progress-label {
   display: flex;
   align-items: center;
-  gap: var(--space-10);
+  gap: var(--space-8);
   color: var(--l-text);
-  font-size: var(--text-16);
+  font-size: var(--text-14);
+  font-weight: 500;
 }
 
 .home-balance {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-12);
+  min-height: 65px;
   color: var(--l-muted);
-  font-size: var(--text-16);
-}
-
-.home-progress {
-  min-width: 0;
+  font-size: var(--text-13);
 }
 
 .home-subjects > .button-secondary {
@@ -539,37 +571,51 @@ p {
 .home-balance-number {
   overflow-wrap: anywhere;
   color: var(--l-text);
-  font-size: var(--text-52);
+  font-size: var(--text-44);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
 .home-empty {
   color: var(--l-muted);
-  font-size: var(--text-18);
+  font-size: var(--text-14);
 }
 
+/* The divider is this border, 14 below the balance and 14 above the streak (the frame's 101 + 14 + 1 + 14 + 58). */
 .home-streak {
   display: flex;
   align-items: center;
   gap: var(--space-14);
-  margin-top: var(--space-8);
-  padding-top: var(--space-16);
+  min-height: 73px;
+  padding-top: var(--space-14);
   border-top: 1px solid var(--l-line);
   color: var(--l-muted);
-  font-size: var(--text-16);
+  font-size: var(--text-13);
+}
+
+.home-streak .home-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  background: var(--l-chip);
 }
 
 .home-streak p {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
 }
 
 .home-streak-days {
   color: var(--l-text);
-  font-size: var(--text-26);
+  font-size: var(--text-22);
+  font-weight: 500;
 }
 
 .home-shop {
+  gap: var(--space-8);
+  min-height: 152px;
+  padding: var(--space-20) var(--space-24);
   background: var(--l-chip);
   color: var(--l-text);
 }
@@ -578,25 +624,29 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-10);
-  font-size: var(--text-19);
+  min-height: 25px;
+  font-size: var(--text-16);
+  font-weight: 500;
 }
 
 .home-shop-line {
   color: var(--l-muted);
-  font-size: var(--text-16);
+  font-size: var(--text-14);
 }
 
+/* A 44 high target around the 22 high link of the frame: the margins pull the extra back. */
 .button-home-link {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
   gap: var(--space-8);
   min-height: 44px;
+  margin-block: -11px;
   padding: 0;
   border: none;
   background: transparent;
   color: var(--l-text);
-  font-size: var(--text-16);
+  font-size: var(--text-14);
   font-weight: 600;
 }
 
@@ -606,51 +656,19 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-12);
+  min-height: 24px;
   color: var(--l-muted);
-  font-size: var(--text-16);
+  font-size: var(--text-14);
 }
 
 .home-footer-right {
   display: inline-flex;
   align-items: center;
   gap: var(--space-8);
+  font-size: var(--text-13);
 }
 /* The mix screen (SPEC §5.1 step 2, docs/DESIGN-PRACTICE.md §17): a .home page with its own bar and sizes from the frames. */
 .mix {
-  --l-inset: #fffbee;
-  --l-pick: #ffe6a0;
-  --l-summary: #fff0bd;
-  --l-rule: #e3ca83;
-  --l-primary: var(--accent);
-  --l-primary-ink: var(--ink);
-}
-
-/* The bar: 80 high, with the frame's sizes. */
-.mix .home-bar {
-  min-height: 80px;
-  padding: env(safe-area-inset-top) max(var(--space-40), env(safe-area-inset-right)) 0
-    max(var(--space-40), env(safe-area-inset-left));
-}
-
-.mix .home-brand {
-  font-size: var(--text-26);
-  font-weight: 500;
-}
-
-.mix .home-nav {
-  gap: var(--space-12);
-}
-
-.mix .home-nav-item,
-.mix .button-home-nav {
-  padding: var(--space-10) var(--space-20);
-  color: var(--l-text);
-  font-size: var(--text-15);
-  font-weight: 500;
-}
-
-.mix a.home-nav-item {
-  color: var(--l-muted);
 }
 
 .mix-main {
@@ -705,7 +723,7 @@ p {
   min-width: 228px;
   height: 44px;
   border: 1px solid var(--l-line);
-  border-radius: 10px;
+  border-radius: var(--radius-button);
   background: var(--l-surface);
   color: var(--l-text);
   font-size: var(--text-15);
@@ -738,10 +756,11 @@ p {
   grid-template-columns: minmax(96px, 164px) repeat(3, minmax(0, 1fr));
   gap: var(--space-8);
   align-content: start;
-  padding: var(--space-16);
-  border: 1px solid var(--l-line);
-  border-radius: 16px;
+  /* The frame's card is 436 high, with its rows 17 in and 728 wide: the 1 px line is drawn inside the padding. */
+  padding: 17px var(--space-15) var(--space-15) 17px;
+  border-radius: var(--radius-card);
   background: var(--l-surface);
+  box-shadow: inset 0 0 0 1px var(--l-line);
 }
 
 .mix-row {
@@ -803,14 +822,13 @@ p {
 
 .button-mix-cell[aria-pressed='true'] {
   border: 2px solid var(--l-link);
-  background: var(--l-pick);
+  background: var(--pick);
 }
 
 .button-mix-cell[aria-disabled='true'] {
-  background: var(--l-inset);
-  color: var(--l-muted);
+  background: var(--disabled);
   cursor: default;
-  opacity: 0.55;
+  opacity: 0.42;
 }
 
 .mix .button:focus-visible {
@@ -823,8 +841,8 @@ p {
   flex-direction: column;
   gap: var(--space-12);
   padding: var(--space-24);
-  border-radius: 16px;
-  background: var(--l-summary);
+  border-radius: var(--radius-card);
+  background: var(--soft);
 }
 
 .mix-panel-title,
@@ -879,7 +897,7 @@ p {
   flex-direction: column;
   gap: var(--space-12);
   padding-top: var(--space-12);
-  border-top: 1px solid var(--l-rule);
+  border-top: 1px solid var(--rule);
 }
 
 .mix-total .mix-muted {
@@ -893,7 +911,8 @@ p {
   gap: var(--space-8);
   padding: var(--space-8) var(--space-12);
   border-radius: var(--radius-pill);
-  background: var(--l-pick);
+  background: var(--pick);
+  min-height: 40px;
   font-size: var(--text-16);
   font-weight: 500;
 }
@@ -911,7 +930,15 @@ p {
   font-size: var(--text-16);
   min-width: 240px;
   height: 52px;
-  border-radius: 10px;
+  border-radius: var(--radius-button);
+}
+
+/* No picks yet: the frame's flat grey, not a faded amber. */
+.mix .button-action:disabled {
+  border-color: var(--disabled-fill);
+  background: var(--disabled-fill);
+  color: var(--disabled-ink);
+  opacity: 1;
 }
 
 @media (min-width: 1024px) {
@@ -924,22 +951,23 @@ p {
 /* parent portal: start */
 /* The parent portal (SPEC §5.3, docs/DESIGN.md): px only, no shadows, no letter-spacing, weights 400 and 600. */
 .parent {
-  --p-bg: #fff6dc;
+  --p-bg: var(--paper);
   --p-surface: #ffffff;
-  --p-divider: #efdba5;
-  --p-primary: #f2a516;
-  --p-primary-ink: #3b2a05;
+  --p-divider: var(--line);
+  --p-primary: var(--accent);
+  --p-primary-ink: var(--accent-ink);
   --p-hero-muted: #5a3f08;
-  --p-accent-ink: #8a5a00;
-  --p-chip: #fde9b8;
-  --p-warm: #f6dc9e;
+  /* Two steps darker than --answer-ink, which is under AA on --p-chip (docs/DESIGN.md §5.3). */
+  --p-accent-ink: #926500;
+  --p-chip: var(--soft);
+  --p-warm: var(--pick);
   --p-avatar: #f2c46b;
   --p-warn-soft: #f6e7cf;
   --p-warn-ink: #7a4a00;
   --p-danger-soft: #ffe0d6;
   --p-danger-ink: #8a3b22;
-  --p-text: #3b2a05;
-  --p-muted: #6b5420;
+  --p-text: var(--ink);
+  --p-muted: var(--muted);
   box-sizing: border-box;
   min-height: 100dvh;
   display: flex;
@@ -1554,7 +1582,7 @@ p {
   font: inherit;
   padding: var(--space-12);
   border: 2px solid var(--accent);
-  border-radius: 10px;
+  border-radius: var(--radius-button);
 }
 
 .text-field-hint {
@@ -2863,11 +2891,12 @@ p {
 
 /* practice: start */
 /* The practice screens (docs/DESIGN-PRACTICE.md): px only, because :root's 24px makes rem and em scale. */
-.practice {
+.practice,
+.home {
   --l-bg: var(--paper);
   --l-surface: #ffffff;
   --l-inset: #fffbee;
-  --l-line: #efdba5;
+  --l-line: var(--line);
   --l-primary: var(--accent);
   --l-primary-ink: var(--ink);
   --l-link: var(--answer-ink);
@@ -2875,7 +2904,10 @@ p {
   --l-warm: #f6dc9e;
   --l-avatar: #f2c46b;
   --l-text: var(--ink);
-  --l-muted: #6b5420;
+  --l-muted: var(--muted);
+}
+
+.practice {
   /* A number pad key's height with room (docs/DESIGN-PRACTICE.md §7.4); with --key-min, the pad panel's height is built from it. */
   --practice-key: 72px;
   /* The pad panel's heading row (docs/DESIGN-PRACTICE.md §8). */

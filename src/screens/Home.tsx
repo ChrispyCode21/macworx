@@ -4,9 +4,9 @@ import { COPY } from '../copy'
 import {
   ArrowRightIcon,
   BookOpenIcon,
-  CoinsIcon,
   FlameIcon,
   LockKeyholeIcon,
+  MacaroniIcon,
   PlusIcon,
   ShoppingBagIcon,
 } from '../practice/icons'
@@ -48,7 +48,7 @@ function SubjectCard({
       </div>
       <Button variant="home-start" aria-label={COPY.homeStartLabel(title)} onClick={onStart}>
         {COPY.homeStart}
-        <ArrowRightIcon />
+        <ArrowRightIcon size={18} />
       </Button>
     </li>
   )
@@ -74,7 +74,7 @@ export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props
               <SubjectCard
                 title={COPY.subjectMath}
                 line={COPY.startHint}
-                icon={<PlusIcon size={32} />}
+                icon={<PlusIcon size={28} />}
                 onStart={onStart}
               />
               <SubjectCard
@@ -86,7 +86,7 @@ export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props
               <SubjectCard
                 title={COPY.subjectReading}
                 line={readingOffline ? COPY.readingOffline : COPY.homeReadingLine}
-                icon={<BookOpenIcon size={32} />}
+                icon={<BookOpenIcon size={28} />}
                 onStart={() => onOpen('reading')}
               />
             </ul>
@@ -101,18 +101,20 @@ export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props
               <h2 id="home-progress-heading">{COPY.homeProgressHeading}</h2>
             </div>
             <div className="home-progress">
-              <p className="home-progress-label">
-                <CoinsIcon />
-                {COPY.homeMacaronisLabel}
-              </p>
-              {numbers ? (
-                <p className="home-balance">
-                  <span className="home-balance-number">{formatNumber(numbers.balance)}</span>{' '}
-                  {COPY.homeAvailable}
+              <div className="home-stat">
+                <p className="home-progress-label">
+                  <MacaroniIcon />
+                  {COPY.homeMacaronisLabel}
                 </p>
-              ) : (
-                <p className="home-empty">{COPY.homeNoNumbers}</p>
-              )}
+                {numbers ? (
+                  <p className="home-balance">
+                    <span className="home-balance-number">{formatNumber(numbers.balance)}</span>{' '}
+                    {COPY.homeAvailable}
+                  </p>
+                ) : (
+                  <p className="home-empty">{COPY.homeNoNumbers}</p>
+                )}
+              </div>
               {numbers && numbers.streak !== null && (
                 <div className="home-streak">
                   <span className="home-tile" aria-hidden="true">
@@ -134,7 +136,7 @@ export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props
               {/* Inert until the shop screen exists (SPEC §5.1 step 1). */}
               <Button variant="home-link" aria-disabled="true">
                 {COPY.homeShopLink}
-                <ArrowRightIcon />
+                <ArrowRightIcon size={16} />
               </Button>
             </div>
           </div>
@@ -142,7 +144,7 @@ export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props
         <footer className="home-footer">
           <span>{COPY.homeFooterLeft}</span>
           <span className="home-footer-right">
-            <LockKeyholeIcon />
+            <LockKeyholeIcon size={14} />
             {COPY.homeFooterRight}
           </span>
         </footer>
