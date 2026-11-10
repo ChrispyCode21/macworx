@@ -12,7 +12,7 @@ const TOKENS: Record<string, string> = {
   '--l-bg': 'var(--paper)',
   '--l-surface': '#ffffff',
   '--l-inset': '#fffbee',
-  '--l-line': '#efdba5',
+  '--l-line': 'var(--line)',
   '--l-primary': 'var(--accent)',
   '--l-primary-ink': 'var(--ink)',
   '--l-link': 'var(--answer-ink)',
@@ -20,7 +20,7 @@ const TOKENS: Record<string, string> = {
   '--l-warm': '#f6dc9e',
   '--l-avatar': '#f2c46b',
   '--l-text': 'var(--ink)',
-  '--l-muted': '#6b5420',
+  '--l-muted': 'var(--muted)',
 }
 
 const START = '/* practice: start */'
