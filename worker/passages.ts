@@ -1,11 +1,14 @@
 // Adding a reading passage from the parent portal (SPEC §6.10, §8). The checks are the engine's, the same ones the
 // portal ran before sending it; this is the second look.
-import { checkPassage, PASSAGE_LIMITS, tooLong } from '../src/engine'
+import { checkPassage, tooLong } from '../src/engine'
 import type { CheckedPassage } from '../src/engine'
 import { json } from './http'
 import type { ParentRequest } from './parent-request'
 
 const WRITE_ATTEMPTS = 3
+
+/** The most characters of request body that are read at all. */
+const MAX_BODY = 1_000_000
 
 const bad = (problems: string[]) => json(400, { error: 'bad_passage', problems })
 
@@ -68,10 +71,10 @@ function storePassage(db: D1Database, id: number, p: CheckedPassage) {
 
 /** POST /api/parent/passages { passage }: checks the pasted passage and saves it whole, or saves nothing. */
 export async function postPassage({ request, db }: ParentRequest): Promise<Response> {
-  // The body is the passage inside `{ passage }`, so it may be a little over the limit that counts the passage.
+  // The limit counts the passage as compact JSON (`tooLong`, below), whatever the request's own spacing. This
+  // larger cap only stops the Worker parsing a body that could not be a passage however it is indented.
   const raw = await request.text()
-  if (raw.length > PASSAGE_LIMITS.bytes * 2)
-    return bad(['That is too long to be one passage (the limit is 64 KB).'])
+  if (raw.length > MAX_BODY) return bad(['That is too long to be one passage (the limit is 64 KB).'])
   let body: unknown
   try {
     body = JSON.parse(raw)
