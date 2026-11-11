@@ -126,6 +126,10 @@ export const chooseChild = (id: number | null) => {
   selected = id
 }
 
+/** Adds a passage the parent pasted (SPEC §8). Content is shared, so it takes no `child`. */
+export const savePassage = (passage: unknown) =>
+  parentCall<{ id: number }>('/api/parent/passages', { method: 'POST', body: JSON.stringify({ passage }) })
+
 export const getChildren = () => parentCall<{ children: Child[] }>('/api/parent/children')
 
 /** Adds a child (SPEC §8). Not for a chosen child, so it takes no `child`; empty initials fill from the name. */

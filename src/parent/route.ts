@@ -1,8 +1,8 @@
-/** The portal's five tabs and their addresses (SPEC §5.3). Pure, so it is tested without a browser. */
-export type Tab = 'overview' | 'points' | 'streak' | 'devices' | 'shop'
+/** The portal's six tabs and their addresses (SPEC §5.3). Pure, so it is tested without a browser. */
+export type Tab = 'overview' | 'content' | 'points' | 'streak' | 'devices' | 'shop'
 
 /** In navigation order. */
-export const TABS: readonly Tab[] = ['overview', 'points', 'streak', 'devices', 'shop']
+export const TABS: readonly Tab[] = ['overview', 'content', 'points', 'streak', 'devices', 'shop']
 
 export const tabPath = (tab: Tab): string => `/parent/${tab}`
 

@@ -5,6 +5,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 const TABS = [
   { path: 'overview', label: 'Overview', title: 'A little progress, daily.' },
+  { path: 'content', label: 'Content', title: 'Make practice personal.' },
   { path: 'points', label: 'Macaronis', title: 'Macaronis, kept fair.' },
   { path: 'streak', label: 'Streak', title: 'Make every day count.' },
   { path: 'devices', label: 'Devices', title: "Ada's devices, connected." },
@@ -59,7 +60,7 @@ for (const tab of TABS) {
     await expect(page.getByRole('heading', { level: 1, name: tab.title })).toBeVisible()
 
     const links = nav(page).getByRole('link')
-    await expect(links).toHaveCount(5)
+    await expect(links).toHaveCount(6)
     await expect(nav(page).locator('[aria-current="page"]')).toHaveText(tab.label)
     await expect(nav(page).locator('[aria-current="page"]')).toHaveCount(1)
 
@@ -82,7 +83,7 @@ for (const tab of TABS) {
   })
 }
 
-test('tapping through the five tabs changes the screen without a page load', async ({ page }) => {
+test('tapping through the six tabs changes the screen without a page load', async ({ page }) => {
   await api(page)
   await page.goto('/parent/overview')
   await expect(page.getByRole('heading', { level: 1, name: TABS[0].title })).toBeVisible()
