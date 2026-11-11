@@ -29,5 +29,13 @@ export {
   type Problem,
 } from './problems'
 export { scoreReading } from './reading'
+export {
+  checkPassage,
+  parsePassageJson,
+  PASSAGE_LIMITS,
+  type CheckedPassage,
+  type CheckedQuestion,
+  type PassageCheck,
+} from './passage'
 export { checkAnswer } from './score'
 export { addDays, dayNumber, nextStreak, type StreakResult, type StreakState } from './streak'
