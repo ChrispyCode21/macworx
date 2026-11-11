@@ -1,13 +1,12 @@
 // The spelling words a parent adds from the portal (SPEC §5.3, §6.11, §8). The checks are the engine's, the same ones
 // the portal ran before sending; this is the second look. Words are shared by every child, so no route here takes a
 // `child`, and none looks anything up in a dictionary.
-import { checkWord, normalizeTyped } from '../src/engine'
+import { checkWord, normalizeTyped, SPELLING } from '../src/engine'
 import { json } from './http'
 import type { ParentRequest } from './parent-request'
 
-/** The most entries one save may carry, and the most characters of request body that are read at all. */
-const MAX_ENTRIES = 500
-const MAX_BODY = 256 * 1024
+/** The most problems listed at once; the rest are counted. */
+const MAX_LISTED = 10
 
 const bad = (problems: string[]) => json(400, { error: 'bad_word', problems })
 
@@ -19,8 +18,11 @@ const validGrade = (grade: unknown): grade is number | null | undefined =>
 
 /** POST /api/parent/words { words }: adds the entries that pass the checks, skipping any already in the list. */
 export async function postWords({ request, db, now }: ParentRequest): Promise<Response> {
+  // The size is counted in bytes, and a request that says it is over the limit is refused before it is read.
+  const tooMany = ['That is too many words to save at once.']
+  if (Number(request.headers.get('content-length')) > SPELLING.saveBytes) return bad(tooMany)
   const raw = await request.text()
-  if (raw.length > MAX_BODY) return bad(['That is too many words to save at once.'])
+  if (new TextEncoder().encode(raw).length > SPELLING.saveBytes) return bad(tooMany)
   let body: unknown
   try {
     body = JSON.parse(raw)
@@ -29,36 +31,53 @@ export async function postWords({ request, db, now }: ParentRequest): Promise<Re
   }
   const words = typeof body === 'object' && body !== null ? (body as { words?: unknown }).words : undefined
   if (!Array.isArray(words)) return bad(['The request has to be JSON like { "words": [ … ] }.'])
-  if (words.length > MAX_ENTRIES) return bad([`A save can have at most ${MAX_ENTRIES} words.`])
+  if (words.length > SPELLING.perSave) return bad([`A save can have at most ${SPELLING.perSave} words.`])
 
   // Every entry is checked before anything is saved, so one refused word saves none of them.
   const problems: string[] = []
   const unique = new Map<
     string,
-    { word: string; sentence: string; alternates: string; grade: number | null }
+    { word: string; sentence: string; alternates: string[]; grade: number | null }
   >()
   for (const entry of words) {
     const checked = checkWord(entry)
     const grade = (entry as { grade?: unknown } | null)?.grade
     if (!checked.ok) problems.push(...checked.problems)
     else if (!validGrade(grade))
-      problems.push(`The grade for "${checked.entry.word}" has to be a whole number.`)
+      problems.push(`The grade for "${checked.entry.word}" has to be a whole number from 0 to 99.`)
     else {
       const key = normalizeTyped(checked.entry.word)
-      if (!unique.has(key))
+      // A word repeated in one save is one word: the first sentence and grade given, every alternate.
+      const earlier = unique.get(key)
+      if (!earlier)
         unique.set(key, {
           word: checked.entry.word,
           sentence: checked.entry.sentence,
-          alternates: JSON.stringify(checked.entry.alternates),
+          alternates: checked.entry.alternates,
           grade: grade ?? null,
         })
+      else {
+        earlier.sentence ||= checked.entry.sentence
+        earlier.grade ??= grade ?? null
+        const seen = new Set([key, ...earlier.alternates.map(normalizeTyped)])
+        for (const alternate of checked.entry.alternates)
+          if (!seen.has(normalizeTyped(alternate))) {
+            seen.add(normalizeTyped(alternate))
+            earlier.alternates.push(alternate)
+          }
+      }
     }
   }
-  if (problems.length > 0) return bad(problems.slice(0, 10))
+  if (problems.length > 0)
+    return bad(
+      problems.length > MAX_LISTED
+        ? [...problems.slice(0, MAX_LISTED), `…and ${problems.length - MAX_LISTED} more to fix.`]
+        : problems,
+    )
 
   // A word already in the list (its key is unique) is left alone, not an error; what is inserted is what was added.
   // Only a clash on the key is passed over: any other refusal by the table fails the whole save.
-  const rows = [...unique].map(([key, row]) => ({ key, ...row }))
+  const rows = [...unique].map(([key, row]) => ({ key, ...row, alternates: JSON.stringify(row.alternates) }))
   const result = await db
     .prepare(
       `INSERT INTO words (word, key, sentence, alternates, grade, created_at)

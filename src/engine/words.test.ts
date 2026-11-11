@@ -107,3 +107,16 @@ describe('words from other sources', () => {
     expect(problems('r2d2')).toEqual(['The word "r2d2" can only have letters, apostrophes and hyphens.'])
   })
 })
+
+describe('characters she cannot type back', () => {
+  it('refuses a ligature, a full-width letter and an invisible mark, in plain words', () => {
+    expect(problems('\ufb01sh')).toEqual([
+      'The word "\ufb01sh" has a character she can\'t type, such as a ligature or a full-width letter. Use plain letters.',
+    ])
+    expect(problems('\uff46ish')).toHaveLength(1)
+    expect(problems('fi\u034Fsh')).toHaveLength(1)
+    expect(problems('fi\u00adsh')).toHaveLength(1)
+    expect(problems('fish')).toEqual([])
+    expect(problems('cafe\u0301')).toEqual([])
+  })
+})

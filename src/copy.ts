@@ -241,12 +241,14 @@ export const COPY = {
   wordsCount: (n: number) => `${n} ${n === 1 ? 'word' : 'words'}`,
   wordsBlankLines: 'Blank lines are ignored.',
   wordsFixHeading: 'A few things to fix before saving:',
+  wordsTooMany: (n: number) => `A save can have at most ${n} words. Save the first ${n}, then the rest.`,
+  wordsTooBig: 'That is too many words to save at once. Save them in smaller lists.',
   wordsMoreProblems: (n: number) => `…and ${n} more to fix.`,
   wordsUse: 'This list will be used in spelling practice.',
   wordsSave: 'Save word list',
   wordsAdded: (added: number, skipped: number) =>
     `Added ${added} ${added === 1 ? 'word' : 'words'}.${
-      skipped > 0 ? ` ${skipped} already in the list ${skipped === 1 ? 'was' : 'were'} skipped.` : ''
+      skipped > 0 ? ` ${skipped} ${skipped === 1 ? 'was' : 'were'} already there.` : ''
     }`,
   wordsSaveProblem: "Those words couldn't be saved. Check them and try again.",
   contentPrivacy: "Only you can manage this content. Saved content is available in your child's practice.",

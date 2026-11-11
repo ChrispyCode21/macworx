@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { COPY } from '../../copy'
-import { checkWord, parseWords } from '../../engine'
+import { checkWord, parseWords, SPELLING } from '../../engine'
 import type { WordEntry } from '../../engine'
 import { addWords } from '../../parent/api'
 import type { ParentResult } from '../../parent/api'
@@ -37,14 +37,22 @@ export function useWordsForm() {
   const entries: WordEntry[] = useMemo(() => parseWords(draft), [draft])
   // Every entry through the same checks the Worker runs, so a save the portal sends is one the Worker accepts.
   const problems = useMemo(() => {
-    const all = entries.flatMap((entry) => {
+    const all: string[] = []
+    // The limits of one save, so the parent hears about them here and not as a refusal after pressing Save.
+    if (entries.length > SPELLING.perSave) all.push(COPY.wordsTooMany(SPELLING.perSave))
+    else if (
+      draft.length > SPELLING.saveBytes / 4 &&
+      new TextEncoder().encode(JSON.stringify({ words: entries })).length > SPELLING.saveBytes
+    )
+      all.push(COPY.wordsTooBig)
+    for (const entry of entries) {
       const checked = checkWord(entry)
-      return checked.ok ? [] : checked.problems
-    })
+      if (!checked.ok) all.push(...checked.problems)
+    }
     return all.length > MAX_LISTED
       ? [...all.slice(0, MAX_LISTED), COPY.wordsMoreProblems(all.length - MAX_LISTED)]
       : all
-  }, [entries])
+  }, [draft, entries])
 
   const setDraft = (text: string) => {
     latest.current = text
@@ -67,10 +75,11 @@ export function useWordsForm() {
       return
     }
     setNote({ tone: 'info', text: COPY.wordsAdded(result.body.added, result.body.skipped) })
-    // Only the text that was saved is cleared: words typed meanwhile stay.
-    if (latest.current === sent) {
-      latest.current = ''
-      setDraftState('')
+    // Only the text that was saved goes: words typed meanwhile (after it) stay.
+    if (latest.current.startsWith(sent)) {
+      const rest = latest.current.slice(sent.length).replace(/^[ \t]*\r?\n/, '')
+      latest.current = rest
+      setDraftState(rest)
     }
   }
 

@@ -36,7 +36,14 @@ export const ASSIGNMENT = {
 export const READING_QUESTIONS = 10
 
 /** A spelling assignment's most words, and the limits on a word and its sentence (SPEC §6.2, §6.11). */
-export const SPELLING = { words: 20, wordLength: 40, sentenceLength: 200 } as const
+export const SPELLING = {
+  words: 20,
+  wordLength: 40,
+  sentenceLength: 200,
+  /** The most entries, and the most bytes of JSON, one save of the word list may carry (SPEC §8). */
+  perSave: 500,
+  saveBytes: 256 * 1024,
+} as const
 
 /** Problems in one assignment. */
 export const ASSIGNMENT_SIZE = ASSIGNMENT.addition + ASSIGNMENT.subtraction + ASSIGNMENT.multiplication

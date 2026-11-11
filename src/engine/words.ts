@@ -40,8 +40,8 @@ export function parseWords(text: string): WordEntry[] {
 // Each character is a letter (with any accents on it), an apostrophe or a hyphen: a mark must follow a letter.
 const LETTERS = /^(?:\p{L}\p{M}*|['’-])+$/u
 const HAS_LETTER = /\p{L}/u
-// Marks that change nothing she sees, which she could never type back.
-const INVISIBLE = /[︀-️​-‍⁠﻿]/u
+// Characters that change nothing she sees (joiners, variation selectors, soft hyphens): she could never type them back.
+const INVISIBLE = /\p{Default_Ignorable_Code_Point}/u
 // Counted after NFC, as the comparison is, so a pasted accent counts once however it is written.
 const length = (text: string) => Array.from(text.normalize('NFC')).length
 
@@ -50,6 +50,9 @@ function wordProblem(word: string, what: string): string | null {
   if (word === '') return `${what} is missing.`
   if (length(word) > SPELLING.wordLength)
     return `${what} "${word}" is longer than ${SPELLING.wordLength} characters.`
+  // A ligature or a full-width letter looks like a letter but is another character: NFKC would change it.
+  if (word.normalize('NFKC') !== word.normalize('NFC'))
+    return `${what} "${word}" has a character she can't type, such as a ligature or a full-width letter. Use plain letters.`
   if (!LETTERS.test(word.normalize('NFC')) || INVISIBLE.test(word))
     return `${what} "${word}" can only have letters, apostrophes and hyphens.`
   if (!HAS_LETTER.test(word)) return `${what} "${word}" needs at least one letter.`

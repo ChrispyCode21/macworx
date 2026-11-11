@@ -57,8 +57,8 @@ describe('WordsCard', () => {
 
   it('says how many words were added and how many were already there, and shows Saving… while one is sent', () => {
     expect(COPY.wordsAdded(3, 0)).toBe('Added 3 words.')
-    expect(COPY.wordsAdded(1, 1)).toBe('Added 1 word. 1 already in the list was skipped.')
-    expect(COPY.wordsAdded(0, 2)).toBe('Added 0 words. 2 already in the list were skipped.')
+    expect(COPY.wordsAdded(1, 1)).toBe('Added 1 word. 1 was already there.')
+    expect(COPY.wordsAdded(0, 2)).toBe('Added 0 words. 2 were already there.')
     expect(render({ note: { tone: 'info', text: COPY.wordsAdded(2, 1) } })).toContain('Added 2 words.')
     expect(render({ count: 2, saving: true })).toMatch(/<button[^>]*disabled=""[^>]*>Saving…/)
   })

@@ -39,18 +39,17 @@ export function WordsCard({ form }: { form: WordsForm }) {
 
       {/* Always mounted, so a screen reader hears each change to it once, not a new alert on every keystroke. */}
       <div className="content-checks" aria-live="polite">
-        {problems.length > 0 && (
-          <>
-            <Safeguard tone="warn">{COPY.wordsFixHeading}</Safeguard>
-            <ul className="content-problems">
-              {problems.map((problem, i) => (
-                <li key={`${i}-${problem}`}>{problem}</li>
-              ))}
-            </ul>
-          </>
-        )}
+        {problems.length > 0 && <Safeguard tone="warn">{COPY.wordsFixHeading}</Safeguard>}
         {note && <Safeguard tone={note.tone}>{note.text}</Safeguard>}
       </div>
+      {/* The list itself is outside the live region: it quotes the word being typed, so it changes on every key. */}
+      {problems.length > 0 && (
+        <ul className="content-problems">
+          {problems.map((problem, i) => (
+            <li key={`${i}-${problem}`}>{problem}</li>
+          ))}
+        </ul>
+      )}
 
       <hr className="parent-divider" />
       <p className="parent-note">{COPY.wordsUse}</p>
