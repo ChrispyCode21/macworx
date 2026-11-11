@@ -31,9 +31,10 @@ export async function getReadingImage({
   if (!known) return error(404, 'not_found')
   const object = await bucket.get(name)
   if (!object) return error(404, 'not_found')
+  const extension = name.slice(name.lastIndexOf('.') + 1).toLowerCase()
   const type =
     object.httpMetadata?.contentType ??
-    TYPES[name.slice(name.lastIndexOf('.') + 1).toLowerCase()] ??
+    (Object.prototype.hasOwnProperty.call(TYPES, extension) ? TYPES[extension] : undefined) ??
     'application/octet-stream'
   return new Response(object.body, {
     headers: {
