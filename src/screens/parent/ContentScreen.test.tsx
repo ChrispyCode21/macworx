@@ -1,10 +1,27 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { COPY } from '../../copy'
+import { parsePassageJson } from '../../engine'
 import { ContentScreen } from './ContentScreen'
+import type { PassageForm } from './usePassageForm'
 
 const noop = () => {}
-const render = (draft: string) => renderToStaticMarkup(<ContentScreen draft={draft} onDraft={noop} />)
+
+/** The Portal's form state for a pasted text, worked out the way the hook does. */
+const form = (draft: string, over: Partial<PassageForm> = {}): PassageForm => ({
+  draft,
+  setDraft: noop,
+  check: draft.trim() === '' ? null : parsePassageJson(draft),
+  saving: false,
+  note: null,
+  manual: null,
+  copy: async () => {},
+  save: async () => {},
+  ...over,
+})
+const render = (draft: string, over: Partial<PassageForm> = {}) =>
+  renderToStaticMarkup(<ContentScreen form={form(draft, over)} />)
+const escaped = (text: string) => text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;').replace(/"/g, '&quot;')
 
 const valid = JSON.stringify({
   title: 'The Little Seed',
@@ -33,10 +50,11 @@ describe('ContentScreen', () => {
       COPY.contentSaveNote,
       COPY.contentSave,
     ])
-      expect(html).toContain(text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;'))
+      expect(html).toContain(escaped(text))
     expect(html).toContain('Only you can manage this content.')
     expect(html).not.toContain('safeguard')
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Save passage/)
+    expect(html).not.toContain('aria-invalid')
   })
 
   it('L18: a valid passage shows the status line and a preview with the right choice marked, and Save is enabled', () => {
@@ -47,6 +65,7 @@ describe('ContentScreen', () => {
     expect(html).toContain('What does Mia plant?')
     expect(html).toMatch(/content-right[^>]*>A seed<span> · Right answer/)
     expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Save passage/)
+    expect(html).not.toContain('aria-invalid')
   })
 
   it('L19: a passage that fails the checks lists what to fix in plain words, shows no preview, and Save is disabled', () => {
@@ -56,9 +75,27 @@ describe('ContentScreen', () => {
     expect(html).toContain('Question 1&#x27;s &quot;correct_answer&quot; isn&#x27;t one of its options.')
     expect(html).not.toContain('content-preview')
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Save passage/)
+    expect(html).toContain('aria-invalid="true"')
   })
 
-  it('text that is not JSON says so in plain words', () => {
-    expect(render('{ "title": ')).toContain('isn&#x27;t valid JSON')
+  it('the checks sit in a polite live region, and the problem list is not inside a paragraph', () => {
+    const html = render('{ "title": ')
+    expect(html).toContain('isn&#x27;t valid JSON')
+    expect(html).toContain('aria-live="polite"')
+    expect(html).not.toMatch(/<p[^>]*>(?:(?!<\/p>)[\s\S])*<ul/)
+  })
+
+  it('shows a note after a save, a Saving… button while one is sent, and the prompt to copy by hand', () => {
+    expect(render(valid, { note: { tone: 'info', text: COPY.contentSaved('The Little Seed') } })).toContain(
+      'Saved &quot;The Little Seed&quot;.',
+    )
+    const saving = render(valid, { saving: true })
+    expect(saving).toMatch(/<button[^>]*disabled=""[^>]*>Saving…/)
+    const manual = render('', {
+      manual: 'the prompt',
+      note: { tone: 'warn', text: COPY.contentCopyUnavailable },
+    })
+    expect(manual).toMatch(/<textarea[^>]*readOnly[^>]*>the prompt<\/textarea>/)
+    expect(manual).toContain('copy it by hand')
   })
 })

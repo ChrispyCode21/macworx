@@ -1,25 +1,13 @@
-import { useMemo, useState } from 'react'
 import { COPY } from '../../copy'
-import { parsePassageJson } from '../../engine'
 import type { CheckedPassage } from '../../engine'
-import { savePassage } from '../../parent/api'
-import type { ParentResult } from '../../parent/api'
 import { CopyIcon, LockKeyholeIcon } from '../../parent/icons'
-import { passagePrompt } from '../../parent/passagePrompt'
 import { Button } from '../../ui/Button'
 import { CodeBox } from '../../ui/CodeBox'
 import { Panel } from '../../ui/Panel'
 import { Safeguard } from '../../ui/Safeguard'
 import { SectionHeading } from '../../ui/SectionHeading'
-
-/** What a failed save shows. While the page reloads for a sign-in, nothing. */
-function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
-  if (result.error === 'reloading') return null
-  if (result.error === 'signed_out') return COPY.parentSignedOut
-  if (result.error === 'offline') return COPY.parentOffline
-  if (result.error === 'bad_passage') return COPY.contentSaveProblem
-  return COPY.parentServerTrouble
-}
+import { TextField } from '../../ui/TextField'
+import type { PassageForm } from './usePassageForm'
 
 /** What the pasted passage will look like in Reading: its title, its length and each question with the right choice marked. */
 function Preview({ passage }: { passage: CheckedPassage }) {
@@ -48,43 +36,10 @@ function Preview({ passage }: { passage: CheckedPassage }) {
 
 /**
  * The Content screen (SPEC §5.3): where a parent adds practice content that every child shares. Today that is a
- * pasted reading passage; the words card comes with the spelling list. The pasted text is the Portal's, so it
- * survives a switch to another tab.
+ * pasted reading passage; the words card comes with the spelling list. Its state is the Portal's (`usePassageForm`).
  */
-export function ContentScreen({ draft, onDraft }: { draft: string; onDraft: (text: string) => void }) {
-  const [saving, setSaving] = useState(false)
-  const [note, setNote] = useState<{ tone: 'info' | 'warn'; text: string } | null>(null)
-  const check = useMemo(() => (draft.trim() === '' ? null : parsePassageJson(draft)), [draft])
-
-  const change = (text: string) => {
-    setNote(null)
-    onDraft(text)
-  }
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(passagePrompt())
-      setNote({ tone: 'info', text: COPY.contentCopied })
-    } catch {
-      setNote({ tone: 'warn', text: COPY.contentCopyUnavailable })
-    }
-  }
-
-  const save = async () => {
-    if (!check?.ok || saving) return
-    setSaving(true)
-    setNote(null)
-    const result = await savePassage(check.passage.source)
-    setSaving(false)
-    if (!result.ok) {
-      const text = failure(result)
-      if (text) setNote({ tone: 'warn', text })
-      return
-    }
-    setNote({ tone: 'info', text: COPY.contentSaved(check.passage.title) })
-    onDraft('')
-  }
-
+export function ContentScreen({ form }: { form: PassageForm }) {
+  const { draft, setDraft, check, saving, note, manual, copy, save } = form
   return (
     <div className="content">
       <Panel className="content-card" aria-label={COPY.contentReadingHeading}>
@@ -105,32 +60,36 @@ export function ContentScreen({ draft, onDraft }: { draft: string; onDraft: (tex
             {COPY.contentCopy}
           </Button>
         </div>
+        {manual !== null && <TextField label={COPY.contentCopyByHand} multiline readOnly value={manual} />}
 
-        <CodeBox label={COPY.contentJsonLabel} hint={COPY.contentJsonHint} value={draft} onChange={change} />
+        <CodeBox
+          label={COPY.contentJsonLabel}
+          hint={COPY.contentJsonHint}
+          value={draft}
+          invalid={check !== null && !check.ok}
+          onChange={setDraft}
+        />
 
-        {check?.ok && (
-          <>
-            <Safeguard tone="info" role="status">
-              {COPY.contentValid(check.passage.questions.length)}
-            </Safeguard>
-            <Preview passage={check.passage} />
-          </>
-        )}
-        {check && !check.ok && (
-          <Safeguard tone="warn" role="alert">
-            {COPY.contentFixHeading}
-            <ul className="content-problems">
-              {check.problems.map((problem) => (
-                <li key={problem}>{problem}</li>
-              ))}
-            </ul>
-          </Safeguard>
-        )}
-        {note && (
-          <Safeguard tone={note.tone} role={note.tone === 'warn' ? 'alert' : 'status'}>
-            {note.text}
-          </Safeguard>
-        )}
+        {/* Always mounted, so a screen reader hears each change to it once, not a new alert on every keystroke. */}
+        <div className="content-checks" aria-live="polite">
+          {check?.ok && (
+            <>
+              <Safeguard tone="info">{COPY.contentValid(check.passage.questions.length)}</Safeguard>
+              <Preview passage={check.passage} />
+            </>
+          )}
+          {check && !check.ok && (
+            <>
+              <Safeguard tone="warn">{COPY.contentFixHeading}</Safeguard>
+              <ul className="content-problems">
+                {check.problems.map((problem) => (
+                  <li key={problem}>{problem}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {note && <Safeguard tone={note.tone}>{note.text}</Safeguard>}
+        </div>
 
         <div className="content-actions">
           <div>

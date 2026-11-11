@@ -216,7 +216,8 @@ export const COPY = {
   contentHelperLine2: 'Ask for a story, then paste its JSON response below.',
   contentCopy: 'Copy prompt + schema',
   contentCopied: 'Copied. Paste it into your LLM.',
-  contentCopyUnavailable: "This browser can't copy for you here.",
+  contentCopyUnavailable: "This browser can't copy for you here. Select the text below and copy it by hand.",
+  contentCopyByHand: 'The prompt and schema',
   contentJsonLabel: 'Passage JSON',
   contentJsonHint: 'Paste the full object, without markdown fences.',
   contentValid: (questions: number) =>

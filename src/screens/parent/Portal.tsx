@@ -26,6 +26,7 @@ import { ChildrenGate } from './ChildrenGate'
 import { ContentScreen } from './ContentScreen'
 import type { ChildMode } from './ChildForm'
 import { ParentPage } from './ParentPage'
+import { usePassageForm } from './usePassageForm'
 
 const NAV: Record<Tab, { label: string; icon: (size: number) => ReactNode }> = {
   overview: { label: COPY.parentTabOverview, icon: (size) => <LayoutDashboardIcon size={size} /> },
@@ -96,8 +97,8 @@ export function Portal() {
   const [childMode, setChildMode] = useState<ChildMode>('add')
   const [focusName, setFocusName] = useState(false)
   const [renames, setRenames] = useState(0)
-  // The passage a parent is pasting on Content: kept here so it survives a switch to another tab.
-  const [passageDraft, setPassageDraft] = useState('')
+  // The passage a parent is pasting on Content, and its save: kept here so they survive a switch to another tab.
+  const passageForm = usePassageForm()
   const title = useRef<HTMLHeadingElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
 
@@ -299,9 +300,7 @@ export function Portal() {
           {sub && <p className="portal-sub">{sub}</p>}
         </div>
         <main className="portal-main">
-          {load.status === 'ready' && tab === 'content' && (
-            <ContentScreen draft={passageDraft} onDraft={setPassageDraft} />
-          )}
+          {load.status === 'ready' && tab === 'content' && <ContentScreen form={passageForm} />}
           {/* Stays mounted on Content too (it shows nothing of its own there), so no tab's state is lost. */}
           {load.status === 'ready' && (
             <ParentPage

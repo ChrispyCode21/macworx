@@ -2,7 +2,10 @@
 // passage. The numbers come from the same limits the checks use, so the two can't drift apart (L24).
 import { PASSAGE_LIMITS } from '../engine'
 
-const text = { type: 'string', minLength: 1 } as const
+// Text counts as empty when it is only spaces, so a value needs at least one character that is not one (`\S`).
+const text = { type: 'string', minLength: 1, pattern: '\\S' } as const
+// Optional text may be empty, and null counts as absent.
+const optionalText = { type: ['string', 'null'] } as const
 
 /** The shape of one passage as JSON Schema. What a schema can't say is in `passagePrompt`. */
 export const PASSAGE_SCHEMA = {
@@ -11,8 +14,8 @@ export const PASSAGE_SCHEMA = {
   properties: {
     title: text,
     minutes: { type: 'integer', minimum: 1, maximum: PASSAGE_LIMITS.minutes },
-    topic: { type: 'string' },
-    hint: { type: 'string' },
+    topic: optionalText,
+    hint: optionalText,
     passage: { type: 'array', minItems: 1, items: text },
     questions: {
       type: 'array',
@@ -30,7 +33,7 @@ export const PASSAGE_SCHEMA = {
             items: text,
           },
           correct_answer: text,
-          explanation: { type: 'string' },
+          explanation: optionalText,
         },
       },
     },

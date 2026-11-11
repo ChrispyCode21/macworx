@@ -68,7 +68,7 @@ test('a passage that fails the checks says what to fix, and cannot be saved', as
   await page.goto('/parent/content')
   const bad = { ...passage, questions: [{ ...passage.questions[0], options: ['A', 'B', 'C'] }] }
   await box(page).fill(JSON.stringify(bad))
-  await expect(page.getByRole('alert')).toContainText('Question 1 needs exactly 4 "options" (it has 3).')
+  await expect(page.getByText('Question 1 needs exactly 4 "options" (it has 3).')).toBeVisible()
   await expect(save(page)).toBeDisabled()
   expect(saved).toEqual([])
 })
@@ -87,6 +87,6 @@ test('the pasted text survives a visit to another tab, and a refused save keeps 
   await expect(box(page)).toHaveValue(text)
 
   await save(page).click()
-  await expect(page.getByRole('alert')).toContainText("couldn't be saved")
+  await expect(page.getByText("couldn't be saved")).toBeVisible()
   await expect(box(page)).toHaveValue(text)
 })

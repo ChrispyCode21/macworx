@@ -15,6 +15,7 @@ const KEYWORDS = [
   'minItems',
   'maxItems',
   'minLength',
+  'pattern',
   'minimum',
   'maximum',
 ]
@@ -22,8 +23,11 @@ function matches(schema: any, value: unknown): boolean {
   for (const key of Object.keys(schema))
     if (!KEYWORDS.includes(key)) throw new Error(`The test can't judge the schema keyword "${key}"`)
   const { type } = schema
+  if (Array.isArray(type)) return type.some((t: string) => matches({ ...schema, type: t }, value))
+  if (type === 'null') return value === null
   if (type === 'string') {
     if (typeof value !== 'string') return false
+    if (schema.pattern !== undefined && !new RegExp(schema.pattern).test(value)) return false
     return schema.minLength === undefined || value.length >= schema.minLength
   }
   if (type === 'integer') {
@@ -86,6 +90,15 @@ describe('PASSAGE_SCHEMA', () => {
       passage({ questions: [question({ question: '' })] }),
       passage({ questions: [question({ correct_answer: undefined })] }),
       passage({ topic: 5 }),
+      // The cases a looser schema gets wrong: only spaces, and null for what is optional.
+      passage({ title: '   ' }),
+      passage({ passage: ['  '] }),
+      passage({ questions: [question({ question: ' ' })] }),
+      passage({ questions: [question({ options: ['a', ' ', 'c', 'd'], correct_answer: 'a' })] }),
+      passage({ questions: [question({ correct_answer: '  ' })] }),
+      passage({ topic: null, hint: null }),
+      passage({ questions: [question({ explanation: null })] }),
+      passage({ topic: '', hint: '' }),
     ]
     for (const sample of samples)
       expect(matches(PASSAGE_SCHEMA, sample), JSON.stringify(sample).slice(0, 120)).toBe(

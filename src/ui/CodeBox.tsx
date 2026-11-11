@@ -8,6 +8,8 @@ interface Props {
   hint?: string
   value: string
   placeholder?: string
+  /** What was pasted has a problem: the box says so to assistive technology. */
+  invalid?: boolean
   onChange: (value: string) => void
 }
 
@@ -15,8 +17,9 @@ interface Props {
  * A box for pasted code: a monospace textarea with a line-number gutter that scrolls with it. Parent pages only.
  * Autocorrect, automatic capitals and spell check are off, so pasted JSON arrives as it was.
  */
-export function CodeBox({ label, hint, value, placeholder, onChange }: Props) {
+export function CodeBox({ label, hint, value, placeholder, invalid, onChange }: Props) {
   const id = useId()
+  const hintId = `${id}-hint`
   const gutter = useRef<HTMLDivElement>(null)
   const lines = Math.max(value.split('\n').length, MIN_LINES)
   return (
@@ -24,7 +27,11 @@ export function CodeBox({ label, hint, value, placeholder, onChange }: Props) {
       <label className="text-field-label" htmlFor={id}>
         {label}
       </label>
-      {hint && <span className="text-field-hint">{hint}</span>}
+      {hint && (
+        <span id={hintId} className="text-field-hint">
+          {hint}
+        </span>
+      )}
       <div className="code-box-frame">
         <div className="code-box-gutter" ref={gutter} aria-hidden="true">
           {Array.from({ length: lines }, (_, i) => (
@@ -36,6 +43,8 @@ export function CodeBox({ label, hint, value, placeholder, onChange }: Props) {
           className="code-box-input"
           value={value}
           placeholder={placeholder}
+          aria-describedby={hint ? hintId : undefined}
+          aria-invalid={invalid ? true : undefined}
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
