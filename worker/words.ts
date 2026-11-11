@@ -128,7 +128,10 @@ export async function patchWord({ request, db, params }: ParentRequest): Promise
 
   let body: unknown
   try {
-    body = JSON.parse(await request.text())
+    const raw = await request.text()
+    // The same size limit as a save, counted in bytes.
+    if (new TextEncoder().encode(raw).length > SPELLING.saveBytes) return bad(['That is too long to save.'])
+    body = JSON.parse(raw)
   } catch {
     body = undefined
   }
@@ -152,23 +155,40 @@ export async function patchWord({ request, db, params }: ParentRequest): Promise
   const key = normalizeTyped(checked.entry.word)
   const clash = await db.prepare('SELECT id FROM words WHERE key = ? AND id <> ?').bind(key, id).first()
   if (clash) return error(409, 'duplicate')
+
+  // Only the fields sent are written, so two edits of different fields don't undo each other.
+  const set: string[] = []
+  const values: unknown[] = []
+  if ('word' in sent) {
+    set.push('word = ?', 'key = ?')
+    values.push(checked.entry.word, key)
+  }
+  if ('sentence' in sent) {
+    set.push('sentence = ?')
+    values.push(checked.entry.sentence)
+  }
+  if ('alternates' in sent) {
+    set.push('alternates = ?')
+    values.push(JSON.stringify(checked.entry.alternates))
+  }
+  if ('grade' in sent) {
+    set.push('grade = ?')
+    values.push(grade ?? null)
+  }
+  let changed: number
   try {
-    await db
-      .prepare('UPDATE words SET word = ?, key = ?, sentence = ?, alternates = ?, grade = ? WHERE id = ?')
-      .bind(
-        checked.entry.word,
-        key,
-        checked.entry.sentence,
-        JSON.stringify(checked.entry.alternates),
-        grade ?? null,
-        id,
-      )
+    const result = await db
+      .prepare(`UPDATE words SET ${set.join(', ')} WHERE id = ?`)
+      .bind(...values, id)
       .run()
+    changed = result.meta.changes
   } catch (e) {
     // Another save took this word between the look above and the write.
     if (/UNIQUE/i.test(String(e))) return error(409, 'duplicate')
     throw e
   }
+  // The word was deleted between the read and the write: nothing was changed.
+  if (changed === 0) return error(404, 'unknown_word')
   return json(200, {
     word: {
       id,

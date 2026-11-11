@@ -18,6 +18,12 @@ export function filterWords(words: readonly WordItem[], query: string): WordItem
   )
 }
 
+/** The words alphabetical, ignoring capitals, as the Worker lists them (ties by id). */
+export function sortWords(words: readonly WordItem[]): WordItem[] {
+  const collator = new Intl.Collator('en', { sensitivity: 'accent' })
+  return [...words].sort((a, b) => collator.compare(a.word, b.word) || a.id - b.id)
+}
+
 /** The alternates as one box shows them, separated by commas. */
 export const alternatesText = (alternates: readonly string[]): string => alternates.join(', ')
 

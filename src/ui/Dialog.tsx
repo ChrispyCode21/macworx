@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
-import type { ReactNode, RefObject } from 'react'
+import type { MouseEvent, ReactNode, RefObject } from 'react'
 import { Button } from './Button'
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   onClose: () => void
   /** Where focus goes on closing, for a browser (Safari) that doesn't focus a button when it is tapped. */
   returnFocusTo?: RefObject<HTMLElement | null>
+  /** Called when Escape is pressed: answer true to say it ended something inside (an edit), so the dialog stays. */
+  onEscape?: () => boolean
   children: ReactNode
 }
 
@@ -17,10 +19,17 @@ interface Props {
  * it, and what has focus when it opens gets it back when it closes. Parent pages only. The children are mounted
  * only while it is open, so what they read is read when it opens.
  */
-export function Dialog({ open, title, closeLabel, onClose, returnFocusTo, children }: Props) {
+export function Dialog({ open, title, closeLabel, onClose, returnFocusTo, onEscape, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
   const opener = useRef<HTMLElement | null>(null)
   const titleId = useId()
+  // A click on the backdrop lands on the dialog itself, as one on its padding does: the position tells them apart,
+  // and both the press and the release must be outside, so dragging out of a box doesn't close it.
+  const pressedOutside = useRef(false)
+  const outside = (e: MouseEvent<HTMLDialogElement>) => {
+    const box = e.currentTarget.getBoundingClientRect()
+    return e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom
+  }
 
   useEffect(() => {
     const dialog = ref.current
@@ -44,8 +53,15 @@ export function Dialog({ open, title, closeLabel, onClose, returnFocusTo, childr
         opener.current = null
         onClose()
       }}
+      onCancel={(e) => {
+        if (onEscape?.()) e.preventDefault()
+      }}
+      onMouseDown={(e) => {
+        pressedOutside.current = e.target === e.currentTarget && outside(e)
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
+        if (pressedOutside.current && e.target === e.currentTarget && outside(e)) onClose()
+        pressedOutside.current = false
       }}
     >
       <div className="dialog-head">

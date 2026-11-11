@@ -255,6 +255,58 @@ describe('PATCH /api/parent/words/:id', () => {
     ).toBe(401)
   })
 
+  it('a rename onto a word that matches as her typing does is 409: another apostrophe or accent form', async () => {
+    await add({ word: "don't" }, { word: 'café' }, { word: 'other' }, { word: 'more' })
+    const other = await idOf('other')
+    const more = await idOf('more')
+    for (const word of ['don’t', 'café'])
+      expect((await call('PATCH', `/api/parent/words/${other}`, { word })).status, word).toBe(409)
+    expect((await call('PATCH', `/api/parent/words/${more}`, { sentence: 'Fine.' })).status).toBe(200)
+  })
+
+  it('only the fields sent are written, and a body over 256 KB is refused', async () => {
+    await add({ word: 'colour', sentence: 'First.', alternates: ['color'] })
+    const id = await idOf('colour')
+    await call('PATCH', `/api/parent/words/${id}`, { grade: 4 })
+    await call('PATCH', `/api/parent/words/${id}`, { sentence: 'Second.' })
+    expect((await stored())[0]).toMatchObject({ sentence: 'Second.', alternates: '["color"]', grade: 4 })
+    const big = await call('PATCH', `/api/parent/words/${id}`, { sentence: 'x'.repeat(300_000) })
+    expect([big.status, big.body.error]).toEqual([400, 'bad_word'])
+  })
+
+  it('a word deleted between the read and the write is 404, not a 200 for a change that was not made', async () => {
+    await add({ word: 'alpha' })
+    const alpha = await idOf('alpha')
+    const real = t.db
+    const db = new Proxy(real, {
+      get: (target, prop) => {
+        if (prop !== 'prepare')
+          return typeof (target as any)[prop] === 'function'
+            ? (target as any)[prop].bind(target)
+            : (target as any)[prop]
+        return (sql: string) => {
+          if (sql.startsWith('UPDATE words')) void target.prepare('DELETE FROM words').run()
+          return target.prepare(sql)
+        }
+      },
+    })
+    const response = await patchWord({
+      request: new Request('https://x/api/parent/words/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ sentence: 'x' }),
+      }),
+      url: new URL('https://x/api/parent/words/1'),
+      db,
+      email: 'p@example.com',
+      now: new Date('2026-10-17T12:00:00Z'),
+      params: { id: String(alpha) },
+    } as Parameters<typeof patchWord>[0])
+    expect([response.status, ((await response.json()) as { error: string }).error]).toEqual([
+      404,
+      'unknown_word',
+    ])
+  })
+
   it('a clash that lands between the check and the write is 409, not a 500', async () => {
     await add({ word: 'alpha' }, { word: 'beta' })
     const alpha = await idOf('alpha')

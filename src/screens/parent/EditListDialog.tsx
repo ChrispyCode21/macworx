@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { COPY } from '../../copy'
 import { checkWord } from '../../engine'
 import { editWord, listWords, removeWord } from '../../parent/api'
 import type { ParentResult } from '../../parent/api'
 import { PencilIcon, XIcon } from '../../parent/icons'
-import { alternatesText, filterWords, parseAlternates } from '../../parent/wordList'
+import { alternatesText, filterWords, parseAlternates, sortWords } from '../../parent/wordList'
 import type { WordItem } from '../../parent/wordList'
 import { Button } from '../../ui/Button'
 import { Dialog } from '../../ui/Dialog'
@@ -55,7 +55,12 @@ function EditRow({
 
   return (
     <li className="edit-list-row edit-list-form">
-      <TextField label={COPY.wordsEditWord} value={text} onChange={(e) => setText(e.target.value)} />
+      <TextField
+        autoFocus
+        label={COPY.wordsEditWord}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
       <TextField
         label={COPY.wordsEditSentence}
         value={sentence}
@@ -76,7 +81,7 @@ function EditRow({
         <Button variant="primary" disabled={saving} onClick={() => void save()}>
           {saving ? COPY.contentSaving : COPY.wordsEditSave}
         </Button>
-        <Button variant="secondary" onClick={onCancel}>
+        <Button variant="secondary" disabled={saving} onClick={onCancel}>
           {COPY.wordsEditCancel}
         </Button>
       </div>
@@ -97,26 +102,32 @@ export function EditListDialog({
   onClose: () => void
   returnFocusTo: RefObject<HTMLElement | null>
 }) {
+  // Escape ends an edit or a delete question first, and only then the dialog (the list sets this).
+  const escape = useRef<() => boolean>(() => false)
   return (
     <Dialog
       open={open}
       title={COPY.wordsEditHeading}
       closeLabel={COPY.wordsEditClose}
       onClose={onClose}
+      onEscape={() => escape.current()}
       returnFocusTo={returnFocusTo}
     >
-      <EditList />
+      <EditList escape={escape} />
     </Dialog>
   )
 }
 
-function EditList() {
+function EditList({ escape }: { escape: RefObject<() => boolean> }) {
   const [words, setWords] = useState<WordItem[] | null>(null)
   const [failed, setFailed] = useState(false)
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<number | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
+  const [removing, setRemoving] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const rows = useRef<HTMLUListElement>(null)
+  const search = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let live = true
@@ -130,29 +141,70 @@ function EditList() {
     }
   }, [])
 
+  // A row's buttons are replaced when it changes, so focus goes to the word's pencil (or the search box when the
+  // word is gone), not to nowhere. It is asked for here and done after the next render, when the pencil exists.
+  const [focusTarget, setFocusTarget] = useState<{ id: number | null } | null>(null)
+  const refocus = (id: number | null) => setFocusTarget({ id })
+  useEffect(() => {
+    if (!focusTarget) return
+    const target =
+      focusTarget.id === null
+        ? search.current?.querySelector('input')
+        : rows.current?.querySelector(`[data-pencil="${focusTarget.id}"]`)
+    ;(target as HTMLElement | null | undefined)?.focus()
+    setFocusTarget(null)
+  }, [focusTarget])
+
+  useEffect(() => {
+    escape.current = () => {
+      if (editing !== null) {
+        refocus(editing)
+        setEditing(null)
+        return true
+      }
+      if (deleting !== null && !removing) {
+        refocus(deleting)
+        setDeleting(null)
+        return true
+      }
+      return false
+    }
+  }, [escape, editing, deleting, removing])
+
   const remove = async (word: WordItem) => {
+    if (removing) return
+    setRemoving(true)
     const result = await removeWord(word.id)
-    setDeleting(null)
+    setRemoving(false)
+    setDeleting((current) => (current === word.id ? null : current))
     // A word that is already gone is gone: the list just drops it.
-    if (!result.ok && result.error !== 'unknown_word') return setNote(failure(result))
+    if (!result.ok && result.error !== 'unknown_word') {
+      refocus(word.id)
+      return setNote(failure(result))
+    }
     setNote(null)
     setWords((all) => (all ?? []).filter((w) => w.id !== word.id))
+    refocus(null)
   }
 
   if (words === null)
     return <p className="parent-note">{failed ? COPY.parentUnavailable : COPY.parentLoading}</p>
-  const shown = filterWords(words, query)
+  // A word being edited or asked about stays in the list even when the search no longer matches it.
+  const matching = new Set(filterWords(words, query).map((w) => w.id))
+  const shown = words.filter((w) => matching.has(w.id) || w.id === editing || w.id === deleting)
   return (
     <div className="edit-list">
-      <TextField
-        label={COPY.wordsSearchLabel}
-        type="search"
-        autoComplete="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div ref={search}>
+        <TextField
+          label={COPY.wordsSearchLabel}
+          type="search"
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
       {note && (
         <Safeguard tone="warn" role="alert">
           {note}
@@ -160,16 +212,21 @@ function EditList() {
       )}
       {words.length === 0 && <p className="parent-note">{COPY.wordsNone}</p>}
       {words.length > 0 && shown.length === 0 && <p className="parent-note">{COPY.wordsNoMatch}</p>}
-      <ul className="edit-list-rows">
+      <ul className="edit-list-rows" ref={rows}>
         {shown.map((word) =>
           editing === word.id ? (
             <EditRow
               key={word.id}
               word={word}
-              onCancel={() => setEditing(null)}
-              onSaved={(changed) => {
+              onCancel={() => {
                 setEditing(null)
-                setWords((all) => (all ?? []).map((w) => (w.id === changed.id ? changed : w)))
+                refocus(word.id)
+              }}
+              onSaved={(changed) => {
+                // Only this word's form closes: another may have been opened meanwhile.
+                setEditing((current) => (current === changed.id ? null : current))
+                setWords((all) => sortWords((all ?? []).map((w) => (w.id === changed.id ? changed : w))))
+                refocus(changed.id)
               }}
             />
           ) : (
@@ -182,12 +239,20 @@ function EditList() {
                 {word.sentence && <p className="parent-note">{word.sentence}</p>}
               </div>
               {deleting === word.id ? (
-                <div className="edit-list-actions">
+                <div className="edit-list-actions" role="group" aria-label={COPY.wordsDeleteAsk(word.word)}>
                   <span className="edit-list-ask">{COPY.wordsDeleteAsk(word.word)}</span>
-                  <Button variant="danger" onClick={() => void remove(word)}>
+                  <Button variant="danger" disabled={removing} onClick={() => void remove(word)}>
                     {COPY.wordsDelete}
                   </Button>
-                  <Button variant="secondary" onClick={() => setDeleting(null)}>
+                  <Button
+                    variant="secondary"
+                    autoFocus
+                    disabled={removing}
+                    onClick={() => {
+                      setDeleting(null)
+                      refocus(word.id)
+                    }}
+                  >
                     {COPY.wordsKeep}
                   </Button>
                 </div>
@@ -195,6 +260,7 @@ function EditList() {
                 <div className="edit-list-actions">
                   <Button
                     variant="bare"
+                    data-pencil={word.id}
                     aria-label={COPY.wordsEditLabel(word.word)}
                     onClick={() => {
                       setDeleting(null)

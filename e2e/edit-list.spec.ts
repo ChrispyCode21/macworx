@@ -11,10 +11,10 @@ interface Word {
   grade: number | null
 }
 
-async function api(page: Page, words: Word[]) {
+async function api(page: Page, words: Word[], gate: Promise<void> = Promise.resolve()) {
   const patches: unknown[] = []
   const deletes: number[] = []
-  await page.route('/api/parent/**', (route) => {
+  await page.route('/api/parent/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     const word = url.pathname.match(/^\/api\/parent\/words\/(\d+)$/)
@@ -31,6 +31,7 @@ async function api(page: Page, words: Word[]) {
     }
     if (word && request.method() === 'DELETE') {
       deletes.push(Number(word[1]))
+      await gate
       words.splice(
         words.findIndex((w) => w.id === Number(word[1])),
         1,
@@ -136,4 +137,71 @@ test('with no words it says so, and when the list cannot be read it says it is n
   await page.route('/api/parent/words', (route) => route.fulfill({ status: 500, body: 'oops' }))
   await page.getByRole('button', { name: 'Edit list' }).click()
   await expect(page.getByRole('dialog').getByText('Not available right now.')).toBeVisible()
+})
+
+test('Escape ends an edit first and the dialog second, and a padding click or a drag out of a box does not close it', async ({
+  page,
+}) => {
+  await api(page, list())
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Edit list' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit list' })
+
+  await dialog.getByRole('button', { name: 'Edit because' }).click()
+  // The Word box has focus as soon as the form opens.
+  await expect(dialog.getByLabel('Word', { exact: true })).toBeFocused()
+  await dialog.getByLabel('Sentence').fill('Typed, not saved.')
+  // A click in the dialog's own padding is not a click outside it.
+  await dialog.click({ position: { x: 4, y: 4 } })
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByLabel('Sentence')).toHaveCount(0)
+  await expect(dialog.getByRole('button', { name: 'Edit because' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+
+  // The backdrop does close it.
+  await page.getByRole('button', { name: 'Edit list' }).click()
+  await expect(dialog).toBeVisible()
+  await page.mouse.click(2, 2)
+  await expect(dialog).toBeHidden()
+})
+
+test('the delete question takes focus on Keep, and while a delete is in flight neither button can be pressed', async ({
+  page,
+}) => {
+  let release: () => void = () => {}
+  const gate = new Promise<void>((resolve) => (release = resolve))
+  const { deletes } = await api(page, list(), gate)
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Edit list' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit list' })
+
+  await dialog.getByRole('button', { name: 'Delete because' }).click()
+  await expect(dialog.getByRole('button', { name: 'Keep' })).toBeFocused()
+  await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+  await expect(dialog.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled()
+  await expect(dialog.getByRole('button', { name: 'Keep' })).toBeDisabled()
+  release()
+  await expect(dialog.locator('.edit-list-word')).toHaveText(['favourite', 'friend'])
+  expect(deletes).toEqual([1])
+})
+
+test('a word being edited stays in the list when the search stops matching it, and a rename moves it to its place', async ({
+  page,
+}) => {
+  await api(page, list())
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Edit list' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit list' })
+
+  await dialog.getByRole('button', { name: 'Edit because' }).click()
+  await dialog.getByRole('searchbox', { name: 'Search the list' }).fill('zzz')
+  await expect(dialog.getByLabel('Word', { exact: true })).toHaveValue('because')
+  await dialog.getByRole('searchbox', { name: 'Search the list' }).fill('')
+  await dialog.getByLabel('Word', { exact: true }).fill('zebra')
+  await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(dialog.locator('.edit-list-word')).toHaveText(['favourite', 'friend', 'zebra'])
+  await expect(dialog.getByRole('button', { name: 'Edit zebra' })).toBeFocused()
 })
