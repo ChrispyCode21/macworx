@@ -32,6 +32,9 @@ export const ASSIGNMENT = {
   multiplication: 6,
 } as const
 
+/** The most questions a reading assignment gives, whatever the passage has (SPEC §6.2). */
+export const READING_QUESTIONS = 10
+
 /** Problems in one assignment. */
 export const ASSIGNMENT_SIZE = ASSIGNMENT.addition + ASSIGNMENT.subtraction + ASSIGNMENT.multiplication
 

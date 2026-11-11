@@ -1,6 +1,6 @@
 // The reading assignment (SPEC §5.6, §6.8, §6.10): choosing her next passage, and marking and paying her choices.
 // The right answers never leave the Worker before a result is recorded.
-import { dayNumber, scoreReading } from '../src/engine'
+import { dayNumber, READING_QUESTIONS, scoreReading } from '../src/engine'
 import {
   clampDay,
   readState,
@@ -72,37 +72,78 @@ function groupQuestions(rows: QuestionRow[]) {
   return questions
 }
 
+/** `count` of `ids` chosen with `random` (numbers from 0 up to, not including, 1), in their original order. */
+export function pickQuestions(ids: number[], count: number, random: () => number): number[] {
+  if (ids.length <= count) return ids
+  const pool = [...ids]
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
+  }
+  const chosen = new Set(pool.slice(0, count))
+  return ids.filter((id) => chosen.has(id))
+}
+
+const randomUnit = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 2 ** 32
+
+/** The questions an attempt carries: the ids stored with it, or all of the passage's when none are (SPEC §6.10). */
+const attemptQuestions = <Q extends { id: number }>(all: Q[], stored: string | null) => {
+  if (stored === null) return all
+  const ids = new Set(JSON.parse(stored) as number[])
+  return all.filter((q) => ids.has(q.id))
+}
+
 /** POST /api/reading/start: her next passage and an attempt to answer it. */
 export async function postReadingStart({ db, device, childId, now }: ChildRequest): Promise<Response> {
   const next = await db.prepare(NEXT_PASSAGE).bind(childId).first<{ id: number }>()
   if (!next) return json(200, { passage: null })
 
-  // An attempt she left unchecked is handed out again, with today as its day (§6.10); otherwise a new one.
+  const [passage, rows] = await db.batch([
+    db.prepare('SELECT title, genre, minutes, hint, body, image FROM passages WHERE id = ?').bind(next.id),
+    db.prepare(QUESTIONS).bind(next.id),
+  ])
+  const all = groupQuestions(rows.results as unknown as QuestionRow[])
+  const choose = () =>
+    all.length > READING_QUESTIONS
+      ? JSON.stringify(
+          pickQuestions(
+            all.map((q) => q.id),
+            READING_QUESTIONS,
+            randomUnit,
+          ),
+        )
+      : null
+
+  // An attempt she left unchecked is handed out again with its same questions and today as its day (§6.10);
+  // otherwise a new one, with its questions chosen now.
   const today = utcDay(now)
   const left = await db
     .prepare(
-      'SELECT id FROM reading_attempts WHERE device_id = ? AND child_id = ? AND passage_id = ? AND used = 0 ORDER BY id DESC LIMIT 1',
+      'SELECT id, questions FROM reading_attempts WHERE device_id = ? AND child_id = ? AND passage_id = ? AND used = 0 ORDER BY id DESC LIMIT 1',
     )
     .bind(device, childId, next.id)
-    .first<{ id: number }>()
+    .first<{ id: number; questions: string | null }>()
   let attempt: number
+  let stored: string | null
   if (left) {
-    await db.prepare('UPDATE reading_attempts SET issued_day = ? WHERE id = ?').bind(today, left.id).run()
+    // One made before the 10-question cap has none stored: choose them now if the passage has more than 10.
+    stored = left.questions ?? choose()
+    await db
+      .prepare('UPDATE reading_attempts SET issued_day = ?, questions = ? WHERE id = ?')
+      .bind(today, stored, left.id)
+      .run()
     attempt = left.id
   } else {
+    stored = choose()
     const made = await db
       .prepare(
-        'INSERT INTO reading_attempts (device_id, child_id, passage_id, issued_day) VALUES (?, ?, ?, ?)',
+        'INSERT INTO reading_attempts (device_id, child_id, passage_id, issued_day, questions) VALUES (?, ?, ?, ?, ?)',
       )
-      .bind(device, childId, next.id, today)
+      .bind(device, childId, next.id, today, stored)
       .run()
     attempt = made.meta.last_row_id
   }
 
-  const [passage, questions] = await db.batch([
-    db.prepare('SELECT title, genre, minutes, hint, body, image FROM passages WHERE id = ?').bind(next.id),
-    db.prepare(QUESTIONS).bind(next.id),
-  ])
   const p = passage.results[0] as unknown as Passage
   return json(200, {
     attempt,
@@ -118,7 +159,7 @@ export async function postReadingStart({ db, device, childId, now }: ChildReques
         .filter(Boolean),
       image: p.image,
       // `correct` and `explanation` are left out on purpose: the iPad learns neither before Check.
-      questions: groupQuestions(questions.results as unknown as QuestionRow[]).map((q) => ({
+      questions: attemptQuestions(all, stored).map((q) => ({
         id: q.id,
         text: q.text,
         choices: q.choices.map(({ id, text }) => ({ id, text })),
@@ -206,9 +247,17 @@ export async function postReadingResult({
   if (!body) return error(400, 'bad_result')
 
   const attempt = await db
-    .prepare('SELECT device_id, child_id, passage_id, issued_day FROM reading_attempts WHERE id = ?')
+    .prepare(
+      'SELECT device_id, child_id, passage_id, issued_day, questions FROM reading_attempts WHERE id = ?',
+    )
     .bind(body.attempt)
-    .first<{ device_id: number; child_id: number; passage_id: number; issued_day: string }>()
+    .first<{
+      device_id: number
+      child_id: number
+      passage_id: number
+      issued_day: string
+      questions: string | null
+    }>()
   if (!attempt || attempt.device_id !== device || attempt.child_id !== childId)
     return error(404, 'unknown_attempt')
 
@@ -224,7 +273,10 @@ export async function postReadingResult({
     db.prepare('SELECT title FROM passages WHERE id = ?').bind(attempt.passage_id),
     db.prepare(QUESTIONS).bind(attempt.passage_id),
   ])
-  const questions = groupQuestions(rows.results as unknown as QuestionRow[])
+  const questions = attemptQuestions(
+    groupQuestions(rows.results as unknown as QuestionRow[]),
+    attempt.questions,
+  )
   // Every question exactly once, each choice one of that question's (nothing is recorded otherwise).
   const picked = new Map<number, number>()
   for (const { question, choice } of body.picks) picked.set(question, choice)
