@@ -5,7 +5,6 @@ import type { HomeNumbers, PracticeChild } from '../../sync/projection'
 import { SpellingPractice } from './SpellingPractice'
 
 // There is no DOM here, so these check the screen as it opens. Tapping through the 8 words is in e2e/spelling.spec.ts.
-// With no `window`, the iPad "can't speak", which is the no-speech state.
 const NUMBERS: HomeNumbers = { balance: 40, completed: 2, streak: 3, latestGrade: null }
 const render = (numbers?: HomeNumbers, child?: PracticeChild | null) =>
   renderToStaticMarkup(<SpellingPractice numbers={numbers} child={child} onBack={() => {}} />)
@@ -15,45 +14,35 @@ describe('SpellingPractice', () => {
     const html = render(NUMBERS)
     expect(html).toContain('40 Macaronis')
     expect(html).toContain('Practice  /  Spelling')
-    expect(html).toContain('Listen closely. Choose confidently.')
+    expect(html).toContain('Listen closely. Type carefully.')
     expect(html).toContain('Word 1 of 8')
     expect(html).toContain('aria-valuenow="1"')
     expect(html).toContain('aria-valuemax="8"')
     expect(html).toContain(COPY.spellingNote)
   })
 
-  it('shows the four choices of the first word, lettered A to D, none chosen', () => {
+  it('shows an empty word box with autocorrect, capitals and spell check off, and no choices', () => {
     const html = render()
-    expect(html).toContain('role="radiogroup"')
-    for (const word of ['frend', 'freind', 'friend', 'frind']) expect(html).toContain(`>${word}<`)
-    for (const letter of ['A', 'B', 'C', 'D']) expect(html).toContain(`>${letter}</span>`)
-    expect(html.match(/role="radio"/g)).toHaveLength(4)
-    expect(html.match(/aria-checked="false"/g)).toHaveLength(4)
+    expect(html).toContain('type="text"')
+    expect(html).toContain('autoCorrect="off"')
+    expect(html).toContain('autoCapitalize="off"')
+    expect(html).toContain('autoComplete="off"')
+    expect(html).toContain('spellCheck="false"')
+    expect(html).toContain('maxLength="100"')
+    expect(html).toContain('value=""')
+    expect(html).not.toContain('role="radio"')
     expect(html).not.toContain('data-result')
-    expect(html).toContain(COPY.spellingChooseOne)
+    expect(html).toContain(COPY.spellingTypeIt)
   })
 
-  it('gives the first choice the only tab stop while none is chosen', () => {
+  it('disables Check until something is typed, and has one Play button that works', () => {
     const html = render()
-    expect(html.match(/role="radio"[^>]*tabindex="0"|tabindex="0"[^>]*role="radio"/g)).toHaveLength(1)
-    expect(html.match(/tabindex="-1"/g)).toHaveLength(3)
-  })
-
-  it('disables Check until a choice is made', () => {
-    expect(render()).toMatch(
+    expect(html).toMatch(
       /<button[^>]*disabled=""[^>]*class="button button-action"|class="button button-action"[^>]*disabled=""/,
     )
-  })
-
-  it('disables both Play buttons and says why when the iPad cannot speak, with the choices still open', () => {
-    const html = render()
-    expect(html).toContain(COPY.playUnavailable.replaceAll("'", '&#x27;'))
-    expect(html).not.toContain(COPY.playWordSub)
-    expect(html).toMatch(/aria-label="Play word"[^>]*disabled=""|disabled=""[^>]*aria-label="Play word"/)
-    expect(html).toMatch(
-      /<button[^>]*disabled=""[^>]*class="button button-support"|class="button button-support"[^>]*disabled=""/,
-    )
-    expect(html).not.toMatch(/role="radio"[^>]*disabled=""/)
+    expect(html).toContain(COPY.playWordSub)
+    expect(html).not.toContain('Hear it in a sentence')
+    expect(html).not.toMatch(/aria-label="Play word"[^>]*disabled=""|disabled=""[^>]*aria-label="Play word"/)
   })
 
   it('shows her avatar and name from the child it opens with', () => {

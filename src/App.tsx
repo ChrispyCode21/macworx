@@ -13,6 +13,7 @@ import {
 } from './storage/device'
 import { earnUpTo, homeNumbers, nextResult, practiceChild } from './sync/projection'
 import type { HomeNumbers, PracticeChild } from './sync/projection'
+import { canSpeak } from './practice/speech'
 import { startReading, type ReadingPassage } from './sync/reading'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { ReadingAssignment } from './screens/practice/ReadingAssignment'
@@ -63,6 +64,7 @@ function ChildApp() {
   const [paired, setPaired] = useState(() => getDeviceKey() !== null)
   const [noSeeds, setNoSeeds] = useState(false)
   const [readingOffline, setReadingOffline] = useState(false)
+  const [spellingSilent, setSpellingSilent] = useState(false)
   const [numbers, setNumbers] = useState(currentNumbers)
   const starting = useRef(false)
   const shown = useRef(screen)
@@ -96,6 +98,9 @@ function ChildApp() {
   // passage (SPEC §5.6). Without a connection nothing starts; an unpaired iPad, or no passages, gets the sample.
   const open = async (subject: 'spelling' | 'reading') => {
     const sample = () => setScreen({ name: 'practice', subject, child: currentChild() })
+    // Spelling is heard before it is typed, so an iPad that can't speak starts nothing, the sample included (SPEC §5.7 step 2).
+    setSpellingSilent(false)
+    if (subject === 'spelling' && !canSpeak()) return setSpellingSilent(true)
     if (subject !== 'reading' || !getDeviceKey()) return sample()
     if (starting.current) return
     starting.current = true
@@ -135,6 +140,7 @@ function ChildApp() {
   }
   const home = () => {
     setReadingOffline(false)
+    setSpellingSilent(false)
     refresh()
     setScreen({ name: 'home' })
   }
@@ -156,6 +162,7 @@ function ChildApp() {
           }}
           onOpen={open}
           readingOffline={readingOffline}
+          spellingSilent={spellingSilent}
           numbers={numbers}
           onPair={!paired && canPair() ? () => setScreen({ name: 'pair' }) : undefined}
         />

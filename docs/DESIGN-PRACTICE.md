@@ -337,22 +337,21 @@ Not in Figma (interim design, #122). Home keeps its current look, except that it
 
 ## 10. Screen: Spelling
 
-Frame `practice-spelling.png`. Crumb "Practice  /  Spelling". Title "Listen closely. Choose confidently." Progress "Word {n} of 8".
+Frame `practice-spelling.png` (it shows the earlier four-choice version; this section wins). Crumb "Practice  /  Spelling". Title "Listen closely. Type carefully." Progress "Word {n} of 8".
 
 **Activity row:** one panel (7.1, padding 32) holding two columns (section 3):
 
 1. **Listen** (fill `--l-inset`, radius 12, no border, column, centered both ways, gap 20 (12 on a short tablet, §3), height 100%):
    - eyebrow "Listen and spell"
-   - `play` button (accessible name "Play word"). It speaks the word with `speechSynthesis` (`lang` `en-US`, `rate` 0.8). Tapping again stops and replays.
-   - Text block (width 360, max 100%, gap 8, centered): listen-title "Play word", listen-sub "Listen to the word, then choose its spelling."
-   - `support` button "Hear it in a sentence": speaks the sample sentence.
-   - **No speech** (`'speechSynthesis' in window` is false): both buttons are disabled, and listen-sub reads "This iPad can't play the word. You can still choose a spelling." (SPEC §5.5 step 4).
-2. **Choices** (column, gap 10, height 100%):
-   - Heading row (height 30, space-between, centered): choice-heading "Which spelling is right?" + choice-hint "Choose one".
-   - Four `choice` buttons, A to D, word-choice text.
+   - `play` button (accessible name "Play word"). It says the word, then its sentence, with `speechSynthesis` (`lang` `en-US`, `rate` 0.8), as one go; tapping again stops and replays.
+   - Text block (width 360, max 100%, gap 8, centered): listen-title "Play word", listen-sub "Listen to the word and its sentence, then type the word."
+   - There is no separate sentence button, and no no-speech state on this screen: an iPad that can't speak never opens it. Home's Spelling card says "This iPad can't say words out loud." instead (SPEC §5.7 step 2).
+2. **Word** (column, gap 10, height 100%):
+   - Heading row (height 30, space-between, centered): choice-heading "Type the word" (the label of the box) + choice-hint "Take your time".
+   - The word box (`WordBox`, `src/ui/WordBox.tsx`): 78 high (56 on a short tablet), radius 12, 1 px `--l-line` border, `--l-surface` fill, text at the word-choice size (24). Autocorrect, automatic capitals, spell check and suggestions are off, and it takes 100 characters at most. After Check it can't be changed and turns the right (soft green) or not-right (soft coral) colors of 7.3, 2 px edge.
    - Footnote:
-     - Before a choice: "Choose one spelling."
-     - After a choice: "Ready to check."
+     - Nothing typed: "Type the word you heard."
+     - Something typed: "Ready to check."
      - After Check: replaced by the response (7.5).
        - Right: lead `COPY.cheers`.
        - Not right: response-line "This word is spelled {word}."
@@ -361,7 +360,7 @@ Frame `practice-spelling.png`. Crumb "Practice  /  Spelling". Title "Listen clos
 
 - Note: volume-2 icon 20 + "You can play the word as many times as you need."
 - Button `action`:
-  - "Check" with check 20, disabled until a choice is made.
+  - "Check" with check 20, disabled until something is typed (Enter on the box does the same).
   - Then "Next" with arrow-right 20.
   - After word 8: "Finish" with arrow-right 20.
 

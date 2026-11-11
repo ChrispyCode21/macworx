@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { canSpeak, speak, stopSpeaking } from './speech'
+import { canSpeak, speak, speakWord, stopSpeaking } from './speech'
 
 class FakeUtterance {
   text: string
@@ -48,9 +48,24 @@ describe('speech', () => {
     expect(spoken[0]).toMatchObject({ text: 'friend', lang: 'en-US', rate: 0.8 })
   })
 
+  it('says the word then its sentence, stopping what was playing once so the word is not cut off', () => {
+    const { calls, spoken } = fakeSpeech()
+    speakWord('friend', 'My friend sits next to me.')
+    expect(calls).toEqual(['cancel', 'speak', 'speak'])
+    expect(spoken.map((u) => u.text)).toEqual(['friend', 'My friend sits next to me.'])
+    expect(spoken[1]).toMatchObject({ lang: 'en-US', rate: 0.8 })
+  })
+
+  it('says only the word when it has no sentence', () => {
+    const { spoken } = fakeSpeech()
+    speakWord('friend', '')
+    expect(spoken.map((u) => u.text)).toEqual(['friend'])
+  })
+
   it('does nothing without speech', () => {
     vi.stubGlobal('window', {})
     expect(() => speak('friend')).not.toThrow()
+    expect(() => speakWord('friend', 'x')).not.toThrow()
     expect(() => stopSpeaking()).not.toThrow()
   })
 
