@@ -621,9 +621,9 @@ The parent API (every route needs a valid Access token, §6.9). A parent can lis
 
 The content routes (every one needs a valid Access token, and none takes `child`):
 
-- `GET /api/parent/words`: every word with its id, sentence, alternates and grade.
-- `POST /api/parent/words { words }`: adds the entries (§6.11) and returns `{ added, skipped }` (201); 400 `bad_word` for an entry that fails the rules, saving none.
-- `PATCH /api/parent/words/:id` and `DELETE /api/parent/words/:id`: edit and delete a word; a PATCH that renames to a word already in the list is 409 `duplicate`; 404 `unknown_word`.
+- `GET /api/parent/words`: every word with its id, sentence, alternates and grade, in alphabetical order ignoring capitals.
+- `POST /api/parent/words { words }`: adds the entries (§6.11: each a word, with an optional sentence, alternates and grade) and returns `{ added, skipped }` (201); 400 `bad_word`, with the problems, for an entry that fails the rules or more than 500 entries, saving none.
+- `PATCH /api/parent/words/:id { word?, sentence?, alternates?, grade? }` and `DELETE /api/parent/words/:id`: edit and delete a word (a PATCH is checked like an entry, 400 `bad_word`); a PATCH that renames to a word already in the list is 409 `duplicate`; 404 `unknown_word`.
 - `GET /api/parent/passages`: each passage's id, title, minutes, number of questions and times read. `GET /api/parent/passages/:id`: its JSON.
 - `POST /api/parent/passages { passage }` and `PUT /api/parent/passages/:id { passage }`: add (201, returns the id) and replace a passage; 400 `bad_passage` with the plain-language problems, saving nothing.
 - `DELETE /api/parent/passages/:id`: 409 `has_results` for a passage with a recorded result; 404 `unknown_passage`.
