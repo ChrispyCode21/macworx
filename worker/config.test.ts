@@ -38,6 +38,12 @@ describe('wrangler configs', () => {
     expect(prod.namespace_id).not.toBe(preview.namespace_id)
   })
 
+  it('bind the passage pictures bucket in production and previews, on different buckets', () => {
+    expect(main.r2_buckets).toEqual([{ binding: 'PASSAGE_IMAGES', bucket_name: 'macworx-prod' }])
+    expect(main.previews.r2_buckets).toEqual([{ binding: 'PASSAGE_IMAGES', bucket_name: 'macworx-preview' }])
+    expect(previewMigrations.r2_buckets).toBeUndefined()
+  })
+
   it('keep production and previews on different databases', () => {
     expect(main.d1_databases[0].database_id).not.toBe(main.previews.d1_databases[0].database_id)
   })
