@@ -232,6 +232,23 @@ export const COPY = {
   contentSaving: 'Saving…',
   contentSaved: (title: string) => `Saved "${title}". It will come up in Reading practice.`,
   contentSaveProblem: "That passage couldn't be saved. Check it and try again.",
+  // The Spelling card of the Content screen (SPEC §5.3).
+  wordsEyebrow: 'Spelling / Orthography',
+  wordsHeading: 'A list of their own.',
+  wordsSub: 'Type or paste words for spelling practice.',
+  wordsLabel: 'Words',
+  wordsHint: 'One word per line, or separate with commas.',
+  wordsCount: (n: number) => `${n} ${n === 1 ? 'word' : 'words'}`,
+  wordsBlankLines: 'Blank lines are ignored.',
+  wordsFixHeading: 'A few things to fix before saving:',
+  wordsMoreProblems: (n: number) => `…and ${n} more to fix.`,
+  wordsUse: 'This list will be used in spelling practice.',
+  wordsSave: 'Save word list',
+  wordsAdded: (added: number, skipped: number) =>
+    `Added ${added} ${added === 1 ? 'word' : 'words'}.${
+      skipped > 0 ? ` ${skipped} already in the list ${skipped === 1 ? 'was' : 'were'} skipped.` : ''
+    }`,
+  wordsSaveProblem: "Those words couldn't be saved. Check them and try again.",
   contentPrivacy: "Only you can manage this content. Saved content is available in your child's practice.",
   parentSwitcherLabel: 'Choose a child',
   parentChildProfile: 'Child profile',

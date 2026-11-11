@@ -3,6 +3,8 @@ import { useId, type ComponentProps } from 'react'
 interface CommonProps {
   label: string
   hint?: string
+  /** Show the hint between the label and the box, not after the box (the Content screen's word list). */
+  hintFirst?: boolean
   /** A word shown after the box, inside the same row (the price's "Macaronis"). */
   unit?: string
 }
@@ -16,7 +18,7 @@ type AreaProps = CommonProps & Omit<ComponentProps<'textarea'>, 'id' | 'classNam
  */
 export function TextField(props: InputProps | AreaProps) {
   const id = useId()
-  const { label, hint, unit, multiline, ...rest } = props
+  const { label, hint, hintFirst, unit, multiline, ...rest } = props
   const input = multiline ? (
     <textarea id={id} className="text-field-input" rows={3} {...(rest as ComponentProps<'textarea'>)} />
   ) : (
@@ -25,6 +27,7 @@ export function TextField(props: InputProps | AreaProps) {
   return (
     <label className="text-field" htmlFor={id}>
       <span className="text-field-label">{label}</span>
+      {hint && hintFirst && <span className="text-field-hint">{hint}</span>}
       {unit ? (
         <span className="text-field-row">
           {input}
@@ -33,7 +36,7 @@ export function TextField(props: InputProps | AreaProps) {
       ) : (
         input
       )}
-      {hint && <span className="text-field-hint">{hint}</span>}
+      {hint && !hintFirst && <span className="text-field-hint">{hint}</span>}
     </label>
   )
 }

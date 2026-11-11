@@ -4,6 +4,7 @@ import { COPY } from '../../copy'
 import { parsePassageJson } from '../../engine'
 import { ContentScreen } from './ContentScreen'
 import type { PassageForm } from './usePassageForm'
+import type { WordsForm } from './useWordsForm'
 
 const noop = () => {}
 
@@ -19,8 +20,18 @@ const form = (draft: string, over: Partial<PassageForm> = {}): PassageForm => ({
   save: async () => {},
   ...over,
 })
-const render = (draft: string, over: Partial<PassageForm> = {}) =>
-  renderToStaticMarkup(<ContentScreen form={form(draft, over)} />)
+const wordsForm = (over: Partial<WordsForm> = {}): WordsForm => ({
+  draft: '',
+  setDraft: noop,
+  count: 0,
+  problems: [],
+  saving: false,
+  note: null,
+  save: async () => {},
+  ...over,
+})
+const render = (draft: string, over: Partial<PassageForm> = {}, words: Partial<WordsForm> = {}) =>
+  renderToStaticMarkup(<ContentScreen form={form(draft, over)} words={wordsForm(words)} />)
 const escaped = (text: string) => text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;').replace(/"/g, '&quot;')
 
 const valid = JSON.stringify({

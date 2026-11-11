@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Add spelling words (parents):** the Content tab has a Spelling card. Type or paste words, one per line or separated by commas; a line can be `their: They ate their dinner.` to say which word is meant, or `favourite/favorite` for another spelling that is also right. It counts them, says in plain words what to fix, and Save word list adds them, telling you how many were new and how many were already in the list. Nothing in her practice uses the list yet.
 - **A Content tab (parents):** the parent portal has a Content tab where you paste a reading passage as JSON. Copy prompt + schema gives you text for an AI assistant. The box checks the passage as you paste it, says in plain words what to fix, and shows a preview with each right answer marked. Save passage adds it to Reading practice, ready for her next story. Your hand-run script still works.
 - **A reading assignment gives 10 questions at most (children):** a passage with more than 10 questions gives 10 of them, chosen at random and shown in the passage's order. If she leaves before Check answers, the same 10 come back. A passage with 10 or fewer gives all of its questions, as before.
 - **Reading passages can show a picture (children):** the Worker serves a passage's picture from Cloudflare R2 to a paired iPad. A passage without a picture, or one whose file isn't uploaded yet, reads without it.

@@ -16,10 +16,17 @@ const passage = {
   ],
 }
 
+const savedWords: unknown[] = []
+
 async function api(page: Page, save: { status: number; json: unknown } = { status: 201, json: { id: 1 } }) {
   const saved: unknown[] = []
+  savedWords.length = 0
   await page.route('/api/parent/**', (route) => {
     const url = new URL(route.request().url())
+    if (route.request().method() === 'POST' && url.pathname === '/api/parent/words') {
+      savedWords.push(route.request().postDataJSON())
+      return route.fulfill({ status: 201, json: { added: 2, skipped: 1 } })
+    }
     if (route.request().method() === 'POST' && url.pathname === '/api/parent/passages') {
       saved.push(route.request().postDataJSON())
       return route.fulfill(save)
@@ -89,4 +96,51 @@ test('the pasted text survives a visit to another tab, and a refused save keeps 
   await save(page).click()
   await expect(page.getByText("couldn't be saved")).toBeVisible()
   await expect(box(page)).toHaveValue(text)
+})
+
+const wordsBox = (page: Page) => page.getByRole('textbox', { name: /^Words/ })
+const saveWords = (page: Page) => page.getByRole('button', { name: 'Save word list' })
+
+test('pasted words are counted and checked, saved, and the box is cleared with how many were added', async ({
+  page,
+}) => {
+  await api(page)
+  await page.goto('/parent/content')
+  await expect(saveWords(page)).toBeDisabled()
+  await expect(page.getByText('0 words')).toBeVisible()
+
+  await wordsBox(page).fill('because, friend\nfavourite/favorite\ntheir: They ate their dinner.\n\n')
+  await expect(page.getByText('4 words')).toBeVisible()
+  await saveWords(page).click()
+
+  await expect(page.getByText('Added 2 words. 1 already in the list was skipped.')).toBeVisible()
+  await expect(wordsBox(page)).toHaveValue('')
+  expect(savedWords).toEqual([
+    {
+      words: [
+        { word: 'because', sentence: '', alternates: [] },
+        { word: 'friend', sentence: '', alternates: [] },
+        { word: 'favourite', sentence: '', alternates: ['favorite'] },
+        { word: 'their', sentence: 'They ate their dinner.', alternates: [] },
+      ],
+    },
+  ])
+})
+
+test('a word that fails the checks says what to fix and keeps Save off, and the words survive a tab switch', async ({
+  page,
+}) => {
+  await api(page)
+  await page.goto('/parent/content')
+  await wordsBox(page).fill('good, ice cream')
+  await expect(
+    page.getByText('The word "ice cream" can only have letters, apostrophes and hyphens.'),
+  ).toBeVisible()
+  await expect(saveWords(page)).toBeDisabled()
+
+  const nav = page.getByRole('navigation', { name: 'Parent sections' })
+  await nav.getByRole('link', { name: 'Shop' }).click()
+  await nav.getByRole('link', { name: 'Content' }).click()
+  await expect(wordsBox(page)).toHaveValue('good, ice cream')
+  expect(savedWords).toEqual([])
 })

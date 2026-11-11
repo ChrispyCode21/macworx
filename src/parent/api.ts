@@ -130,6 +130,13 @@ export const chooseChild = (id: number | null) => {
 export const savePassage = (passage: unknown) =>
   parentCall<{ id: number }>('/api/parent/passages', { method: 'POST', body: JSON.stringify({ passage }) })
 
+/** Adds the words a parent pasted (SPEC §8). Content is shared, so it takes no `child`. */
+export const addWords = (words: readonly unknown[]) =>
+  parentCall<{ added: number; skipped: number }>('/api/parent/words', {
+    method: 'POST',
+    body: JSON.stringify({ words }),
+  })
+
 export const getChildren = () => parentCall<{ children: Child[] }>('/api/parent/children')
 
 /** Adds a child (SPEC §8). Not for a chosen child, so it takes no `child`; empty initials fill from the name. */
