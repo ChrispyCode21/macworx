@@ -24,6 +24,7 @@ export function mixWords(mix: Mix): string {
 /** What the Results list's Practice column says: the mix of a math result ("Mixed" for the fixed mix), a reading title. */
 export function practiceWords(r: Pick<ResultRow, 'kind' | 'mix' | 'title'>): string {
   if (r.kind === 'reading') return r.title ?? ''
+  if (r.kind === 'spelling') return COPY.subjectSpelling
   return r.mix ? mixWords(r.mix) : COPY.parentFixedMix
 }
 

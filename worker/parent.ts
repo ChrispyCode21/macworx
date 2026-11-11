@@ -131,7 +131,7 @@ export async function listResults(req: ParentRequest): Promise<Response> {
     .bind(childId, LIST_LIMIT)
     .all<{
       id: number
-      kind: 'math' | 'reading'
+      kind: 'math' | 'reading' | 'spelling'
       title: string | null
       mix: string | null
       day: string
@@ -337,7 +337,7 @@ export async function postBalance(req: ParentRequest): Promise<Response> {
 
 interface StoredResult {
   id: number
-  kind: 'math' | 'reading'
+  kind: 'math' | 'reading' | 'spelling'
   seed: number | null
   detail: string | null
   day: string
@@ -416,6 +416,29 @@ function readingView(row: StoredResult) {
   }
 }
 
+/** A spelling result: each word with its alternates, her typing and whether it matched, as recorded (SPEC §6.8, D15). */
+function spellingView(row: StoredResult) {
+  const detail = JSON.parse(row.detail ?? '{}') as {
+    words?: { word: string; alternates: string[]; typed: string; matched: boolean }[]
+  }
+  return {
+    id: row.id,
+    kind: 'spelling' as const,
+    day: row.day,
+    answered: row.answered,
+    correct: row.correct,
+    finished: row.finished === 1,
+    grade: row.grade,
+    total: row.total,
+    words: (detail.words ?? []).map(({ word, alternates, typed, matched }) => ({
+      word,
+      alternates,
+      typed,
+      matched,
+    })),
+  }
+}
+
 /** GET /api/parent/results/:id: one recorded result with its problems. */
 export async function getResult(req: ParentRequest): Promise<Response> {
   const { db, params } = req
@@ -429,6 +452,7 @@ export async function getResult(req: ParentRequest): Promise<Response> {
     .first<StoredResult>()
   if (!row) return error(404, 'unknown_result')
   if (row.kind === 'reading') return json(200, { result: readingView(row) })
+  if (row.kind === 'spelling') return json(200, { result: spellingView(row) })
   const answers = storedAnswers(row)
   if (!answers || row.seed === null) return error(500, 'server')
   return json(200, { result: resultView({ ...row, seed: row.seed }, answers) })

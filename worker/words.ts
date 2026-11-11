@@ -177,11 +177,15 @@ export async function patchWord({ request, db, params }: ParentRequest): Promise
   }
   let changed: number
   try {
-    const result = await db
-      .prepare(`UPDATE words SET ${set.join(', ')} WHERE id = ?`)
-      .bind(...values, id)
-      .run()
-    changed = result.meta.changes
+    const statements = [db.prepare(`UPDATE words SET ${set.join(', ')} WHERE id = ?`).bind(...values, id)]
+    // A change she could hear or be marked on voids the unchecked attempts that hold the word, in the same
+    // transaction (SPEC §6.11); saving the same text again, or a grade alone, doesn't.
+    const heard =
+      checked.entry.word !== stored.word ||
+      checked.entry.sentence !== stored.sentence ||
+      JSON.stringify(checked.entry.alternates) !== stored.alternates
+    if (heard) statements.push(voidAttempts(db, id))
+    changed = (await db.batch(statements))[0]!.meta.changes
   } catch (e) {
     // Another save took this word between the look above and the write.
     if (/UNIQUE/i.test(String(e))) return error(409, 'duplicate')
@@ -202,6 +206,18 @@ export async function patchWord({ request, db, params }: ParentRequest): Promise
 
 /** DELETE /api/parent/words/:id. */
 export async function deleteWord({ db, params }: ParentRequest): Promise<Response> {
-  const result = await db.prepare('DELETE FROM words WHERE id = ?').bind(Number(params.id)).run()
-  return result.meta.changes === 0 ? error(404, 'unknown_word') : json(200, { ok: true })
+  const id = Number(params.id)
+  const [result] = await db.batch([
+    db.prepare('DELETE FROM words WHERE id = ?').bind(id),
+    voidAttempts(db, id),
+  ])
+  return result!.meta.changes === 0 ? error(404, 'unknown_word') : json(200, { ok: true })
 }
+
+/** Removes the attempts she hasn't checked that hold this word, so her next start is new words (SPEC §6.11, E19). */
+const voidAttempts = (db: D1Database, wordId: number) =>
+  db
+    .prepare(
+      'DELETE FROM spelling_attempts WHERE used = 0 AND EXISTS (SELECT 1 FROM json_each(spelling_attempts.words) WHERE value = ?)',
+    )
+    .bind(wordId)

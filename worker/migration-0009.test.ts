@@ -7,7 +7,7 @@ let mf: Miniflare
 let db: D1Database
 const upTo8 = () => migrationStatements('0008_question_explanations.sql').length
 const upgrade = async () => {
-  for (const sql of migrationStatements().slice(upTo8())) await db.prepare(sql).run()
+  for (const sql of migrationStatements('0009_results_mix.sql').slice(upTo8())) await db.prepare(sql).run()
 }
 beforeEach(async () => {
   mf = new Miniflare(

@@ -206,21 +206,24 @@ export function settleFinished({
   clockWrong,
   correct,
   size,
+  pay = payout,
 }: {
   child: Pick<ChildRow, 'streak' | 'last_day'>
   day: string
   clockWrong: boolean
   correct: number
   size: number
+  /** The payout rule of the assignment's kind: spelling's base is not scaled (§6.4). */
+  pay?: typeof payout
 }) {
   const gradeLabel = grade(correct, size)
   if (clockWrong) {
-    const earned = payout({ correct, problemCount: size, firstOfDay: false, streak: child.streak })
+    const earned = pay({ correct, problemCount: size, firstOfDay: false, streak: child.streak })
     return { earned, streak: child.streak, lastDay: child.last_day, gradeLabel }
   }
   const streakDay = child.last_day && dayNumber(day) < dayNumber(child.last_day) ? child.last_day : day
   const next = nextStreak({ streak: child.streak, lastDay: child.last_day }, streakDay)
-  const earned = payout({ correct, problemCount: size, firstOfDay: next.firstOfDay, streak: next.streak })
+  const earned = pay({ correct, problemCount: size, firstOfDay: next.firstOfDay, streak: next.streak })
   return { earned, streak: next.streak, lastDay: next.lastDay, gradeLabel }
 }
 
