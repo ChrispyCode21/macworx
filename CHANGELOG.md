@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **Reading passages can show a picture (children):** the Worker serves a passage's picture from Cloudflare R2 to a paired iPad. A passage without a picture, or one whose file isn't uploaded yet, reads without it.
 - **Division looks like long division (children):** a division problem shows the divisor to the left of a bracket round the number being divided, with a box for her answer above each of its digits.
 - **A math mix of her own (children):** Math now opens a screen where she taps up to 3 problems to try, from addition, subtraction, multiplication and division at three levels, and sees how many problems each gets, how many Macaronis she could earn and a Start button. "Same as last time" brings back the last mix. "Do another one" keeps the mix she did.
 - **Reading is a real assignment on a paired iPad (children):** tapping Reading first sends any math she hasn't sent yet, then gets her next story from the Worker. She reads it, answers its questions two at a time (four choices each, her picks kept when she goes Back or reads again), and taps Check answers once every question has a pick. Each question then turns green or coral with its explanation, and the result shows right answers, Macaronis (with the bonuses) and the grade like Math. Without Wi-Fi Home says "Connect to Wi-Fi to get your next story!" and nothing starts, and a Check without Wi-Fi keeps her picks so she can tap it again. An iPad that isn't paired still opens the Reading sample.

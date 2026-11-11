@@ -3,6 +3,7 @@ import { fetchCertsFromCloudflare, parentEmail, type AccessEnv, type CertsFetche
 import { deviceFor } from './auth'
 import { getState, postResult, postSeeds, type ChildRequest } from './child'
 import { error, json } from './http'
+import { getReadingImage } from './image'
 import { postPair, previewPairCode } from './pair'
 import { PARENT_ROUTES } from './parent'
 import { postReadingResult, postReadingStart } from './reading'
@@ -16,6 +17,8 @@ export interface Env extends AccessEnv {
   PREVIEW?: string
   /** The preview's pairing code: a Preview base-config secret, never in the repo. */
   PREVIEW_PAIR_CODE?: string
+  /** Passage pictures (R2, `r2_buckets` in wrangler.jsonc). Missing means no picture is served: 404, never a throw. */
+  PASSAGE_IMAGES?: R2Bucket
 }
 
 /** Child routes; every one needs the iPad's device key (SPEC §2). */
@@ -26,6 +29,8 @@ const CHILD_ROUTES: Record<string, (req: ChildRequest) => Promise<Response>> = {
   'POST /api/reading/start': postReadingStart,
   'POST /api/reading/result': postReadingResult,
 }
+
+const IMAGE_PREFIX = '/api/reading/image/'
 
 const isParentPath = (pathname: string) => pathname === '/api/parent' || pathname.startsWith('/api/parent/')
 
@@ -63,6 +68,16 @@ export async function handle(
         limiter: env.PAIR_LIMITER,
         previewCode: previewPairCode(env),
       })
+
+    // A passage's picture: the key is checked first, so a name's validity isn't shown without one (SPEC §8).
+    if (request.method === 'GET' && pathname.startsWith(IMAGE_PREFIX)) {
+      if ((await deviceFor(request, env.DB)) === null) return error(401, 'unauthorized')
+      return await getReadingImage({
+        db: env.DB,
+        bucket: env.PASSAGE_IMAGES,
+        name: pathname.slice(IMAGE_PREFIX.length),
+      })
+    }
 
     const route = CHILD_ROUTES[`${request.method} ${pathname}`]
     if (!route) return error(404, 'not_found')
