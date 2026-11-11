@@ -205,7 +205,7 @@ export function ParentPage({
 
   return (
     <>
-      {problem && (
+      {problem && tab !== 'content' && (
         <p className="parent-problem" role="alert">
           {problem}
         </p>

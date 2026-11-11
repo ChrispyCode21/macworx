@@ -2877,6 +2877,113 @@ p {
     grid-area: results;
   }
 }
+/* The Content screen (SPEC §5.3) */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-22);
+}
+.content-card {
+  gap: var(--space-16);
+}
+.content-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.content-helper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-14) var(--space-16);
+  border-radius: var(--radius-control);
+  background: var(--p-warm);
+}
+.content-helper-title {
+  font-size: var(--text-13);
+  font-weight: 600;
+  color: var(--p-text);
+}
+.content-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+.content-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-14);
+  border: 1px solid var(--p-divider);
+  border-radius: var(--radius-control);
+}
+.content-preview h3 {
+  font-size: var(--text-14);
+  font-weight: 600;
+  color: var(--p-text);
+}
+.content-preview ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  padding-left: var(--space-18);
+  font-size: var(--text-13);
+}
+.content-preview ul,
+.content-problems {
+  padding-left: var(--space-16);
+}
+.content-right {
+  font-weight: 600;
+  color: var(--p-accent-ink);
+}
+.code-box-frame {
+  display: flex;
+  height: 224px;
+  border: 1px solid var(--p-divider);
+  border-radius: var(--radius-control);
+  background: var(--p-bg);
+  overflow: hidden;
+}
+.code-box-gutter,
+.code-box-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--text-12);
+  line-height: 18px;
+}
+.code-box-gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: var(--space-10) var(--space-8) var(--space-10) var(--space-10);
+  overflow: hidden;
+  color: var(--p-muted);
+  user-select: none;
+}
+.code-box-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-10);
+  border: 0;
+  background: transparent;
+  color: var(--p-text);
+  resize: none;
+  white-space: pre;
+  overflow: auto;
+}
+.code-box-input:focus-visible {
+  outline: 2px solid var(--p-accent-ink);
+  outline-offset: -2px;
+}
+@media (max-width: 767px) {
+  .content-helper,
+  .content-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 /* parent portal: end */
 
 /* Read by VoiceOver, not shown. */
