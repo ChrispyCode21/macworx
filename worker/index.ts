@@ -7,6 +7,7 @@ import { getReadingImage } from './image'
 import { postPair, previewPairCode } from './pair'
 import { PARENT_ROUTES } from './parent'
 import { postReadingResult, postReadingStart } from './reading'
+import { postSpellingResult, postSpellingStart } from './spelling'
 
 export interface Env extends AccessEnv {
   ASSETS: Fetcher
@@ -28,6 +29,8 @@ const CHILD_ROUTES: Record<string, (req: ChildRequest) => Promise<Response>> = {
   'POST /api/results': postResult,
   'POST /api/reading/start': postReadingStart,
   'POST /api/reading/result': postReadingResult,
+  'POST /api/spelling/start': postSpellingStart,
+  'POST /api/spelling/result': postSpellingResult,
 }
 
 const IMAGE_PREFIX = '/api/reading/image/'

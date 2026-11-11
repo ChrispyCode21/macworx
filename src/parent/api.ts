@@ -74,7 +74,7 @@ export interface Summary {
 
 export interface ResultRow {
   id: number
-  kind: 'math' | 'reading'
+  kind: 'math' | 'reading' | 'spelling'
   /** The passage's title of a reading result; null for math. */
   title: string | null
   /** A math result's picks in the order she picked them; null for the fixed mix and for reading. */
