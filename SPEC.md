@@ -221,7 +221,7 @@ Problems come from code, not a question bank, so the supply never runs out. Each
 ### 6.3 Scoring
 
 - Each problem has one answer, computed by the generator. Each reading question has one right choice, stored with the passage. Each spelling word has its spelling and any alternates (§6.11).
-- Her answer is a whole number. It is correct when its value equals the computed answer. A reading question is correct when the choice she picked is its right choice. A spelling word is correct when what she typed, after trimming spaces, ignoring capitals and reading ’ and ‘ as ' (and accented letters written one way or the other as the same), equals the word, or one of its alternates, read the same way; a missing letter, an extra letter or a different letter is not correct.
+- Her answer is a whole number. It is correct when its value equals the computed answer. A reading question is correct when the choice she picked is its right choice. A spelling word is correct when what she typed, after trimming spaces, ignoring capitals and reading ’, ‘ and ʼ as ' (and accented letters written one way or the other as the same), equals the word, or one of its alternates, read the same way; a missing letter, an extra letter or a different letter is not correct.
 - **Accuracy** is correct answers divided by the problem count (a reading assignment's question count, a spelling assignment's word count).
 
 ### 6.4 Macaroni payout
