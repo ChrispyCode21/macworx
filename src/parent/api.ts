@@ -6,6 +6,7 @@
 import type { Mix } from '../engine'
 import type { ChildFields } from './childFields'
 import { pickChild, readSelectedChild } from './selection'
+import type { WordItem } from './wordList'
 
 const RELOADED = 'macworx.parentReloaded'
 
@@ -136,6 +137,16 @@ export const addWords = (words: readonly unknown[]) =>
     method: 'POST',
     body: JSON.stringify({ words }),
   })
+
+/** Every word, alphabetical (SPEC §8). */
+export const listWords = () => parentCall<{ words: WordItem[] }>('/api/parent/words')
+
+/** Changes a word; only the fields sent change. */
+export const editWord = (id: number, fields: { word?: string; sentence?: string; alternates?: string[] }) =>
+  parentCall<{ word: WordItem }>(`/api/parent/words/${id}`, { method: 'PATCH', body: JSON.stringify(fields) })
+
+export const removeWord = (id: number) =>
+  parentCall<{ ok: true }>(`/api/parent/words/${id}`, { method: 'DELETE' })
 
 export const getChildren = () => parentCall<{ children: Child[] }>('/api/parent/children')
 
