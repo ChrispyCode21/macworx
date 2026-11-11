@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// The parent portal's shell (SPEC §5.3): five tabs at their own addresses, the phone and wide layouts, and the
+// The parent portal's shell (SPEC §5.3): six tabs at their own addresses, the phone and wide layouts, and the
 // child switcher. /api/parent is answered by the test. The 820 and 1180 projects are wide; the phone projects
 // (402) run phone.spec.ts, and other phone widths set their own viewport.
 
@@ -11,6 +11,7 @@ const children = [
 
 const TABS = [
   { path: 'overview', label: 'Overview', title: 'A little progress, daily.' },
+  { path: 'content', label: 'Content', title: 'Make practice personal.' },
   { path: 'points', label: 'Macaronis', title: 'Macaronis, kept fair.' },
   { path: 'streak', label: 'Streak', title: 'Make every day count.' },
   { path: 'devices', label: 'Devices', title: "Ada's devices, connected." },
@@ -89,7 +90,7 @@ test('every tab opens directly, with its title and one current link', async ({ p
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(tab.title)
     await expect(current(page)).toHaveCount(1)
     await expect(current(page)).toHaveText(tab.label)
-    await expect(nav(page).getByRole('link')).toHaveCount(5)
+    await expect(nav(page).getByRole('link')).toHaveCount(6)
   }
   // The last tab, Shop, has its screen.
   await expect(page.locator('.shop')).toBeVisible()

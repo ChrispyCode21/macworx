@@ -4,6 +4,7 @@ import { COPY } from '../../copy'
 import { chooseChild, getChildren } from '../../parent/api'
 import type { Child } from '../../parent/api'
 import {
+  BookOpenIcon,
   ChevronsUpDownIcon,
   CoinsIcon,
   FlameIcon,
@@ -22,11 +23,14 @@ import { Button } from '../../ui/Button'
 import { formatLongDay } from '../../ui/format'
 import { ChildForm } from './ChildForm'
 import { ChildrenGate } from './ChildrenGate'
+import { ContentScreen } from './ContentScreen'
 import type { ChildMode } from './ChildForm'
 import { ParentPage } from './ParentPage'
+import { usePassageForm } from './usePassageForm'
 
 const NAV: Record<Tab, { label: string; icon: (size: number) => ReactNode }> = {
   overview: { label: COPY.parentTabOverview, icon: (size) => <LayoutDashboardIcon size={size} /> },
+  content: { label: COPY.parentTabContent, icon: (size) => <BookOpenIcon size={size} /> },
   points: { label: COPY.parentTabMacaronis, icon: (size) => <CoinsIcon size={size} /> },
   streak: { label: COPY.parentTabStreak, icon: (size) => <FlameIcon size={size} /> },
   devices: { label: COPY.parentTabDevices, icon: (size) => <SmartphoneIcon size={size} /> },
@@ -35,6 +39,7 @@ const NAV: Record<Tab, { label: string; icon: (size: number) => ReactNode }> = {
 
 const EYEBROW: Record<Tab, string> = {
   overview: COPY.parentEyebrowOverview,
+  content: COPY.parentEyebrowContent,
   points: COPY.parentEyebrowMacaronis,
   streak: COPY.parentEyebrowStreak,
   devices: COPY.parentEyebrowDevices,
@@ -46,6 +51,8 @@ function heading(tab: Tab, child: Child | null): { title: string; sub: string | 
   if (!child) return { title: NAV[tab].label, sub: null }
   const name = child.name
   switch (tab) {
+    case 'content':
+      return { title: COPY.parentTitleContent, sub: COPY.parentSubContent }
     case 'overview':
       return {
         title: COPY.parentTitleOverview,
@@ -81,7 +88,7 @@ function Who({ child }: { child: Child }) {
   )
 }
 
-/** The parent portal (SPEC §5.3): the shell, the five tabs, and the child every screen is for. */
+/** The parent portal (SPEC §5.3): the shell, the six tabs, and the child every screen is for. */
 export function Portal() {
   const [tab, setTab] = useState<Tab>(() => tabFromPath(location.pathname))
   const [load, setLoad] = useState<ChildrenLoad>({ status: 'loading' })
@@ -91,6 +98,8 @@ export function Portal() {
   const [childMode, setChildMode] = useState<ChildMode>('add')
   const [focusName, setFocusName] = useState(false)
   const [renames, setRenames] = useState(0)
+  // The passage a parent is pasting on Content, and its save: kept here so they survive a switch to another tab.
+  const passageForm = usePassageForm()
   const title = useRef<HTMLHeadingElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
 
@@ -292,6 +301,8 @@ export function Portal() {
           {sub && <p className="portal-sub">{sub}</p>}
         </div>
         <main className="portal-main">
+          {load.status === 'ready' && tab === 'content' && <ContentScreen form={passageForm} />}
+          {/* Stays mounted on Content too (it shows nothing of its own there), so no tab's state is lost. */}
           {load.status === 'ready' && (
             <ParentPage
               key={`${load.selected.id}-${renames}`}

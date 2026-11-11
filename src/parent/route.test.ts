@@ -8,6 +8,8 @@ describe('the portal route', () => {
       expect(tabFromPath(`${tabPath(tab)}/`)).toBe(tab)
     }
     expect(tabPath('points')).toBe('/parent/points')
+    expect(TABS).toEqual(['overview', 'content', 'points', 'streak', 'devices', 'shop'])
+    expect(tabPath('content')).toBe('/parent/content')
   })
 
   it('shows Overview for /parent and any unknown address', () => {

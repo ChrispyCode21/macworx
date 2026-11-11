@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **A Content tab (parents):** the parent portal has a Content tab where you paste a reading passage as JSON. Copy prompt + schema gives you text for an AI assistant. The box checks the passage as you paste it, says in plain words what to fix, and shows a preview with each right answer marked. Save passage adds it to Reading practice, ready for her next story. Your hand-run script still works.
 - **A reading assignment gives 10 questions at most (children):** a passage with more than 10 questions gives 10 of them, chosen at random and shown in the passage's order. If she leaves before Check answers, the same 10 come back. A passage with 10 or fewer gives all of its questions, as before.
 - **Reading passages can show a picture (children):** the Worker serves a passage's picture from Cloudflare R2 to a paired iPad. A passage without a picture, or one whose file isn't uploaded yet, reads without it.
 - **Division looks like long division (children):** a division problem shows the divisor to the left of a bracket round the number being divided, with a box for her answer above each of its digits.
