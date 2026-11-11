@@ -102,6 +102,16 @@ describe('migration 0013', () => {
     expect(await rows('SELECT COUNT(*) AS n FROM results')).toEqual([{ n: 2 }])
   })
 
+  it('keeps every word, and never gives the id of a deleted word to a new one', async () => {
+    await run("INSERT INTO words (id, word, key, created_at) VALUES (1, 'a', 'a', 'x'), (2, 'b', 'b', 'x')")
+    const before = await rows('SELECT * FROM words ORDER BY id')
+    await upgrade()
+    expect(await rows('SELECT * FROM words ORDER BY id')).toEqual(before)
+    await run('DELETE FROM words WHERE id = 2')
+    await run("INSERT INTO words (word, key, created_at) VALUES ('c', 'c', 'x')")
+    expect((await rows("SELECT id FROM words WHERE word = 'c'"))[0]!.id).toBe(3)
+  })
+
   it('keeps the child index', async () => {
     await upgrade()
     expect(

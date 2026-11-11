@@ -61,3 +61,21 @@ FROM results;
 DROP TABLE results;
 ALTER TABLE results_new RENAME TO results;
 CREATE INDEX results_child ON results (child_id, id);
+
+-- `words` is rebuilt with AUTOINCREMENT: the id of a deleted word is never given to a new one, so a new word can't
+-- inherit a deleted word's finished results (they are found by word id, SPEC §6.11) or sit in an old attempt.
+CREATE TABLE words_new (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  word TEXT NOT NULL CHECK (length(word) > 0),
+  key TEXT NOT NULL UNIQUE CHECK (length(key) > 0),
+  sentence TEXT NOT NULL DEFAULT '',
+  alternates TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(alternates)),
+  grade INTEGER,
+  created_at TEXT NOT NULL
+) STRICT;
+
+INSERT INTO words_new (id, word, key, sentence, alternates, grade, created_at)
+SELECT id, word, key, sentence, alternates, grade, created_at FROM words;
+
+DROP TABLE words;
+ALTER TABLE words_new RENAME TO words;

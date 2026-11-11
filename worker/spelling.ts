@@ -89,10 +89,16 @@ export async function postSpellingStart({ db, device, childId, now }: ChildReque
     .prepare('INSERT INTO spelling_attempts (device_id, child_id, issued_day, words) VALUES (?, ?, ?, ?)')
     .bind(device, childId, today, JSON.stringify(ids))
     .run()
+  const attempt = made.meta.last_row_id
   const words = await wordsOf(db, ids)
-  // A word deleted between the two reads: the attempt is already voided, so she asks again.
-  if (words.length !== ids.length) return error(503, 'busy')
-  return json(200, { attempt: made.meta.last_row_id, words: words.map(forIpad) })
+  // A word deleted or changed since the list was read voided attempts that didn't exist yet, so look once more: an
+  // attempt that is gone, or a word that is, is not handed out, and she asks again.
+  const there = await db.prepare('SELECT 1 AS ok FROM spelling_attempts WHERE id = ?').bind(attempt).first()
+  if (!there || words.length !== ids.length) {
+    await db.prepare('DELETE FROM spelling_attempts WHERE id = ? AND used = 0').bind(attempt).run()
+    return error(503, 'busy')
+  }
+  return json(200, { attempt, words: words.map(forIpad) })
 }
 
 interface SpellingBody {
@@ -105,7 +111,6 @@ function parseSpellingResult(body: unknown): SpellingBody | null {
   if (typeof body !== 'object' || body === null) return null
   const { attempt, day, answers } = body as Record<string, unknown>
   if (!isUint32(attempt) || typeof day !== 'string' || !Array.isArray(answers)) return null
-  if (answers.length < 1 || answers.length > SPELLING.words) return null
   const shaped = answers.every(
     (a) =>
       typeof a === 'object' &&

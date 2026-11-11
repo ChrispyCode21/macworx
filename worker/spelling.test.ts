@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clearAccessKeys } from './access'
 import { accessToken } from './test/access-keys'
-import { CHILD2_KEY, createTestDb, OTHER_KEY } from './test/db'
+import { handle } from './index'
+import { CHILD2_KEY, createTestDb, DEVICE_KEY, OTHER_KEY } from './test/db'
 
 let t: Awaited<ReturnType<typeof createTestDb>>
 let token: string
@@ -172,7 +173,6 @@ describe('POST /api/spelling/result', () => {
       expect([refused.status, refused.body.error]).toEqual([400, 'bad_answers'])
     }
     for (const list of [
-      [],
       'nope',
       [{ word: 1 }],
       [{ word: 1, typed: 5 }],
@@ -180,6 +180,8 @@ describe('POST /api/spelling/result', () => {
     ]) {
       expect((await send(list)).status).toBe(400)
     }
+    const empty = await send([])
+    expect([empty.status, empty.body.error]).toEqual([400, 'bad_answers'])
     expect([await count('results'), (await balance()).balance]).toEqual([0, 0])
     expect((await send(good)).status).toBe(201)
   })
@@ -273,10 +275,37 @@ describe('editing and deleting words (E19, D15)', () => {
     await words(3)
     const done = await finish(3)
     expect(done.status).toBe(201)
-    await patch(1, { word: 'wab' })
-    await del(2)
+    expect((await patch(1, { word: 'wab' })).status).toBe(200)
+    expect((await del(2)).status).toBe(200)
     expect(await count('spelling_attempts')).toBe(1)
     expect(await count('results')).toBe(1)
+  })
+
+  it('voids only the unchecked attempts that hold the word', async () => {
+    await words(3)
+    const a = await start()
+    await words(1, 4)
+    // Another device's attempt holds all four words; hers keeps its three.
+    const other = await start({ key: OTHER_KEY })
+    expect(ids(other.body)).toEqual([1, 2, 3, 4])
+    expect((await patch(4, { sentence: 'New.' })).status).toBe(200)
+    const left = await t.db.prepare('SELECT id FROM spelling_attempts').all<any>()
+    expect(left.results.map((r) => r.id)).toEqual([a.body.attempt])
+  })
+
+  it('a new word never takes the id of a deleted one, so it comes before words she has done', async () => {
+    await words(3)
+    await finish(3)
+    expect((await del(3)).status).toBe(200)
+    const added = await t.call('POST', '/api/parent/words', {
+      key: null,
+      accessToken: token,
+      body: { words: [{ word: 'fresh' }] },
+    })
+    expect(added.status).toBe(201)
+    const row = await t.db.prepare("SELECT id FROM words WHERE word = 'fresh'").first<any>()
+    expect(row!.id).toBeGreaterThan(3)
+    expect(ids((await start()).body)[0]).toBe(row!.id)
   })
 
   it('D15: a recorded result keeps each word, its alternates, her typing and whether it matched', async () => {
@@ -316,5 +345,65 @@ describe('editing and deleting words (E19, D15)', () => {
       { word: 'wb', alternates: [], typed: 'oops', matched: false },
       { word: 'wc', alternates: [], typed: 'wc', matched: true },
     ])
+  })
+})
+
+describe('while a result is on its way', () => {
+  /** The Worker with `before` run once just before it writes a result (the batch), as if it happened meanwhile. */
+  const racing = (before: () => Promise<unknown>) => {
+    let fired = false
+    const db = new Proxy(t.db, {
+      get(target, prop) {
+        if (prop === 'batch')
+          return async (statements: D1PreparedStatement[]) => {
+            if (!fired) {
+              fired = true
+              await before()
+            }
+            return target.batch(statements)
+          }
+        const value = Reflect.get(target, prop)
+        return typeof value === 'function' ? value.bind(target) : value
+      },
+    })
+    return { ...t.env, DB: db as D1Database }
+  }
+  const send = (env: typeof t.env, body: Record<string, any>) =>
+    handle(
+      new Request('https://macworx.test/api/spelling/result', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${DEVICE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attempt: body.attempt, day: '2026-10-17', answers: answers(body, 3) }),
+      }),
+      env,
+      at('2026-10-17'),
+      t.certs.fetchCerts,
+    )
+
+  it('a word edited meanwhile voids the attempt: 404, nothing paid or recorded', async () => {
+    await words(3)
+    const { body } = await start()
+    const env = racing(() =>
+      t.db.prepare('DELETE FROM spelling_attempts WHERE id = ?').bind(body.attempt).run(),
+    )
+    expect((await send(env, body)).status).toBe(404)
+    expect([await count('results'), (await balance()).balance]).toEqual([0, 0])
+  })
+
+  it('an iPad unpaired meanwhile is refused (401), nothing paid or recorded', async () => {
+    await words(3)
+    const { body } = await start()
+    const env = racing(() => t.db.prepare("UPDATE devices SET revoked_at = 'x' WHERE id = 1").run())
+    expect((await send(env, body)).status).toBe(401)
+    expect([await count('results'), (await balance()).balance]).toEqual([0, 0])
+  })
+
+  it('two results at once for one attempt record and pay once', async () => {
+    await words(3)
+    const { body } = await start()
+    const both = await Promise.all([send(t.env, body), send(t.env, body)])
+    expect(both.map((r) => r.status).sort()).toEqual([200, 201])
+    expect(await count('results')).toBe(1)
+    expect((await balance()).completed).toBe(1)
   })
 })
