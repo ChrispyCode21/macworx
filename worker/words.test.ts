@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clearAccessKeys } from './access'
 import { accessToken } from './test/access-keys'
 import { createTestDb } from './test/db'
+import { patchWord } from './words'
 
 let t: Awaited<ReturnType<typeof createTestDb>>
 let token: string
@@ -161,5 +162,203 @@ describe('POST /api/parent/words', () => {
     })
     expect(status).toBe(401)
     expect(await stored()).toEqual([])
+  })
+})
+
+const call = (method: string, path: string, body?: unknown) =>
+  t.call(method, path, { key: null, accessToken: token, body })
+const idOf = async (word: string) =>
+  (await t.db.prepare('SELECT id FROM words WHERE word = ?').bind(word).first<{ id: number }>())!.id
+
+describe('GET /api/parent/words', () => {
+  it('lists every word alphabetically, ignoring capitals, with its sentence, alternates and grade', async () => {
+    await add(
+      { word: 'zebra' },
+      { word: 'Apple' },
+      { word: '\u00e9cole' },
+      { word: 'favourite', alternates: ['favorite'], sentence: 'My favourite.', grade: 2 },
+      { word: 'banana' },
+    )
+    const { status, body } = await call('GET', '/api/parent/words')
+    expect(status).toBe(200)
+    expect(body.words.map((w: any) => w.word)).toEqual([
+      'Apple',
+      'banana',
+      '\u00e9cole',
+      'favourite',
+      'zebra',
+    ])
+    expect(body.words[3]).toMatchObject({ alternates: ['favorite'], sentence: 'My favourite.', grade: 2 })
+    expect(typeof body.words[0].id).toBe('number')
+  })
+
+  it('is empty before any word is added, and needs Access', async () => {
+    expect((await call('GET', '/api/parent/words')).body).toEqual({ words: [] })
+    expect((await t.call('GET', '/api/parent/words', { key: null })).status).toBe(401)
+  })
+})
+
+describe('PATCH /api/parent/words/:id', () => {
+  it('changes each field sent and leaves the others as they were', async () => {
+    await add({ word: 'colour', sentence: 'A bright colour.', alternates: ['color'], grade: 1 })
+    const id = await idOf('colour')
+    const edit = (body: unknown) => call('PATCH', `/api/parent/words/${id}`, body)
+    expect((await edit({ sentence: 'Pick a colour.' })).body.word).toEqual({
+      id,
+      word: 'colour',
+      sentence: 'Pick a colour.',
+      alternates: ['color'],
+      grade: 1,
+    })
+    expect((await edit({ alternates: [] })).body.word.alternates).toEqual([])
+    expect((await edit({ grade: null })).body.word.grade).toBeNull()
+    const renamed = await edit({ word: 'Colours' })
+    expect([renamed.status, renamed.body.word.word]).toEqual([200, 'Colours'])
+    expect(await stored()).toEqual([
+      { word: 'Colours', key: 'colours', sentence: 'Pick a colour.', alternates: '[]', grade: null },
+    ])
+  })
+
+  it('an empty sentence stores none, and a new word equal to an alternate drops that alternate', async () => {
+    await add({ word: 'colour', sentence: 'A bright colour.', alternates: ['color', 'colr'] })
+    const id = await idOf('colour')
+    const edit = (body: unknown) => call('PATCH', `/api/parent/words/${id}`, body)
+    expect((await edit({ sentence: '  ' })).body.word.sentence).toBe('')
+    expect((await edit({ word: 'color' })).body.word).toMatchObject({ word: 'color', alternates: ['colr'] })
+  })
+
+  it('a word with other capitals is the same word, not a clash; another word with the key is 409', async () => {
+    await add({ word: 'friend' }, { word: 'other' })
+    const friend = await idOf('friend')
+    expect((await call('PATCH', `/api/parent/words/${friend}`, { word: 'Friend' })).status).toBe(200)
+    const clash = await call('PATCH', `/api/parent/words/${friend}`, { word: 'OTHER' })
+    expect([clash.status, clash.body.error]).toEqual([409, 'duplicate'])
+    expect((await stored()).map((r) => r.word)).toEqual(['Friend', 'other'])
+  })
+
+  it('refuses a word the checks refuse, an empty body, a bad grade and a body that is not an object', async () => {
+    await add({ word: 'one' })
+    const id = await idOf('one')
+    const edit = (body: unknown) => call('PATCH', `/api/parent/words/${id}`, body)
+    const bad = await edit({ word: 'ice cream' })
+    expect([bad.status, bad.body.error]).toEqual([400, 'bad_word'])
+    for (const body of [{}, { nope: 1 }, [], 'x', { grade: 100 }, { alternates: 'color' }])
+      expect((await edit(body)).status, JSON.stringify(body)).toBe(400)
+    expect((await stored())[0]).toMatchObject({ word: 'one', grade: null })
+  })
+
+  it('an unknown id is 404 unknown_word, and it needs Access', async () => {
+    const missing = await call('PATCH', '/api/parent/words/999', { sentence: 'x' })
+    expect([missing.status, missing.body.error]).toEqual([404, 'unknown_word'])
+    expect(
+      (await t.call('PATCH', '/api/parent/words/1', { key: null, body: { sentence: 'x' } })).status,
+    ).toBe(401)
+  })
+
+  it('a rename onto a word that matches as her typing does is 409: another apostrophe or accent form', async () => {
+    await add({ word: "don't" }, { word: 'café' }, { word: 'other' }, { word: 'more' })
+    const other = await idOf('other')
+    const more = await idOf('more')
+    for (const word of ['don’t', 'café'])
+      expect((await call('PATCH', `/api/parent/words/${other}`, { word })).status, word).toBe(409)
+    expect((await call('PATCH', `/api/parent/words/${more}`, { sentence: 'Fine.' })).status).toBe(200)
+  })
+
+  it('only the fields sent are written, and a body over 256 KB is refused', async () => {
+    await add({ word: 'colour', sentence: 'First.', alternates: ['color'] })
+    const id = await idOf('colour')
+    await call('PATCH', `/api/parent/words/${id}`, { grade: 4 })
+    await call('PATCH', `/api/parent/words/${id}`, { sentence: 'Second.' })
+    expect((await stored())[0]).toMatchObject({ sentence: 'Second.', alternates: '["color"]', grade: 4 })
+    const big = await call('PATCH', `/api/parent/words/${id}`, { sentence: 'x'.repeat(300_000) })
+    expect([big.status, big.body.error]).toEqual([400, 'bad_word'])
+  })
+
+  it('a word deleted between the read and the write is 404, not a 200 for a change that was not made', async () => {
+    await add({ word: 'alpha' })
+    const alpha = await idOf('alpha')
+    const real = t.db
+    const db = new Proxy(real, {
+      get: (target, prop) => {
+        if (prop !== 'prepare')
+          return typeof (target as any)[prop] === 'function'
+            ? (target as any)[prop].bind(target)
+            : (target as any)[prop]
+        return (sql: string) => {
+          if (sql.startsWith('UPDATE words')) void target.prepare('DELETE FROM words').run()
+          return target.prepare(sql)
+        }
+      },
+    })
+    const response = await patchWord({
+      request: new Request('https://x/api/parent/words/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ sentence: 'x' }),
+      }),
+      url: new URL('https://x/api/parent/words/1'),
+      db,
+      email: 'p@example.com',
+      now: new Date('2026-10-17T12:00:00Z'),
+      params: { id: String(alpha) },
+    } as Parameters<typeof patchWord>[0])
+    expect([response.status, ((await response.json()) as { error: string }).error]).toEqual([
+      404,
+      'unknown_word',
+    ])
+  })
+
+  it('a clash that lands between the check and the write is 409, not a 500', async () => {
+    await add({ word: 'alpha' }, { word: 'beta' })
+    const alpha = await idOf('alpha')
+    // The look for another word with the key finds none, then the write meets the unique key.
+    const real = t.db
+    const db = new Proxy(real, {
+      get: (target, prop) => {
+        if (prop !== 'prepare')
+          return typeof (target as any)[prop] === 'function'
+            ? (target as any)[prop].bind(target)
+            : (target as any)[prop]
+        return (sql: string) =>
+          sql.startsWith('SELECT id FROM words WHERE key')
+            ? { bind: () => ({ first: async () => null }) }
+            : target.prepare(sql)
+      },
+    })
+    const response = await patchWord({
+      request: new Request('https://x/api/parent/words/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ word: 'beta' }),
+      }),
+      url: new URL('https://x/api/parent/words/1'),
+      db,
+      email: 'p@example.com',
+      now: new Date('2026-10-17T12:00:00Z'),
+      params: { id: String(alpha) },
+    } as Parameters<typeof patchWord>[0])
+    expect([response.status, ((await response.json()) as { error: string }).error]).toEqual([
+      409,
+      'duplicate',
+    ])
+  })
+})
+
+describe('DELETE /api/parent/words/:id', () => {
+  it('removes the word, and then it is gone: a second delete is 404', async () => {
+    await add({ word: 'one' }, { word: 'two' })
+    const one = await idOf('one')
+    expect(await call('DELETE', `/api/parent/words/${one}`)).toMatchObject({
+      status: 200,
+      body: { ok: true },
+    })
+    expect((await stored()).map((r) => r.word)).toEqual(['two'])
+    const again = await call('DELETE', `/api/parent/words/${one}`)
+    expect([again.status, again.body.error]).toEqual([404, 'unknown_word'])
+  })
+
+  it('a deleted word can be added again, and it needs Access', async () => {
+    await add({ word: 'again' })
+    await call('DELETE', `/api/parent/words/${await idOf('again')}`)
+    expect((await add({ word: 'again' })).body).toEqual({ added: 1, skipped: 0 })
+    expect((await t.call('DELETE', '/api/parent/words/1', { key: null })).status).toBe(401)
   })
 })

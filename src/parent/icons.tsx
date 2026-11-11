@@ -38,6 +38,13 @@ export const ChevronsUpDownIcon = ({ size = 17 }: { size?: number }) => (
   </Icon>
 )
 
+export const XIcon = ({ size = 17 }: { size?: number }) => (
+  <Icon box={24} size={size}>
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </Icon>
+)
+
 export const BookOpenIcon = ({ size = 20 }: { size?: number }) => (
   <Icon box={24} size={size}>
     <path d="M12 7v14" />

@@ -2891,6 +2891,67 @@ p {
 .content-card {
   gap: var(--space-16);
 }
+.dialog {
+  width: min(560px, calc(100% - 2 * var(--space-16)));
+  max-height: calc(100% - 2 * var(--space-24));
+  padding: var(--space-18);
+  border: 1px solid var(--p-divider);
+  border-radius: var(--radius-panel);
+  background: var(--p-surface);
+  color: var(--p-text);
+}
+.dialog::backdrop {
+  background: var(--p-text);
+  opacity: 0.4;
+}
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-14);
+}
+.edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+}
+.edit-list-rows {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+}
+.edit-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-10) 0;
+  border-top: 1px solid var(--p-divider);
+}
+.edit-list-form {
+  flex-direction: column;
+  align-items: stretch;
+}
+.edit-list-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.edit-list-word {
+  font-size: var(--text-14);
+  font-weight: 600;
+}
+.edit-list-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+.edit-list-ask {
+  font-size: var(--text-13);
+}
 .words-count {
   display: flex;
   flex-direction: column;

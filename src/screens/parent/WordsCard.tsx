@@ -1,9 +1,11 @@
+import { useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { Button } from '../../ui/Button'
 import { Panel } from '../../ui/Panel'
 import { Safeguard } from '../../ui/Safeguard'
 import { SectionHeading } from '../../ui/SectionHeading'
 import { TextField } from '../../ui/TextField'
+import { EditListDialog } from './EditListDialog'
 import type { WordsForm } from './useWordsForm'
 
 /**
@@ -12,6 +14,8 @@ import type { WordsForm } from './useWordsForm'
  */
 export function WordsCard({ form }: { form: WordsForm }) {
   const { draft, setDraft, count, problems, saving, note, save } = form
+  const [editing, setEditing] = useState(false)
+  const editButton = useRef<HTMLButtonElement>(null)
   return (
     <Panel className="content-card words-card" aria-label={COPY.wordsHeading}>
       <div className="content-card-head">
@@ -60,6 +64,10 @@ export function WordsCard({ form }: { form: WordsForm }) {
       >
         {saving ? COPY.contentSaving : COPY.wordsSave}
       </Button>
+      <Button ref={editButton} variant="secondary" onClick={() => setEditing(true)}>
+        {COPY.wordsEdit}
+      </Button>
+      <EditListDialog open={editing} onClose={() => setEditing(false)} returnFocusTo={editButton} />
     </Panel>
   )
 }
