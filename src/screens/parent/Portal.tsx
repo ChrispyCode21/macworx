@@ -48,10 +48,11 @@ const EYEBROW: Record<Tab, string> = {
 
 /** The page title and subline of a tab. With no child known yet there is no name to show: the tab's label. */
 function heading(tab: Tab, child: Child | null): { title: string; sub: string | null } {
-  if (tab === 'content') return { title: COPY.parentTitleContent, sub: COPY.parentSubContent }
   if (!child) return { title: NAV[tab].label, sub: null }
   const name = child.name
   switch (tab) {
+    case 'content':
+      return { title: COPY.parentTitleContent, sub: COPY.parentSubContent }
     case 'overview':
       return {
         title: COPY.parentTitleOverview,
