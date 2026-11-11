@@ -5,6 +5,7 @@ import { error, json, readJson, utcDay } from './http'
 import { logChange } from './admin-log'
 import { patchChild, postChild } from './children'
 import { postPairingCode } from './pair'
+import { postPassage } from './passages'
 import { childOf } from './parent-request'
 import type { ParentRequest } from './parent-request'
 
@@ -451,4 +452,5 @@ export const PARENT_ROUTES: {
   { method: 'POST', pattern: /^\/api\/parent\/balance$/, run: postBalance },
   { method: 'POST', pattern: /^\/api\/parent\/pairing-code$/, run: (req) => postPairingCode(req) },
   { method: 'POST', pattern: /^\/api\/parent\/streak$/, run: postStreak },
+  { method: 'POST', pattern: /^\/api\/parent\/passages$/, run: postPassage },
 ]
