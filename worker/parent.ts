@@ -6,7 +6,7 @@ import { logChange } from './admin-log'
 import { patchChild, postChild } from './children'
 import { postPairingCode } from './pair'
 import { postPassage } from './passages'
-import { postWords } from './words'
+import { deleteWord, listWords, patchWord, postWords } from './words'
 import { childOf } from './parent-request'
 import type { ParentRequest } from './parent-request'
 
@@ -454,5 +454,8 @@ export const PARENT_ROUTES: {
   { method: 'POST', pattern: /^\/api\/parent\/pairing-code$/, run: (req) => postPairingCode(req) },
   { method: 'POST', pattern: /^\/api\/parent\/streak$/, run: postStreak },
   { method: 'POST', pattern: /^\/api\/parent\/passages$/, run: postPassage },
+  { method: 'GET', pattern: /^\/api\/parent\/words$/, run: listWords },
   { method: 'POST', pattern: /^\/api\/parent\/words$/, run: postWords },
+  { method: 'PATCH', pattern: /^\/api\/parent\/words\/(?<id>\d+)$/, run: patchWord },
+  { method: 'DELETE', pattern: /^\/api\/parent\/words\/(?<id>\d+)$/, run: deleteWord },
 ]

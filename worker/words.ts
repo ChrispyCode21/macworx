@@ -2,7 +2,7 @@
 // the portal ran before sending; this is the second look. Words are shared by every child, so no route here takes a
 // `child`, and none looks anything up in a dictionary.
 import { checkWord, normalizeTyped, SPELLING } from '../src/engine'
-import { json } from './http'
+import { error, json } from './http'
 import type { ParentRequest } from './parent-request'
 
 /** The most problems listed at once; the rest are counted. */
@@ -89,4 +89,99 @@ export async function postWords({ request, db, now }: ParentRequest): Promise<Re
     .run()
   const added = result.meta.changes
   return json(201, { added, skipped: words.length - added })
+}
+
+interface WordRow {
+  id: number
+  word: string
+  sentence: string
+  alternates: string
+  grade: number | null
+}
+
+const present = (row: WordRow) => ({
+  id: row.id,
+  word: row.word,
+  sentence: row.sentence,
+  alternates: JSON.parse(row.alternates) as string[],
+  grade: row.grade,
+})
+
+/** GET /api/parent/words: every word, alphabetical ignoring capitals. */
+export async function listWords({ db }: ParentRequest): Promise<Response> {
+  const rows = await db
+    .prepare('SELECT id, word, sentence, alternates, grade FROM words ORDER BY id')
+    .all<WordRow>()
+  const collator = new Intl.Collator('en', { sensitivity: 'accent' })
+  const sorted = [...rows.results].sort((a, b) => collator.compare(a.word, b.word) || a.id - b.id)
+  return json(200, { words: sorted.map(present) })
+}
+
+/** PATCH /api/parent/words/:id: changes the fields sent, checked as an entry is. */
+export async function patchWord({ request, db, params }: ParentRequest): Promise<Response> {
+  const id = Number(params.id)
+  const stored = await db
+    .prepare('SELECT id, word, sentence, alternates, grade FROM words WHERE id = ?')
+    .bind(id)
+    .first<WordRow>()
+  if (!stored) return error(404, 'unknown_word')
+
+  let body: unknown
+  try {
+    body = JSON.parse(await request.text())
+  } catch {
+    body = undefined
+  }
+  const sent =
+    typeof body === 'object' && body !== null && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : null
+  if (!sent || !['word', 'sentence', 'alternates', 'grade'].some((field) => field in sent))
+    return bad(['There is nothing to change.'])
+
+  const checked = checkWord({
+    word: 'word' in sent ? sent.word : stored.word,
+    sentence: 'sentence' in sent ? sent.sentence : stored.sentence,
+    alternates: 'alternates' in sent ? sent.alternates : JSON.parse(stored.alternates),
+  })
+  if (!checked.ok) return bad(checked.problems)
+  const grade = 'grade' in sent ? sent.grade : stored.grade
+  if (!validGrade(grade)) return bad(['The grade has to be a whole number from 0 to 99.'])
+
+  // The same word with other capitals is this word, not a clash; another row with the key is.
+  const key = normalizeTyped(checked.entry.word)
+  const clash = await db.prepare('SELECT id FROM words WHERE key = ? AND id <> ?').bind(key, id).first()
+  if (clash) return error(409, 'duplicate')
+  try {
+    await db
+      .prepare('UPDATE words SET word = ?, key = ?, sentence = ?, alternates = ?, grade = ? WHERE id = ?')
+      .bind(
+        checked.entry.word,
+        key,
+        checked.entry.sentence,
+        JSON.stringify(checked.entry.alternates),
+        grade ?? null,
+        id,
+      )
+      .run()
+  } catch (e) {
+    // Another save took this word between the look above and the write.
+    if (/UNIQUE/i.test(String(e))) return error(409, 'duplicate')
+    throw e
+  }
+  return json(200, {
+    word: {
+      id,
+      word: checked.entry.word,
+      sentence: checked.entry.sentence,
+      alternates: checked.entry.alternates,
+      grade: grade ?? null,
+    },
+  })
+}
+
+/** DELETE /api/parent/words/:id. */
+export async function deleteWord({ db, params }: ParentRequest): Promise<Response> {
+  const result = await db.prepare('DELETE FROM words WHERE id = ?').bind(Number(params.id)).run()
+  return result.meta.changes === 0 ? error(404, 'unknown_word') : json(200, { ok: true })
 }
