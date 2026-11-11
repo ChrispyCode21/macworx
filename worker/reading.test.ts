@@ -325,6 +325,12 @@ describe('L25: an assignment gives at most 10 questions', () => {
     expect(pickQuestions([1, 2, 3], 10, Math.random)).toEqual([1, 2, 3])
   })
 
+  it('L25: the choice follows the random function, not the passage order', () => {
+    const all = Array.from({ length: 25 }, (_, i) => i + 1)
+    expect(pickQuestions(all, 10, () => 0)).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    expect(pickQuestions(all, 10, () => 0.999)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+  })
+
   it('L25: a 25-question passage hands out 10 of them in the passage order, the same 10 when started again', async () => {
     await passage(1, 25)
     const first1 = (await start()).body
@@ -359,6 +365,51 @@ describe('L25: an assignment gives at most 10 questions', () => {
     })
     expect(refused.status).toBe(400)
     expect((await first('SELECT COUNT(*) AS n FROM results')).n).toBe(0)
+    // The attempt stays usable.
+    const ok = await t.call('POST', '/api/reading/result', {
+      body: { attempt: body.attempt, day: '2026-10-17', picks: picks(body, 10) },
+      now: at('2026-10-17'),
+    })
+    expect(ok.status).toBe(201)
+  })
+
+  it('L25: 10 questions give all 10 and store nothing; 11 give 10 and store them', async () => {
+    await passage(1, 10)
+    await passage(2, 11)
+    await run(
+      "INSERT INTO reading_attempts (device_id, child_id, passage_id, issued_day, used) VALUES (1, 1, 1, 'x', 1)",
+    )
+    const ten = (await start()).body
+    expect(ids(ten)).toHaveLength(10)
+    expect(
+      (await first('SELECT questions FROM reading_attempts WHERE id = ?', ten.attempt)).questions,
+    ).toBeNull()
+    await recorded(1)
+    const eleven = (await start()).body
+    expect(eleven.passage.id).toBe(2)
+    expect(ids(eleven)).toHaveLength(10)
+    const stored = (await first('SELECT questions FROM reading_attempts WHERE id = ?', eleven.attempt))
+      .questions
+    expect(JSON.parse(stored)).toEqual(ids(eleven))
+  })
+
+  it('L25: when some questions of an unchecked attempt are gone, the next start chooses 10 again and keeps them', async () => {
+    await passage(1, 25)
+    const first1 = (await start()).body
+    const shown = ids(first1)
+    for (const gone of [[shown[0]], shown]) {
+      await run(
+        'UPDATE reading_attempts SET questions = ? WHERE id = ?',
+        JSON.stringify(gone.map((id: number) => id + 1000)),
+        first1.attempt,
+      )
+      const again = (await start()).body
+      expect(again.attempt).toBe(first1.attempt)
+      expect(ids(again)).toHaveLength(10)
+      const stored = (await first('SELECT questions FROM reading_attempts WHERE id = ?', again.attempt))
+        .questions
+      expect(JSON.parse(stored)).toEqual(ids(again))
+    }
   })
 
   it('L25: a passage of 8 questions hands out all 8 and stores no choice', async () => {

@@ -126,12 +126,22 @@ export async function postReadingStart({ db, device, childId, now }: ChildReques
   let attempt: number
   let stored: string | null
   if (left) {
-    // One made before the 10-question cap has none stored: choose them now if the passage has more than 10.
-    stored = left.questions ?? choose()
-    await db
-      .prepare('UPDATE reading_attempts SET issued_day = ?, questions = ? WHERE id = ?')
-      .bind(today, stored, left.id)
-      .run()
+    // Its stored questions stand while every one is still the passage's; one made before the cap has none, and
+    // one whose questions were replaced since has some gone: either way they are chosen again now. The write
+    // changes them only if nobody has since, so two starts at once agree on one set.
+    const present = new Set(all.map((q) => q.id))
+    const usable =
+      left.questions === null
+        ? all.length <= READING_QUESTIONS
+        : (JSON.parse(left.questions) as number[]).every((id) => present.has(id))
+    const kept = await db
+      .prepare(
+        `UPDATE reading_attempts SET issued_day = ?, questions = CASE WHEN questions IS ? THEN ? ELSE questions END
+         WHERE id = ? RETURNING questions`,
+      )
+      .bind(today, left.questions, usable ? left.questions : choose(), left.id)
+      .first<{ questions: string | null }>()
+    stored = kept?.questions ?? null
     attempt = left.id
   } else {
     stored = choose()
