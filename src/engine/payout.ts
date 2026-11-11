@@ -1,5 +1,5 @@
 // Macaroni payout for a finished assignment, or one she leaves early (SPEC §6.4).
-import { PAYOUT } from './config'
+import { PAYOUT, SPELLING } from './config'
 
 export interface PayoutInput {
   correct: number
@@ -19,7 +19,7 @@ export interface Payout {
   total: number
 }
 
-export function payout({ correct, problemCount, firstOfDay, streak }: PayoutInput): Payout {
+function validate({ correct, problemCount, firstOfDay, streak }: PayoutInput) {
   const valid =
     [correct, problemCount, streak].every(Number.isInteger) &&
     problemCount >= 1 &&
@@ -29,14 +29,31 @@ export function payout({ correct, problemCount, firstOfDay, streak }: PayoutInpu
     // Strictly a boolean, so a "false" string from a request body can't pay the streak bonus.
     typeof firstOfDay === 'boolean'
   if (!valid) throw new RangeError(`Invalid result: ${correct} of ${problemCount}, streak ${streak}`)
+}
 
-  // The correct answers scaled to a 20-problem assignment, rounded down (§6.4).
-  const base = Math.floor((correct * PAYOUT.perCorrect * PAYOUT.baseScale) / problemCount)
+/** The bonuses and the minimum on top of a base, the same for every kind of assignment (§6.4). */
+function settle(base: number, { firstOfDay, streak }: PayoutInput): Payout {
   // 20% of the base, rounded down: 20% of 17 is floor(340 / 100) = 3.
   const accuracyBonus = Math.floor((base * PAYOUT.accuracyBonusPercent) / 100)
   const streakBonus = firstOfDay ? Math.min(streak * PAYOUT.streakPerDay, PAYOUT.streakCap) : 0
   const total = Math.max(PAYOUT.minimum, base + accuracyBonus + streakBonus)
   return { base, accuracyBonus, streakBonus, total }
+}
+
+export function payout(input: PayoutInput): Payout {
+  validate(input)
+  // The correct answers scaled to a 20-problem assignment, rounded down (§6.4).
+  const base = Math.floor((input.correct * PAYOUT.perCorrect * PAYOUT.baseScale) / input.problemCount)
+  return settle(base, input)
+}
+
+/** A spelling assignment: 1 Macaroni per correct word, never scaled, so a list under 20 words pays less (§6.4). */
+export function spellingPayout(input: PayoutInput): Payout {
+  validate(input)
+  // A list is 20 words at most (§6.2), so the unscaled base can't pass the 20 a full assignment pays.
+  if (input.problemCount > SPELLING.words)
+    throw new RangeError(`Invalid spelling result: ${input.problemCount} words, at most ${SPELLING.words}`)
+  return settle(input.correct * PAYOUT.perCorrect, input)
 }
 
 export interface LeftEarlyInput {

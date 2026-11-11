@@ -10,13 +10,21 @@ export {
   PAYOUT,
   RANGES,
   READING_QUESTIONS,
+  SPELLING,
   REWARDS,
   type Grade,
   type RewardId,
 } from './config'
 export { checkChoice } from './choice'
 export { grade } from './grade'
-export { leftEarlyPayout, payout, type LeftEarlyInput, type Payout, type PayoutInput } from './payout'
+export {
+  leftEarlyPayout,
+  payout,
+  spellingPayout,
+  type LeftEarlyInput,
+  type Payout,
+  type PayoutInput,
+} from './payout'
 export {
   generateAssignment,
   isMix,
@@ -29,6 +37,8 @@ export {
   type Problem,
 } from './problems'
 export { scoreReading } from './reading'
+export { checkSpelling, normalizeTyped, scoreSpelling } from './spelling'
+export { checkWord, parseWords, type WordCheck, type WordEntry } from './words'
 export {
   checkPassage,
   parsePassageJson,

@@ -39,6 +39,8 @@ How macworx is built. SPEC.md says what it does; this file covers only what exis
 | `streak.ts` | `nextStreak(state, today)`: dates come in as `YYYY-MM-DD` strings and are compared as day numbers, with no `Date` object or clock. |
 | `payout.ts` | `payout`: base (the correct answers scaled to 20 by the result's size, so a math or reading result alike), accuracy bonus from the base, streak bonus and total, all whole-number math. |
 | `reading.ts` | `scoreReading`: how many of a passage's questions she got right. |
+| `spelling.ts` | `checkSpelling` and `scoreSpelling`: her typing against a word and its alternates (trimmed, capitals ignored, curly apostrophes and accent forms read the same). `payout.ts` also has `spellingPayout`: 1 Macaroni per correct word, never scaled. |
+| `words.ts` | `parseWords` (a pasted list into entries) and `checkWord` (the rules for one word, its alternates and its sentence, with plain-language problems). `SPELLING` in `config.ts` holds the 20 words and the length limits. |
 | `grade.ts` | `grade`: the grade from the cutoffs in `config.ts`. |
 
 Each file's tests sit beside it, named with their SPEC §7 IDs.

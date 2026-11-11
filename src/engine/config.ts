@@ -35,6 +35,9 @@ export const ASSIGNMENT = {
 /** The most questions a reading assignment gives, whatever the passage has (SPEC §6.2). */
 export const READING_QUESTIONS = 10
 
+/** A spelling assignment's most words, and the limits on a word and its sentence (SPEC §6.2, §6.11). */
+export const SPELLING = { words: 20, wordLength: 40, sentenceLength: 200 } as const
+
 /** Problems in one assignment. */
 export const ASSIGNMENT_SIZE = ASSIGNMENT.addition + ASSIGNMENT.subtraction + ASSIGNMENT.multiplication
 
