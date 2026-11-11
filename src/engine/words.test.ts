@@ -95,7 +95,7 @@ describe('words from other sources', () => {
     expect(checkWord({ word: 'a', sentence: null }).ok).toBe(true)
   })
 
-  it('E20: a pasted line with nothing before the colon is a missing word, and a colon inside a sentence stays in it', () => {
+  it('a pasted line with nothing before the colon is a missing word, and a colon inside a sentence stays in it', () => {
     const [empty] = parseWords(':x')
     expect(checkWord(empty)).toEqual({ ok: false, problems: ['The word is missing.'] })
     expect(parseWords('their: Note: they ate.')).toEqual([
