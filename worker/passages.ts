@@ -1,6 +1,6 @@
 // Adding a reading passage from the parent portal (SPEC §6.10, §8). The checks are the engine's, the same ones the
 // portal ran before sending it; this is the second look.
-import { checkPassage, PASSAGE_LIMITS } from '../src/engine'
+import { checkPassage, PASSAGE_LIMITS, tooLong } from '../src/engine'
 import type { CheckedPassage } from '../src/engine'
 import { json } from './http'
 import type { ParentRequest } from './parent-request'
@@ -81,8 +81,7 @@ export async function postPassage({ request, db }: ParentRequest): Promise<Respo
   if (typeof body !== 'object' || body === null || !('passage' in body))
     return bad(['The request has to be JSON like { "passage": { … } }.'])
   const pasted = (body as { passage: unknown }).passage
-  if (new TextEncoder().encode(JSON.stringify(pasted)).length > PASSAGE_LIMITS.bytes)
-    return bad(['That is too long to be one passage (the limit is 64 KB).'])
+  if (tooLong(pasted)) return bad(['That is too long to be one passage (the limit is 64 KB).'])
 
   const checked = checkPassage(pasted)
   if (!checked.ok) return bad(checked.problems)
@@ -97,8 +96,9 @@ export async function postPassage({ request, db }: ParentRequest): Promise<Respo
     try {
       await db.batch(storePassage(db, id, checked.passage))
       return json(201, { id })
-    } catch {
-      // A clash, or a refusal by the table's own checks: look again before giving up.
+    } catch (e) {
+      // Only a clash on the id is worth another look; anything else is a fault, not a busy Worker.
+      if (!/UNIQUE|PRIMARY KEY/i.test(String(e))) throw e
     }
   }
   return json(503, { error: 'busy' })

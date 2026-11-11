@@ -33,6 +33,7 @@ export {
   checkPassage,
   parsePassageJson,
   PASSAGE_LIMITS,
+  tooLong,
   type CheckedPassage,
   type CheckedQuestion,
   type PassageCheck,

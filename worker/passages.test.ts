@@ -1,6 +1,7 @@
 // Adding a passage from the parent portal (SPEC §6.10, §7.L): the second look at what the portal checked.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { PASSAGE_LIMITS } from '../src/engine'
+import { postPassage } from './passages'
 import { clearAccessKeys } from './access'
 import { accessToken } from './test/access-keys'
 import { createTestDb } from './test/db'
@@ -96,15 +97,62 @@ describe('POST /api/parent/passages', () => {
     await nothingSaved()
   })
 
-  it('saves two at once under different ids, or answers 503 for the one that lost', async () => {
-    // A first call warms the Access keys, so the two below don't both fetch them at once.
-    await t.call('GET', '/api/parent/children', { key: null, accessToken: token })
-    const [a, b] = await Promise.all([save(passage(2)), save(passage(2))])
-    const ok = [a, b].filter((r) => r.status === 201)
-    expect(ok.length).toBeGreaterThanOrEqual(1)
-    expect(await count('SELECT COUNT(*) AS n FROM passages')).toBe(ok.length)
-    expect(await count('SELECT COUNT(*) AS n FROM questions')).toBe(2 * ok.length)
-    for (const r of [a, b]) if (r.status !== 201) expect(r.status).toBe(503)
+  /** The Worker's database with a hook on its statements, to stage a clash or a fault. */
+  const withDb = (hook: (sql: string) => unknown) => {
+    const real = t.db
+    return new Proxy(real, {
+      get: (target, prop) => {
+        if (prop === 'prepare')
+          return (sql: string) => {
+            const made = hook(sql)
+            return made ?? target.prepare(sql)
+          }
+        const value = (target as any)[prop]
+        return typeof value === 'function' ? value.bind(target) : value
+      },
+    })
+  }
+  const request = (db: D1Database) =>
+    ({
+      request: new Request('https://x/api/parent/passages', {
+        method: 'POST',
+        body: JSON.stringify({ passage: passage(2) }),
+      }),
+      url: new URL('https://x/api/parent/passages'),
+      db,
+      email: 'p@example.com',
+      now: new Date('2026-10-17T12:00:00Z'),
+      params: {},
+    }) as Parameters<typeof postPassage>[0]
+
+  it('retries with a fresh id when another save took the one it read', async () => {
+    await save(passage(2)) // takes id 1
+    let stale = true
+    const db = withDb((sql) => {
+      if (!sql.startsWith('SELECT COALESCE(MAX(id)') || !stale) return null
+      stale = false
+      return { first: async () => ({ id: 1 }) } // what it read before the other save landed
+    })
+    const response = await postPassage(request(db))
+    expect([response.status, ((await response.json()) as { id: number }).id]).toEqual([201, 2])
+    expect(await count('SELECT COUNT(*) AS n FROM passages')).toBe(2)
+  })
+
+  it('a fault that is not an id clash is thrown, not retried as busy', async () => {
+    const db = withDb((sql) => {
+      if (!sql.startsWith('INSERT INTO passages')) return null
+      return { bind: () => ({}) }
+    })
+    const broken = new Proxy(db, {
+      get: (target, prop) =>
+        prop === 'batch'
+          ? async () => {
+              throw new Error('D1_ERROR: boom')
+            }
+          : (target as any)[prop],
+    })
+    await expect(postPassage(request(broken))).rejects.toThrow('boom')
+    await nothingSaved()
   })
 
   it('needs an Access token like every parent route', async () => {

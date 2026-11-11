@@ -63,9 +63,13 @@ describe('checkPassage', () => {
 
   it('L19: no minutes, no title, no paragraphs or no questions is refused, and over 50 questions too', () => {
     expect(problems(passage({ minutes: undefined }))).toEqual([
-      'The passage needs "minutes", a whole number of at least 1.',
+      'The passage needs "minutes", a whole number from 1 to 999.',
     ])
     expect(problems(passage({ minutes: 1.5 }))).toHaveLength(1)
+    expect(problems(passage({ minutes: 1e20 }))).toEqual([
+      'The passage needs "minutes", a whole number from 1 to 999.',
+    ])
+    expect(checkPassage(passage({ minutes: 999 })).ok).toBe(true)
     expect(problems(passage({ title: '  ' }))).toEqual(['The passage needs a "title".'])
     expect(problems(passage({ passage: [] }))).toHaveLength(1)
     expect(problems(passage({ questions: [] }))).toHaveLength(1)
@@ -74,6 +78,15 @@ describe('checkPassage', () => {
       'The passage needs between 1 and 50 "questions".',
     ])
     expect(checkPassage(passage({ questions: many.slice(0, 50) })).ok).toBe(true)
+  })
+
+  it('L19: a blank line inside a paragraph is named, and null counts as absent', () => {
+    expect(problems(passage({ passage: ['One.\n\nTwo.'] }))).toEqual([
+      'Paragraph 1 has a blank line inside it. Make it two paragraphs.',
+    ])
+    expect(
+      checkPassage(passage({ hint: null, topic: null, questions: [question({ explanation: null })] })).ok,
+    ).toBe(true)
   })
 
   it('L19: reports every problem at once, and says what to paste when it is not an object', () => {
@@ -109,9 +122,12 @@ describe('parsePassageJson', () => {
     expect(parsePassageJson(JSON.stringify(passage())).ok).toBe(true)
   })
 
-  it('L19: refuses over 64 KB', () => {
+  it('L19: refuses over 64 KB counted as compact JSON, however it was spaced', () => {
     const big = JSON.stringify(passage({ pad: 'x'.repeat(PASSAGE_LIMITS.bytes) }))
     const result = parsePassageJson(big)
     expect(result.ok === false && result.problems[0]).toMatch(/64 KB/)
+    const spaced = JSON.stringify(passage({ pad: Array.from({ length: 12000 }, () => 1) }), null, 6)
+    expect(spaced.length).toBeGreaterThan(PASSAGE_LIMITS.bytes)
+    expect(parsePassageJson(spaced).ok).toBe(true)
   })
 })

@@ -2,7 +2,7 @@
 // again, with this same code. Every problem is a plain sentence a parent can act on.
 
 /** The most questions a passage may have, and the most bytes of JSON one may be pasted as. */
-export const PASSAGE_LIMITS = { questions: 50, options: 4, bytes: 64 * 1024 } as const
+export const PASSAGE_LIMITS = { questions: 50, options: 4, bytes: 64 * 1024, minutes: 999 } as const
 
 export interface CheckedQuestion {
   text: string
@@ -44,8 +44,13 @@ export function checkPassage(value: unknown): PassageCheck {
   if (title === null) problems.push('The passage needs a "title".')
 
   const minutes = input.minutes
-  if (typeof minutes !== 'number' || !Number.isInteger(minutes) || minutes < 1)
-    problems.push('The passage needs "minutes", a whole number of at least 1.')
+  if (
+    typeof minutes !== 'number' ||
+    !Number.isInteger(minutes) ||
+    minutes < 1 ||
+    minutes > PASSAGE_LIMITS.minutes
+  )
+    problems.push(`The passage needs "minutes", a whole number from 1 to ${PASSAGE_LIMITS.minutes}.`)
 
   const paragraphs: string[] = []
   if (!Array.isArray(input.passage) || input.passage.length === 0) {
@@ -54,12 +59,14 @@ export function checkPassage(value: unknown): PassageCheck {
     input.passage.forEach((p, i) => {
       const t = text(p)
       if (t === null) problems.push(`Paragraph ${i + 1} is empty or isn't text.`)
+      else if (/\n\s*\n/.test(t))
+        problems.push(`Paragraph ${i + 1} has a blank line inside it. Make it two paragraphs.`)
       else paragraphs.push(t)
     })
   }
 
   for (const key of ['topic', 'hint'] as const)
-    if (input[key] !== undefined && typeof input[key] !== 'string') problems.push(`"${key}" has to be text.`)
+    if (input[key] != null && typeof input[key] !== 'string') problems.push(`"${key}" has to be text.`)
 
   const questions: CheckedQuestion[] = []
   if (
@@ -79,7 +86,7 @@ export function checkPassage(value: unknown): PassageCheck {
       const q = raw as Record<string, unknown>
       const questionText = text(q.question)
       if (questionText === null) problems.push(`Question ${n} has no "question" text.`)
-      if (q.explanation !== undefined && typeof q.explanation !== 'string')
+      if (q.explanation != null && typeof q.explanation !== 'string')
         problems.push(`Question ${n}'s "explanation" has to be text.`)
 
       if (!Array.isArray(q.options) || q.options.length !== PASSAGE_LIMITS.options) {
@@ -132,8 +139,6 @@ export function checkPassage(value: unknown): PassageCheck {
 
 /** Checks pasted text: JSON first, then the passage. */
 export function parsePassageJson(pasted: string): PassageCheck {
-  if (new TextEncoder().encode(pasted).length > PASSAGE_LIMITS.bytes)
-    return { ok: false, problems: ['That is too long to be one passage (the limit is 64 KB).'] }
   let value: unknown
   try {
     value = JSON.parse(pasted)
@@ -145,5 +150,11 @@ export function parsePassageJson(pasted: string): PassageCheck {
       ],
     }
   }
-  return checkPassage(value)
+  return tooLong(value) ? { ok: false, problems: [TOO_LONG] } : checkPassage(value)
 }
+
+const TOO_LONG = 'That is too long to be one passage (the limit is 64 KB).'
+
+/** Whether a parsed passage is over the limit, counted as compact JSON (the Worker counts the same way). */
+export const tooLong = (value: unknown): boolean =>
+  new TextEncoder().encode(JSON.stringify(value)).length > PASSAGE_LIMITS.bytes
