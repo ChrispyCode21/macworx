@@ -221,7 +221,7 @@ Problems come from code, not a question bank, so the supply never runs out. Each
 ### 6.3 Scoring
 
 - Each problem has one answer, computed by the generator. Each reading question has one right choice, stored with the passage. Each spelling word has its spelling and any alternates (§6.11).
-- Her answer is a whole number. It is correct when its value equals the computed answer. A reading question is correct when the choice she picked is its right choice. A spelling word is correct when what she typed, after trimming spaces, ignoring capitals and reading ’ as ', equals the word or one of its alternates; a missing letter, an extra letter or a different letter is not correct.
+- Her answer is a whole number. It is correct when its value equals the computed answer. A reading question is correct when the choice she picked is its right choice. A spelling word is correct when what she typed, after trimming spaces, ignoring capitals and reading ’ and ‘ as ' (and accented letters written one way or the other as the same), equals the word, or one of its alternates, read the same way; a missing letter, an extra letter or a different letter is not correct.
 - **Accuracy** is correct answers divided by the problem count (a reading assignment's question count, a spelling assignment's word count).
 
 ### 6.4 Macaroni payout
@@ -308,7 +308,7 @@ Prices are fixed. The streak bonus only speeds up earning. The small rewards cos
 
 ### 6.11 Spelling words
 
-- **A word** is 1 to 40 letters, apostrophes and hyphens, with no spaces, kept as typed. It may also have a sentence (up to 200 characters) that the iPad says after the word, accepted alternates (each a word of the same kind, such as the US spelling of a UK one), and a grade, a whole number or nothing (kept for later; nothing reads it yet). Words are shared by every child and live in the database.
+- **A word** is 1 to 40 characters, each a letter (of any language), an apostrophe (' or ’) or a hyphen, with at least one letter and no spaces, kept as typed. It may also have a sentence (up to 200 characters, trimmed; an empty one means none) that the iPad says after the word, accepted alternates (each a word of the same kind, such as the US spelling of a UK one; one equal to the word ignoring capitals, or repeated, is dropped), and a grade, a whole number or nothing (kept for later; nothing reads it yet). Words are shared by every child and live in the database.
 - **Adding:** a parent adds words on the Content screen (§5.3), one or many. A word already in the list, ignoring capitals, is skipped. The dictionary check there is advice only and never blocks a save: a word found in neither the US nor the UK English dictionary gets a warning, and a word found in only one is offered with the other spelling as an alternate, which the parent can keep or remove. The Worker checks the rules of the first bullet on every save and refuses a bad word (400), saving nothing; neither it nor scoring ever looks a word up in a dictionary. A parent can edit and delete words; either voids the unchecked attempts that include that word, so her next start is new words. A recorded result keeps each word, its alternates, her typing and whether it matched as they were, so editing or deleting a word never changes it (D15).
 - **Her next words:** up to 20, in this order: words she has no finished result for, lowest id first; then the words whose latest finished result the Worker recorded longest ago, ties by lowest id (the order the Worker saved them, not the day on the result). An attempt she left unchecked comes again with the same words, its day set to the day it is handed out again. With no words, there are none (§5.7). A repeat pays in full (§6.4).
 - **What the iPad gets:** the attempt and, per word, its id, the word, its sentence and its alternates, because it says the word and marks each one as she goes (§5.7).
@@ -568,8 +568,9 @@ Unless stated, her state is balance 0, streak 0 and no last counted day, the lis
 | E15 | The Worker has no words | The start response has no words, and the iPad opens the Spelling sample |
 | E16 | The pasted text `because, friend`, a line `favourite/favorite`, a line `their: They ate their dinner, then left.` and blank lines | Entries: because, friend, favourite (alternate favorite) and their with the sentence "They ate their dinner, then left." |
 | E17 | Adding "Friend" when "friend" is already in the list | Skipped; the result says 0 added, 1 skipped |
-| E18 | Adding "mother-in-law" and "don't", then "ice cream", "r2d2", an empty word and a 41-letter word | The first two are accepted; the rest are refused (400); nothing is saved from a refused save |
+| E18 | "mother-in-law" and "don't", then "ice cream", "r2d2", an empty word, "'-'" and a 41-letter word, each checked as a word | The first two are accepted; the rest are refused with a plain sentence |
 | E19 | A word that is in an unchecked attempt is deleted | The attempt is voided; her next start is new words |
+| E20 | A save that includes a word the checks refuse | 400 `bad_word`; nothing is saved, not even the good words |
 
 ## 8. Contracts (signatures are in code, `src/engine/`)
 
@@ -582,6 +583,7 @@ The question engine is pure TypeScript: no React, no `fetch`, no D1, no clock an
 - `scoreReading(rightChoices, picks)`: the questions she got right (§6.3).
 - `scoreSpelling(words, typed)`: the words she got right (§6.3).
 - `parseWords(text)`: the entries of a pasted word list (§5.3).
+- `spellingPayout(result)`: the same, for a spelling assignment: the base is 1 Macaroni per correct word, never scaled (§6.4).
 - `checkWord(entry)` and `checkPassage(json)`: the rules of §6.11 and §6.10, answering with the entry or passage or with plain-language problems. The portal and the Worker both use them.
 - `leftEarlyPayout({ correct, answered, problemCount })`: the base-only payout for an assignment she leaves early (§6.4).
 - `grade(correct, total)`: §6.6.
