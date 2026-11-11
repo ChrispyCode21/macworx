@@ -5,7 +5,7 @@
  * ignored, and a curly apostrophe (what an iPad types) read as a straight one.
  */
 export const normalizeTyped = (text: string): string =>
-  text.normalize('NFC').trim().replace(/[’‘]/g, "'").toLowerCase()
+  text.normalize('NFC').trim().replace(/[’‘ʼ]/g, "'").toLowerCase()
 
 /** Whether her typing is the word or one of its alternates. */
 export function checkSpelling(typed: string, word: string, alternates: readonly string[] = []): boolean {
@@ -20,5 +20,7 @@ export function scoreSpelling(
 ): number {
   if (words.length === 0 || typed.length !== words.length)
     throw new RangeError(`Invalid spelling result: ${typed.length} answers for ${words.length} words`)
+  if (typed.some((t) => typeof t !== 'string'))
+    throw new RangeError('Invalid spelling result: an answer is not text')
   return words.filter((w, i) => checkSpelling(typed[i]!, w.word, w.alternates)).length
 }

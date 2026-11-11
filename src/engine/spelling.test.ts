@@ -82,3 +82,25 @@ describe('checking and scoring her typing (SPEC §6.3)', () => {
     expect(() => scoreSpelling([], [])).toThrow(RangeError)
   })
 })
+
+describe('spelling results from a request', () => {
+  it('a result that is not text is refused as a range error, not a type error', () => {
+    const words = [{ word: 'because' }]
+    expect(() => scoreSpelling(words, [null as unknown as string])).toThrow(RangeError)
+    expect(() => scoreSpelling(words, [5 as unknown as string])).toThrow(RangeError)
+  })
+
+  it('a modifier-letter apostrophe and a curly one are the same as a straight one', () => {
+    expect(checkSpelling('don\u2019t', 'don\u02bct')).toBe(true)
+    expect(checkSpelling("don't", 'don\u02bct')).toBe(true)
+  })
+})
+
+describe('spellingPayout limits', () => {
+  it('a list of 5 words all right pays 5 + 1 = 6, and more than 20 words is refused', () => {
+    expect(spellingPayout({ correct: 5, problemCount: 5, firstOfDay: false, streak: 0 }).total).toBe(6)
+    expect(() => spellingPayout({ correct: 50, problemCount: 50, firstOfDay: false, streak: 0 })).toThrow(
+      RangeError,
+    )
+  })
+})

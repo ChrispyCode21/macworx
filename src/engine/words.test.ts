@@ -67,3 +67,43 @@ describe('checkWord', () => {
     ])
   })
 })
+
+describe('words from other sources', () => {
+  it('a mark must follow a letter, and invisible marks are refused, so she can always type the word back', () => {
+    expect(problems('\u0301abc')).toHaveLength(1)
+    expect(problems('a\uFE0F')).toHaveLength(1)
+    expect(problems('a\u200Bb')).toHaveLength(1)
+    expect(problems('cafe\u0301')).toEqual([])
+  })
+
+  it('counts length after NFC, so a pasted accent is one character however it is written', () => {
+    expect(problems('e\u0301'.repeat(40))).toEqual([])
+    expect(problems('e\u0301'.repeat(41))).toHaveLength(1)
+    expect(problems('their', { sentence: 'e\u0301'.repeat(200) })).toEqual([])
+  })
+
+  it('a modifier-letter apostrophe is a word she can type back with a curly one', () => {
+    expect(problems('don\u02bct')).toEqual([])
+  })
+
+  it('refuses an entry that is not shaped like one, instead of throwing', () => {
+    expect(problems('colour', { alternates: 'color' as unknown as string[] })).toEqual([
+      'The alternates have to be a list of text.',
+    ])
+    for (const bad of [null, undefined, 5, 'word', { word: 5 }, { word: null }, { word: 'a', sentence: 3 }])
+      expect(checkWord(bad).ok).toBe(false)
+    expect(checkWord({ word: 'a', sentence: null }).ok).toBe(true)
+  })
+
+  it('E20: a pasted line with nothing before the colon is a missing word, and a colon inside a sentence stays in it', () => {
+    const [empty] = parseWords(':x')
+    expect(checkWord(empty)).toEqual({ ok: false, problems: ['The word is missing.'] })
+    expect(parseWords('their: Note: they ate.')).toEqual([
+      { word: 'their', sentence: 'Note: they ate.', alternates: [] },
+    ])
+  })
+
+  it('E18: the refusal of r2d2 is a sentence a parent can act on', () => {
+    expect(problems('r2d2')).toEqual(['The word "r2d2" can only have letters, apostrophes and hyphens.'])
+  })
+})

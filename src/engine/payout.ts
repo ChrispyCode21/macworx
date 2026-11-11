@@ -1,5 +1,5 @@
 // Macaroni payout for a finished assignment, or one she leaves early (SPEC §6.4).
-import { PAYOUT } from './config'
+import { PAYOUT, SPELLING } from './config'
 
 export interface PayoutInput {
   correct: number
@@ -50,6 +50,9 @@ export function payout(input: PayoutInput): Payout {
 /** A spelling assignment: 1 Macaroni per correct word, never scaled, so a list under 20 words pays less (§6.4). */
 export function spellingPayout(input: PayoutInput): Payout {
   validate(input)
+  // A list is 20 words at most (§6.2), so the unscaled base can't pass the 20 a full assignment pays.
+  if (input.problemCount > SPELLING.words)
+    throw new RangeError(`Invalid spelling result: ${input.problemCount} words, at most ${SPELLING.words}`)
   return settle(input.correct * PAYOUT.perCorrect, input)
 }
 

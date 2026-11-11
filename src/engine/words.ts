@@ -37,16 +37,21 @@ export function parseWords(text: string): WordEntry[] {
   return entries
 }
 
-const LETTERS = /^[\p{L}\p{M}'’-]+$/u
+// Each character is a letter (with any accents on it), an apostrophe or a hyphen: a mark must follow a letter.
+const LETTERS = /^(?:\p{L}\p{M}*|['’-])+$/u
 const HAS_LETTER = /\p{L}/u
-const length = (text: string) => Array.from(text).length
+// Marks that change nothing she sees, which she could never type back.
+const INVISIBLE = /[︀-️​-‍⁠﻿]/u
+// Counted after NFC, as the comparison is, so a pasted accent counts once however it is written.
+const length = (text: string) => Array.from(text.normalize('NFC')).length
 
 /** The problem with a word or an alternate, as a sentence, or null when it is fine. */
 function wordProblem(word: string, what: string): string | null {
   if (word === '') return `${what} is missing.`
   if (length(word) > SPELLING.wordLength)
     return `${what} "${word}" is longer than ${SPELLING.wordLength} characters.`
-  if (!LETTERS.test(word)) return `${what} "${word}" can only have letters, apostrophes and hyphens.`
+  if (!LETTERS.test(word.normalize('NFC')) || INVISIBLE.test(word))
+    return `${what} "${word}" can only have letters, apostrophes and hyphens.`
   if (!HAS_LETTER.test(word)) return `${what} "${word}" needs at least one letter.`
   return null
 }
@@ -55,20 +60,27 @@ function wordProblem(word: string, what: string): string | null {
  * Checks one entry against the rules of §6.11, and tidies it: trimmed, and alternates that repeat the word or each
  * other dropped.
  */
-export function checkWord(entry: {
-  word: string
-  sentence?: string
-  alternates?: readonly string[]
-}): WordCheck {
-  const word = entry.word.trim()
-  const sentence = (entry.sentence ?? '').trim()
+export function checkWord(value: unknown): WordCheck {
+  // The Worker passes what a request carried, so the shape is checked too.
+  if (typeof value !== 'object' || value === null) return { ok: false, problems: ['A word is missing.'] }
+  const entry = value as Record<string, unknown>
+  const shape: string[] = []
+  if (typeof entry.word !== 'string') shape.push('The word has to be text.')
+  if (entry.sentence != null && typeof entry.sentence !== 'string') shape.push('The sentence has to be text.')
+  const alternatesIn = entry.alternates ?? []
+  if (!Array.isArray(alternatesIn) || alternatesIn.some((a) => typeof a !== 'string'))
+    shape.push('The alternates have to be a list of text.')
+  if (shape.length > 0) return { ok: false, problems: shape }
+
+  const word = (entry.word as string).trim()
+  const sentence = typeof entry.sentence === 'string' ? entry.sentence.trim() : ''
   const problems: string[] = []
   const first = wordProblem(word, 'The word')
   if (first) problems.push(first)
 
   const alternates: string[] = []
   const seen = new Set([normalizeTyped(word)])
-  for (const raw of entry.alternates ?? []) {
+  for (const raw of alternatesIn as string[]) {
     const alternate = raw.trim()
     if (alternate === '') continue
     const problem = wordProblem(alternate, 'The alternate')
