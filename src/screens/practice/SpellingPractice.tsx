@@ -33,7 +33,6 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
 
   const boxId = useId()
   const playRef = useRef<HTMLButtonElement>(null)
-  const boxRef = useRef<HTMLInputElement>(null)
   const shownIndex = useRef(index)
 
   // What she was hearing never carries over to the next word, into the finished panel, or out of the screen.
@@ -134,13 +133,13 @@ export function SpellingPractice({ numbers, child, onBack }: Props) {
             </div>
             <WordBox
               id={boxId}
-              ref={boxRef}
               value={typed}
               readOnly={checked}
               result={checked ? (right ? 'right' : 'not-right') : undefined}
               onChange={(e) => setTyped(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !checked && typed.trim() !== '') setChecked(true)
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing && !checked && typed.trim() !== '')
+                  setChecked(true)
               }}
             />
             {response ? (

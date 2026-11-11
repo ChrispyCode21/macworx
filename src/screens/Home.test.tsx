@@ -63,6 +63,12 @@ describe('Home (SPEC §5.1 step 1)', () => {
     expect(html).not.toContain('Read a passage, then answer a few questions.')
   })
 
+  it('says the iPad cannot speak on the Spelling card, in place of its line', () => {
+    const html = render({ spellingSilent: true })
+    expect(html).toContain('This iPad can&#x27;t say words out loud.')
+    expect(html).not.toContain('Listen to a word, then type it.')
+  })
+
   it('shows the two Shop controls but they do nothing yet', () => {
     const html = render()
     expect(html.match(/aria-disabled="true"/g)).toHaveLength(2)

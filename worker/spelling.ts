@@ -13,7 +13,6 @@ import {
 import { error, isUint32, json, readJson, utcDay } from './http'
 
 /** The longest typing a result may carry: more than any word or alternate, so only a mistake or a trick is refused. */
-const MAX_TYPED = 100
 
 /**
  * Her next words (SPEC §6.11): the words she has no finished result for, lowest id first, then the words whose latest
@@ -117,7 +116,7 @@ function parseSpellingResult(body: unknown): SpellingBody | null {
       a !== null &&
       isUint32((a as any).word) &&
       typeof (a as any).typed === 'string' &&
-      (a as any).typed.length <= MAX_TYPED,
+      (a as any).typed.length <= SPELLING.typedLength,
   )
   if (!shaped) return null
   try {

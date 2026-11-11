@@ -63,9 +63,7 @@ test('Enter checks the word, and the box turns off autocorrect, capitals and spe
   await expect(page.locator('.response-equation')).toHaveText('This word is spelled friend.')
 })
 
-test('a wrong word turns the box coral and names the spelling; the box takes 100 characters at most', async ({
-  page,
-}) => {
+test('the box takes 100 characters at most', async ({ page }) => {
   await open(page, [])
   await box(page).fill('x'.repeat(150))
   await expect(box(page)).toHaveValue('x'.repeat(100))

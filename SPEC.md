@@ -162,7 +162,7 @@ A recorded result and her answers never change; Add or Remove on the Points scre
 
 ### 5.5 The samples (child)
 
-Spelling on an iPad that isn't paired, or whose Worker has no words, and Reading on an iPad that isn't paired, or whose Worker has no passages, are samples. They work on any iPad, online or offline. Their content is built into the app. The iPad checks her answers itself. Nothing is recorded or sent to the Worker, and they pay no Macaronis and don't count toward her streak, completed assignments or grade.
+Spelling on an iPad that isn't paired, or whose Worker has no words, and Reading on an iPad that isn't paired, or whose Worker has no passages, are samples. They work on any iPad that can speak, online or offline. Their content is built into the app. The iPad checks her answers itself. Nothing is recorded or sent to the Worker, and they pay no Macaronis and don't count toward her streak, completed assignments or grade.
 
 1. **Spelling sample:** 8 built-in words, one at a time, typed and checked on the iPad on the screens of §5.7 step 2, speech needed as there. After the 8th word she sees that she's done, with a button back to Home.
 2. **Reading sample:** one built-in passage, then its questions. It looks and works like the reading assignment's screens (§5.6), except that the iPad checks her choices itself and nothing is earned or saved.

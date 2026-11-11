@@ -125,11 +125,11 @@ Sizes are the shared `--text-N` custom properties (docs/DESIGN.md §4); a litera
 | action | 17 | 600 | normal | 0 | as is | see buttons | action buttons |
 | listen-title | 26 | 500 | normal | 0 | as is | `--l-text` | "Play word" |
 | listen-sub | 16 | 400 | 1.5 | 0 | as is | `--l-muted` | listen instructions |
-| support | 14 | 500 | normal | 0 | as is | `--l-link` | "Hear it in a sentence" |
-| choice-heading | 18 | 600 | normal | 0 | as is | `--l-text` | "Which spelling is right?" |
-| choice-hint | 13 | 400 | normal | 0 | as is | `--l-muted` | "Choose one" |
+| support | 14 | 500 | normal | 0 | as is | `--l-link` | (unused since Spelling went typed) |
+| choice-heading | 18 | 600 | normal | 0 | as is | `--l-text` | "Type the word" |
+| choice-hint | 13 | 400 | normal | 0 | as is | `--l-muted` | "Take your time" |
 | marker | 14 | 600 | normal | 0 | upper | see choice | A, B, C, D |
-| word-choice | 24 | 400 (600 chosen) | 1.4 | 0 | as is | `--l-text` | spelling choices |
+| word-choice | 24 | 400 (600 chosen) | 1.4 | 0 | as is | `--l-text` | the Spelling word box |
 | answer-choice | 17 | 400 (600 chosen) | 1.4 | 0 | as is | `--l-text` | reading choices |
 | footnote | 13 | 400 | normal | 0 | as is | `--l-muted` | under choices |
 | passage-title | 28 | 400 | normal | −0.5 | as is | `--l-text` | passage title |
@@ -277,7 +277,7 @@ A `<Button variant="choice">` in a `role="radiogroup"`. Each choice has `role="r
 | `crumb` | min-height 44 (hit area; the row is 24), gap 8, no padding, no fill | none | none | `--l-link`, crumb | back control |
 | `key` (practice size) | height 72 with room, 48 at the least, radius 12 | `--l-surface` | none | `--l-text`, key; delete icon 27 `--l-link` | number pad |
 | `play` | circle 112 (96 on a short tablet, §3) | `--l-primary` | none | play icon 40, `--l-primary-ink` | Play word |
-| `support` | height 44, gap 8 | none | none | `--l-link`, support; volume-2 18 | Hear it in a sentence |
+| `support` | height 44, gap 8 | none | none | `--l-link`, support; volume-2 18 | (unused since Spelling went typed) |
 | `choice` | 7.3 | | | | |
 
 - **Disabled:** `opacity: 0.4; cursor: default`, as in the rest of the app.
@@ -476,25 +476,25 @@ Final decisions on every Figma string:
 | Shop control | Not built | no child Shop screen yet; behavior settled (section 6.1, #123) |
 | Problem, progress, Check, response | Real | engine `generateAssignment`, `checkAnswer`; unchanged flow (SPEC §5.1) |
 | Spelling words, sentences, choices; passage, hint, questions, choices, skills | Sample | one module, `src/practice/samples.ts`, content in section 15 |
-| Spelling and Reading answer checking | Engine | a pure `checkChoice(chosen, answer)` in `src/engine/` with its test, so a later recorded subject scores the same way on the Worker |
+| Reading answer checking | Engine | a pure `checkChoice(chosen, answer)` in `src/engine/` with its test (Spelling uses `checkSpelling`), so a later recorded subject scores the same way on the Worker |
 | Passage art | Not built | the placeholder passage has none. The Figma illustration is not added to the repo. Real passages and pictures come from the database later (SPEC §9). |
 
 ## 15. Sample content
 
-`src/practice/samples.ts` holds exactly this. `answer` is the index of the right choice. Words are for a 7-year-old, unlike Figma's "necessary".
+`src/practice/samples.ts` holds exactly this. On a Reading question, `answer` is the index of the right choice. Words are for a 7-year-old, unlike Figma's "necessary".
 
-**Spelling** (8 words: word, sentence, choices A to D):
+**Spelling** (8 words: word, sentence; she types the word, so there are no choices):
 
-| Word | Sentence | Choices |
-|---|---|---|
-| friend | My friend sits next to me. | frend, freind, friend, frind |
-| because | I smiled because it was sunny. | because, becuase, becos, beacause |
-| said | Mom said it was time for lunch. | sed, siad, saide, said |
-| again | Let's play that game again. | agin, again, agian, egain |
-| people | Many people came to the park. | peple, poeple, people, peeple |
-| there | The cat is over there. | there, thare, ther, theer |
-| could | I could see the moon. | cood, culd, coud, could |
-| where | Where did you put the ball? | whare, where, wher, wheer |
+| Word | Sentence |
+|---|---|
+| friend | My friend sits next to me. |
+| because | I smiled because it was sunny. |
+| said | Mom said it was time for lunch. |
+| again | Let's play that game again. |
+| people | Many people came to the park. |
+| there | The cat is over there. |
+| could | I could see the moon. |
+| where | Where did you put the ball? |
 
 **Reading** (one passage):
 

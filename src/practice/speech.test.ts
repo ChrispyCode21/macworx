@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { canSpeak, speak, speakWord, stopSpeaking } from './speech'
+import { canSpeak, speakWord, stopSpeaking } from './speech'
 
 class FakeUtterance {
   text: string
@@ -39,15 +39,6 @@ describe('speech', () => {
     expect(canSpeak()).toBe(false)
   })
 
-  it('speaks one utterance in English at 0.8, stopping what was playing first', () => {
-    const { calls, spoken } = fakeSpeech()
-    expect(canSpeak()).toBe(true)
-    speak('friend')
-    expect(calls).toEqual(['cancel', 'speak'])
-    expect(spoken).toHaveLength(1)
-    expect(spoken[0]).toMatchObject({ text: 'friend', lang: 'en-US', rate: 0.8 })
-  })
-
   it('says the word then its sentence, stopping what was playing once so the word is not cut off', () => {
     const { calls, spoken } = fakeSpeech()
     speakWord('friend', 'My friend sits next to me.')
@@ -64,7 +55,6 @@ describe('speech', () => {
 
   it('does nothing without speech', () => {
     vi.stubGlobal('window', {})
-    expect(() => speak('friend')).not.toThrow()
     expect(() => speakWord('friend', 'x')).not.toThrow()
     expect(() => stopSpeaking()).not.toThrow()
   })
