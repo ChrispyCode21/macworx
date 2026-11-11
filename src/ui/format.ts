@@ -77,3 +77,7 @@ export function formatMoment(iso: string): string {
     minute: '2-digit',
   })
 }
+
+/** Compares two words alphabetically, ignoring capitals (accents still count), for sorting a list. */
+export const compareWords = (a: string, b: string): number => collator.compare(a, b)
+const collator = new Intl.Collator('en', { sensitivity: 'accent' })

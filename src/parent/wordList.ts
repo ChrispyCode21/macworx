@@ -1,5 +1,6 @@
 // The word list as the Edit list dialog shows it (SPEC §5.3): what a word looks like, and the search.
 import { normalizeTyped } from '../engine'
+import { compareWords } from '../ui/format'
 
 export interface WordItem {
   id: number
@@ -20,8 +21,7 @@ export function filterWords(words: readonly WordItem[], query: string): WordItem
 
 /** The words alphabetical, ignoring capitals, as the Worker lists them (ties by id). */
 export function sortWords(words: readonly WordItem[]): WordItem[] {
-  const collator = new Intl.Collator('en', { sensitivity: 'accent' })
-  return [...words].sort((a, b) => collator.compare(a.word, b.word) || a.id - b.id)
+  return [...words].sort((a, b) => compareWords(a.word, b.word) || a.id - b.id)
 }
 
 /** The alternates as one box shows them, separated by commas. */

@@ -28,7 +28,9 @@ export function Dialog({ open, title, closeLabel, onClose, returnFocusTo, onEsca
   const pressedOutside = useRef(false)
   const outside = (e: MouseEvent<HTMLDialogElement>) => {
     const box = e.currentTarget.getBoundingClientRect()
-    return e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom
+    const inside =
+      e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom
+    return !inside
   }
 
   useEffect(() => {
