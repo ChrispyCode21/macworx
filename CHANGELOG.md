@@ -8,6 +8,7 @@ To release: in a PR, move the "Unreleased" notes under a new version heading and
 
 ### Added
 
+- **A reading assignment gives 10 questions at most (children):** a passage with more than 10 questions gives 10 of them, chosen at random and shown in the passage's order. If she leaves before Check answers, the same 10 come back. A passage with 10 or fewer gives all of its questions, as before.
 - **Reading passages can show a picture (children):** the Worker serves a passage's picture from Cloudflare R2 to a paired iPad. A passage without a picture, or one whose file isn't uploaded yet, reads without it.
 - **Division looks like long division (children):** a division problem shows the divisor to the left of a bracket round the number being divided, with a box for her answer above each of its digits.
 - **A math mix of her own (children):** Math now opens a screen where she taps up to 3 problems to try, from addition, subtraction, multiplication and division at three levels, and sees how many problems each gets, how many Macaronis she could earn and a Start button. "Same as last time" brings back the last mix. "Do another one" keeps the mix she did.

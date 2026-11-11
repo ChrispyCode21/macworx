@@ -9,6 +9,7 @@ export {
   MAX_ANSWER,
   PAYOUT,
   RANGES,
+  READING_QUESTIONS,
   REWARDS,
   type Grade,
   type RewardId,
