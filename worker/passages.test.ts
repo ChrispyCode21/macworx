@@ -112,11 +112,11 @@ describe('POST /api/parent/passages', () => {
       },
     })
   }
-  const request = (db: D1Database) =>
+  const request = (db: D1Database, body: string = JSON.stringify({ passage: passage(2) })) =>
     ({
       request: new Request('https://x/api/parent/passages', {
         method: 'POST',
-        body: JSON.stringify({ passage: passage(2) }),
+        body,
       }),
       url: new URL('https://x/api/parent/passages'),
       db,
@@ -153,6 +153,13 @@ describe('POST /api/parent/passages', () => {
     })
     await expect(postPassage(request(broken))).rejects.toThrow('boom')
     await nothingSaved()
+  })
+
+  it('L19: the size limit counts the passage compact, so a request indented far more is still accepted', async () => {
+    const padded = passage(1, { pad: Array.from({ length: 12000 }, () => 1) })
+    const body = JSON.stringify({ passage: padded }, null, 10)
+    expect(body.length).toBeGreaterThan(PASSAGE_LIMITS.bytes * 2)
+    expect((await postPassage(request(t.db, body))).status).toBe(201)
   })
 
   it('needs an Access token like every parent route', async () => {
