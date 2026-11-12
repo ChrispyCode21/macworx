@@ -6,6 +6,7 @@ const KEY = 'test-device-key-0123456789'
 const words = [
   { id: 4, word: 'friend', sentence: 'My friend came.', alternates: [] },
   { id: 9, word: 'colour', sentence: '', alternates: ['color'] },
+  { id: 12, word: 'said', sentence: '', alternates: [] },
 ]
 const state = { balance: 125, streak: 1, lastDay: '2026-11-09', completed: 1, latestGrade: 'Great' }
 const result = {
@@ -64,15 +65,16 @@ test('types the Worker’s words, retries Finish after Wi-Fi drops, and sees the
   await giveSpeech(page)
   const { posted, api } = await pair(page, (n) => (n === 1 ? 'offline' : 'ok'))
   await start(page)
-  await expect(page.getByRole('progressbar', { name: 'Word 1 of 2' })).toBeVisible()
+  await expect(page.getByRole('progressbar', { name: 'Word 1 of 3' })).toBeVisible()
 
   await typeWord(page, 'frend', 'Next')
-  await expect(page.getByRole('progressbar', { name: 'Word 2 of 2' })).toBeVisible()
-  await typeWord(page, 'color', 'Finish')
+  await expect(page.getByRole('progressbar', { name: 'Word 2 of 3' })).toBeVisible()
+  await typeWord(page, 'color', 'Next')
+  await typeWord(page, 'sed', 'Finish')
 
   // No connection: her typing stays and Finish is still there.
   await expect(page.getByText('Connect to Wi-Fi, then tap Finish again.').first()).toBeVisible()
-  await expect(box(page)).toHaveValue('color')
+  await expect(box(page)).toHaveValue('sed')
   await page.getByRole('button', { name: 'Finish', exact: true }).click()
   await expect(page.getByText('You got 1 of 2 words right!').first()).toBeVisible()
   await ready(page)
@@ -85,6 +87,7 @@ test('types the Worker’s words, retries Finish after Wi-Fi drops, and sees the
     answers: [
       { word: 4, typed: 'frend' },
       { word: 9, typed: 'color' },
+      { word: 12, typed: 'sed' },
     ],
   }
   expect(posted).toHaveLength(2)
@@ -97,7 +100,8 @@ test('words a parent changed: nothing is recorded and she goes back to Home', as
   await pair(page, () => 'voided')
   await start(page)
   await typeWord(page, 'friend', 'Next')
-  await typeWord(page, 'colour', 'Finish')
+  await typeWord(page, 'colour', 'Next')
+  await typeWord(page, 'said', 'Finish')
   await expect(page.getByText('Your words changed!').first()).toBeVisible()
   await ready(page)
   await page.getByRole('button', { name: 'Back to Home' }).click()

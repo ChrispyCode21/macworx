@@ -126,6 +126,12 @@ describe('finishing a spelling assignment', () => {
     expect(calls.indexOf('POST /api/results')).toBeLessThan(calls.indexOf('POST /api/spelling/result'))
   })
 
+  it('is unpaired, and sends nothing, when the iPad has no key', async () => {
+    localStorage.clear()
+    expect(await spelling.finishSpelling(5, typed, new Date())).toEqual({ kind: 'unpaired' })
+    expect(calls).toEqual([])
+  })
+
   it('is voided on a 404: nothing recorded, and the state is left alone', async () => {
     routes['POST /api/spelling/result'] = () => json(404, {})
     expect(await spelling.finishSpelling(5, typed, new Date())).toEqual({ kind: 'voided' })
@@ -142,9 +148,9 @@ describe('finishing a spelling assignment', () => {
     expect(await spelling.finishSpelling(5, typed, new Date())).toEqual({ kind: 'offline' })
   })
 
-  it('is offline, and forgets the key, when a parent unpaired the iPad', async () => {
+  it('is unpaired, and forgets the key, when a parent unpaired the iPad', async () => {
     routes['POST /api/spelling/result'] = () => json(401, {})
-    expect(await spelling.finishSpelling(5, typed, new Date())).toEqual({ kind: 'offline' })
+    expect(await spelling.finishSpelling(5, typed, new Date())).toEqual({ kind: 'unpaired' })
     expect(getDeviceKey()).toBeNull()
   })
 

@@ -51,17 +51,20 @@ export function SpellingPractice({ numbers, child, onBack, words, attempt, onDon
   const [sending, setSending] = useState(false)
   const [offline, setOffline] = useState(false)
   const [voided, setVoided] = useState(false)
+  // A parent unpaired this iPad while she was typing: nothing can be sent, so Wi-Fi isn't the problem.
+  const [disconnected, setDisconnected] = useState(false)
   const [result, setResult] = useState<SpellingResult | null>(null)
 
   const boxId = useId()
   const playRef = useRef<HTMLButtonElement>(null)
   const shownIndex = useRef(index)
+  const sendingRef = useRef(false)
 
   // What she was hearing never carries over to the next word, into the finished panel, or out of the screen.
   useEffect(() => {
     stopSpeaking()
     return stopSpeaking
-  }, [index, finished])
+  }, [index, finished, result, voided, disconnected])
 
   // Next unmounts, so focus would fall to the page. Send it to the new word's Play word.
   useEffect(() => {
@@ -75,18 +78,20 @@ export function SpellingPractice({ numbers, child, onBack, words, attempt, onDon
   const right = checked && checkSpelling(typed, item.word, item.alternates)
 
   const finish = async () => {
-    if (sending) return
+    if (sendingRef.current) return
+    sendingRef.current = true
     setSending(true)
-    setOffline(false)
     try {
       const answers = list.map((w, i) => ({ word: w.id, typed: i < index ? before[i] : typed }))
       const outcome = await finishSpelling(attempt!, answers, new Date())
+      setOffline(outcome.kind === 'offline')
       if (outcome.kind === 'checked') setResult(outcome.result)
       else if (outcome.kind === 'voided') setVoided(true)
-      else setOffline(true)
+      else if (outcome.kind === 'unpaired') setDisconnected(true)
     } catch {
       setOffline(true)
     } finally {
+      sendingRef.current = false
       setSending(false)
     }
   }
@@ -104,15 +109,17 @@ export function SpellingPractice({ numbers, child, onBack, words, attempt, onDon
     : right
       ? COPY.cheers[index % COPY.cheers.length]
       : COPY.spellingAnswer(item.word)
-  const over = finished || result !== null || voided
+  const over = finished || result !== null || voided || disconnected
   const progress = over
     ? { label: COPY.spellingProgress(count, count), done: count, total: count }
     : { label: COPY.spellingProgress(index + 1, count), done: index + 1, total: count }
   const overMessage = voided
     ? COPY.spellingVoided
-    : result
-      ? COPY.spellingRecorded(result.correct, result.answered)
-      : COPY.spellingDone(count)
+    : disconnected
+      ? COPY.spellingUnpaired
+      : result
+        ? COPY.spellingRecorded(result.correct, result.answered)
+        : COPY.spellingDone(count)
 
   return (
     <PracticeFrame
@@ -122,13 +129,14 @@ export function SpellingPractice({ numbers, child, onBack, words, attempt, onDon
       title={COPY.spellingTitle}
       progress={progress}
       backLabel={COPY.back}
-      onBack={onBack}
+      // Leaving while Finish is on its way would pay her without showing the result.
+      onBack={sending ? () => {} : onBack}
       note={over ? undefined : offline ? COPY.spellingFinishOffline : COPY.spellingNote}
-      noteIcon={over ? undefined : <Volume2Icon size={20} />}
+      noteIcon={over || offline ? undefined : <Volume2Icon size={20} />}
       actions={
         result ? (
           <NextButton key="done" label={COPY.done} onClick={() => onDone?.(result)} />
-        ) : finished || voided ? (
+        ) : finished || voided || disconnected ? (
           <BackToHomeButton key="home" onClick={onBack} />
         ) : checked ? (
           <NextButton key="next" label={last ? COPY.finish : COPY.next} onClick={next} />

@@ -82,6 +82,7 @@ export const COPY = {
   finish: 'Finish',
   spellingFinishOffline: 'Connect to Wi-Fi, then tap Finish again.',
   spellingVoided: 'Your words changed! Tap Back to Home to get new ones.',
+  spellingUnpaired: 'This iPad was disconnected. Tap Back to Home.',
   spellingRecorded: (correct: number, total: number) => `You got ${correct} of ${total} words right!`,
   spellingOffline: 'Connect to Wi-Fi to get your next words!',
   spellingDone: (total: number) => `You finished all ${total} words!`,

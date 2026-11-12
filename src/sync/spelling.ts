@@ -30,6 +30,8 @@ export type FinishOutcome =
   | { kind: 'offline' }
   /** A parent changed one of the words, so the attempt is gone and nothing was recorded (SPEC §5.7 step 3). */
   | { kind: 'voided' }
+  /** A parent unpaired this iPad (SPEC §5.7 step 3): there is nobody to send to, so a retry can't help. */
+  | { kind: 'unpaired' }
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
@@ -82,14 +84,15 @@ export async function startSpelling(): Promise<StartOutcome> {
  * results go first, so the streak is counted in order.
  */
 export async function finishSpelling(attempt: number, answers: Typed[], now: Date): Promise<FinishOutcome> {
-  if (!getDeviceKey()) return { kind: 'offline' }
-  if (!(await syncBeforeReading())) return { kind: 'offline' }
+  if (!getDeviceKey()) return { kind: 'unpaired' }
+  if (!(await syncBeforeReading())) return getDeviceKey() ? { kind: 'offline' } : { kind: 'unpaired' }
   const key = getDeviceKey()
-  if (!key) return { kind: 'offline' }
+  if (!key) return { kind: 'unpaired' }
   const response = await post(key, '/api/spelling/result', { attempt, day: localDay(now), answers })
   if (!response) return { kind: 'offline' }
   if (response.status === 404) return { kind: 'voided' }
-  if (unpaired(response, key) || !response.ok) return { kind: 'offline' }
+  if (unpaired(response, key)) return { kind: 'unpaired' }
+  if (!response.ok) return { kind: 'offline' }
   const body = await readBody(response)
   const result = body?.result
   if (!isResult(result)) return { kind: 'offline' }
