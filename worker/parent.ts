@@ -5,7 +5,7 @@ import { error, json, readJson, utcDay } from './http'
 import { logChange } from './admin-log'
 import { patchChild, postChild } from './children'
 import { postPairingCode } from './pair'
-import { postPassage } from './passages'
+import { deletePassage, getPassage, listPassages, postPassage, putPassage } from './passages'
 import { deleteWord, listWords, patchWord, postWords } from './words'
 import { childOf } from './parent-request'
 import type { ParentRequest } from './parent-request'
@@ -477,7 +477,11 @@ export const PARENT_ROUTES: {
   { method: 'POST', pattern: /^\/api\/parent\/balance$/, run: postBalance },
   { method: 'POST', pattern: /^\/api\/parent\/pairing-code$/, run: (req) => postPairingCode(req) },
   { method: 'POST', pattern: /^\/api\/parent\/streak$/, run: postStreak },
+  { method: 'GET', pattern: /^\/api\/parent\/passages$/, run: listPassages },
   { method: 'POST', pattern: /^\/api\/parent\/passages$/, run: postPassage },
+  { method: 'GET', pattern: /^\/api\/parent\/passages\/(?<id>\d+)$/, run: getPassage },
+  { method: 'PUT', pattern: /^\/api\/parent\/passages\/(?<id>\d+)$/, run: putPassage },
+  { method: 'DELETE', pattern: /^\/api\/parent\/passages\/(?<id>\d+)$/, run: deletePassage },
   { method: 'GET', pattern: /^\/api\/parent\/words$/, run: listWords },
   { method: 'POST', pattern: /^\/api\/parent\/words$/, run: postWords },
   { method: 'PATCH', pattern: /^\/api\/parent\/words\/(?<id>\d+)$/, run: patchWord },

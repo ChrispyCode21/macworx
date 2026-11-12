@@ -57,7 +57,15 @@ export async function handle(
       for (const route of PARENT_ROUTES) {
         const match = route.method === request.method && route.pattern.exec(pathname)
         if (match)
-          return await route.run({ request, url, db: env.DB, email, now, params: { ...match.groups } })
+          return await route.run({
+            request,
+            url,
+            db: env.DB,
+            email,
+            now,
+            bucket: env.PASSAGE_IMAGES,
+            params: { ...match.groups },
+          })
       }
       return error(404, 'not_found')
     }
