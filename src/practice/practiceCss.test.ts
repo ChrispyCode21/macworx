@@ -118,6 +118,20 @@ describe('the practice CSS (docs/DESIGN-PRACTICE.md §3, §5)', () => {
       expect(media, base).toBeGreaterThan(practice.indexOf(base))
   })
 
+  it('sizes the Spelling word box like a choice, 78 high and 56 on a short tablet, with the result colors (§10)', () => {
+    const rule = /\n\.word-box \{([^}]*)\}/.exec(css)?.[1] ?? ''
+    expect(rule).toContain('min-height: 78px;')
+    expect(rule).toContain('border-radius: var(--radius-control);')
+    expect(css).toMatch(
+      /\.word-box\[data-result='right'\] \{[^}]*var\(--right-edge\)[^}]*var\(--right-soft\)/,
+    )
+    expect(css).toMatch(
+      /\.word-box\[data-result='not-right'\] \{[^}]*var\(--not-right-edge\)[^}]*var\(--not-right-soft\)/,
+    )
+    const block = /@media \(max-height: 833px\) \{([\s\S]*?)\n\}\n/.exec(css)?.[1] ?? ''
+    expect(block).toMatch(/\.word-box \{\s*min-height: 56px;/)
+  })
+
   it('uses font weights 400, 500 and 600 only', () => {
     const weights = [...practice.matchAll(/font-weight:\s*(\d+)/g)].map((m) => m[1])
     expect(weights.length).toBeGreaterThan(0)

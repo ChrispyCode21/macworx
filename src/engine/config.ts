@@ -40,6 +40,8 @@ export const SPELLING = {
   words: 20,
   wordLength: 40,
   sentenceLength: 200,
+  /** The most characters one typed word may have (SPEC §5.7 step 2, §8). */
+  typedLength: 100,
   /** The most entries, and the most bytes of JSON, one save of the word list may carry (SPEC §8). */
   perSave: 500,
   saveBytes: 256 * 1024,

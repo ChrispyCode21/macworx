@@ -14,16 +14,15 @@ describe('Math screen copy', () => {
 })
 
 describe('Spelling screen copy', () => {
-  it('words the listen panel, the choices and the finish', () => {
+  it('words the listen panel, the box and the finish', () => {
     expect(COPY.spellingEyebrow).toBe('Listen and spell')
     expect(COPY.playWord).toBe('Play word')
-    expect(COPY.playWordSub).toBe('Listen to the word, then choose its spelling.')
-    expect(COPY.playUnavailable).toBe("This iPad can't play the word. You can still choose a spelling.")
-    expect(COPY.hearSentence).toBe('Hear it in a sentence')
-    expect(COPY.spellingChoiceHeading).toBe('Which spelling is right?')
-    expect(COPY.spellingChooseOne).toBe('Choose one spelling.')
-    expect(COPY.chooseHint).toBe('Choose one')
+    expect(COPY.playWordSub).toBe('Listen to the word and its sentence, then type the word.')
+    expect(COPY.spellingSilent).toBe("This iPad can't say words out loud.")
+    expect(COPY.spellingBoxHeading).toBe('Type the word')
+    expect(COPY.spellingTypeIt).toBe('Type the word you heard.')
     expect(COPY.readyToCheck).toBe('Ready to check.')
+    expect(COPY.homeSpellingLine).toBe('Listen to a word, then type it.')
     expect(COPY.spellingNote).toBe('You can play the word as many times as you need.')
     expect(COPY.finish).toBe('Finish')
     expect(COPY.backToHome).toBe('Back to Home')

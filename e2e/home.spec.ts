@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { addDays, generateAssignment } from '../src/engine'
 import { fastClock, skipReadyDelay } from './readyDelay'
 import { startMath } from './mix'
+import { giveSpeech } from './speech'
 
 // Her numbers on Home and the streak bonus on the result (SPEC §5.1, §6.8). The Worker is never reachable
 // here (every /api call answers 503), so what shows is the stored state plus the results not yet sent.
@@ -16,6 +17,7 @@ function today(): string {
 
 /** `paired` stores the device key (plain text); `stored` holds the JSON entries. */
 async function openApp(page: Page, paired: boolean, stored: Record<string, unknown> = {}) {
+  await giveSpeech(page)
   await page.route('/api/**', (route) => route.fulfill({ status: 503, json: { error: 'busy' } }))
   await page.addInitScript(
     ({ key, items }) => {
@@ -345,19 +347,15 @@ test(
         expect(overflow, `${at} at ${width}x${height} scrolls`).toBeLessThanOrEqual(1)
       }
     }
-    const choice = () =>
-      page
-        .locator('.button-choice')
-        .first()
-        .evaluate((el) => el.getBoundingClientRect().height)
+    const choice = () => page.locator('.word-box').evaluate((el) => el.getBoundingClientRect().height)
 
     await page.getByRole('button', { name: 'Start Spelling', exact: true }).click()
     await fits('Spelling')
     await page.setViewportSize({ width: 1194, height: 834 })
-    expect(await choice(), 'a choice keeps its 78 in the 1194x834 frame').toBeGreaterThanOrEqual(77)
+    expect(await choice(), 'the word box keeps its 78 in the 1194x834 frame').toBeGreaterThanOrEqual(77)
     await page.setViewportSize({ width: 1133, height: 744 })
-    expect(await choice(), 'a choice gives height back on a short tablet').toBeLessThan(60)
-    await page.getByRole('radio').first().click()
+    expect(await choice(), 'the word box gives height back on a short tablet').toBeLessThan(60)
+    await page.getByRole('textbox', { name: 'Type the word' }).fill('frend')
     await page.getByRole('button', { name: 'Check' }).click()
     await fits('Spelling after Check')
     await page.locator('.button-crumb').click()
@@ -421,7 +419,7 @@ test('Home shows Math, Spelling and Reading;Spelling and Reading open their prac
     if (name === 'Spelling') {
       await expect(page.getByRole('progressbar', { name: 'Word 1 of 8' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Play word', exact: true })).toBeVisible()
-      await page.getByRole('radio').first().click()
+      await page.getByRole('textbox', { name: 'Type the word' }).fill('friend')
       await page.getByRole('button', { name: 'Check' }).click()
       await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
     } else {

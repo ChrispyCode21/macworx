@@ -22,6 +22,8 @@ interface Props {
   onPair?: () => void
   /** Reading found no connection for her next story (SPEC §5.6 step 1). */
   readingOffline?: boolean
+  /** This iPad can't speak, so Spelling starts nothing (SPEC §5.7 step 2). */
+  spellingSilent?: boolean
   /** Her numbers; absent until a paired iPad has the Worker's state (SPEC §6.8). */
   numbers?: HomeNumbers
 }
@@ -55,7 +57,7 @@ function SubjectCard({
 }
 
 /** The child Home (SPEC §5.1 step 1, docs/DESIGN.md "Home"). */
-export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props) {
+export function Home({ onStart, onOpen, onPair, readingOffline, spellingSilent, numbers }: Props) {
   return (
     <div className="home">
       <HomeBar />
@@ -79,7 +81,7 @@ export function Home({ onStart, onOpen, onPair, readingOffline, numbers }: Props
               />
               <SubjectCard
                 title={COPY.subjectSpelling}
-                line={COPY.homeSpellingLine}
+                line={spellingSilent ? COPY.spellingSilent : COPY.homeSpellingLine}
                 icon={<span className="home-aa">{COPY.homeSpellingIcon}</span>}
                 onStart={() => onOpen('spelling')}
               />

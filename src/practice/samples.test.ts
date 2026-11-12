@@ -16,19 +16,10 @@ describe('the Spelling samples (docs/DESIGN-PRACTICE.md §15)', () => {
     ])
   })
 
-  it('give each word four different choices', () => {
-    for (const w of SPELLING_WORDS) {
-      expect(w.choices).toHaveLength(4)
-      expect(new Set(w.choices).size).toBe(4)
-    }
-  })
-
-  it('point the answer at the word itself', () => {
-    for (const w of SPELLING_WORDS) {
-      expect(w.answer).toBeGreaterThanOrEqual(0)
-      expect(w.answer).toBeLessThanOrEqual(3)
-      expect(w.choices[w.answer]).toBe(w.word)
-    }
+  it('have the shape the Worker hands out: an id, the word, a sentence and alternates', () => {
+    expect(SPELLING_WORDS.map((w) => w.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+    for (const w of SPELLING_WORDS)
+      expect(Object.keys(w).sort()).toEqual(['alternates', 'id', 'sentence', 'word'])
   })
 
   it('put the word in its sentence', () => {
