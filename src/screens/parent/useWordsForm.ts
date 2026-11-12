@@ -78,23 +78,25 @@ export function useWordsForm() {
       return rest
     })
   // Every entry through the same checks the Worker runs, so a save the portal sends is one the Worker accepts.
+  // What would be sent: the entries with the spellings the parent added, so the limits cover the real request.
+  const sendable = useMemo(() => withAlternates(entries, accepted), [entries, accepted])
   const problems = useMemo(() => {
     const all: string[] = []
     // The limits of one save, so the parent hears about them here and not as a refusal after pressing Save.
     if (entries.length > SPELLING.perSave) all.push(COPY.wordsTooMany(SPELLING.perSave))
     else if (
       draft.length > SPELLING.saveBytes / 4 &&
-      new TextEncoder().encode(JSON.stringify({ words: entries })).length > SPELLING.saveBytes
+      new TextEncoder().encode(JSON.stringify({ words: sendable })).length > SPELLING.saveBytes
     )
       all.push(COPY.wordsTooBig)
-    for (const entry of entries) {
+    for (const entry of sendable) {
       const checked = checkWord(entry)
       if (!checked.ok) all.push(...checked.problems)
     }
     return all.length > MAX_LISTED
       ? [...all.slice(0, MAX_LISTED), COPY.wordsMoreProblems(all.length - MAX_LISTED)]
       : all
-  }, [draft, entries])
+  }, [draft, entries, sendable])
 
   const setDraft = (text: string) => {
     latest.current = text
@@ -109,7 +111,7 @@ export function useWordsForm() {
     setNote(null)
     const sent = latest.current
     // The other spellings the parent added go with their word (the advice is only for words still in the box).
-    const result = await addWords(withAlternates(entries, accepted))
+    const result = await addWords(sendable)
     busy.current = false
     setSaving(false)
     if (!result.ok) {

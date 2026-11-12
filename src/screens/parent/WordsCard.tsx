@@ -59,7 +59,7 @@ export function WordsCard({ form }: { form: WordsForm }) {
       {advice.length > 0 && (
         <ul className="words-advice" aria-label={COPY.wordsAdviceLabel}>
           {advice.map(({ word, advice: said, added }) => (
-            <li key={word.toLowerCase()}>
+            <li key={word}>
               {said.kind === 'neither' ? (
                 <span>{COPY.wordsInNeither(word)}</span>
               ) : (

@@ -38,7 +38,7 @@ export function adviceItems(
     if (said.kind === 'none') continue
     // An alternate already on the line counts as added; nothing is offered for it.
     if (said.kind === 'only' && said.other && entry.alternates.some((a) => same(a, said.other!))) continue
-    items.push({ word: entry.word, advice: said, added: acceptedKey(entry.word) in accepted })
+    items.push({ word: entry.word, advice: said, added: Object.hasOwn(accepted, acceptedKey(entry.word)) })
   }
   return items
 }
@@ -46,7 +46,9 @@ export function adviceItems(
 /** The entries with the other spellings the parent added put on their words. */
 export function withAlternates(entries: WordEntry[], accepted: Record<string, string>): WordEntry[] {
   return entries.map((entry) => {
-    const other = accepted[acceptedKey(entry.word)]
+    // Own properties only: a word like "constructor" is not an added spelling.
+    const key = acceptedKey(entry.word)
+    const other = Object.hasOwn(accepted, key) ? accepted[key] : undefined
     return other && !entry.alternates.some((a) => same(a, other))
       ? { ...entry, alternates: [...entry.alternates, other] }
       : entry

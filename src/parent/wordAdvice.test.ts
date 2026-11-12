@@ -34,6 +34,11 @@ describe('adviceItems', () => {
 })
 
 describe('withAlternates', () => {
+  it('ignores inherited properties: the word "constructor" gets no alternate', () => {
+    expect(withAlternates([entry('constructor')], {})).toEqual([entry('constructor')])
+    expect(adviceItems([entry('toString')], us, uk, new Map(), {})[0]!.added).toBe(false)
+  })
+
   it('puts an added spelling on its word, once, and leaves the others alone', () => {
     const entries = [entry('colour'), entry('grey', ['gray']), entry('other')]
     expect(withAlternates(entries, { colour: 'color', grey: 'gray' })).toEqual([
