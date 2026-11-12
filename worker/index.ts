@@ -87,6 +87,7 @@ export async function handle(
         db: env.DB,
         bucket: env.PASSAGE_IMAGES,
         name: pathname.slice(IMAGE_PREFIX.length),
+        ifNoneMatch: request.headers.get('If-None-Match'),
       })
     }
 
