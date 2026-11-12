@@ -30,6 +30,17 @@ export default defineConfig({
   define: {
     'import.meta.env.VITE_PREVIEW': JSON.stringify(isPreviewBranch(process.env.WORKERS_CI_BRANCH) ? '1' : ''),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // The spelling dictionary code (src/parent/dictionary.ts) gets a name the offline files leave out, below.
+        chunkFileNames: (chunk) =>
+          chunk.moduleIds.some((id) => id.includes('/node_modules/nspell/'))
+            ? 'assets/dictionary-[hash].js'
+            : 'assets/[name]-[hash].js',
+      },
+    },
+  },
   plugins: [
     react(),
     // Installable + offline on the iPad (SPEC §2): a web app manifest, and a service worker that
@@ -55,6 +66,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // The spelling dictionaries (src/parent/dictionary.ts) are for a parent's browser: the iPad never downloads them.
+        globIgnores: ['**/dictionary-*.js'],
         // Never the cached app shell for these: the Worker, Cloudflare Access and its sign-in (src/networkOnly.ts).
         navigateFallbackDenylist: NETWORK_ONLY_PATHS,
       },

@@ -39,6 +39,7 @@ export {
 export { scoreReading } from './reading'
 export { checkSpelling, normalizeTyped, scoreSpelling } from './spelling'
 export { checkWord, parseWords, type WordCheck, type WordEntry } from './words'
+export { wordAdvice, type Lookup, type WordAdvice } from './dictionary'
 export {
   checkPassage,
   parsePassageJson,

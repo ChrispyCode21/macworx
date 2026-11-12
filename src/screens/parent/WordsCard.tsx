@@ -13,7 +13,7 @@ import type { WordsForm } from './useWordsForm'
  * A line can be `word: sentence` or `word/alternate`. Its state is the Portal's (`useWordsForm`).
  */
 export function WordsCard({ form }: { form: WordsForm }) {
-  const { draft, setDraft, count, problems, saving, note, save } = form
+  const { draft, setDraft, count, problems, saving, note, save, advice, addAlternate, removeAlternate } = form
   const [editing, setEditing] = useState(false)
   const editButton = useRef<HTMLButtonElement>(null)
   return (
@@ -51,6 +51,37 @@ export function WordsCard({ form }: { form: WordsForm }) {
         <ul className="content-problems">
           {problems.map((problem, i) => (
             <li key={`${i}-${problem}`}>{problem}</li>
+          ))}
+        </ul>
+      )}
+
+      {/* Advice from the dictionaries (SPEC §6.11) never blocks Save. Outside the live region, like the list above. */}
+      {advice.length > 0 && (
+        <ul className="words-advice" aria-label={COPY.wordsAdviceLabel}>
+          {advice.map(({ word, advice: said, added }) => (
+            <li key={word}>
+              {said.kind === 'neither' ? (
+                <span>{COPY.wordsInNeither(word)}</span>
+              ) : (
+                <>
+                  <span>
+                    {COPY.wordsInOne(word, said.from)}{' '}
+                    {said.other &&
+                      (added ? COPY.wordsAccepting(said.other) : COPY.wordsOfferOther(said.other))}
+                  </span>
+                  {said.other && (
+                    <Button
+                      variant="secondary"
+                      disabled={saving}
+                      aria-label={added ? COPY.wordsRemoveOther(word) : COPY.wordsAddOther(word)}
+                      onClick={() => (added ? removeAlternate(word) : addAlternate(word, said.other!))}
+                    >
+                      {added ? COPY.wordsRemove : COPY.wordsAdd}
+                    </Button>
+                  )}
+                </>
+              )}
+            </li>
           ))}
         </ul>
       )}

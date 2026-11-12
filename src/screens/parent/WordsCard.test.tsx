@@ -12,6 +12,9 @@ const form = (over: Partial<WordsForm> = {}): WordsForm => ({
   saving: false,
   note: null,
   save: async () => {},
+  advice: [],
+  addAlternate: () => {},
+  removeAlternate: () => {},
   ...over,
 })
 const render = (over: Partial<WordsForm> = {}) => renderToStaticMarkup(<WordsCard form={form(over)} />)
@@ -53,6 +56,35 @@ describe('WordsCard', () => {
     expect(html).toContain('ice cream')
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Save word list/)
     expect(html).not.toMatch(/<p[^>]*>(?:(?!<\/p>)[\s\S])*<ul/)
+  })
+
+  it('lists dictionary advice: a warning for a word in neither, an offer with Add, and Remove once added', () => {
+    const neither = render({ advice: [{ word: 'xqzt', advice: { kind: 'neither' }, added: false }] })
+    expect(neither).toContain(escaped(COPY.wordsInNeither('xqzt')))
+    expect(neither).not.toContain('>Add<')
+    const offer = render({
+      advice: [{ word: 'colour', advice: { kind: 'only', from: 'UK', other: 'color' }, added: false }],
+    })
+    expect(offer).toContain(escaped('"colour" is in the UK dictionary only.'))
+    expect(offer).toContain(escaped('Also accept "color"?'))
+    expect(offer).toMatch(/<button[^>]*aria-label="Add alternate for colour"[^>]*>Add</)
+    const added = render({
+      advice: [{ word: 'colour', advice: { kind: 'only', from: 'UK', other: 'color' }, added: true }],
+    })
+    expect(added).toContain(escaped('Also accepting "color".'))
+    expect(added).toMatch(/<button[^>]*aria-label="Remove alternate for colour"[^>]*>Remove</)
+    // A word found in only one dictionary with no other spelling to offer is said and left at that.
+    const none = render({
+      advice: [{ word: 'tyre', advice: { kind: 'only', from: 'UK', other: null }, added: false }],
+    })
+    expect(none).toContain(escaped('"tyre" is in the UK dictionary only.'))
+    expect(none).not.toContain('>Add<')
+    // Advice never keeps Save off.
+    const saveable = render({
+      count: 1,
+      advice: [{ word: 'xqzt', advice: { kind: 'neither' }, added: false }],
+    })
+    expect(saveable).not.toMatch(/<button[^>]*disabled=""[^>]*>Save word list/)
   })
 
   it('says how many words were added and how many were already there, and shows Saving… while one is sent', () => {
