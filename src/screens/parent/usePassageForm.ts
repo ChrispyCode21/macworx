@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { parsePassageJson } from '../../engine'
 import type { PassageCheck } from '../../engine'
-import { savePassage } from '../../parent/api'
+import { getPassage, replacePassage, savePassage } from '../../parent/api'
 import type { ParentResult } from '../../parent/api'
 import { passagePrompt } from '../../parent/passagePrompt'
 
@@ -18,6 +18,7 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
   if (result.error === 'offline') return COPY.parentOffline
   // The portal ran the same checks before sending, so a refusal here is rare and its detail adds nothing.
   if (result.error === 'bad_passage') return COPY.contentSaveProblem
+  if (result.error === 'unknown_passage') return COPY.passagesGone
   return COPY.parentServerTrouble
 }
 
@@ -28,6 +29,10 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
 export function usePassageForm() {
   const [draft, setDraftState] = useState('')
   const [saving, setSaving] = useState(false)
+  // The saved passage whose JSON is in the box, while a parent edits it; Save then replaces it (SPEC §5.3).
+  const [editing, setEditing] = useState<{ id: number; title: string } | null>(null)
+  // Counts saves and deletes, so the list of saved passages reads again.
+  const [version, setVersion] = useState(0)
   const [note, setNote] = useState<PassageNote | null>(null)
   // The prompt, shown to copy by hand when this browser won't copy for us.
   const [manual, setManual] = useState<string | null>(null)
@@ -64,7 +69,10 @@ export function usePassageForm() {
     setNote(null)
     const sent = latest.current
     const title = check.passage.title
-    const result = await savePassage(check.passage.source)
+    const target = editing
+    const result = target
+      ? await replacePassage(target.id, check.passage.source)
+      : await savePassage(check.passage.source)
     busy.current = false
     setSaving(false)
     if (!result.ok) {
@@ -72,7 +80,9 @@ export function usePassageForm() {
       if (text) setNote({ tone: 'warn', text })
       return
     }
-    setNote({ tone: 'info', text: COPY.contentSaved(title) })
+    setNote({ tone: 'info', text: target ? COPY.contentSavedChanges(title) : COPY.contentSaved(title) })
+    setEditing((now) => (now?.id === target?.id ? null : now))
+    setVersion((v) => v + 1)
     // Only the text that was saved is cleared: a passage pasted meanwhile stays.
     if (latest.current === sent) {
       latest.current = ''
@@ -80,7 +90,58 @@ export function usePassageForm() {
     }
   }
 
-  return { draft, setDraft, check, saving, note, manual, copy, save }
+  /** Loads a saved passage's JSON into the box to change it. */
+  const edit = async (id: number) => {
+    if (busy.current) return
+    busy.current = true
+    const result = await getPassage(id)
+    busy.current = false
+    if (!result.ok) {
+      const text = failure(result) ?? null
+      if (text)
+        setNote({
+          tone: 'warn',
+          text: result.error === 'unknown_passage' ? text : COPY.contentEditLoadFailed,
+        })
+      return
+    }
+    const text = JSON.stringify(result.body.passage, null, 2)
+    latest.current = text
+    setManual(null)
+    setDraftState(text)
+    setEditing({ id, title: String(result.body.passage.title ?? '') })
+    setNote(null)
+  }
+
+  /** Leaves editing without saving: the box is emptied. */
+  const cancelEdit = () => {
+    latest.current = ''
+    setDraftState('')
+    setEditing(null)
+    setNote(null)
+  }
+
+  /** A saved passage was deleted: if it was open in the box, the box is emptied. */
+  const removed = (id: number) => {
+    if (editing?.id === id) cancelEdit()
+    setVersion((v) => v + 1)
+  }
+
+  return {
+    draft,
+    setDraft,
+    check,
+    saving,
+    note,
+    manual,
+    copy,
+    save,
+    editing,
+    version,
+    edit,
+    cancelEdit,
+    removed,
+  }
 }
 
 export type PassageForm = ReturnType<typeof usePassageForm>

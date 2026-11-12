@@ -9,6 +9,7 @@ import { SectionHeading } from '../../ui/SectionHeading'
 import { TextField } from '../../ui/TextField'
 import type { PassageForm } from './usePassageForm'
 import type { WordsForm } from './useWordsForm'
+import { PassagesList } from './PassagesList'
 import { WordsCard } from './WordsCard'
 
 /** What the pasted passage will look like in Reading: its title, its length and each question with the right choice marked. */
@@ -41,7 +42,7 @@ function Preview({ passage }: { passage: CheckedPassage }) {
  * pasted reading passage; the words card comes with the spelling list. Its state is the Portal's (`usePassageForm`).
  */
 export function ContentScreen({ form, words }: { form: PassageForm; words: WordsForm }) {
-  const { draft, setDraft, check, saving, note, manual, copy, save } = form
+  const { draft, setDraft, check, saving, note, manual, copy, save, editing, cancelEdit } = form
   return (
     <div className="content">
       <div className="content-cards">
@@ -65,6 +66,15 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
             </Button>
           </div>
           {manual !== null && <TextField label={COPY.contentCopyByHand} multiline readOnly value={manual} />}
+
+          {editing && (
+            <div className="content-editing">
+              <Safeguard tone="info">{COPY.contentEditing(editing.title)}</Safeguard>
+              <Button variant="secondary" onClick={cancelEdit}>
+                {COPY.contentCancelEdit}
+              </Button>
+            </div>
+          )}
 
           <CodeBox
             label={COPY.contentJsonLabel}
@@ -101,9 +111,10 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
               <p className="parent-note">{COPY.contentSaveNote}</p>
             </div>
             <Button variant="primary" disabled={!check?.ok || saving} onClick={() => void save()}>
-              {saving ? COPY.contentSaving : COPY.contentSave}
+              {saving ? COPY.contentSaving : editing ? COPY.contentSaveChanges : COPY.contentSave}
             </Button>
           </div>
+          <PassagesList form={form} />
         </Panel>
       </div>
 

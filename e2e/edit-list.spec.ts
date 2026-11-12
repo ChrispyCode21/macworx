@@ -52,6 +52,7 @@ async function api(page: Page, words: Word[], gate: Promise<void> = Promise.reso
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
       '/api/parent/devices': { devices: [] },
+      '/api/parent/passages': { passages: [] },
     }
     return route.fulfill({ json: answers[url.pathname] })
   })

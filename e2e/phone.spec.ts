@@ -38,6 +38,7 @@ async function api(page: Page) {
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
       '/api/parent/devices': { devices: [] },
+      '/api/parent/passages': { passages: [] },
     }
     return route.fulfill({ json: answers[path] })
   })

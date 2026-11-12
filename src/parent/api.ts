@@ -131,6 +131,30 @@ export const chooseChild = (id: number | null) => {
 export const savePassage = (passage: unknown) =>
   parentCall<{ id: number }>('/api/parent/passages', { method: 'POST', body: JSON.stringify({ passage }) })
 
+/** A saved passage as the list shows it (SPEC §5.3). */
+export interface PassageItem {
+  id: number
+  title: string
+  minutes: number
+  questions: number
+  timesRead: number
+}
+
+export const listPassages = () => parentCall<{ passages: PassageItem[] }>('/api/parent/passages')
+
+/** The JSON of one passage, for the Content box. */
+export const getPassage = (id: number) =>
+  parentCall<{ passage: Record<string, unknown> }>(`/api/parent/passages/${id}`)
+
+export const replacePassage = (id: number, passage: unknown) =>
+  parentCall<{ id: number }>(`/api/parent/passages/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ passage }),
+  })
+
+export const removePassage = (id: number) =>
+  parentCall<{ ok: true }>(`/api/parent/passages/${id}`, { method: 'DELETE' })
+
 /** Adds the words a parent pasted (SPEC §8). Content is shared, so it takes no `child`. */
 export const addWords = (words: readonly unknown[]) =>
   parentCall<{ added: number; skipped: number }>('/api/parent/words', {
