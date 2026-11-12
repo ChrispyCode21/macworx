@@ -25,10 +25,19 @@ const json = (title: string) => ({
   ],
 })
 
-async function api(page: Page, rows: Row[], onDelete: (id: number) => { status: number; json: unknown }) {
+type Answer = { status: number; json: unknown }
+const ok: Answer = { status: 200, json: { ok: true } }
+
+async function api(
+  page: Page,
+  rows: Row[],
+  onDelete: (id: number) => Answer,
+  onPut: (id: number) => Answer = (id) => ({ status: 200, json: { id } }),
+  gate: Promise<void> = Promise.resolve(),
+) {
   const puts: unknown[] = []
   const deletes: number[] = []
-  await page.route('/api/parent/**', (route) => {
+  await page.route('/api/parent/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     const one = url.pathname.match(/^\/api\/parent\/passages\/(\d+)$/)
@@ -38,7 +47,8 @@ async function api(page: Page, rows: Row[], onDelete: (id: number) => { status: 
       return route.fulfill({ json: { passage: json(rows.find((r) => r.id === Number(one[1]))!.title) } })
     if (one && request.method() === 'PUT') {
       puts.push({ id: Number(one[1]), ...(request.postDataJSON() as object) })
-      return route.fulfill({ json: { id: Number(one[1]) } })
+      await gate
+      return route.fulfill(onPut(Number(one[1])))
     }
     if (one && request.method() === 'DELETE') {
       deletes.push(Number(one[1]))
@@ -145,4 +155,99 @@ test('deleting the passage that is open in the box empties the box', async ({ pa
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await expect(box(page)).toHaveValue('')
   await expect(page.getByText('Editing "Night Sky"')).toHaveCount(0)
+})
+
+test('the pencils wait while the box has text, and say why, so nothing typed is lost', async ({ page }) => {
+  await api(page, rows(), () => ok)
+  await page.goto('/parent/content')
+  await expect(page.getByRole('button', { name: 'Edit Night Sky' })).toBeEnabled()
+  await box(page).fill('{"title": "Typed by hand"')
+  await expect(page.getByRole('button', { name: 'Edit Night Sky' })).toBeDisabled()
+  await expect(
+    page.getByText("Save or cancel what's in the box before opening another passage."),
+  ).toBeVisible()
+  await box(page).fill('')
+  await expect(page.getByRole('button', { name: 'Edit Night Sky' })).toBeEnabled()
+})
+
+test('typing while Save changes is on its way keeps it an edit, so the next Save replaces, not adds', async ({
+  page,
+}) => {
+  let release!: () => void
+  const gate = new Promise<void>((resolve) => (release = resolve))
+  const { puts } = await api(
+    page,
+    rows(),
+    () => ok,
+    (id) => ({ status: 200, json: { id } }),
+    gate,
+  )
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Edit Night Sky' }).click()
+  await box(page).fill(JSON.stringify({ ...json('Night Sky'), minutes: 8 }))
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await box(page).fill(JSON.stringify({ ...json('Night Sky'), minutes: 9 }))
+  release()
+  await expect(page.getByText('Saved your changes to "Night Sky".')).toBeVisible()
+  await expect(box(page)).toHaveValue(/"minutes":9/)
+  await expect(page.getByText('Editing "Night Sky"')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible()
+  expect(puts).toHaveLength(1)
+})
+
+test('Cancel waits while a save is on its way', async ({ page }) => {
+  let release!: () => void
+  const gate = new Promise<void>((resolve) => (release = resolve))
+  await api(
+    page,
+    rows(),
+    () => ok,
+    (id) => ({ status: 200, json: { id } }),
+    gate,
+  )
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Edit Night Sky' }).click()
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await expect(page.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+  release()
+  await expect(page.getByText('Saved your changes to "Night Sky".')).toBeVisible()
+})
+
+test('a passage that is gone when Save changes is sent: the text stays, as a new passage', async ({
+  page,
+}) => {
+  await api(
+    page,
+    rows(),
+    () => ok,
+    () => ({ status: 404, json: { error: 'unknown_passage' } }),
+  )
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Edit Night Sky' }).click()
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await expect(page.getByText('That passage is no longer in the list.')).toBeVisible()
+  await expect(page.getByText('Editing "Night Sky"')).toHaveCount(0)
+  await expect(box(page)).toHaveValue(/Night Sky/)
+  await expect(page.getByRole('button', { name: 'Save passage' })).toBeVisible()
+})
+
+test('deleting a passage that is already gone drops it from the list', async ({ page }) => {
+  const list = rows()
+  await api(page, list, () => ({ status: 404, json: { error: 'unknown_passage' } }))
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Delete Night Sky' }).click()
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  await expect(page.getByText('That passage is no longer in the list.')).toBeVisible()
+})
+
+test('focus goes back to the row after Keep, and to the box after Cancel', async ({ page }) => {
+  await api(page, rows(), () => ok)
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Delete Night Sky' }).click()
+  await page.getByRole('button', { name: 'Keep' }).click()
+  await expect(page.getByRole('button', { name: 'Delete Night Sky' })).toBeFocused()
+
+  await page.getByRole('button', { name: 'Edit Night Sky' }).click()
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await expect(box(page)).toBeFocused()
 })

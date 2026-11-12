@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { COPY } from '../../copy'
 import type { CheckedPassage } from '../../engine'
 import { CopyIcon, LockKeyholeIcon } from '../../parent/icons'
@@ -42,9 +43,10 @@ function Preview({ passage }: { passage: CheckedPassage }) {
  * pasted reading passage; the words card comes with the spelling list. Its state is the Portal's (`usePassageForm`).
  */
 export function ContentScreen({ form, words }: { form: PassageForm; words: WordsForm }) {
-  const { draft, setDraft, check, saving, note, manual, copy, save, editing, cancelEdit } = form
+  const { draft, setDraft, check, saving, opening, note, manual, copy, save, editing, cancelEdit } = form
+  const root = useRef<HTMLDivElement>(null)
   return (
-    <div className="content">
+    <div className="content" ref={root}>
       <div className="content-cards">
         <WordsCard form={words} />
         <Panel className="content-card" aria-label={COPY.contentReadingHeading}>
@@ -70,7 +72,15 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
           {editing && (
             <div className="content-editing">
               <Safeguard tone="info">{COPY.contentEditing(editing.title)}</Safeguard>
-              <Button variant="secondary" onClick={cancelEdit}>
+              <Button
+                variant="secondary"
+                disabled={saving}
+                onClick={() => {
+                  cancelEdit()
+                  // The line and this button go, so focus is sent to the box they were about.
+                  root.current?.querySelector<HTMLTextAreaElement>('.code-box-input')?.focus()
+                }}
+              >
                 {COPY.contentCancelEdit}
               </Button>
             </div>
@@ -110,7 +120,7 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
               <p className="parent-note">{COPY.contentReview}</p>
               <p className="parent-note">{COPY.contentSaveNote}</p>
             </div>
-            <Button variant="primary" disabled={!check?.ok || saving} onClick={() => void save()}>
+            <Button variant="primary" disabled={!check?.ok || saving || opening} onClick={() => void save()}>
               {saving ? COPY.contentSaving : editing ? COPY.contentSaveChanges : COPY.contentSave}
             </Button>
           </div>

@@ -239,7 +239,7 @@ export const COPY = {
   contentCancelEdit: 'Cancel',
   contentSaveChanges: 'Save changes',
   contentSavedChanges: (title: string) => `Saved your changes to "${title}".`,
-  contentEditLoadFailed: "That passage couldn't be opened. Try again.",
+  passagesFinishFirst: "Save or cancel what's in the box before opening another passage.",
   passagesHeading: 'Saved passages',
   passagesNone: 'No passages yet.',
   passagesMeta: (minutes: number, questions: number, timesRead: number) =>
