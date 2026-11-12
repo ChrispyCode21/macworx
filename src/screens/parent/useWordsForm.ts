@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { COPY } from '../../copy'
-import { checkWord, parseWords, SPELLING, wordAdvice } from '../../engine'
+import { checkWord, parseWords, SPELLING } from '../../engine'
 import type { WordAdvice, WordEntry } from '../../engine'
 import { loadDictionaries } from '../../parent/dictionary'
+import { acceptedKey, adviceItems, withAlternates } from '../../parent/wordAdvice'
+import type { WordAdviceItem } from '../../parent/wordAdvice'
 import type { Dictionaries } from '../../parent/dictionary'
 import { addWords } from '../../parent/api'
 import type { ParentResult } from '../../parent/api'
@@ -22,18 +24,8 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
   return COPY.parentServerTrouble
 }
 
-/** What the dictionary check says about one word in the box, and the other spelling the parent has added for it. */
-export interface WordAdviceItem {
-  word: string
-  advice: Exclude<WordAdvice, { kind: 'none' }>
-  /** The offered other spelling once the parent has added it. */
-  added: boolean
-}
-
 /** Typing pauses this long before the words are looked up, so half-typed words get no advice. */
 const LOOK_UP_AFTER_MS = 400
-
-const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
 
 /** The most problems listed at once; the rest are counted. */
 const MAX_LISTED = 10
@@ -72,32 +64,17 @@ export function useWordsForm() {
     return () => {
       live = false
     }
-  }, [wanted, dictionaries])
-  const advice: WordAdviceItem[] = useMemo(() => {
-    if (!dictionaries) return []
-    const items: WordAdviceItem[] = []
-    const seen = new Set<string>()
-    for (const entry of settled) {
-      const key = entry.word.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      let said = asked.current.get(key)
-      if (!said) {
-        said = wordAdvice(entry.word, dictionaries.us, dictionaries.uk)
-        asked.current.set(key, said)
-      }
-      if (said.kind === 'none') continue
-      // An alternate already on the line counts as added; nothing is offered for it.
-      if (said.kind === 'only' && said.other && entry.alternates.some((a) => same(a, said.other!))) continue
-      items.push({ word: entry.word, advice: said, added: key in accepted })
-    }
-    return items
-  }, [dictionaries, settled, accepted])
+  }, [wanted, dictionaries, settled])
+  const advice: WordAdviceItem[] = useMemo(
+    () =>
+      dictionaries ? adviceItems(settled, dictionaries.us, dictionaries.uk, asked.current, accepted) : [],
+    [dictionaries, settled, accepted],
+  )
   const addAlternate = (word: string, other: string) =>
-    setAccepted((a) => ({ ...a, [word.toLowerCase()]: other }))
+    setAccepted((a) => ({ ...a, [acceptedKey(word)]: other }))
   const removeAlternate = (word: string) =>
     setAccepted((a) => {
-      const { [word.toLowerCase()]: _gone, ...rest } = a
+      const { [acceptedKey(word)]: _gone, ...rest } = a
       return rest
     })
   // Every entry through the same checks the Worker runs, so a save the portal sends is one the Worker accepts.
@@ -132,14 +109,7 @@ export function useWordsForm() {
     setNote(null)
     const sent = latest.current
     // The other spellings the parent added go with their word (the advice is only for words still in the box).
-    const result = await addWords(
-      entries.map((entry) => {
-        const other = accepted[entry.word.toLowerCase()]
-        return other && !entry.alternates.some((a) => same(a, other))
-          ? { ...entry, alternates: [...entry.alternates, other] }
-          : entry
-      }),
-    )
+    const result = await addWords(withAlternates(entries, accepted))
     busy.current = false
     setSaving(false)
     if (!result.ok) {
@@ -148,10 +118,11 @@ export function useWordsForm() {
       return
     }
     setNote({ tone: 'info', text: COPY.wordsAdded(result.body.added, result.body.skipped) })
-    const savedWords = new Set(entries.map((entry) => entry.word.toLowerCase()))
-    setAccepted((a) => Object.fromEntries(Object.entries(a).filter(([word]) => !savedWords.has(word))))
-    // Only the text that was saved goes: words typed meanwhile (after it) stay.
+    // Only the text that was saved goes: words typed meanwhile (after it) stay. A word that stays keeps its added
+    // spelling, so the advice doesn't offer again what was saved.
     if (latest.current.startsWith(sent)) {
+      const savedWords = new Set(entries.map((entry) => acceptedKey(entry.word)))
+      setAccepted((a) => Object.fromEntries(Object.entries(a).filter(([word]) => !savedWords.has(word))))
       const rest = latest.current.slice(sent.length).replace(/^[ \t]*\r?\n/, '')
       latest.current = rest
       setDraftState(rest)

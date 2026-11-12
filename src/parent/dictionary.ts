@@ -26,7 +26,8 @@ let loading: Promise<Dictionaries | null> | null = null
 
 /**
  * The US and UK English dictionaries (SPEC §6.11), loaded once and only when asked for. Where they can't load (no
- * connection, a blocked file) it answers null and a later call tries again; the check is advice, so the page goes on.
+ * connection, a blocked file) it answers null and the next call tries again (the form asks again when the words change);
+ * the check is advice, so the page goes on.
  */
 export function loadDictionaries(): Promise<Dictionaries | null> {
   loading ??= (async () => {

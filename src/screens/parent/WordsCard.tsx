@@ -72,6 +72,7 @@ export function WordsCard({ form }: { form: WordsForm }) {
                   {said.other && (
                     <Button
                       variant="secondary"
+                      disabled={saving}
                       aria-label={added ? COPY.wordsRemoveOther(word) : COPY.wordsAddOther(word)}
                       onClick={() => (added ? removeAlternate(word) : addAlternate(word, said.other!))}
                     >
