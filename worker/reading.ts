@@ -333,9 +333,20 @@ export async function postReadingResult({
         .prepare(
           `UPDATE children SET balance = balance + ?, completed = completed + 1, streak = ?, last_day = ?,
            revision = ? WHERE id = ? AND revision = ? AND NOT EXISTS (SELECT 1 FROM results WHERE attempt = ?)
-           AND EXISTS (SELECT 1 FROM devices WHERE id = ? AND revoked_at IS NULL)`,
+           AND EXISTS (SELECT 1 FROM devices WHERE id = ? AND revoked_at IS NULL)
+           AND EXISTS (SELECT 1 FROM reading_attempts WHERE id = ? AND used = 0)`,
         )
-        .bind(earned.total, streak, lastDay, revision, childId, child.revision, body.attempt, device),
+        .bind(
+          earned.total,
+          streak,
+          lastDay,
+          revision,
+          childId,
+          child.revision,
+          body.attempt,
+          device,
+          body.attempt,
+        ),
       db
         .prepare(
           `INSERT INTO results (kind, attempt, detail, device_id, child_id, day, answers, answered, correct, finished,

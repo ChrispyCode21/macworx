@@ -155,15 +155,15 @@ async function storedQuestions(db: D1Database, id: number) {
     )
     .bind(id)
     .all<StoredRow>()
-  const out: { text: string; explanation: string; options: string[]; right: string }[] = []
+  // Grouped by question id, so a gap in the positions (a passage added by hand) can't break it.
+  const byId = new Map<number, { text: string; explanation: string; options: string[]; right: string }>()
   for (const r of results) {
-    if (out.length < r.position)
-      out.push({ text: r.text, explanation: r.explanation, options: [], right: '' })
-    const q = out[r.position - 1]!
+    let q = byId.get(r.qid)
+    if (!q) byId.set(r.qid, (q = { text: r.text, explanation: r.explanation, options: [], right: '' }))
     q.options.push(r.choice)
     if (r.correct === 1) q.right = r.choice
   }
-  return out
+  return [...byId.values()]
 }
 
 /** GET /api/parent/passages/:id: the JSON for the Content screen's box (SPEC §5.3), or 404. */
@@ -196,7 +196,10 @@ export async function getPassage({ db, params }: ParentRequest): Promise<Respons
       minutes: row.minutes,
       ...(row.genre ? { topic: row.genre } : {}),
       ...(row.hint ? { hint: row.hint } : {}),
-      passage: row.body.split('\n\n'),
+      passage: row.body
+        .split(/\n\s*\n/)
+        .map((t) => t.trim())
+        .filter(Boolean),
       questions: questions.map((q) => ({
         question: q.text,
         options: q.options,

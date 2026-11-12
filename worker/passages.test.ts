@@ -331,9 +331,14 @@ describe('saved passages', () => {
     await save(passage(3))
     await run("UPDATE passages SET image = '1.png' WHERE id = 1")
     const before = (await start()).body
-    const order = await one(
-      'SELECT group_concat(id) AS ids FROM choices WHERE question_id = 101 ORDER BY position',
-    )
+    // The stored order of the choices, by what they say: ids never change, so only text shows a reshuffle.
+    const order = async () =>
+      (
+        await t.db
+          .prepare('SELECT text, correct FROM choices WHERE question_id = 101 ORDER BY position')
+          .all()
+      ).results
+    const orderBefore = await order()
     const retitled = passage(3, { title: 'A better title', minutes: 4, hint: 'Think of seeds.' })
     // The same questions, with the choices pasted in another order.
     retitled.questions[0] = { ...question(1), options: ['d1', 'c1', 'b1', 'a1'] }
@@ -345,9 +350,7 @@ describe('saved passages', () => {
       image: '1.png',
     })
     expect(await count(`SELECT COUNT(*) AS n FROM reading_attempts WHERE id = ${before.attempt}`)).toBe(1)
-    expect(
-      await one('SELECT group_concat(id) AS ids FROM choices WHERE question_id = 101 ORDER BY position'),
-    ).toEqual(order)
+    expect(await order()).toEqual(orderBefore)
     expect((await start()).body.attempt).toBe(before.attempt)
   })
 

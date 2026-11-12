@@ -290,6 +290,36 @@ describe('ids that are never reused (SPEC §6.10)', () => {
   })
 })
 
+describe('a result racing a parent who edits or deletes the passage', () => {
+  it('is refused (404) and pays nothing when the attempt is removed after the Worker read it', async () => {
+    await passage(1)
+    const { body } = await start()
+    const real = t.env.DB
+    let removed = false
+    // The parent's edit commits after the Worker has looked the attempt up but before its write batch runs.
+    t.env.DB = new Proxy(real, {
+      get(target, prop) {
+        if (prop !== 'batch') return (target as any)[prop].bind?.(target) ?? (target as any)[prop]
+        return async (statements: D1PreparedStatement[]) => {
+          if (!removed) {
+            removed = true
+            await real.prepare('DELETE FROM reading_attempts WHERE id = ?').bind(body.attempt).run()
+          }
+          return real.batch(statements)
+        }
+      },
+    })
+    const before = await first('SELECT balance, completed FROM children WHERE id = 1')
+    const gone = await t.call('POST', '/api/reading/result', {
+      body: { attempt: body.attempt, day: '2026-10-17', picks: picks(body, 3) },
+    })
+    expect(removed).toBe(true)
+    expect(gone.status).toBe(404)
+    expect(await first('SELECT balance, completed FROM children WHERE id = 1')).toEqual(before)
+    expect((await first('SELECT COUNT(*) AS n FROM results')).n).toBe(0)
+  })
+})
+
 describe('keys and the parent view', () => {
   it('L13: both routes need the device key', async () => {
     for (const path of ['/api/reading/start', '/api/reading/result'])
