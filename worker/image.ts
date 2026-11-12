@@ -21,16 +21,32 @@ export async function getReadingImage({
   db,
   bucket,
   name,
+  ifNoneMatch = null,
 }: {
   db: D1Database
   bucket: R2Bucket | undefined
   name: string
+  /** The request's If-None-Match, so an unchanged picture answers 304. */
+  ifNoneMatch?: string | null
 }): Promise<Response> {
   if (!bucket || !NAME.test(name)) return error(404, 'not_found')
   const known = await db.prepare('SELECT 1 AS ok FROM passages WHERE image = ?').bind(name).first()
   if (!known) return error(404, 'not_found')
-  const object = await bucket.get(name)
+  // A value R2 can't use as a condition is no reason to fail: the picture is simply sent whole.
+  const object = await (ifNoneMatch
+    ? bucket
+        .get(name, { onlyIf: new Headers({ 'If-None-Match': ifNoneMatch }) })
+        .catch(() => bucket.get(name))
+    : bucket.get(name))
   if (!object) return error(404, 'not_found')
+  // A replaced picture keeps its name, so it is revalidated on each use rather than trusted for a year.
+  const revalidate = {
+    ETag: object.httpEtag,
+    'Cache-Control': 'private, no-cache',
+    'X-Content-Type-Options': 'nosniff',
+  }
+  // The conditional get found it unchanged: an object without a body.
+  if (!('body' in object)) return new Response(null, { status: 304, headers: revalidate })
   const extension = name.slice(name.lastIndexOf('.') + 1).toLowerCase()
   const type =
     object.httpMetadata?.contentType ??
@@ -39,8 +55,7 @@ export async function getReadingImage({
   return new Response(object.body, {
     headers: {
       'Content-Type': type,
-      'Cache-Control': 'private, max-age=31536000',
-      'X-Content-Type-Options': 'nosniff',
+      ...revalidate,
     },
   })
 }

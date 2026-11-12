@@ -12,15 +12,15 @@ const BYTES = new Uint8Array([1, 2, 3, 4])
 /** Holds `files` (name -> content type or undefined for no metadata); `list` throws, as it must never be called. */
 function fakeBucket(files: Record<string, string | undefined>) {
   return {
-    async get(key: string) {
+    async get(key: string, options?: { onlyIf?: Headers }) {
       gets.push(key)
       if (!(key in files)) return null
       const contentType = files[key]
-      return {
-        body: new Blob([BYTES]).stream(),
-        size: BYTES.length,
-        httpMetadata: contentType ? { contentType } : undefined,
-      }
+      const httpEtag = `"etag-${key}"`
+      const base = { size: BYTES.length, httpEtag, httpMetadata: contentType ? { contentType } : undefined }
+      // A conditional get that finds the object unchanged returns it without a body, as R2 does.
+      if (options?.onlyIf?.get('If-None-Match') === httpEtag) return base
+      return { ...base, body: new Blob([BYTES]).stream() }
     },
     async list() {
       lists++
@@ -48,11 +48,16 @@ const passage = (id: number, image: string | null) =>
 async function get(
   path: string,
   bucket: R2Bucket | undefined,
-  { key = DEVICE_KEY, method = 'GET' }: { key?: string | null; method?: string } = {},
+  {
+    key = DEVICE_KEY,
+    method = 'GET',
+    ifNoneMatch,
+  }: { key?: string | null; method?: string; ifNoneMatch?: string } = {},
 ) {
   const env: Env = { ...t.env, PASSAGE_IMAGES: bucket }
   const headers: Record<string, string> = {}
   if (key) headers.Authorization = `Bearer ${key}`
+  if (ifNoneMatch) headers['If-None-Match'] = ifNoneMatch
   return handle(
     new Request(`https://macworx.test/api/reading/image/${path}`, { method, headers }),
     env,
@@ -78,16 +83,51 @@ describe('GET /api/reading/image/:name', () => {
     expect(gets).toEqual([])
   })
 
-  it("streams a passage's picture with its content type, a long private cache and nosniff", async () => {
+  it("streams a passage's picture with its content type, its ETag, private revalidation and nosniff", async () => {
     await passage(3, '3.webp')
     const res = await get('3.webp', fakeBucket({ '3.webp': 'image/webp' }))
     expect(res.status).toBe(200)
     expect(res.headers.get('Content-Type')).toBe('image/webp')
-    expect(res.headers.get('Cache-Control')).toContain('private')
-    expect(res.headers.get('Cache-Control')).toContain('max-age=31536000')
+    expect(res.headers.get('Cache-Control')).toBe('private, no-cache')
+    expect(res.headers.get('ETag')).toBe('"etag-3.webp"')
     expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff')
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(BYTES)
     expect(gets).toEqual(['3.webp'])
+  })
+
+  it('answers 304 with no body when the ETag still matches, and the whole picture when it does not', async () => {
+    await passage(3, '3.webp')
+    const bucket = fakeBucket({ '3.webp': 'image/webp' })
+    const same = await get('3.webp', bucket, { ifNoneMatch: '"etag-3.webp"' })
+    expect(same.status).toBe(304)
+    expect(same.headers.get('ETag')).toBe('"etag-3.webp"')
+    expect(same.headers.get('Cache-Control')).toBe('private, no-cache')
+    expect((await same.arrayBuffer()).byteLength).toBe(0)
+    const changed = await get('3.webp', bucket, { ifNoneMatch: '"etag-old"' })
+    expect(changed.status).toBe(200)
+    expect(new Uint8Array(await changed.arrayBuffer())).toEqual(BYTES)
+  })
+
+  it('sends the whole picture when R2 will not take the If-None-Match value', async () => {
+    await passage(3, '3.webp')
+    const picky = {
+      async get(key: string, options?: { onlyIf?: Headers }) {
+        if (options?.onlyIf) throw new Error('bad condition')
+        return { body: new Blob([BYTES]).stream(), size: BYTES.length, httpEtag: `"etag-${key}"` }
+      },
+    } as unknown as R2Bucket
+    const res = await get('3.webp', picky, { ifNoneMatch: 'W/"weird", garbage' })
+    expect(res.status).toBe(200)
+    expect(new Uint8Array(await res.arrayBuffer())).toEqual(BYTES)
+  })
+
+  it('checks the key before it answers 304', async () => {
+    await passage(3, '3.webp')
+    const res = await get('3.webp', fakeBucket({ '3.webp': 'image/webp' }), {
+      key: null,
+      ifNoneMatch: '"etag-3.webp"',
+    })
+    expect(res.status).toBe(401)
   })
 
   it('takes the content type from the extension when the object has none, and serves any case', async () => {
