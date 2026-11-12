@@ -21,6 +21,7 @@ const form = (draft: string, over: Partial<PassageForm> = {}): PassageForm => ({
   save: async () => {},
   picture: null,
   pictureNote: null,
+  choosing: false,
   choosePicture: async () => {},
   removePicture: noop,
   editing: null,

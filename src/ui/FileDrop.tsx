@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 
 interface Props {
@@ -23,6 +23,18 @@ export function FileDrop({ label, prompt, hint, accept, disabled, onFile }: Prop
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
 
+  // A file released just outside the box would be opened by the browser, and the unsaved text on the page with it:
+  // while the box is on the page, drops anywhere else are ignored.
+  useEffect(() => {
+    const stop = (e: Event) => e.preventDefault()
+    window.addEventListener('dragover', stop)
+    window.addEventListener('drop', stop)
+    return () => {
+      window.removeEventListener('dragover', stop)
+      window.removeEventListener('drop', stop)
+    }
+  }, [])
+
   const drop = (event: DragEvent<HTMLLabelElement>) => {
     event.preventDefault()
     setOver(false)
@@ -40,7 +52,10 @@ export function FileDrop({ label, prompt, hint, accept, disabled, onFile }: Prop
           e.preventDefault()
           if (!disabled) setOver(true)
         }}
-        onDragLeave={() => setOver(false)}
+        onDragLeave={(e) => {
+          // Moving onto the box's own text or input is not leaving it.
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false)
+        }}
         onDrop={drop}
       >
         <input

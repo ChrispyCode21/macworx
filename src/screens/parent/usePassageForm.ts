@@ -37,6 +37,8 @@ export function usePassageForm() {
   // The picture chosen for the passage in the box, sent right after Save (it belongs to a saved passage).
   const [picture, setPicture] = useState<File | null>(null)
   const [pictureNote, setPictureNote] = useState<string | null>(null)
+  const [choosingNow, setChoosingState] = useState(false)
+  const choosing = useRef(false)
   // Counts saves and deletes, so the list of saved passages reads again.
   const [version, setVersion] = useState(0)
   const [note, setNote] = useState<PassageNote | null>(null)
@@ -55,25 +57,33 @@ export function usePassageForm() {
 
   /** Checks a chosen file by its size and first bytes, in plain words, and keeps it for Save when it will do. */
   const choosePicture = async (file: File) => {
-    setPicture(null)
-    let head: Uint8Array
+    // Save waits for the check: a file still being read would otherwise miss the save it was meant for.
+    choosing.current = true
+    setChoosingState(true)
     try {
-      head = new Uint8Array(await file.slice(0, PICTURE_HEAD).arrayBuffer())
-    } catch {
-      return setPictureNote(COPY.contentPictureUnreadable)
+      let head: Uint8Array
+      try {
+        head = new Uint8Array(await file.slice(0, PICTURE_HEAD).arrayBuffer())
+      } catch {
+        return setPictureNote(COPY.contentPictureUnreadable)
+      }
+      const problem = pictureProblem(file.size, head)
+      // A file that will not do leaves the picture already chosen where it was.
+      if (problem) {
+        return setPictureNote(
+          problem === 'big'
+            ? COPY.contentPictureBig
+            : problem === 'empty'
+              ? COPY.contentPictureEmpty
+              : COPY.contentPictureType,
+        )
+      }
+      setPictureNote(null)
+      setPicture(file)
+    } finally {
+      choosing.current = false
+      setChoosingState(false)
     }
-    const problem = pictureProblem(file.size, head)
-    if (problem) {
-      return setPictureNote(
-        problem === 'big'
-          ? COPY.contentPictureBig
-          : problem === 'empty'
-            ? COPY.contentPictureEmpty
-            : COPY.contentPictureType,
-      )
-    }
-    setPictureNote(null)
-    setPicture(file)
   }
   const removePicture = () => {
     setPicture(null)
@@ -106,10 +116,12 @@ export function usePassageForm() {
   }
 
   const save = async () => {
-    if (busy.current || !check?.ok) return
+    if (busy.current || choosing.current || !check?.ok) return
     busy.current = true
     setSaving(true)
     setNote(null)
+    // A warning about an earlier pick has done its work once this save goes ahead.
+    setPictureNote(null)
     const sent = latest.current
     const title = check.passage.title
     const target = editingNow.current
@@ -218,6 +230,7 @@ export function usePassageForm() {
     save,
     picture,
     pictureNote,
+    choosing: choosingNow,
     choosePicture,
     removePicture,
     editing,

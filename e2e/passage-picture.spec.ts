@@ -21,22 +21,31 @@ const png = (extra = 100) => Buffer.from([...PNG, ...new Array(extra).fill(1)])
 async function api(
   page: Page,
   picture: { status: number; json: unknown } = { status: 200, json: { image: '1.png' } },
+  gate: Promise<void> = Promise.resolve(),
+  rows: unknown[] = [],
 ) {
   const calls: { method: string; path: string; bytes?: number; type?: string }[] = []
-  await page.route('/api/parent/**', (route) => {
+  await page.route('/api/parent/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
+    const one = url.pathname.match(/^\/api\/parent\/passages\/(\d+)$/)
+    if (one && request.method() === 'GET') return route.fulfill({ json: { passage } })
+    if (one && request.method() === 'PUT') {
+      calls.push({ method: 'PUT', path: url.pathname })
+      return route.fulfill({ json: { id: Number(one[1]) } })
+    }
     if (url.pathname === '/api/parent/passages' && request.method() === 'POST') {
       calls.push({ method: 'POST', path: url.pathname })
       return route.fulfill({ status: 201, json: { id: 1 } })
     }
-    if (url.pathname === '/api/parent/passages/1/image' && request.method() === 'PUT') {
+    if (/^\/api\/parent\/passages\/\d+\/image$/.test(url.pathname) && request.method() === 'PUT') {
       calls.push({
         method: 'PUT',
         path: url.pathname,
         bytes: request.postDataBuffer()?.length,
         type: request.headers()['content-type'],
       })
+      await gate
       return route.fulfill(picture)
     }
     const answers: Record<string, unknown> = {
@@ -53,7 +62,7 @@ async function api(
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
       '/api/parent/devices': { devices: [] },
-      '/api/parent/passages': { passages: [] },
+      '/api/parent/passages': { passages: rows },
     }
     return route.fulfill({ json: answers[url.pathname] })
   })
@@ -168,4 +177,41 @@ test('a file dropped on the box is taken like a chosen one', async ({ page }) =>
     [...png()],
   )
   await expect(page.getByText('dropped.png (1 KB)')).toBeVisible()
+})
+
+test('an edited passage gets its picture too: it goes to that passage, with Save changes', async ({
+  page,
+}) => {
+  const calls = await api(page, undefined, undefined, [
+    { id: 2, title: 'The Little Seed', minutes: 2, questions: 1, timesRead: 0 },
+  ])
+  await page.goto('/parent/content')
+  await page.getByRole('button', { name: 'Edit The Little Seed' }).click()
+  await expect(page.getByText('Editing "The Little Seed"')).toBeVisible()
+  await file(page).setInputFiles({ name: 'new.png', mimeType: 'image/png', buffer: png() })
+  await expect(page.getByText('new.png (1 KB)')).toBeVisible()
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await expect(page.getByText('Saved your changes to "The Little Seed".')).toBeVisible()
+  expect(calls.map((c) => [c.method, c.path])).toEqual([
+    ['PUT', '/api/parent/passages/2'],
+    ['PUT', '/api/parent/passages/2/image'],
+  ])
+})
+
+test('while the picture is on its way, Save, the box and Remove wait, so the passage is added once', async ({
+  page,
+}) => {
+  let release!: () => void
+  const gate = new Promise<void>((resolve) => (release = resolve))
+  const calls = await api(page, undefined, gate)
+  await page.goto('/parent/content')
+  await paste(page)
+  await file(page).setInputFiles({ name: 'seed.png', mimeType: 'image/png', buffer: png() })
+  await page.getByRole('button', { name: 'Save passage' }).click()
+  await expect(page.getByRole('button', { name: 'Saving…' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Remove picture' })).toBeDisabled()
+  await expect(file(page)).toBeDisabled()
+  release()
+  await expect(page.getByText('Saved "The Little Seed".')).toBeVisible()
+  expect(calls.filter((c) => c.method === 'POST')).toHaveLength(1)
 })

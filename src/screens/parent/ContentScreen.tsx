@@ -59,6 +59,7 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
     cancelEdit,
     picture,
     pictureNote,
+    choosing,
     choosePicture,
     removePicture,
   } = form
@@ -158,7 +159,11 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
               <p className="parent-note">{COPY.contentReview}</p>
               <p className="parent-note">{COPY.contentSaveNote}</p>
             </div>
-            <Button variant="primary" disabled={!check?.ok || saving || opening} onClick={() => void save()}>
+            <Button
+              variant="primary"
+              disabled={!check?.ok || saving || opening || choosing}
+              onClick={() => void save()}
+            >
               {saving ? COPY.contentSaving : editing ? COPY.contentSaveChanges : COPY.contentSave}
             </Button>
           </div>
