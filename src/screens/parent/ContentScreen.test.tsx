@@ -41,6 +41,9 @@ const wordsForm = (over: Partial<WordsForm> = {}): WordsForm => ({
   saving: false,
   note: null,
   save: async () => {},
+  advice: [],
+  addAlternate: () => {},
+  removeAlternate: () => {},
   ...over,
 })
 const render = (draft: string, over: Partial<PassageForm> = {}, words: Partial<WordsForm> = {}) =>

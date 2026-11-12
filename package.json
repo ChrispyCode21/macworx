@@ -23,6 +23,9 @@
     "check:fast": "node scripts/check-all.mjs --fast"
   },
   "dependencies": {
+    "dictionary-en": "^4.0.0",
+    "dictionary-en-gb": "^3.0.0",
+    "nspell": "^2.1.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -30,6 +33,7 @@
     "@cloudflare/workers-types": "^5.20261104.1",
     "@playwright/test": "1.64.1",
     "@types/node": "^26.6.6",
+    "@types/nspell": "^2.1.6",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vite-pwa/assets-generator": "^2.0.0",
