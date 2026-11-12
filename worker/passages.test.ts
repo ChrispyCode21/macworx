@@ -182,3 +182,204 @@ describe('POST /api/parent/passages', () => {
     await nothingSaved()
   })
 })
+
+// The list, edit and delete of saved passages (SPEC §5.3, §6.10, L21, L22).
+describe('saved passages', () => {
+  const as = (method: string, path: string, body?: unknown) =>
+    t.call(method, path, { key: null, accessToken: token, body })
+  const run = (sql: string, ...values: unknown[]) =>
+    t.db
+      .prepare(sql)
+      .bind(...values)
+      .run()
+  const one = (sql: string, ...values: unknown[]) =>
+    t.db
+      .prepare(sql)
+      .bind(...values)
+      .first<any>()
+  const start = () => t.call('POST', '/api/reading/start', { now: new Date('2026-10-17T12:00:00Z') })
+
+  /** A result recorded straight into the database for a new attempt at passage `id`. */
+  async function recorded(id: number, finished = 1) {
+    const made = await run(
+      "INSERT INTO reading_attempts (device_id, child_id, passage_id, issued_day, used) VALUES (1, 1, ?, '2026-10-01', 1)",
+      id,
+    )
+    await run(
+      `INSERT INTO results (kind, attempt, detail, device_id, child_id, day, answers, answered, correct, finished, grade, base,
+       accuracy_bonus, streak_bonus, total, created_at) VALUES ('reading', ?, '{}', 1, 1, '2026-10-01', '[]', 3, 3, ?, 'Excellent', 20, 4, 0, 24, 'x')`,
+      made.meta.last_row_id,
+      finished,
+    )
+  }
+
+  /** A fake bucket that remembers what was deleted. */
+  function bucket() {
+    const deleted: string[] = []
+    t.env.PASSAGE_IMAGES = {
+      async delete(key: string) {
+        deleted.push(key)
+      },
+    } as unknown as R2Bucket
+    return deleted
+  }
+
+  it('lists each passage with its questions and the number of finished results', async () => {
+    await save(passage(3))
+    await save(passage(5, { title: 'Second' }))
+    await recorded(1)
+    await recorded(1)
+    await recorded(1, 0) // left early: not a time read
+    const { status, body } = await as('GET', '/api/parent/passages')
+    expect(status).toBe(200)
+    expect(body.passages).toEqual([
+      { id: 1, title: 'The Little Seed', minutes: 2, questions: 3, timesRead: 2 },
+      { id: 2, title: 'Second', minutes: 2, questions: 5, timesRead: 0 },
+    ])
+  })
+
+  it('gives back the JSON as it was pasted, with the fields that do nothing', async () => {
+    const pasted = passage(2, { settings: { shuffle_options: true }, reading_level: 'A' })
+    await save(pasted)
+    const { body } = await as('GET', '/api/parent/passages/1')
+    expect(body.passage).toEqual(pasted)
+  })
+
+  it('rebuilds the JSON of a passage added by hand, and 404s for one that is not there', async () => {
+    await save(passage(2))
+    await run('UPDATE passages SET source = NULL WHERE id = 1')
+    const { body } = await as('GET', '/api/parent/passages/1')
+    expect(body.passage).toMatchObject({ title: 'The Little Seed', minutes: 2, topic: 'Story' })
+    expect(body.passage.passage).toEqual(['Mia plants a seed.', 'She waters it.'])
+    expect(body.passage.questions).toHaveLength(2)
+    expect(body.passage.questions[0]).toMatchObject({ question: 'Question 1?', explanation: 'Because 1.' })
+    expect([...body.passage.questions[0].options].sort()).toEqual(['a1', 'b1', 'c1', 'd1'])
+    expect(body.passage.questions[0].correct_answer).toBe('b1')
+    expect((await as('GET', '/api/parent/passages/9')).status).toBe(404)
+  })
+
+  it('L21: deleting a passage with a recorded result is refused (409) and nothing is removed', async () => {
+    const deleted = bucket()
+    await save(passage(3))
+    await run("UPDATE passages SET image = '1.png' WHERE id = 1")
+    await recorded(1)
+    const { status, body } = await as('DELETE', '/api/parent/passages/1')
+    expect([status, body.error]).toEqual([409, 'has_results'])
+    expect(await count('SELECT COUNT(*) AS n FROM passages')).toBe(1)
+    expect(await count('SELECT COUNT(*) AS n FROM questions')).toBe(3)
+    expect(await count('SELECT COUNT(*) AS n FROM choices')).toBe(12)
+    expect(deleted).toEqual([])
+  })
+
+  it('L21: a left-early result counts too, since it points at the passage', async () => {
+    await save(passage(2))
+    await recorded(1, 0)
+    expect((await as('DELETE', '/api/parent/passages/1')).status).toBe(409)
+  })
+
+  it('L21: deleting one with no result removes it with its questions, choices, attempts and picture', async () => {
+    const deleted = bucket()
+    await save(passage(3))
+    await save(passage(2, { title: 'Keep me' }))
+    await run("UPDATE passages SET image = '1.png' WHERE id = 1")
+    expect((await start()).status).toBe(200) // an unchecked attempt at passage 1
+    const { status } = await as('DELETE', '/api/parent/passages/1')
+    expect(status).toBe(200)
+    expect(deleted).toEqual(['1.png'])
+    expect(await count('SELECT COUNT(*) AS n FROM passages WHERE id = 1')).toBe(0)
+    expect(await count('SELECT COUNT(*) AS n FROM questions WHERE passage_id = 1')).toBe(0)
+    expect(await count('SELECT COUNT(*) AS n FROM choices WHERE question_id BETWEEN 101 AND 150')).toBe(0)
+    expect(await count('SELECT COUNT(*) AS n FROM reading_attempts')).toBe(0)
+    // The other passage is untouched, and the deleted ids come back to nobody.
+    expect(await count('SELECT COUNT(*) AS n FROM questions WHERE passage_id = 2')).toBe(2)
+    expect((await save(passage(1, { title: 'New' }))).body.id).toBe(3)
+    const next = await start()
+    expect(next.body.attempt).toBe(2)
+  })
+
+  it('deleting (or editing) one that is not there is a 404', async () => {
+    expect((await as('DELETE', '/api/parent/passages/7')).status).toBe(404)
+    expect((await as('PUT', '/api/parent/passages/7', { passage: passage() })).status).toBe(404)
+  })
+
+  it('L22: editing a question voids her unchecked attempt, so her next start is the edited passage', async () => {
+    await save(passage(3))
+    await recorded(1) // finished earlier, kept
+    const before = (await start()).body
+    expect(before.passage.questions).toHaveLength(3)
+    const edited = passage(3)
+    edited.questions[1] = question(2, { question: 'A new second question?' })
+    const { status } = await as('PUT', '/api/parent/passages/1', { passage: edited })
+    expect(status).toBe(200)
+    expect(await count(`SELECT COUNT(*) AS n FROM reading_attempts WHERE id = ${before.attempt}`)).toBe(0)
+    expect(await count('SELECT COUNT(*) AS n FROM reading_attempts WHERE used = 1')).toBe(1)
+    const after = (await start()).body
+    expect(after.attempt).toBeGreaterThan(before.attempt)
+    expect(after.passage.questions.map((q: any) => q.text)).toContain('A new second question?')
+    // The old attempt's result can no longer be recorded.
+    const stale = await t.call('POST', '/api/reading/result', {
+      body: {
+        attempt: before.attempt,
+        day: '2026-10-17',
+        picks: before.passage.questions.map((q: any) => ({ question: q.id, choice: q.choices[0].id })),
+      },
+    })
+    expect(stale.status).toBe(404)
+  })
+
+  it('an edit that leaves the questions alone keeps her attempt, the choices order and the picture', async () => {
+    await save(passage(3))
+    await run("UPDATE passages SET image = '1.png' WHERE id = 1")
+    const before = (await start()).body
+    const order = await one(
+      'SELECT group_concat(id) AS ids FROM choices WHERE question_id = 101 ORDER BY position',
+    )
+    const retitled = passage(3, { title: 'A better title', minutes: 4, hint: 'Think of seeds.' })
+    // The same questions, with the choices pasted in another order.
+    retitled.questions[0] = { ...question(1), options: ['d1', 'c1', 'b1', 'a1'] }
+    expect((await as('PUT', '/api/parent/passages/1', { passage: retitled })).status).toBe(200)
+    expect(await one('SELECT title, minutes, hint, image FROM passages WHERE id = 1')).toEqual({
+      title: 'A better title',
+      minutes: 4,
+      hint: 'Think of seeds.',
+      image: '1.png',
+    })
+    expect(await count(`SELECT COUNT(*) AS n FROM reading_attempts WHERE id = ${before.attempt}`)).toBe(1)
+    expect(
+      await one('SELECT group_concat(id) AS ids FROM choices WHERE question_id = 101 ORDER BY position'),
+    ).toEqual(order)
+    expect((await start()).body.attempt).toBe(before.attempt)
+  })
+
+  it('an edit that fails the checks is refused (400) and leaves the passage as it was', async () => {
+    await save(passage(3))
+    const bad = passage(3)
+    bad.questions[0] = question(1, { correct_answer: 'nope' })
+    const { status, body } = await as('PUT', '/api/parent/passages/1', { passage: bad })
+    expect([status, body.error]).toEqual([400, 'bad_passage'])
+    expect(body.problems.length).toBeGreaterThan(0)
+    expect(await one('SELECT title FROM passages WHERE id = 1')).toEqual({ title: 'The Little Seed' })
+    expect(await count('SELECT COUNT(*) AS n FROM questions')).toBe(3)
+  })
+
+  it('the list, the JSON, edit and delete all need an Access token', async () => {
+    await save(passage())
+    for (const [method, path] of [
+      ['GET', '/api/parent/passages'],
+      ['GET', '/api/parent/passages/1'],
+      ['PUT', '/api/parent/passages/1'],
+      ['DELETE', '/api/parent/passages/1'],
+    ] as const) {
+      expect(
+        (
+          await t.call(method, path, {
+            key: null,
+            body: method === 'GET' || method === 'DELETE' ? undefined : { passage: passage() },
+          })
+        ).status,
+        path,
+      ).toBe(401)
+    }
+    expect(await count('SELECT COUNT(*) AS n FROM passages')).toBe(1)
+  })
+})

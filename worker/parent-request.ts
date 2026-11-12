@@ -8,6 +8,8 @@ export interface ParentRequest {
   db: D1Database
   email: string
   now: Date
+  /** The passage pictures (R2); missing when the Worker has no bucket. */
+  bucket?: R2Bucket
   /** Path parameters, e.g. { id } for /api/parent/devices/:id. */
   params: Record<string, string>
 }
