@@ -627,7 +627,7 @@ The content routes (every one needs a valid Access token, and none takes `child`
 - `GET /api/parent/passages`: each passage's id, title, minutes, number of questions and times read. `GET /api/parent/passages/:id`: its JSON.
 - `POST /api/parent/passages { passage }` and `PUT /api/parent/passages/:id { passage }`: add (201, returns the id) and replace a passage; 400 `bad_passage` with the plain-language problems, saving nothing.
 - `DELETE /api/parent/passages/:id`: 409 `has_results` for a passage with a recorded result; 404 `unknown_passage`.
-- `PUT /api/parent/passages/:id/image`: the picture's bytes as the body (§6.10). 400 `bad_image` for an empty body, bytes that are not a PNG, JPEG or WebP, or more than 2 MB (the body is read only as far as the limit); 404 `unknown_passage`; 503 `no_picture_store` when the Worker has no picture store. Nothing is stored on a refusal. Answers `{ image }`, the name now held.
+- `PUT /api/parent/passages/:id/image`: the picture's bytes as the body (§6.10). 400 `bad_image` for an empty body, bytes that are not a PNG, JPEG or WebP, or more than 2 MB (the body is read only as far as the limit); 404 `unknown_passage`; 503 `no_picture_store` when the Worker has no picture store; 409 `busy` when another upload for the same passage changed its picture first (try again). Nothing is stored on a refusal. Answers `{ image }`, the name now held.
 
 Pairing, the one route with no key or token (the code is the gate, CLAUDE.md):
 
