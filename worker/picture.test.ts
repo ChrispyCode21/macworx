@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clearAccessKeys } from './access'
 import { handle } from './index'
-import { MAX_PICTURE, pictureType } from './picture'
+import { MAX_PICTURE } from '../src/engine'
 import { accessToken } from './test/access-keys'
 import { createTestDb } from './test/db'
 
@@ -72,23 +72,6 @@ function put(
     t.certs.fetchCerts,
   )
 }
-
-describe('pictureType', () => {
-  it('reads PNG, JPEG and WebP from the first bytes, and nothing else', () => {
-    expect(pictureType(png())?.extension).toBe('png')
-    expect(pictureType(jpg())?.extension).toBe('jpg')
-    expect(pictureType(webp())?.extension).toBe('webp')
-    expect(pictureType(text)).toBeNull()
-    expect(pictureType(new Uint8Array())).toBeNull()
-    // RIFF but not WebP (a WAV), and a RIFF header that stops short.
-    expect(
-      pictureType(new Uint8Array([0x52, 0x49, 0x46, 0x46, 4, 0, 0, 0, 0x57, 0x41, 0x56, 0x45])),
-    ).toBeNull()
-    expect(pictureType(new Uint8Array([0x52, 0x49, 0x46, 0x46, 4, 0, 0, 0, 0x57, 0x45]))).toBeNull()
-    // GIF is not on the list.
-    expect(pictureType(new TextEncoder().encode('GIF89a....'))).toBeNull()
-  })
-})
 
 describe('PUT /api/parent/passages/:id/image', () => {
   it('stores a picture as <id>.<extension> from its bytes, whatever the declared type', async () => {

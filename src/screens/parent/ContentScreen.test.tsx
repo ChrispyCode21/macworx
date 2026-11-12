@@ -19,6 +19,11 @@ const form = (draft: string, over: Partial<PassageForm> = {}): PassageForm => ({
   manual: null,
   copy: async () => {},
   save: async () => {},
+  picture: null,
+  pictureNote: null,
+  choosing: false,
+  choosePicture: async () => {},
+  removePicture: noop,
   editing: null,
   version: 0,
   canEdit: true,
@@ -133,5 +138,22 @@ describe('ContentScreen', () => {
     const plain = render(valid)
     expect(plain).toContain(`>${COPY.contentSave}<`)
     expect(plain).not.toContain(COPY.contentSaveChanges)
+  })
+
+  it('has the picture box under the JSON, and names a chosen picture with a Remove button', () => {
+    const empty = render('')
+    expect(empty).toContain(COPY.contentPictureLabel)
+    expect(empty).toContain(COPY.contentPicturePrompt)
+    expect(empty).toContain('type="file"')
+    expect(empty).not.toContain(COPY.contentPictureRemove)
+
+    const file = new File([new Uint8Array(2048)], 'seed.png', { type: 'image/png' })
+    const chosen = render(valid, { picture: file })
+    expect(chosen).toContain('seed.png (2 KB)')
+    expect(chosen).toContain(COPY.contentPictureRemove)
+  })
+
+  it('says in plain words why a picture was not taken', () => {
+    expect(render('', { pictureNote: COPY.contentPictureBig })).toContain(COPY.contentPictureBig)
   })
 })

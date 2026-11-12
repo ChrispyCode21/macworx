@@ -1,27 +1,9 @@
 // Uploading a passage's picture from the parent portal (SPEC §6.10, §8). The Access token is already checked.
+import { MAX_PICTURE, pictureType } from '../src/engine'
 import { error, json } from './http'
 import type { ParentRequest } from './parent-request'
 
-/** 2 MB: exactly this many bytes are accepted (SPEC §6.10). */
-export const MAX_PICTURE = 2 * 1024 * 1024
-
 const bad = () => error(400, 'bad_image')
-
-/** The type a picture's own first bytes call for, or null when they are none of PNG, JPEG and WebP. */
-export function pictureType(bytes: Uint8Array): { extension: string; contentType: string } | null {
-  const starts = (...head: number[]) => head.every((byte, i) => bytes[i] === byte)
-  if (starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
-    return { extension: 'png', contentType: 'image/png' }
-  if (starts(0xff, 0xd8, 0xff)) return { extension: 'jpg', contentType: 'image/jpeg' }
-  // RIFF, a 4-byte size, then WEBP.
-  if (
-    bytes.length >= 12 &&
-    starts(0x52, 0x49, 0x46, 0x46) &&
-    [0x57, 0x45, 0x42, 0x50].every((b, i) => bytes[8 + i] === b)
-  )
-    return { extension: 'webp', contentType: 'image/webp' }
-  return null
-}
 
 /** The request body, or null once it is longer than `MAX_PICTURE`: it is read only as far as that. */
 async function readCapped(request: Request): Promise<Uint8Array | null> {

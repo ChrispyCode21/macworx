@@ -223,6 +223,17 @@ export const COPY = {
   contentCopyUnavailable: "This browser can't copy for you here. Select the text below and copy it by hand.",
   contentCopyByHand: 'The prompt and schema',
   contentJsonLabel: 'Passage JSON',
+  contentPictureLabel: 'Picture (optional)',
+  contentPicturePrompt: 'Upload or drag and drop',
+  contentPictureHint: 'PNG, JPEG or WebP, up to 2 MB. It is added when you save the passage.',
+  contentPictureChosen: (name: string, size: string) => `${name} (${size})`,
+  contentPictureRemove: 'Remove picture',
+  contentPictureType: "That file isn't a PNG, JPEG or WebP picture.",
+  contentPictureBig: 'That picture is over 2 MB. Choose a smaller one.',
+  contentPictureEmpty: 'That file is empty.',
+  contentPictureUnreadable: "That file couldn't be read. Try another.",
+  contentPictureFailed: (title: string) =>
+    `Saved "${title}", but the picture couldn't be added. Edit the passage to try again.`,
   contentJsonHint: 'Paste the full object, without markdown fences.',
   contentValid: (questions: number) =>
     `Valid JSON · 1 passage · ${questions} ${questions === 1 ? 'question' : 'questions'}`,

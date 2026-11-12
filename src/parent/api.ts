@@ -152,6 +152,14 @@ export const replacePassage = (id: number, passage: unknown) =>
     body: JSON.stringify({ passage }),
   })
 
+/** Sends a passage's picture: the file's bytes (SPEC §8). The Worker decides what it is from its first bytes. */
+export const uploadPicture = (id: number, file: File) =>
+  parentCall<{ image: string }>(`/api/parent/passages/${id}/image`, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+  })
+
 export const removePassage = (id: number) =>
   parentCall<{ ok: true }>(`/api/parent/passages/${id}`, { method: 'DELETE' })
 
