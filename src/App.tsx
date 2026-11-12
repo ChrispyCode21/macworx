@@ -15,6 +15,7 @@ import { earnUpTo, homeNumbers, nextResult, practiceChild } from './sync/project
 import type { HomeNumbers, PracticeChild } from './sync/projection'
 import { canSpeak } from './practice/speech'
 import { startReading, type ReadingPassage } from './sync/reading'
+import { startSpelling, type AssignedWord } from './sync/spelling'
 import { endSeed, localDay, sync, takeSeed } from './sync/sync'
 import { ReadingAssignment } from './screens/practice/ReadingAssignment'
 import { Assignment } from './screens/Assignment'
@@ -29,9 +30,10 @@ type Screen =
   | { name: 'pair' }
   | { name: 'practice'; subject: 'spelling' | 'reading'; child: PracticeChild | undefined }
   | { name: 'reading'; attempt: number; passage: ReadingPassage }
+  | { name: 'spelling'; attempt: number; words: AssignedWord[] }
   | { name: 'mix'; initial?: MixOf }
   | { name: 'assignment'; seed: number; mix: MixOf }
-  | { name: 'result'; outcome: Outcome; mix?: MixOf; reading?: true }
+  | { name: 'result'; outcome: Outcome; mix?: MixOf; recorded?: true }
 
 /** A seed for an iPad that isn't paired: it practices and saves nothing (SPEC §6.8). */
 function practiceSeed(): number {
@@ -65,6 +67,7 @@ function ChildApp() {
   const [noSeeds, setNoSeeds] = useState(false)
   const [readingOffline, setReadingOffline] = useState(false)
   const [spellingSilent, setSpellingSilent] = useState(false)
+  const [spellingOffline, setSpellingOffline] = useState(false)
   const [numbers, setNumbers] = useState(currentNumbers)
   const starting = useRef(false)
   const shown = useRef(screen)
@@ -101,25 +104,28 @@ function ChildApp() {
     // Spelling is heard before it is typed, so an iPad that can't speak starts nothing, the sample included (SPEC §5.7 step 2).
     setSpellingSilent(false)
     if (subject === 'spelling' && !canSpeak()) return setSpellingSilent(true)
-    if (subject !== 'reading' || !getDeviceKey()) return sample()
+    if (!getDeviceKey()) return sample()
     if (starting.current) return
     starting.current = true
     setReadingOffline(false)
+    setSpellingOffline(false)
     const from = shown.current
-    let outcome: Awaited<ReturnType<typeof startReading>>
+    let outcome: Awaited<ReturnType<typeof startReading>> | Awaited<ReturnType<typeof startSpelling>>
     try {
-      outcome = await startReading()
+      outcome = subject === 'reading' ? await startReading() : await startSpelling()
     } catch {
       outcome = { kind: 'offline' }
     } finally {
       starting.current = false
     }
-    // She went somewhere else meanwhile: don't pull her into a story.
+    // She went somewhere else meanwhile: don't pull her into a story or a list of words.
     if (shown.current !== from) return
     setPaired(getDeviceKey() !== null)
-    if (outcome.kind === 'offline') setReadingOffline(true)
+    if (outcome.kind === 'offline') (subject === 'reading' ? setReadingOffline : setSpellingOffline)(true)
     else if (outcome.kind === 'sample') sample()
-    else setScreen({ name: 'reading', attempt: outcome.attempt, passage: outcome.passage })
+    else if (outcome.kind === 'passage')
+      setScreen({ name: 'reading', attempt: outcome.attempt, passage: outcome.passage })
+    else setScreen({ name: 'spelling', attempt: outcome.attempt, words: outcome.words })
   }
   const end = (seed: number, answers: number[], now: Date, mix: MixOf) => {
     endSeed(seed, answers, now, mix)
@@ -141,6 +147,7 @@ function ChildApp() {
   const home = () => {
     setReadingOffline(false)
     setSpellingSilent(false)
+    setSpellingOffline(false)
     refresh()
     setScreen({ name: 'home' })
   }
@@ -162,6 +169,7 @@ function ChildApp() {
           }}
           onOpen={open}
           readingOffline={readingOffline}
+          spellingOffline={spellingOffline}
           spellingSilent={spellingSilent}
           numbers={numbers}
           onPair={!paired && canPair() ? () => setScreen({ name: 'pair' }) : undefined}
@@ -206,7 +214,32 @@ function ChildApp() {
                 problemCount: result.answered,
                 earned: result.payout,
               },
-              reading: true,
+              recorded: true,
+            })
+          }}
+        />
+      )
+    case 'spelling':
+      return (
+        <SpellingPractice
+          key={screen.attempt}
+          attempt={screen.attempt}
+          words={screen.words}
+          numbers={numbers}
+          child={currentChild()}
+          onBack={home}
+          onDone={(result) => {
+            // The Worker already stored the new numbers; the payout is the Worker's, not worked out here.
+            setNumbers(currentNumbers())
+            setScreen({
+              name: 'result',
+              outcome: {
+                kind: 'finished',
+                correct: result.correct,
+                problemCount: result.answered,
+                earned: result.payout,
+              },
+              recorded: true,
             })
           }}
         />
@@ -255,7 +288,7 @@ function ChildApp() {
       return (
         <Result
           outcome={screen.outcome}
-          onAnother={screen.reading || !screen.mix ? undefined : () => start(screen.mix!)}
+          onAnother={screen.recorded || !screen.mix ? undefined : () => start(screen.mix!)}
           onHome={home}
         />
       )

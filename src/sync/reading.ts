@@ -31,7 +31,7 @@ export type StartOutcome =
 
 export type CheckOutcome = { kind: 'checked'; result: ReadingResult } | { kind: 'offline' }
 
-async function post(key: string, path: string, body: unknown): Promise<Response | null> {
+export async function post(key: string, path: string, body: unknown): Promise<Response | null> {
   try {
     return await fetch(path, {
       method: 'POST',
@@ -44,11 +44,11 @@ async function post(key: string, path: string, body: unknown): Promise<Response 
   }
 }
 
-const readBody = async (response: Response) =>
+export const readBody = async (response: Response) =>
   (await response.json().catch(() => null)) as Record<string, unknown> | null
 
 /** A 401 means a parent unpaired this iPad: its key goes, as in a sync (§6.9). */
-function unpaired(response: Response, key: string): boolean {
+export function unpaired(response: Response, key: string): boolean {
   if (response.status === 401 && getDeviceKey() === key) forgetDeviceKey()
   return getDeviceKey() !== key
 }
