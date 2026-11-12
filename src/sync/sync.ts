@@ -101,6 +101,15 @@ export function saveWorkerState(state: unknown): void {
   })
 }
 
+/**
+ * A 4xx the Worker gave with an `error` code: asking again can't change it. 401, 408 and 429 are tried again, and a
+ * 404 counts only as `unknown_seed`: any other 404 is a route that isn't there yet (an iPad ahead of the Worker).
+ */
+function refusedForGood(status: number, body: Record<string, unknown> | null): boolean {
+  if (status < 400 || status >= 500 || [401, 408, 429].includes(status)) return false
+  return typeof body?.error === 'string' && (status !== 404 || body.error === 'unknown_seed')
+}
+
 async function syncOnce(): Promise<SyncOutcome> {
   const key = getDeviceKey()
   if (!key) return 'done'
@@ -134,8 +143,9 @@ async function syncOnce(): Promise<SyncOutcome> {
     if (!response) return 'offline'
     if (unpaired(response)) return 'unpaired'
     const body = await readBody(response)
-    // Refused as not valid: it can never be recorded, so it mustn't hold up the rest (§6.8).
-    if (body?.error === 'bad_result' || body?.error === 'bad_mix' || body?.error === 'unknown_seed') {
+    // Refused by the Worker itself with a 4xx and a reason (not a 401, 408 or 429): it can never be recorded, so it
+    // mustn't hold up the rest, or Reading and Spelling behind it (§6.8). A page from a proxy has no reason.
+    if (refusedForGood(response.status, body)) {
       dropQueued(next.seed)
       continue
     }

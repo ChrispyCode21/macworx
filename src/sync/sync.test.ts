@@ -163,6 +163,9 @@ describe('sync', () => {
     [400, 'bad_result'],
     [400, 'bad_mix'],
     [404, 'unknown_seed'],
+    [400, 'some_new_reason'],
+    [403, 'forbidden'],
+    [409, 'conflict'],
   ])('drops a result refused with %i %s and carries on', async (status, code) => {
     queueResult(result(1))
     queueResult(result(2))
@@ -173,6 +176,26 @@ describe('sync', () => {
     expect(await sync.sync()).toBe('done')
     expect(calls.slice(0, 2)).toEqual(['POST /api/results 1', 'POST /api/results 2'])
     expect(getQueue()).toEqual([])
+  })
+
+  it.each([
+    ['a 429 with a reason', () => json(429, { error: 'slow_down' })],
+    ['a 408 with a reason', () => json(408, { error: 'timeout' })],
+    ['a 503 with a reason', () => json(503, { error: 'busy' })],
+    ['a 403 page with no reason', () => new Response('<html>sign in</html>', { status: 403 })],
+    ['a 400 with no reason', () => json(400, {})],
+  ])('keeps a result refused with %s, so Reading and Spelling wait for it', async (_name, answer) => {
+    queueResult(result(1))
+    worker([], { 'POST /api/results': answer })
+    expect(await sync.sync()).toBe('offline')
+    expect(getQueue()).toHaveLength(1)
+    expect(await sync.syncBeforeReading()).toBe(false)
+  })
+
+  it('a result the Worker refuses for good no longer blocks Reading and Spelling', async () => {
+    queueResult(result(1))
+    worker([], { 'POST /api/results': () => json(403, { error: 'forbidden' }) })
+    expect(await sync.syncBeforeReading()).toBe(true)
   })
 
   it('queues the mix she played and sends it with the result; no mix is sent as none', async () => {
