@@ -64,6 +64,7 @@ async function portalApi(page: Page, replies: Record<string, unknown> = {}) {
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
       '/api/parent/devices': { devices: [] },
+      '/api/parent/passages': { passages: [] },
       ...replies,
     }
     return route.fulfill({ json: answers[url.pathname] })

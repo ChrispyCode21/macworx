@@ -14,10 +14,18 @@ const form = (draft: string, over: Partial<PassageForm> = {}): PassageForm => ({
   setDraft: noop,
   check: draft.trim() === '' ? null : parsePassageJson(draft),
   saving: false,
+  opening: false,
   note: null,
   manual: null,
   copy: async () => {},
   save: async () => {},
+  editing: null,
+  version: 0,
+  canEdit: true,
+  report: noop,
+  edit: async () => {},
+  cancelEdit: noop,
+  removed: noop,
   ...over,
 })
 const wordsForm = (over: Partial<WordsForm> = {}): WordsForm => ({
@@ -108,5 +116,22 @@ describe('ContentScreen', () => {
     })
     expect(manual).toMatch(/<textarea[^>]*readOnly[^>]*>the prompt<\/textarea>/)
     expect(manual).toContain('copy it by hand')
+  })
+
+  it('shows the saved passages, loading until the list arrives', () => {
+    const html = render('')
+    expect(html).toContain(COPY.passagesHeading)
+    expect(html).toContain(COPY.parentLoading)
+  })
+
+  it('while a saved passage is open it says so, offers Cancel, and Save becomes Save changes', () => {
+    const html = render(valid, { editing: { id: 3, title: 'The Little Seed' } })
+    expect(html).toContain(escaped(COPY.contentEditing('The Little Seed')))
+    expect(html).toContain(COPY.contentCancelEdit)
+    expect(html).toContain(COPY.contentSaveChanges)
+    expect(html).not.toContain(`>${COPY.contentSave}<`)
+    const plain = render(valid)
+    expect(plain).toContain(`>${COPY.contentSave}<`)
+    expect(plain).not.toContain(COPY.contentSaveChanges)
   })
 })

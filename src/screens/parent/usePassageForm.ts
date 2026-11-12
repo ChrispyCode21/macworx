@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { COPY } from '../../copy'
 import { parsePassageJson } from '../../engine'
 import type { PassageCheck } from '../../engine'
-import { savePassage } from '../../parent/api'
+import { getPassage, replacePassage, savePassage } from '../../parent/api'
 import type { ParentResult } from '../../parent/api'
 import { passagePrompt } from '../../parent/passagePrompt'
 
@@ -11,13 +11,15 @@ export interface PassageNote {
   text: string
 }
 
-/** What a failed save shows. While the page reloads for a sign-in, nothing. */
-function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
+/** What a failed save, open or delete shows. While the page reloads for a sign-in, nothing. */
+export function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string | null {
   if (result.error === 'reloading') return null
   if (result.error === 'signed_out') return COPY.parentSignedOut
   if (result.error === 'offline') return COPY.parentOffline
   // The portal ran the same checks before sending, so a refusal here is rare and its detail adds nothing.
   if (result.error === 'bad_passage') return COPY.contentSaveProblem
+  if (result.error === 'unknown_passage') return COPY.passagesGone
+  if (result.error === 'has_results') return COPY.passagesHasResults
   return COPY.parentServerTrouble
 }
 
@@ -28,15 +30,31 @@ function failure(result: Extract<ParentResult<unknown>, { ok: false }>): string 
 export function usePassageForm() {
   const [draft, setDraftState] = useState('')
   const [saving, setSaving] = useState(false)
+  // A saved passage is being opened into the box.
+  const [opening, setOpening] = useState(false)
+  // The saved passage whose JSON is in the box, while a parent edits it; Save then replaces it (SPEC §5.3).
+  const [editing, setEditingState] = useState<{ id: number; title: string } | null>(null)
+  // Counts saves and deletes, so the list of saved passages reads again.
+  const [version, setVersion] = useState(0)
   const [note, setNote] = useState<PassageNote | null>(null)
   // The prompt, shown to copy by hand when this browser won't copy for us.
   const [manual, setManual] = useState<string | null>(null)
   const latest = useRef('')
   const busy = useRef(false)
+  // `editing` for code that runs after an await, which would otherwise see the value from its own render.
+  const editingNow = useRef<{ id: number; title: string } | null>(null)
+  // Counts cancels and deletes, so an open that was on its way when one happened doesn't fill the box after it.
+  const epoch = useRef(0)
   const check: PassageCheck | null = useMemo(
     () => (draft.trim() === '' ? null : parsePassageJson(draft)),
     [draft],
   )
+
+  const setEditing = (value: { id: number; title: string } | null) => {
+    editingNow.current = value
+    setEditingState(value)
+  }
+  const refreshList = () => setVersion((v) => v + 1)
 
   const setDraft = (text: string) => {
     latest.current = text
@@ -64,23 +82,99 @@ export function usePassageForm() {
     setNote(null)
     const sent = latest.current
     const title = check.passage.title
-    const result = await savePassage(check.passage.source)
+    const target = editingNow.current
+    const result = target
+      ? await replacePassage(target.id, check.passage.source)
+      : await savePassage(check.passage.source)
     busy.current = false
     setSaving(false)
     if (!result.ok) {
       const text = failure(result)
       if (text) setNote({ tone: 'warn', text })
+      // The passage is gone, so the text can only be added as a new one: it stays, no longer an edit.
+      if (target && result.error === 'unknown_passage') {
+        setEditing(null)
+        refreshList()
+      }
       return
     }
-    setNote({ tone: 'info', text: COPY.contentSaved(title) })
-    // Only the text that was saved is cleared: a passage pasted meanwhile stays.
+    setNote({ tone: 'info', text: target ? COPY.contentSavedChanges(title) : COPY.contentSaved(title) })
+    refreshList()
+    // Only the text that was saved is cleared, and with it the edit: text typed meanwhile stays, and is still
+    // a change to the same passage.
     if (latest.current === sent) {
       latest.current = ''
       setDraftState('')
+      setEditing(null)
     }
   }
 
-  return { draft, setDraft, check, saving, note, manual, copy, save }
+  /** Loads a saved passage's JSON into the box to change it. Only into an empty box, so nothing typed is lost. */
+  const edit = async (id: number) => {
+    if (busy.current || latest.current !== '') return
+    busy.current = true
+    setOpening(true)
+    const asked = epoch.current
+    const result = await getPassage(id)
+    busy.current = false
+    setOpening(false)
+    // A cancel, a delete or typing happened while it was on its way.
+    if (epoch.current !== asked || latest.current !== '') return
+    if (!result.ok) {
+      const text = failure(result)
+      if (text) setNote({ tone: 'warn', text })
+      if (result.error === 'unknown_passage') refreshList()
+      return
+    }
+    const text = JSON.stringify(result.body.passage, null, 2)
+    latest.current = text
+    setManual(null)
+    setDraftState(text)
+    setEditing({ id, title: String(result.body.passage.title ?? '') })
+    setNote(null)
+  }
+
+  /** Leaves editing without saving: the box is emptied. */
+  const cancelEdit = () => {
+    epoch.current += 1
+    latest.current = ''
+    setDraftState('')
+    setEditing(null)
+    setNote(null)
+  }
+
+  /** A saved passage is gone (deleted, or already gone): if it was open in the box, the box is emptied. */
+  const removed = (id: number, message: PassageNote) => {
+    if (editingNow.current?.id === id) cancelEdit()
+    epoch.current += 1
+    refreshList()
+    setNote(message)
+  }
+
+  /** Something the list wants to say, in the screen's one status line. */
+  const report = (message: PassageNote) => setNote(message)
+
+  // A saved passage can only be opened into an empty box, and not while something is in flight.
+  const canEdit = draft === '' && !saving && !opening
+
+  return {
+    draft,
+    setDraft,
+    check,
+    saving,
+    opening,
+    note,
+    manual,
+    copy,
+    save,
+    editing,
+    version,
+    canEdit,
+    edit,
+    cancelEdit,
+    removed,
+    report,
+  }
 }
 
 export type PassageForm = ReturnType<typeof usePassageForm>

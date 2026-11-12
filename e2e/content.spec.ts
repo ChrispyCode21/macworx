@@ -45,6 +45,7 @@ async function api(page: Page, save: { status: number; json: unknown } = { statu
       '/api/parent/results': { results: [] },
       '/api/parent/log': { entries: [] },
       '/api/parent/devices': { devices: [] },
+      '/api/parent/passages': { passages: [] },
     }
     return route.fulfill({ json: answers[url.pathname] })
   })
