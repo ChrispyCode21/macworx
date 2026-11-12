@@ -63,6 +63,13 @@ describe('Home (SPEC §5.1 step 1)', () => {
     expect(html).not.toContain('Read a passage, then answer a few questions.')
   })
 
+  it('shows the words Wi-Fi line on Spelling only when its start found no connection', () => {
+    expect(render()).toContain('Listen to a word, then type it.')
+    const html = render({ spellingOffline: true })
+    expect(html).toContain('Connect to Wi-Fi to get your next words!')
+    expect(html).not.toContain('Listen to a word, then type it.')
+  })
+
   it('says the iPad cannot speak on the Spelling card, in place of its line', () => {
     const html = render({ spellingSilent: true })
     expect(html).toContain('This iPad can&#x27;t say words out loud.')

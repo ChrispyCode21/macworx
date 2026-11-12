@@ -50,4 +50,17 @@ describe('SpellingPractice', () => {
     expect(html).toContain('>AL<')
     expect(html).toContain('⁨Ada⁩ · ⁨4th grade⁩')
   })
+
+  it("with the Worker's words it is that many words long, not 8", () => {
+    const words = [
+      { id: 4, word: 'friend', sentence: '', alternates: [] },
+      { id: 9, word: 'colour', sentence: '', alternates: ['color'] },
+      { id: 12, word: 'said', sentence: '', alternates: [] },
+    ]
+    const html = renderToStaticMarkup(
+      <SpellingPractice words={words} attempt={5} onDone={() => {}} onBack={() => {}} />,
+    )
+    expect(html).toContain('Word 1 of 3')
+    expect(html).toContain('aria-valuemax="3"')
+  })
 })
