@@ -65,6 +65,17 @@ describe('POST /api/parent/passages', () => {
     expect(await count('SELECT COUNT(*) AS n FROM choices WHERE question_id BETWEEN 201 AND 250')).toBe(200)
   })
 
+  it("never gives a deleted passage's id to a new one", async () => {
+    expect((await save(passage(1))).body.id).toBe(1)
+    expect((await save(passage(1))).body.id).toBe(2)
+    await t.db.prepare('DELETE FROM choices WHERE question_id BETWEEN 201 AND 299').run()
+    await t.db.prepare('DELETE FROM questions WHERE passage_id = 2').run()
+    await t.db.prepare('DELETE FROM passages WHERE id = 2').run()
+    // With nothing remembered, the highest left (1) would give id 2 again.
+    await t.db.prepare("INSERT INTO id_floor (name, value) VALUES ('passages', 2)").run()
+    expect((await save(passage(1))).body.id).toBe(3)
+  })
+
   it('L20: keeps the pasted object and shuffles choices once, with exactly one right', async () => {
     const pasted = passage(5, { settings: { shuffle_options: true, points_per_question: 5 }, grade: 2 })
     await save(pasted)

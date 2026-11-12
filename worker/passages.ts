@@ -3,6 +3,7 @@
 import { checkPassage, tooLong } from '../src/engine'
 import type { CheckedPassage } from '../src/engine'
 import { json } from './http'
+import { nextId } from './idFloor'
 import type { ParentRequest } from './parent-request'
 
 const WRITE_ATTEMPTS = 3
@@ -93,7 +94,8 @@ export async function postPassage({ request, db }: ParentRequest): Promise<Respo
   // tries again with a fresh id.
   for (let tries = 0; tries < WRITE_ATTEMPTS; tries++) {
     const next = await db
-      .prepare('SELECT COALESCE(MAX(id), 0) + 1 AS id FROM passages')
+      // Past the highest id ever given, not just the highest left: a removed id is never reused (SPEC §6.10).
+      .prepare(`SELECT ${nextId('passages')} AS id`)
       .first<{ id: number }>()
     const id = next!.id
     try {

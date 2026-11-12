@@ -10,6 +10,7 @@ import {
   type ChildRow,
 } from './child'
 import { error, isUint32, json, readJson, utcDay } from './http'
+import { nextId } from './idFloor'
 
 const MAX_QUESTIONS = 50
 
@@ -147,7 +148,8 @@ export async function postReadingStart({ db, device, childId, now }: ChildReques
     stored = choose()
     const made = await db
       .prepare(
-        'INSERT INTO reading_attempts (device_id, child_id, passage_id, issued_day, questions) VALUES (?, ?, ?, ?, ?)',
+        `INSERT INTO reading_attempts (id, device_id, child_id, passage_id, issued_day, questions)
+         SELECT ${nextId('reading_attempts')}, ?, ?, ?, ?, ?`,
       )
       .bind(device, childId, next.id, today, stored)
       .run()
@@ -339,7 +341,8 @@ export async function postReadingResult({
           `INSERT INTO results (kind, attempt, detail, device_id, child_id, day, answers, answered, correct, finished,
            grade, base, accuracy_bonus, streak_bonus, total, created_at)
            SELECT 'reading', ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ? WHERE (SELECT revision FROM children WHERE id = ?) = ?
-           AND NOT EXISTS (SELECT 1 FROM results WHERE attempt = ?)`,
+           AND NOT EXISTS (SELECT 1 FROM results WHERE attempt = ?)
+           AND EXISTS (SELECT 1 FROM reading_attempts WHERE id = ? AND used = 0)`,
         )
         .bind(
           body.attempt,
@@ -358,6 +361,7 @@ export async function postReadingResult({
           now.toISOString(),
           childId,
           revision,
+          body.attempt,
           body.attempt,
         ),
       db
@@ -386,6 +390,12 @@ export async function postReadingResult({
       .bind(device)
       .first()
     if (!active) return error(401, 'unauthorized')
+    // A parent edited the passage while this was on its way, so the attempt is gone (SPEC §6.10).
+    const stillThere = await db
+      .prepare('SELECT 1 AS ok FROM reading_attempts WHERE id = ?')
+      .bind(body.attempt)
+      .first()
+    if (!stillThere) return error(404, 'unknown_attempt')
   }
   return error(503, 'busy')
 }
