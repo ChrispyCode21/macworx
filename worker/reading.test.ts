@@ -267,6 +267,29 @@ describe('POST /api/reading/result', () => {
   })
 })
 
+describe('ids that are never reused (SPEC §6.10)', () => {
+  it('a new attempt takes the id after the highest ever given, even when that attempt is gone', async () => {
+    await passage(1)
+    const first1 = (await start()).body.attempt
+    await run('DELETE FROM reading_attempts WHERE id = ?', first1)
+    await run("INSERT INTO id_floor (name, value) VALUES ('reading_attempts', ?)", first1)
+    const second = (await start()).body.attempt
+    expect(second).toBe(first1 + 1)
+  })
+
+  it('a result for an attempt a parent voided meanwhile is refused (404) and records nothing', async () => {
+    await passage(1)
+    const { body } = await start()
+    await run('DELETE FROM reading_attempts WHERE id = ?', body.attempt)
+    const gone = await t.call('POST', '/api/reading/result', {
+      body: { attempt: body.attempt, day: '2026-10-17', picks: picks(body, 3) },
+    })
+    expect(gone.status).toBe(404)
+    expect(gone.body.error).toBe('unknown_attempt')
+    expect((await first('SELECT COUNT(*) AS n FROM results')).n).toBe(0)
+  })
+})
+
 describe('keys and the parent view', () => {
   it('L13: both routes need the device key', async () => {
     for (const path of ['/api/reading/start', '/api/reading/result'])
