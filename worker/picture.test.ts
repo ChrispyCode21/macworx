@@ -53,13 +53,20 @@ const imageOf = async (id: number) =>
   (await t.db.prepare('SELECT image FROM passages WHERE id = ?').bind(id).first<{ image: string | null }>())!
     .image
 
-function put(id: number, body: BodyInit | null, headers: Record<string, string> = {}, signed = true) {
+function put(
+  id: number,
+  body: BodyInit | null,
+  headers: Record<string, string> = {},
+  signed = true,
+  stream = false,
+) {
   return handle(
     new Request(`https://macworx.test/api/parent/passages/${id}/image?child=1`, {
       method: 'PUT',
       headers: { ...(signed ? { 'Cf-Access-Jwt-Assertion': token } : {}), ...headers },
       body,
-    }),
+      ...(stream ? { duplex: 'half' } : {}),
+    } as RequestInit),
     t.env,
     new Date('2026-10-17T12:00:00Z'),
     t.certs.fetchCerts,
@@ -214,6 +221,57 @@ describe('PUT /api/parent/passages/:id/image', () => {
     expect(res.status).toBe(200)
     expect(deletes).toEqual([])
     expect(files.has('3.png')).toBe(true)
+  })
+
+  it('two uploads at once of different types leave the row on a file that exists, and the loser is told to retry', async () => {
+    await passage(3, '3.png')
+    files.set('3.png', { bytes: png(), contentType: 'image/png' })
+    // B (a PNG) has read the row and is waiting for its body; A (a WebP) runs through meanwhile.
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => (release = resolve))
+    const body = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        await gate
+        controller.enqueue(png(30))
+        controller.close()
+      },
+    })
+    const slow = put(3, body as unknown as BodyInit, { 'Content-Type': 'image/png' }, true, true)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect((await put(3, webp())).status).toBe(200)
+    release()
+    const loser = await slow
+    expect([loser.status, await loser.json()]).toEqual([409, { error: 'busy' }])
+    expect(await imageOf(3)).toBe('3.webp')
+    expect([...files.keys()]).toEqual(['3.webp'])
+  })
+
+  it('takes back its own file, and says 404, when the passage is deleted just after the row was updated', async () => {
+    await passage(3, '3.png')
+    files.set('3.png', { bytes: png(), contentType: 'image/png' })
+    const real = t.env.DB
+    // The row is deleted after this upload's update, before it looks at the row again.
+    t.env.DB = new Proxy(real, {
+      get(target, prop) {
+        if (prop !== 'prepare') return (target as any)[prop].bind?.(target) ?? (target as any)[prop]
+        return (sql: string) => {
+          const statement = target.prepare(sql)
+          if (!sql.startsWith('UPDATE passages SET image')) return statement
+          return {
+            bind: (...values: unknown[]) => ({
+              run: async () => {
+                const done = await statement.bind(...values).run()
+                await target.prepare('DELETE FROM passages WHERE id = 3').run()
+                return done
+              },
+            }),
+          }
+        }
+      },
+    })
+    const res = await put(3, webp())
+    expect(res.status).toBe(404)
+    expect(files.has('3.webp')).toBe(false)
   })
 
   it('needs an Access token like every parent route', async () => {

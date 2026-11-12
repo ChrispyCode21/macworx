@@ -32,10 +32,12 @@ export async function getReadingImage({
   if (!bucket || !NAME.test(name)) return error(404, 'not_found')
   const known = await db.prepare('SELECT 1 AS ok FROM passages WHERE image = ?').bind(name).first()
   if (!known) return error(404, 'not_found')
-  const object = await bucket.get(
-    name,
-    ifNoneMatch ? { onlyIf: new Headers({ 'If-None-Match': ifNoneMatch }) } : undefined,
-  )
+  // A value R2 can't use as a condition is no reason to fail: the picture is simply sent whole.
+  const object = await (ifNoneMatch
+    ? bucket
+        .get(name, { onlyIf: new Headers({ 'If-None-Match': ifNoneMatch }) })
+        .catch(() => bucket.get(name))
+    : bucket.get(name))
   if (!object) return error(404, 'not_found')
   // A replaced picture keeps its name, so it is revalidated on each use rather than trusted for a year.
   const revalidate = {

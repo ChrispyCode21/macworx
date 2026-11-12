@@ -108,6 +108,19 @@ describe('GET /api/reading/image/:name', () => {
     expect(new Uint8Array(await changed.arrayBuffer())).toEqual(BYTES)
   })
 
+  it('sends the whole picture when R2 will not take the If-None-Match value', async () => {
+    await passage(3, '3.webp')
+    const picky = {
+      async get(key: string, options?: { onlyIf?: Headers }) {
+        if (options?.onlyIf) throw new Error('bad condition')
+        return { body: new Blob([BYTES]).stream(), size: BYTES.length, httpEtag: `"etag-${key}"` }
+      },
+    } as unknown as R2Bucket
+    const res = await get('3.webp', picky, { ifNoneMatch: 'W/"weird", garbage' })
+    expect(res.status).toBe(200)
+    expect(new Uint8Array(await res.arrayBuffer())).toEqual(BYTES)
+  })
+
   it('checks the key before it answers 304', async () => {
     await passage(3, '3.webp')
     const res = await get('3.webp', fakeBucket({ '3.webp': 'image/webp' }), {

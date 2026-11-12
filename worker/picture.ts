@@ -53,7 +53,9 @@ async function readCapped(request: Request): Promise<Uint8Array | null> {
 /**
  * PUT /api/parent/passages/:id/image: the picture's bytes as the body. The type comes from the bytes, and the file is
  * stored as `<id>.<extension>`. The new file goes to R2 first and the passage row follows, so a failure between the
- * two leaves a file nobody can reach and never a row pointing at nothing; the old file goes last.
+ * two leaves a file nobody can reach and never a row pointing at nothing; the old file goes last. The row changes
+ * only if it still holds the name this upload read, so two uploads at once can't each remove the other's file: the
+ * one that loses is told to try again (409 `busy`) and takes back its own file unless the row now holds that name.
  */
 export async function putPicture({ request, db, params, bucket }: ParentRequest): Promise<Response> {
   const id = Number(params.id)
@@ -71,19 +73,26 @@ export async function putPicture({ request, db, params, bucket }: ParentRequest)
 
   const name = `${id}.${type.extension}`
   await bucket.put(name, bytes, { httpMetadata: { contentType: type.contentType } })
-  const updated = await db.prepare('UPDATE passages SET image = ? WHERE id = ?').bind(name, id).run()
+  const imageNow = async () =>
+    db.prepare('SELECT image FROM passages WHERE id = ?').bind(id).first<{ image: string | null }>()
+  const dropOwn = () => bucket.delete(name).catch((e) => console.error(e))
+  const updated = await db
+    .prepare('UPDATE passages SET image = ? WHERE id = ? AND image IS ?')
+    .bind(name, id, row.image)
+    .run()
   if (updated.meta.changes === 0) {
-    // The passage was deleted meanwhile: its picture goes too.
-    await bucket.delete(name).catch((e) => console.error(e))
-    return error(404, 'unknown_passage')
+    // Either the passage was deleted meanwhile, or another upload changed the row first.
+    const now = await imageNow()
+    if (now?.image !== name) await dropOwn()
+    return now ? error(409, 'busy') : error(404, 'unknown_passage')
   }
-  // The old file goes only if no other upload has put the row back on its name since.
-  if (row.image && row.image !== name) {
-    const now = await db
-      .prepare('SELECT image FROM passages WHERE id = ?')
-      .bind(id)
-      .first<{ image: string | null }>()
-    if (now?.image !== row.image) await bucket.delete(row.image).catch((e) => console.error(e))
+  // The old file goes only if no other upload has put the row back on its name since. A passage deleted just now
+  // takes this upload's file with it (its delete only knew the old name).
+  const now = await imageNow()
+  if (!now) {
+    await dropOwn()
+  } else if (row.image && row.image !== name && now.image !== row.image) {
+    await bucket.delete(row.image).catch((e) => console.error(e))
   }
-  return json(200, { image: name })
+  return now ? json(200, { image: name }) : error(404, 'unknown_passage')
 }
