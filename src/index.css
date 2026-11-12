@@ -3054,6 +3054,43 @@ p {
   outline: 2px solid var(--p-accent-ink);
   outline-offset: -2px;
 }
+.file-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-14);
+  border: 1px dashed var(--p-divider);
+  border-radius: var(--radius-control);
+  background: var(--p-bg);
+  color: var(--p-muted);
+  cursor: pointer;
+}
+.file-drop-over {
+  border-color: var(--p-accent-ink);
+  color: var(--p-accent-ink);
+}
+.file-drop-disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.file-drop:focus-within {
+  outline: 2px solid var(--p-accent-ink);
+  outline-offset: 2px;
+}
+/* The real input stays in the page for the keyboard and screen readers; the box around it is what is seen. */
+.file-drop-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.content-picture {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
 @media (max-width: 767px) {
   .content-helper,
   .content-actions {

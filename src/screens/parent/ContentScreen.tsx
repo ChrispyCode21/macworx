@@ -4,6 +4,8 @@ import type { CheckedPassage } from '../../engine'
 import { CopyIcon, LockKeyholeIcon } from '../../parent/icons'
 import { Button } from '../../ui/Button'
 import { CodeBox } from '../../ui/CodeBox'
+import { FileDrop } from '../../ui/FileDrop'
+import { formatFileSize } from '../../ui/format'
 import { Panel } from '../../ui/Panel'
 import { Safeguard } from '../../ui/Safeguard'
 import { SectionHeading } from '../../ui/SectionHeading'
@@ -43,7 +45,23 @@ function Preview({ passage }: { passage: CheckedPassage }) {
  * pasted reading passage; the words card comes with the spelling list. Its state is the Portal's (`usePassageForm`).
  */
 export function ContentScreen({ form, words }: { form: PassageForm; words: WordsForm }) {
-  const { draft, setDraft, check, saving, opening, note, manual, copy, save, editing, cancelEdit } = form
+  const {
+    draft,
+    setDraft,
+    check,
+    saving,
+    opening,
+    note,
+    manual,
+    copy,
+    save,
+    editing,
+    cancelEdit,
+    picture,
+    pictureNote,
+    choosePicture,
+    removePicture,
+  } = form
   const root = useRef<HTMLDivElement>(null)
   return (
     <div className="content" ref={root}>
@@ -94,6 +112,25 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
             onChange={setDraft}
           />
 
+          <FileDrop
+            label={COPY.contentPictureLabel}
+            prompt={COPY.contentPicturePrompt}
+            hint={COPY.contentPictureHint}
+            accept="image/png,image/jpeg,image/webp"
+            disabled={saving}
+            onFile={(file) => void choosePicture(file)}
+          />
+          {picture && (
+            <div className="content-picture">
+              <p className="parent-note">
+                {COPY.contentPictureChosen(picture.name, formatFileSize(picture.size))}
+              </p>
+              <Button variant="secondary" disabled={saving} onClick={removePicture}>
+                {COPY.contentPictureRemove}
+              </Button>
+            </div>
+          )}
+
           {/* Always mounted, so a screen reader hears each change to it once, not a new alert on every keystroke. */}
           <div className="content-checks" aria-live="polite">
             {check?.ok && (
@@ -112,6 +149,7 @@ export function ContentScreen({ form, words }: { form: PassageForm; words: Words
                 </ul>
               </>
             )}
+            {pictureNote && <Safeguard tone="warn">{pictureNote}</Safeguard>}
             {note && <Safeguard tone={note.tone}>{note.text}</Safeguard>}
           </div>
 

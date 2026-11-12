@@ -50,3 +50,4 @@ export {
 } from './passage'
 export { checkAnswer } from './score'
 export { addDays, dayNumber, nextStreak, type StreakResult, type StreakState } from './streak'
+export { MAX_PICTURE, PICTURE_HEAD, pictureProblem, pictureType, type PictureType } from './picture'
